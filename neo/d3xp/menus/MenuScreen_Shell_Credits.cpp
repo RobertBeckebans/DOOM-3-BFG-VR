@@ -42,33 +42,33 @@ void idMenuScreen_Shell_Credits::SetupCreditList()
 			screen( _screen )
 		{
 		}
-		
+
 		idSWFScriptVar Call( idSWFScriptObject* thisObject, const idSWFParmList& parms )
 		{
-		
+
 			if( screen == NULL )
 			{
 				return idSWFScriptVar();
 			}
-			
+
 			screen->UpdateCredits();
 			return idSWFScriptVar();
 		}
 	private:
 		idMenuScreen_Shell_Credits* screen;
 	};
-	
+
 	if( GetSWFObject() )
 	{
 		GetSWFObject()->SetGlobal( "updateCredits", new( TAG_SWF ) idRefreshCredits( this ) );
 	}
-	
-	
+
+
 	creditList.Clear();
-	creditList.Append( creditInfo_t( 3, "DOOM 3 BFG VR EDITION: Fully Possessed") );
-	creditList.Append( creditInfo_t());
-	creditList.Append( creditInfo_t( 1, "VR Implementation.") );
-	creditList.Append( creditInfo_t( 0, "/u/Samson- Initial VR implementaion.") );
+	creditList.Append( creditInfo_t( 3, "DOOM 3 BFG VR EDITION: Fully Possessed" ) );
+	creditList.Append( creditInfo_t() );
+	creditList.Append( creditInfo_t( 1, "VR Implementation." ) );
+	creditList.Append( creditInfo_t( 0, "/u/Samson- Initial VR implementaion." ) );
 	creditList.Append( creditInfo_t() );
 	creditList.Append( creditInfo_t( 0, "Carl Kenner:" ) );
 	creditList.Append( creditInfo_t( 0, "    Teleport, Voice Commands, Flicksync, Bink videos, tons of improvements." ) );
@@ -94,8 +94,8 @@ void idMenuScreen_Shell_Credits::SetupCreditList()
 	creditList.Append( creditInfo_t( 0, "tmek:" ) );
 	creditList.Append( creditInfo_t( 0, "    Original inspiration." ) );
 	creditList.Append( creditInfo_t() );
-	creditList.Append( creditInfo_t( 2, "BASED ON"));
-	creditList.Append( creditInfo_t());
+	creditList.Append( creditInfo_t( 2, "BASED ON" ) );
+	creditList.Append( creditInfo_t() );
 	creditList.Append( creditInfo_t( 3,	"RBDOOM 3 BFG EDITION"	) );
 	creditList.Append( creditInfo_t() );
 	creditList.Append( creditInfo_t( 1,	"Lead Programmer"	) );
@@ -755,21 +755,21 @@ idMenuScreen_Shell_Credits::Initialize
 void idMenuScreen_Shell_Credits::Initialize( idMenuHandler* data )
 {
 	idMenuScreen::Initialize( data );
-	
+
 	if( data != NULL )
 	{
 		menuGUI = data->GetGUI();
 	}
-	
+
 	SetSpritePath( "menuCredits" );
-	
+
 	btnBack = new( TAG_SWF ) idMenuWidget_Button();
 	btnBack->Initialize( data );
 	btnBack->SetLabel( "#str_02305" );
 	btnBack->SetSpritePath( GetSpritePath(), "info", "btnBack" );
 	btnBack->AddEventAction( WIDGET_EVENT_PRESS ).Set( WIDGET_ACTION_GO_BACK );
 	AddChild( btnBack );
-	
+
 	SetupCreditList();
 }
 
@@ -787,14 +787,14 @@ void idMenuScreen_Shell_Credits::Update()
 		if( cmdBar != NULL )
 		{
 			cmdBar->ClearAllButtons();
-			
+
 			idMenuHandler_Shell* shell = dynamic_cast< idMenuHandler_Shell* >( menuData );
 			bool complete = false;
 			if( shell != NULL )
 			{
 				complete = shell->GetGameComplete();
 			}
-			
+
 			idMenuWidget_CommandBar::buttonInfo_t* buttonInfo;
 			if( !complete )
 			{
@@ -816,7 +816,7 @@ void idMenuScreen_Shell_Credits::Update()
 			}
 		}
 	}
-	
+
 	idSWFScriptObject& root = GetSWFObject()->GetRootObject();
 	if( BindSprite( root ) )
 	{
@@ -827,12 +827,12 @@ void idMenuScreen_Shell_Credits::Update()
 			heading->SetStrokeInfo( true, 0.75f, 1.75f );
 		}
 	}
-	
+
 	if( btnBack != NULL )
 	{
 		btnBack->BindSprite( root );
 	}
-	
+
 	idMenuScreen::Update();
 }
 
@@ -852,13 +852,13 @@ void idMenuScreen_Shell_Credits::ShowScreen( const mainMenuTransition_t transiti
 		{
 			complete = shell->GetGameComplete();
 		}
-		
+
 		if( complete )
 		{
 			menuData->PlaySound( GUI_SOUND_MUSIC );
 		}
 	}
-	
+
 	idMenuScreen::ShowScreen( transitionType );
 	creditIndex = 0;
 	UpdateCredits();
@@ -886,25 +886,25 @@ bool idMenuScreen_Shell_Credits::HandleAction( idWidgetAction& action, const idW
 	{
 		return true;
 	}
-	
+
 	if( menuData->ActiveScreen() != SHELL_AREA_CREDITS )
 	{
 		return false;
 	}
-	
+
 	widgetAction_t actionType = action.GetType();
 	switch( actionType )
 	{
 		case WIDGET_ACTION_GO_BACK:
 		{
-		
+
 			idMenuHandler_Shell* shell = dynamic_cast< idMenuHandler_Shell* >( menuData );
 			bool complete = false;
 			if( shell != NULL )
 			{
 				complete = shell->GetGameComplete();
 			}
-			
+
 			if( complete )
 			{
 				cmdSystem->BufferCommandText( CMD_EXEC_NOW, "disconnect" );
@@ -913,11 +913,11 @@ bool idMenuScreen_Shell_Credits::HandleAction( idWidgetAction& action, const idW
 			{
 				menuData->SetNextScreen( SHELL_AREA_ROOT, MENU_TRANSITION_SIMPLE );
 			}
-			
+
 			return true;
 		}
 	}
-	
+
 	return idMenuWidget::HandleAction( action, event, widget, forceHandled );
 }
 
@@ -933,12 +933,12 @@ void idMenuScreen_Shell_Credits::UpdateCredits()
 	{
 		return;
 	}
-	
+
 	if( menuData->ActiveScreen() != SHELL_AREA_CREDITS && menuData->NextScreen() != SHELL_AREA_CREDITS )
 	{
 		return;
 	}
-	
+
 	if( creditIndex >= creditList.Num() + NUM_CREDIT_LINES )
 	{
 		idMenuHandler_Shell* shell = dynamic_cast< idMenuHandler_Shell* >( menuData );
@@ -947,7 +947,7 @@ void idMenuScreen_Shell_Credits::UpdateCredits()
 		{
 			complete = shell->GetGameComplete();
 		}
-		
+
 		if( complete )
 		{
 			cmdSystem->BufferCommandText( CMD_EXEC_NOW, "disconnect" );
@@ -958,7 +958,7 @@ void idMenuScreen_Shell_Credits::UpdateCredits()
 		}
 		return;
 	}
-	
+
 	idSWFScriptObject* options = GetSWFObject()->GetRootObject().GetNestedObj( "menuCredits", "info", "options" );
 	if( options != NULL )
 	{
@@ -969,61 +969,61 @@ void idMenuScreen_Shell_Credits::UpdateCredits()
 			idSWFTextInstance* subHeading = options->GetNestedText( va( "item%d", 15 - i ), "subHeading" );
 			idSWFTextInstance* title = options->GetNestedText( va( "item%d", 15 - i ), "title" );
 			idSWFTextInstance* txtEntry = options->GetNestedText( va( "item%d", 15 - i ), "entry" );
-			
+
 			if( curIndex >= 0 && curIndex < creditList.Num() )
 			{
-			
+
 				int type = creditList[ curIndex ].type;
 				idStr entry = creditList[ curIndex ].entry;
-				
+
 				if( heading )
 				{
 					heading->SetText( type == 3 ? entry : "" );
 					heading->SetStrokeInfo( true );
 				}
-				
+
 				if( subHeading )
 				{
 					subHeading->SetText( type == 2 ? entry : "" );
 					subHeading->SetStrokeInfo( true );
 				}
-				
+
 				if( title )
 				{
 					title->SetText( type == 1 ? entry : "" );
 					title->SetStrokeInfo( true );
 				}
-				
+
 				if( txtEntry )
 				{
 					txtEntry->SetText( type == 0 ? entry : "" );
 					txtEntry->SetStrokeInfo( true );
 				}
-				
+
 			}
 			else
 			{
-			
+
 				if( heading )
 				{
 					heading->SetText( "" );
 				}
-				
+
 				if( subHeading )
 				{
 					subHeading->SetText( "" );
 				}
-				
+
 				if( txtEntry )
 				{
 					txtEntry->SetText( "" );
 				}
-				
+
 				if( title )
 				{
 					title->SetText( "" );
 				}
-				
+
 			}
 		}
 		if( options->GetSprite() )
@@ -1031,6 +1031,6 @@ void idMenuScreen_Shell_Credits::UpdateCredits()
 			options->GetSprite()->PlayFrame( "roll" );
 		}
 	}
-	
+
 	creditIndex++;
 }

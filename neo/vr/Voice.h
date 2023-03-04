@@ -45,39 +45,39 @@ public:
 
 	iVoice();
 
-	void		VoiceInit(void);
+	void		VoiceInit( void );
 	bool		InitVoiceDictionary( void );
 	static void		ListVoiceCmds_f( const idCmdArgs& args );
-	void		VoiceShutdown(void);
-	void		Speed(int talkingSpeed);
+	void		VoiceShutdown( void );
+	void		Speed( int talkingSpeed );
 
-	void		Say(VERIFY_FORMAT_STRING const char* fmt, ...);
+	void		Say( VERIFY_FORMAT_STRING const char* fmt, ... );
 
-	void		HearWord(const char *w, int confidence);
-	void		HearWord(const wchar_t *w, int confidence);
+	void		HearWord( const char* w, int confidence );
+	void		HearWord( const wchar_t* w, int confidence );
 #ifdef _WIN32
-	void		Event(WPARAM wParam, LPARAM lParam);
+	void		Event( WPARAM wParam, LPARAM lParam );
 #endif
 	bool		GetTalkButton();
-	bool		GetSayButton(int j);
+	bool		GetSayButton( int j );
 
-	void		AddFlicksyncLine(const char* line);
-	void		AddFlicksyncLine(const wchar_t* line);
+	void		AddFlicksyncLine( const char* line );
+	void		AddFlicksyncLine( const wchar_t* line );
 
 	float currentVolume; // 0 to 1
 	float maxVolume; // max volume since sound started: 0 to 1
 	//---------------------------
 private:
-	
+
 	idStr available;
 	idStr npc;
 	idStr cmds1;
 	idStr cmds2;
 	idStr startListen;
 	idStr stopListen;
-	
-	void		AddWord(const char* word);
-	void		AddWord(const wchar_t* word);
+
+	void		AddWord( const char* word );
+	void		AddWord( const wchar_t* word );
 };
 
 

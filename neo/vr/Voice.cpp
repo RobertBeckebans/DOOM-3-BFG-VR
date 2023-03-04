@@ -14,17 +14,17 @@
 
 #ifdef _WIN32
 
-#include <sapi.h>
-#include <sphelper.h>
-#include "sys\win32\win_local.h"
+	#include <sapi.h>
+	#include <sphelper.h>
+	#include "sys\win32\win_local.h"
 
-ISpVoice * pVoice = NULL;
-ISpRecognizer *pRecognizer = NULL;
-ISpObjectToken *pObjectToken = NULL;
-ISpRecoContext *pReco = NULL;
-ISpRecoGrammar *pGrammar = NULL;
-SPSTATEHANDLE rule = NULL;
-SPSTATEHANDLE flicksyncRule = NULL;
+	ISpVoice* pVoice = NULL;
+	ISpRecognizer* pRecognizer = NULL;
+	ISpObjectToken* pObjectToken = NULL;
+	ISpRecoContext* pReco = NULL;
+	ISpRecoGrammar* pGrammar = NULL;
+	SPSTATEHANDLE rule = NULL;
+	SPSTATEHANDLE flicksyncRule = NULL;
 
 #endif
 
@@ -62,12 +62,13 @@ vr_voiceAction_t voiceActionStrings[J_SAY_NUM] =
 	{ "SOULCUBE", J_SAY_SOUL_CUBE },
 	{ "ARTIFACT", J_SAY_ARTIFACT },
 };
-	
+
 idList<idStr> voiceCommandStrings;
 idList<int> voiceCommandActions;
 
-	
-const char* words[] = {
+
+const char* words[] =
+{
 	"what can I say",
 	"consecution", "start listening",
 	"consentient", "stop listening",
@@ -98,9 +99,9 @@ const char* words[] = {
 
 
 #ifdef _WIN32
-void __stdcall SpeechCallback(WPARAM wParam, LPARAM lParam)
+void __stdcall SpeechCallback( WPARAM wParam, LPARAM lParam )
 {
-	commonVoice->Event(wParam, lParam);
+	commonVoice->Event( wParam, lParam );
 }
 #endif
 
@@ -127,7 +128,7 @@ void MadeASound()
 void StartedTalking()
 {
 	idPlayer* player = gameLocal.GetLocalPlayer();
-	if( player != NULL && player->hudManager && (vr_flicksyncCharacter.GetInteger() || vr_voiceCommands.GetInteger() || vr_talkMode.GetInteger()) )
+	if( player != NULL && player->hudManager && ( vr_flicksyncCharacter.GetInteger() || vr_voiceCommands.GetInteger() || vr_talkMode.GetInteger() ) )
 	{
 		player->hudManager->SetRadioMessage( true );
 	}
@@ -138,7 +139,7 @@ void StoppedTalking()
 	spoke = true;
 
 	idPlayer* player = gameLocal.GetLocalPlayer();
-	if( player != NULL && player->hudManager && (vr_flicksyncCharacter.GetInteger() || vr_voiceCommands.GetInteger() || vr_talkMode.GetInteger()) )
+	if( player != NULL && player->hudManager && ( vr_flicksyncCharacter.GetInteger() || vr_voiceCommands.GetInteger() || vr_talkMode.GetInteger() ) )
 	{
 		player->hudManager->SetRadioMessage( false );
 	}
@@ -150,12 +151,12 @@ bool iVoice::GetTalkButton()
 	return in_phrase;
 #if 0
 	static int count = 0;
-	if (spoke)
+	if( spoke )
 	{
 		count = 20;
 		spoke = false;
 	}
-	if (count > 0)
+	if( count > 0 )
 	{
 		--count;
 		return true;
@@ -168,9 +169,9 @@ idStr buildCmdString( int actionNum )
 {
 	idStr cmdStr;
 
-	for ( int i = 0; i < voiceCommandActions.Num(); i++ )
+	for( int i = 0; i < voiceCommandActions.Num(); i++ )
 	{
-		if ( voiceCommandActions[i] == actionNum )
+		if( voiceCommandActions[i] == actionNum )
 		{
 			cmdStr += ", ," + voiceCommandStrings[i];
 		}
@@ -179,7 +180,7 @@ idStr buildCmdString( int actionNum )
 
 }
 
-bool iVoice::GetSayButton(int j)
+bool iVoice::GetSayButton( int j )
 {
 	bool result = heard[j - J_SAY_MIN];
 	heard[j - J_SAY_MIN] = false;
@@ -189,52 +190,60 @@ bool iVoice::GetSayButton(int j)
 void iVoice::ListVoiceCmds_f( const idCmdArgs& args )
 {
 	common->Printf( "Listing available voice commands\n" );
-	
-	for ( int i = 0; i < J_SAY_NUM; i++ )
+
+	for( int i = 0; i < J_SAY_NUM; i++ )
 	{
 		common->Printf( "\nAction:  %s\n", voiceActionStrings[i].string.c_str() );
 
 		int count = 0;
-		for ( int j = 0; j < voiceCommandActions.Num(); j++ )
+		for( int j = 0; j < voiceCommandActions.Num(); j++ )
 		{
-			if ( voiceCommandActions[j] == voiceActionStrings[i].action )
+			if( voiceCommandActions[j] == voiceActionStrings[i].action )
 			{
 				count++;
 				common->Printf( "    Phrase %d: %s\n", count, voiceCommandStrings[j].c_str() );
 			}
 		}
-		if ( count == 0 ) common->Printf( "    No phrase defined\n" );
+		if( count == 0 )
+		{
+			common->Printf( "    No phrase defined\n" );
+		}
 
 	}
 }
 
 
-void iVoice::HearWord(const char *w, int confidence)
+void iVoice::HearWord( const char* w, int confidence )
 {
 
 	int index = voiceCommandStrings.FindIndex( w );
-	if ( index == -1 ) return; // not found;
-	
+	if( index == -1 )
+	{
+		return;    // not found;
+	}
+
 	int action = voiceCommandActions[index];
 
-	if ( action == J_SAY_START_RUNNING && !commonVr->forceRun )
+	if( action == J_SAY_START_RUNNING && !commonVr->forceRun )
 	{
 		commonVr->forceRun = true;
-		Say("running");
+		Say( "running" );
 	}
-	else if ((action == J_SAY_STOP_RUNNING || action == J_SAY_START_RUNNING) && commonVr->forceRun)
+	else if( ( action == J_SAY_STOP_RUNNING || action == J_SAY_START_RUNNING ) && commonVr->forceRun )
 	{
 		commonVr->forceRun = false;
-		Say("walking");
+		Say( "walking" );
 	}
-	else if (action == J_SAY_LIST ) 
+	else if( action == J_SAY_LIST )
 	{
 		Speed( 4 );
-		if ( vr_talkMode.GetInteger() > 0 )
+		if( vr_talkMode.GetInteger() > 0 )
+		{
 			Say( npc.c_str() );
-			//Say( "You can say anything to NPC's." );
+		}
+		//Say( "You can say anything to NPC's." );
 
-		if ( !listening )
+		if( !listening )
 		{
 			Say( available.c_str() );
 			Say( buildCmdString( J_SAY_LIST ).c_str() );
@@ -243,22 +252,26 @@ void iVoice::HearWord(const char *w, int confidence)
 		}
 		else
 		{
-			if ( vr_voiceCommands.GetInteger() > 2 )
+			if( vr_voiceCommands.GetInteger() > 2 )
+			{
 				Say( cmds2.c_str() );
-				//Say( "You can use voice commands, weapon names, or holodeck commands." );
-			else if ( vr_voiceCommands.GetInteger() == 1 )
+			}
+			//Say( "You can use voice commands, weapon names, or holodeck commands." );
+			else if( vr_voiceCommands.GetInteger() == 1 )
+			{
 				Say( cmds1.c_str() );
-				//Say( "You can use voice commands or holodeck commands." );
+			}
+			//Say( "You can use voice commands or holodeck commands." );
 			Speed( 6 );
-						
+
 			Say( available.c_str() );
 			Say( buildCmdString( J_SAY_LIST ).c_str() );
 			Say( buildCmdString( J_SAY_LISTENSTOP ).c_str() );
 			Say( buildCmdString( J_SAY_LISTENSTART ).c_str() );
 			//Say( "You can say: What can I say, stop listening, start listening." );
-			
+
 			Speed( 7 );
-			if ( vr_voiceCommands.GetInteger() >= 1 )
+			if( vr_voiceCommands.GetInteger() >= 1 )
 			{
 				Say( buildCmdString( J_SAY_PAUSE ) );
 				Say( buildCmdString( J_SAY_RESUME ) );
@@ -271,8 +284,8 @@ void iVoice::HearWord(const char *w, int confidence)
 				Say( buildCmdString( J_SAY_STOP_RUNNING ) );
 				//Say( "pause game, resume game, exit game, menu, cancel, PDA." );
 			}
-					
-			if ( vr_voiceCommands.GetInteger() >= 2 )
+
+			if( vr_voiceCommands.GetInteger() >= 2 )
 			{
 				Say( buildCmdString( J_SAY_RELOAD ) );
 				Say( buildCmdString( J_SAY_FLASHLIGHT ) );
@@ -290,17 +303,17 @@ void iVoice::HearWord(const char *w, int confidence)
 				Say( buildCmdString( J_SAY_BFG ) );
 				Say( buildCmdString( J_SAY_SOUL_CUBE ) );
 				Say( buildCmdString( J_SAY_ARTIFACT ) );
-										
-				
+
+
 			}
-					
+
 		}
 	}
 
-	else if ( action == J_SAY_LISTENSTART )
+	else if( action == J_SAY_LISTENSTART )
 
 	{
-		if ( !listening )
+		if( !listening )
 		{
 			listening = true;
 			Speed( 5 );
@@ -309,15 +322,15 @@ void iVoice::HearWord(const char *w, int confidence)
 		}
 	}
 
-	else if ( listening
+	else if( listening
 #ifdef _WIN32
-            && confidence >= SP_NORMAL_CONFIDENCE
+			 && confidence >= SP_NORMAL_CONFIDENCE
 #endif
-        )
+		   )
 	{
 		int heardIndex = voiceCommandActions.FindIndex( action );
 
-		if ( action == J_SAY_LISTENSTOP )
+		if( action == J_SAY_LISTENSTOP )
 		{
 			listening = false;
 			Speed( 5 );
@@ -332,11 +345,11 @@ void iVoice::HearWord(const char *w, int confidence)
 	}
 }
 
-void iVoice::HearWord( const wchar_t *w, int confidence )
+void iVoice::HearWord( const wchar_t* w, int confidence )
 {
 #ifdef _WIN32
 	char buffer[1024];
-	WideCharToMultiByte( CP_ACP, 0, w, -1, buffer, sizeof( buffer ) / sizeof( buffer[0] ),"'", NULL );
+	WideCharToMultiByte( CP_ACP, 0, w, -1, buffer, sizeof( buffer ) / sizeof( buffer[0] ), "'", NULL );
 	HearWord( buffer, confidence );
 #endif
 }
@@ -346,10 +359,10 @@ void iVoice::Event( WPARAM wParam, LPARAM lParam )
 {
 	SPEVENT event;
 	HRESULT hr;
-	while ( pReco->GetEvents(1, &event, NULL) == S_OK )
+	while( pReco->GetEvents( 1, &event, NULL ) == S_OK )
 	{
 		ISpRecoResult* recoResult;
-		switch ( event.eEventId )
+		switch( event.eEventId )
 		{
 			case SPEI_END_SR_STREAM:
 				in_phrase = false;
@@ -362,15 +375,17 @@ void iVoice::Event( WPARAM wParam, LPARAM lParam )
 				//common->Printf("$ Sound start\n");
 				break;
 			case SPEI_SOUND_END:
-				if (in_phrase)
+				if( in_phrase )
+				{
 					StoppedTalking();
+				}
 				//common->Printf("$ Sound end\n");
 				in_phrase = false;
 				currentVolume = 0;
 				break;
 			case SPEI_PHRASE_START:
-				
-				if ( !vr_voicePushToTalk.GetInteger() || common->ButtonState( UB_IMPULSE30 ) )
+
+				if( !vr_voicePushToTalk.GetInteger() || common->ButtonState( UB_IMPULSE30 ) )
 				{
 					in_phrase = true;
 					StartedTalking();
@@ -379,10 +394,10 @@ void iVoice::Event( WPARAM wParam, LPARAM lParam )
 				break;
 			case SPEI_RECOGNITION:
 				//common->Printf("$ Recognition\n");
-				if ( !vr_voicePushToTalk.GetInteger() || common->ButtonState( UB_IMPULSE30 ) )
+				if( !vr_voicePushToTalk.GetInteger() || common->ButtonState( UB_IMPULSE30 ) )
 				{
-					recoResult = reinterpret_cast<ISpRecoResult*>(event.lParam);
-					if ( recoResult )
+					recoResult = reinterpret_cast<ISpRecoResult*>( event.lParam );
+					if( recoResult )
 					{
 						ULONG isLine = false;
 						ULONGLONG startTime = 0;
@@ -391,7 +406,8 @@ void iVoice::Event( WPARAM wParam, LPARAM lParam )
 						SPPHRASE* pPhrase = NULL;
 						hr = recoResult->GetPhrase( &pPhrase );
 						int confidence = 0;
-						if SUCCEEDED( hr ) {
+						if SUCCEEDED( hr )
+						{
 							confidence = pPhrase->Rule.Confidence; // -1, 0, or 1
 							isLine = pPhrase->Rule.ulId;
 							startTime = pPhrase->ftStartTime;
@@ -399,11 +415,13 @@ void iVoice::Event( WPARAM wParam, LPARAM lParam )
 						}
 						const char* confidences[3] = { "low", "medium", "high" };
 						hr = recoResult->GetText( SP_GETWHOLEPHRASE, SP_GETWHOLEPHRASE, FALSE, &text, NULL );
-						if ( vr_voiceRepeat.GetBool() )
-							Say( "%s %d: %S.", confidences[confidence + 1], (int)(maxVolume * 100), text );
-						if ( isLine )
+						if( vr_voiceRepeat.GetBool() )
 						{
-							if ( vr_flicksyncCharacter.GetInteger() )
+							Say( "%s %d: %S.", confidences[confidence + 1], ( int )( maxVolume * 100 ), text );
+						}
+						if( isLine )
+						{
+							if( vr_flicksyncCharacter.GetInteger() )
 							{
 								char buffer[1024];
 								WideCharToMultiByte( CP_ACP, 0, text, -1, buffer, sizeof( buffer ) / sizeof( buffer[0] ), "'", NULL );
@@ -412,8 +430,10 @@ void iVoice::Event( WPARAM wParam, LPARAM lParam )
 						}
 						else
 						{
-							if ( maxVolume * 100 >= vr_voiceMinVolume.GetInteger() )
+							if( maxVolume * 100 >= vr_voiceMinVolume.GetInteger() )
+							{
 								HearWord( text, confidence );
+							}
 							Flicksync_StoppedTalking();
 						}
 						CoTaskMemFree( text );
@@ -424,14 +444,16 @@ void iVoice::Event( WPARAM wParam, LPARAM lParam )
 				break;
 			case SPEI_HYPOTHESIS:
 
-				if ( !vr_voicePushToTalk.GetInteger() || common->ButtonState( UB_IMPULSE30 ) )
+				if( !vr_voicePushToTalk.GetInteger() || common->ButtonState( UB_IMPULSE30 ) )
 				{
-					if ( !in_phrase )
+					if( !in_phrase )
+					{
 						StartedTalking();
+					}
 					in_phrase = true;
 					//common->Printf("$ Hypothesis\n");
-					recoResult = reinterpret_cast<ISpRecoResult*>(event.lParam);
-					if ( recoResult )
+					recoResult = reinterpret_cast<ISpRecoResult*>( event.lParam );
+					if( recoResult )
 					{
 						ULONG isLine = false;
 
@@ -439,13 +461,14 @@ void iVoice::Event( WPARAM wParam, LPARAM lParam )
 						SPPHRASE* pPhrase = NULL;
 						hr = recoResult->GetPhrase( &pPhrase );
 						int confidence = 0;
-						if SUCCEEDED( hr ) {
+						if SUCCEEDED( hr )
+						{
 							confidence = pPhrase->Rule.Confidence; // -1, 0, or 1
 							isLine = pPhrase->Rule.ulId;
 						}
 						const char* confidences[3] = { "low", "medium", "high" };
 						hr = recoResult->GetText( SP_GETWHOLEPHRASE, SP_GETWHOLEPHRASE, FALSE, &text, NULL );
-						if ( isLine )
+						if( isLine )
 						{
 							//Say("Maybe %s: %S", confidences[confidence + 1], text);
 						}
@@ -469,7 +492,7 @@ void iVoice::Event( WPARAM wParam, LPARAM lParam )
 			case SPEI_FALSE_RECOGNITION:
 				//common->Printf("$ False Recognition\n");
 				recoResult = reinterpret_cast<ISpRecoResult*>( event.lParam );
-				if ( recoResult )
+				if( recoResult )
 				{
 					wchar_t* text;
 					hr = recoResult->GetText( SP_GETWHOLEPHRASE, SP_GETWHOLEPHRASE, FALSE, &text, NULL );
@@ -482,19 +505,19 @@ void iVoice::Event( WPARAM wParam, LPARAM lParam )
 				//common->Printf("$ Interference\n");
 				break;
 			case SPEI_REQUEST_UI:
-				common->Printf("$ Request UI\n");
+				common->Printf( "$ Request UI\n" );
 				break;
 			case SPEI_RECO_STATE_CHANGE:
 				in_phrase = false;
-				common->Printf("$ Reco State Change\n");
+				common->Printf( "$ Reco State Change\n" );
 				break;
 			case SPEI_ADAPTATION:
-				common->Printf("$ Adaptation\n");
+				common->Printf( "$ Adaptation\n" );
 				break;
 			case SPEI_START_SR_STREAM:
 				in_phrase = false;
 				currentVolume = 0;
-				common->Printf("$ Start SR Stream\n");
+				common->Printf( "$ Start SR Stream\n" );
 				break;
 			case SPEI_RECO_OTHER_CONTEXT:
 				//common->Printf("$ Reco Other Context\n");
@@ -502,18 +525,20 @@ void iVoice::Event( WPARAM wParam, LPARAM lParam )
 				break;
 			case SPEI_SR_AUDIO_LEVEL:
 				currentVolume = event.wParam / 100.0f;
-				if ( currentVolume > maxVolume )
+				if( currentVolume > maxVolume )
+				{
 					maxVolume = currentVolume;
+				}
 				//common->Printf("$ SR Audio Level: %3d / 100\n", event.wParam);
 				break;
 			case SPEI_SR_RETAINEDAUDIO:
-				common->Printf("$ SR Retained Audio\n");
+				common->Printf( "$ SR Retained Audio\n" );
 				break;
 			case SPEI_SR_PRIVATE:
-				common->Printf("$ SR Private\n");
+				common->Printf( "$ SR Private\n" );
 				break;
 			case SPEI_ACTIVE_CATEGORY_CHANGED:
-				common->Printf("$ Active Category changed\n");
+				common->Printf( "$ Active Category changed\n" );
 				break;
 		}
 	}
@@ -524,7 +549,7 @@ void iVoice::AddWord( const char* word )
 {
 #ifdef _WIN32
 	wchar_t wbuffer[1024];
-	MultiByteToWideChar( CP_ACP, MB_PRECOMPOSED, word, -1, wbuffer, sizeof(wbuffer) / sizeof(wbuffer[0]) );
+	MultiByteToWideChar( CP_ACP, MB_PRECOMPOSED, word, -1, wbuffer, sizeof( wbuffer ) / sizeof( wbuffer[0] ) );
 	pGrammar->AddWordTransition( rule, NULL, wbuffer, L" ", SPWT_LEXICAL, 1.0f, NULL );
 #endif
 }
@@ -540,7 +565,7 @@ void iVoice::AddFlicksyncLine( const char* line )
 {
 #ifdef _WIN32
 	wchar_t wbuffer[1024];
-	MultiByteToWideChar( CP_ACP, MB_PRECOMPOSED, line, -1, wbuffer, sizeof(wbuffer) / sizeof(wbuffer[0]) );
+	MultiByteToWideChar( CP_ACP, MB_PRECOMPOSED, line, -1, wbuffer, sizeof( wbuffer ) / sizeof( wbuffer[0] ) );
 	pGrammar->AddWordTransition( flicksyncRule, NULL, wbuffer, L" ", SPWT_LEXICAL, 1.0f, NULL );
 #endif
 }
@@ -562,7 +587,7 @@ iVoice::InitVoiceDictionary
 
 bool iVoice::InitVoiceDictionary( void )
 {
-	idLexer		parser( LEXFL_NOSTRINGESCAPECHARS | LEXFL_NOSTRINGCONCAT  );
+	idLexer		parser( LEXFL_NOSTRINGESCAPECHARS | LEXFL_NOSTRINGCONCAT );
 	idToken		token;
 	idStr		filename;
 
@@ -570,25 +595,25 @@ bool iVoice::InitVoiceDictionary( void )
 	int numActions;
 	int numEntries;
 	int currentAction;
-	
+
 	voiceCommandStrings.Clear();
 	voiceCommandActions.Clear();
 
 	filename = "dict/voice";
 	filename.SetFileExtension( "dict" );
-	if ( !parser.LoadFile( filename ) )
+	if( !parser.LoadFile( filename ) )
 	{
-		gameLocal.Error( "Error initializing voice commands.\nUnable to load '%s'",filename.c_str() );
+		gameLocal.Error( "Error initializing voice commands.\nUnable to load '%s'", filename.c_str() );
 	}
 
 	parser.ExpectTokenString( "numActions" );
 	numActions = parser.ParseInt();
 
-	if ( numActions > maxActions )
+	if( numActions > maxActions )
 	{
-		parser.Error( "Invalid number of actions: %d\nMax defined actions = %d\n", numActions,maxActions );
+		parser.Error( "Invalid number of actions: %d\nMax defined actions = %d\n", numActions, maxActions );
 	}
-	
+
 	parser.ExpectTokenString( "available" );
 	parser.ReadToken( &token );
 	available = token;
@@ -612,36 +637,36 @@ bool iVoice::InitVoiceDictionary( void )
 	parser.ExpectTokenString( "stop" );
 	parser.ReadToken( &token );
 	stopListen = token;
-	
-	for ( int i = 0; i < numActions; i++ )
+
+	for( int i = 0; i < numActions; i++ )
 	{
 		parser.ExpectTokenString( "action" );
 		parser.ExpectTokenString( "{" );
 		parser.ExpectTokenString( "name" );
 		parser.ReadToken( &token );
-				
-		for ( int j = 0; j < maxActions; j++ )
+
+		for( int j = 0; j < maxActions; j++ )
 		{
-			if ( !token.Cmp( voiceActionStrings[j].string ) )
+			if( !token.Cmp( voiceActionStrings[j].string ) )
 			{
 				currentAction = voiceActionStrings[j].action;
 				break;
 			}
 		}
-				
+
 		parser.ExpectTokenString( "entries" );
 		numEntries = parser.ParseInt();
 
-		for ( int k = 0; k < numEntries; k++ )
+		for( int k = 0; k < numEntries; k++ )
 		{
 			parser.ReadToken( &token );
 			voiceCommandStrings.Append( token );
 			voiceCommandActions.Append( currentAction );
-			
+
 		}
 		parser.ExpectTokenString( "}" );
 	}
-	
+
 	cmdSystem->AddCommand( "vr_listVoiceCommands", ListVoiceCmds_f, CMD_FL_SYSTEM, "lists voice activated commands" );
 
 	return true;
@@ -657,17 +682,17 @@ iVoice::VoiceInit
 void iVoice::VoiceInit( void )
 {
 #ifdef _WIN32
-	if ( !InitVoiceDictionary() )
+	if( !InitVoiceDictionary() )
 	{
 		pVoice = NULL;
 		return;
 	}
-	
-	// CoInitialize(NULL) is already called by  Sys_Init(), just make sure we call this after Sys_Init() 
-	HRESULT hr = CoCreateInstance( CLSID_SpVoice, NULL, CLSCTX_ALL, IID_ISpVoice, (void **)&pVoice );
-	if ( SUCCEEDED( hr ) )
+
+	// CoInitialize(NULL) is already called by  Sys_Init(), just make sure we call this after Sys_Init()
+	HRESULT hr = CoCreateInstance( CLSID_SpVoice, NULL, CLSCTX_ALL, IID_ISpVoice, ( void** )&pVoice );
+	if( SUCCEEDED( hr ) )
 	{
-		Speed(7);
+		Speed( 7 );
 		common->Printf( "\nISpVoice succeeded.\n" );
 	}
 	else
@@ -675,34 +700,34 @@ void iVoice::VoiceInit( void )
 		common->Printf( "\nISpVoice failed.\n" );
 		pVoice = NULL;
 	}
-	hr = CoCreateInstance( CLSID_SpInprocRecognizer, NULL, CLSCTX_ALL, IID_ISpRecognizer, (void **)&pRecognizer );
-	if ( SUCCEEDED(hr) )
+	hr = CoCreateInstance( CLSID_SpInprocRecognizer, NULL, CLSCTX_ALL, IID_ISpRecognizer, ( void** )&pRecognizer );
+	if( SUCCEEDED( hr ) )
 	{
 		//Say("Recognizer created.");
 		// Get the default audio input token.
 		hr = SpGetDefaultTokenFromCategoryId( SPCAT_AUDIOIN, &pObjectToken );
 
-		if ( SUCCEEDED( hr ) )
+		if( SUCCEEDED( hr ) )
 		{
 			// Set the audio input to our token.
 			hr = pRecognizer->SetInput( pObjectToken, TRUE );
 		}
 
 		hr = pRecognizer->CreateRecoContext( &pReco );
-		if ( SUCCEEDED( hr ) )
+		if( SUCCEEDED( hr ) )
 		{
 			//Say("Context created.");
 			hr = pReco->Pause( 0 );
 			hr = pReco->CreateGrammar( 1, &pGrammar );
-			if ( SUCCEEDED( hr ) )
+			if( SUCCEEDED( hr ) )
 			{
 				//Say("Grammar created.");
-				pGrammar->GetRule (L"word", 0, SPRAF_TopLevel | SPRAF_Active, true, &rule );
-				
-				
+				pGrammar->GetRule( L"word", 0, SPRAF_TopLevel | SPRAF_Active, true, &rule );
+
+
 				// Koz begin
-				
-				for ( int i = 0; i < voiceCommandStrings.Num(); i++ )
+
+				for( int i = 0; i < voiceCommandStrings.Num(); i++ )
 				{
 					AddWord( voiceCommandStrings[i].c_str() );
 				}
@@ -714,22 +739,22 @@ void iVoice::VoiceInit( void )
 				hr = pGrammar->Commit( NULL );
 				//if (SUCCEEDED(hr))
 				//	Say("Compiled.");
-								
+
 				hr = pReco->SetNotifyCallbackFunction( SpeechCallback, 0, 0 );
 				//if (SUCCEEDED(hr))
 				//	Say("Callback created.");
-				
+
 				ULONGLONG interest;
 				interest = SPFEI_ALL_SR_EVENTS;
 				hr = pReco->SetInterest( interest, interest );
 				//if (SUCCEEDED(hr))
 				//	Say("Interested.");
-				
+
 				hr = pGrammar->SetRuleState( L"word", NULL, SPRS_ACTIVE );
 				hr = pGrammar->SetRuleState( L"line", NULL, SPRS_ACTIVE );
 				//if (SUCCEEDED(hr))
 				//	Say("Listening.");
-				
+
 				hr = pReco->Resume( 0 );
 				//if (SUCCEEDED(hr))
 				//	Say("Resumed.");
@@ -753,7 +778,7 @@ iVoice::VoiceShutdown
 void iVoice::VoiceShutdown( void )
 {
 #ifdef _WIN32
-	if ( pVoice )
+	if( pVoice )
 	{
 		pVoice->Release();
 		pVoice = NULL;
@@ -780,8 +805,10 @@ void iVoice::Say( VERIFY_FORMAT_STRING const char* fmt, ... )
 	char buffer[1024];
 	wchar_t wbuffer[1024];
 	vsprintf_s( buffer, 1023, fmt, argptr );
-	for ( int i = 0; i < sizeof( buffer ); ++i )
+	for( int i = 0; i < sizeof( buffer ); ++i )
+	{
 		wbuffer[i] = buffer[i];
+	}
 	pVoice->Speak( wbuffer, SPF_ASYNC, NULL );
 	va_end( argptr );
 #endif

@@ -156,7 +156,8 @@ typedef enum
 	CUTSCENE_FLICKSYNC_GAMEOVER
 } t_cutscene;
 
-typedef enum {
+typedef enum
+{
 	SCENES_ALL = 0,
 	SCENES_CHAPTER = 1,
 	SCENES_MYSTART = 2,
@@ -172,7 +173,7 @@ bool Flicksync_Fade( const char* entity );
 void Flicksync_AddVoiceLines();
 void Flicksync_HearLine( const char* line, int confidence, uint64 startTime, uint32 length );
 void Flicksync_StoppedTalking();
-void Flicksync_NewGame(bool notFlicksync);
+void Flicksync_NewGame( bool notFlicksync );
 bool Flicksync_UseCueCard();
 void Flicksync_Cheat();
 void Flicksync_GiveUp();
@@ -180,7 +181,7 @@ void Flicksync_NewMap();
 void Flicksync_StartCutscene();
 bool Flicksync_EndCutscene();
 bool Flicksync_NextCutscene();
-void Flicksync_GoToCutscene(t_cutscene scene);
+void Flicksync_GoToCutscene( t_cutscene scene );
 t_cutscene Flicksync_GetNextCutscene();
 void Flicksync_ResumeCutscene();
 

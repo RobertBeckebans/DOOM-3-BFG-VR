@@ -30,8 +30,8 @@ If you have questions concerning this license or the applicable additional terms
 #pragma hdrstop
 
 #ifdef USE_OVR
-#include "../libs/LibOVR/Include/OVR_CAPI.h"
-#include "../libs/LibOVR/Include/OVR_CAPI_GL.h"
+	#include "../libs/LibOVR/Include/OVR_CAPI.h"
+	#include "../libs/LibOVR/Include/OVR_CAPI_GL.h"
 #endif
 
 #include "vr_hmd.h"
@@ -39,7 +39,7 @@ If you have questions concerning this license or the applicable additional terms
 #include "FlickSync.h"
 #include "../renderer/Framebuffer.h"
 #ifdef USE_OVR
-#include "../libs/LibOVR/Include/OVR_CAPI_Audio.h"
+	#include "../libs/LibOVR/Include/OVR_CAPI_Audio.h"
 #endif
 #include "../libs/openvr/headers/openvr.h"
 
@@ -47,7 +47,7 @@ If you have questions concerning this license or the applicable additional terms
 #ifndef __VR_H__
 #define __VR_H__
 
-// hand == 0 == right, 1 == left 
+// hand == 0 == right, 1 == left
 #define HAND_RIGHT 0
 #define HAND_LEFT 1
 
@@ -63,7 +63,7 @@ typedef enum
 	MOTION_OCULUS
 } vr_motionControl_t;
 
-typedef enum 
+typedef enum
 {
 	VR_AA_NONE,
 	VR_AA_MSAA,
@@ -101,55 +101,55 @@ class idClipModel;
 class iVr
 {
 public:
-	
+
 	iVr();
-	
+
 	bool				OculusInit( void );
 	bool				OpenVRInit( void );
 	void				HMDInit( void );
 	void				HMDShutdown( void );
 	void				HMDInitializeDistortion( void );
-	void				HMDGetOrientation( idAngles &hmdAngles, idVec3 &headPositionDelta, idVec3 &bodyPositionDelta, idVec3 &absolutePosition, bool resetTrackingOffset );
-	void				HMDGetOrientationAbsolute( idAngles &hmdAngles, idVec3 &positoin );
-	void				HMDRender( idImage *leftCurrent, idImage *rightCurrent );
-	bool				HMDRenderQuad( idImage *leftCurrent, idImage *rightCurrent );
+	void				HMDGetOrientation( idAngles& hmdAngles, idVec3& headPositionDelta, idVec3& bodyPositionDelta, idVec3& absolutePosition, bool resetTrackingOffset );
+	void				HMDGetOrientationAbsolute( idAngles& hmdAngles, idVec3& positoin );
+	void				HMDRender( idImage* leftCurrent, idImage* rightCurrent );
+	bool				HMDRenderQuad( idImage* leftCurrent, idImage* rightCurrent );
 	void				HMDTrackStatic( bool is3D );
-	void				HUDRender( idImage *image0, idImage *image1 );
+	void				HUDRender( idImage* image0, idImage* image1 );
 	void				HMDResetTrackingOriginOffset();
-	
+
 	void				FrameStart( void );
 
-	void				OpenVrGetRight( idVec3 &position, idQuat &rotation );
-	void				OpenVrGetLeft( idVec3 &position, idQuat &rotation );
-	
+	void				OpenVrGetRight( idVec3& position, idQuat& rotation );
+	void				OpenVrGetLeft( idVec3& position, idQuat& rotation );
+
 	void				MotionControlSetRotationOffset();
 	void				MotionControlSetOffset();
-	void				MotionControlGetHand( int hand, idVec3 &position, idQuat &rotation );
-	void				MotionControlGetLeftHand( idVec3 &position, idQuat &rotation );
-	void				MotionControlGetRightHand( idVec3 &position, idQuat &rotation );
-	void				MotionControlGetOpenVrController( vr::TrackedDeviceIndex_t deviceNum, idVec3 &position, idQuat &rotation );
-	void				MotionControlGetTouchController( int hand, idVec3 &position, idQuat &rotation );
+	void				MotionControlGetHand( int hand, idVec3& position, idQuat& rotation );
+	void				MotionControlGetLeftHand( idVec3& position, idQuat& rotation );
+	void				MotionControlGetRightHand( idVec3& position, idQuat& rotation );
+	void				MotionControlGetOpenVrController( vr::TrackedDeviceIndex_t deviceNum, idVec3& position, idQuat& rotation );
+	void				MotionControlGetTouchController( int hand, idVec3& position, idQuat& rotation );
 	void				MotionControllerSetHapticOculus( float low, float hi );
 	void				MotionControllerSetHapticOpenVR( int hand, unsigned short value );
-	
+
 	void				MSAAResolve( void );
-	void				FXAAResolve( idImage * leftCurrent, idImage * rightCurrent );
+	void				FXAAResolve( idImage* leftCurrent, idImage* rightCurrent );
 	void				FXAASetUniforms( Framebuffer FBO );
 
-	void				CalcAimMove( float &yawDelta, float &pitchDelta );
+	void				CalcAimMove( float& yawDelta, float& pitchDelta );
 
 	int					GetCurrentFlashMode();
 	void				NextFlashMode();
 
 	bool				ShouldQuit();
-	void				ForceChaperone(int which, bool force);
+	void				ForceChaperone( int which, bool force );
 
 	//------------------
 
 	int					currentFlashMode;
 
 	bool				VR_GAME_PAUSED;
-	
+
 	bool				PDAforcetoggle;
 	bool				PDAforced;
 	bool				PDArising;
@@ -166,7 +166,7 @@ public:
 	bool				forceRun;
 
 	bool				forceLeftStick;
-	
+
 	int					currentFlashlightPosition;
 
 	bool				handInGui;
@@ -174,19 +174,19 @@ public:
 	bool				vrIsBackgroundSaving;
 
 	bool				shouldRecenter;
-		
+
 	int					vrFrameNumber;
 	int					lastPostFrame;
-		
+
 	int					frameCount;
-		
+
 	double				sensorSampleTime;
 
 	int					fingerPose[2];
-				
+
 	idVec3				lastViewOrigin;
 	idMat3				lastViewAxis;
-	
+
 	idVec3				lastCenterEyeOrigin;
 	idMat3				lastCenterEyeAxis;
 
@@ -201,29 +201,29 @@ public:
 	idMat3				lastHMDViewAxis;
 	idVec3				uncrouchedHMDViewOrigin;
 	float				headHeightDiff;
-			
+
 	bool				isWalking;
 	bool				thirdPersonMovement;
 	float				thirdPersonDelta;
 	idVec3				thirdPersonHudPos;
 	idMat3				thirdPersonHudAxis;
 
-	
+
 	float				angles[3];
-	
+
 	uint32_t			hmdWidth;
 	uint32_t			hmdHeight;
 	int					hmdHz;
-	
+
 	bool				useFBO;
 	int					primaryFBOWidth;
 	int					primaryFBOHeight;
-	
+
 	int					VR_AAmode;
-	
+
 	int					VR_USE_MOTION_CONTROLS;
 	int					weaponHand;
-		
+
 	bool				hasHMD;
 	bool				hasOculusRift;
 
@@ -233,22 +233,22 @@ public:
 	bool				m_bVblank;
 	bool				m_bGlFinishHack;
 
-	vr::IVRSystem			*m_pHMD;
-	vr::IVRCompositor		*m_pCompositor;
-	vr::IVRChaperone		*m_pChaperone;
-	vr::IVRRenderModels		*m_pRenderModels;
+	vr::IVRSystem*			m_pHMD;
+	vr::IVRCompositor*		m_pCompositor;
+	vr::IVRChaperone*		m_pChaperone;
+	vr::IVRRenderModels*		m_pRenderModels;
 	vr::TrackedDevicePose_t	m_rTrackedDevicePose[vr::k_unMaxTrackedDeviceCount];
 	vr::TrackedDevicePose_t	m1_rTrackedDevicePose[vr::k_unMaxTrackedDeviceCount];
 
 	vr::VRControllerState_t pControllerStateL;
 	vr::VRControllerState_t pControllerStateR;
-	
+
 	vr::TrackedDeviceIndex_t leftControllerDeviceNo;
 	vr::TrackedDeviceIndex_t rightControllerDeviceNo;
-		
+
 	idStr				m_strDriver;
 	idStr				m_strDisplay;
-	
+
 	char				m_rDevClassChar[vr::k_unMaxTrackedDeviceCount];
 	idMat4				m_rmat4DevicePose[vr::k_unMaxTrackedDeviceCount];
 	bool				m_rbShowTrackedDevice[vr::k_unMaxTrackedDeviceCount];
@@ -258,10 +258,10 @@ public:
 	idMat4				m_mat4ProjectionRight;
 	idMat4				m_mat4eyePosLeft;
 	idMat4				m_mat4eyePosRight;
-	
+
 	float				singleEyeIPD;
 	float				hmdForwardOffset;
-	
+
 	float				hmdFovX;
 	float				hmdFovY;
 	float				hmdPixelScale;
@@ -272,7 +272,7 @@ public:
 
 	float				officialIPD;
 	float				officialHeight;
-	
+
 	float				manualIPD;
 	float				manualHeight;
 
@@ -314,17 +314,17 @@ public:
 	idImage*			primaryFBOimage;
 	idImage*			resolveFBOimage;
 	idImage*			fullscreenFBOimage;
-						
+
 	double				hmdFrameTime;
 	bool				hmdPositionTracked;
 	int					currentEye;
-	
+
 	idVec3				trackingOriginOffset;
 	float				trackingOriginYawOffset;
 	float				trackingOriginHeight;
 	bool				chestDefaultDefined;
 	idVec3				hmdBodyTranslation;
-	
+
 	idVec3				motionMoveDelta;
 	idVec3				motionMoveVelocity;
 	bool				isLeaning;
@@ -341,7 +341,7 @@ public:
 
 	float				independentWeaponYaw;
 	float				independentWeaponPitch;
-	
+
 	bool				playerDead;
 
 	bool				isLoading;
@@ -351,13 +351,13 @@ public:
 	bool				updateScreen;
 
 	bool				scanningPDA;
-	
+
 	float				bodyMoveAng;
 
 	bool				privateCamera;
 
 	vr_motionControl_t	motionControlType;
-	
+
 	// wip stuff
 	int					wipNumSteps;
 	int					wipStepState;
@@ -371,7 +371,7 @@ public:
 	float				wipTotalDeltaAvg;
 
 	bool				renderingSplash;
-		
+
 	idAngles			poseHmdAngles;
 	idVec3				poseHmdHeadPositionDelta;
 	idVec3				poseHmdBodyPositionDelta;
@@ -399,18 +399,18 @@ public:
 	float				teleportDir;
 
 	idVec3				currentHandWorldPosition[2];
-	
-	
-	
+
+
+
 	// clip stuff
 	idClipModel*		bodyClip;
 	idClipModel*		headClip;
-			
+
 	//---------------------------
 private:
-	
 
-	
+
+
 };
 
 #endif
@@ -450,14 +450,14 @@ extern idCVar	vr_weaponPivotOffsetVertical;
 extern idCVar	vr_weaponPivotForearmLength;
 
 
-extern idCVar	vr_guiScale; 
+extern idCVar	vr_guiScale;
 extern idCVar	vr_guiSeparation;
 
 extern idCVar	vr_guiMode;
 
 extern idCVar	vr_hudScale;
-extern idCVar	vr_hudPosHor; 
-extern idCVar	vr_hudPosVer; 
+extern idCVar	vr_hudPosHor;
+extern idCVar	vr_hudPosVer;
 extern idCVar	vr_hudPosDis;
 extern idCVar	vr_hudPosLock;
 extern idCVar	vr_hudType;

@@ -102,7 +102,7 @@ enum joystickAxis_t
 	AXIS_RIGHT_TOUCH_Y,
 	AXIS_LEFT_TOUCH_TRIG,
 	AXIS_RIGHT_TOUCH_TRIG,
-	
+
 	// Koz SteamVR axissessessssssssesseessssssssssssssssssssssssssss
 	AXIS_LEFT_STEAMVR_X,
 	AXIS_LEFT_STEAMVR_Y,
@@ -215,16 +215,16 @@ enum sys_jEvents
 	// left openvr controller button start
 	J_STEAMVR_ACTION_FIRST,
 	J_LV_ACTION_FIRST = J_STEAMVR_ACTION_FIRST,
-	J_LV_SYS = J_LV_ACTION_FIRST, // left openvr Sys 
+	J_LV_SYS = J_LV_ACTION_FIRST, // left openvr Sys
 	J_LV_MENU,	// left openvr ApplicationMenu
 	J_LV_GRIP, // left openvr Grip
-	J_LSTEAMVR_DPAD_LEFT,	// left openvr DPad_Left ( not used ) 
-	J_LSTEAMVR_DPAD_UP,	// left openvr DPad_Up ( not used ) 
-	J_LSTEAMVR_DPAD_RIGHT,	// left openvr DPad_Right ( not used ) 
-	J_LSTEAMVR_DPAD_DOWN,	// left openvr DPad_Down ( not used ) 
+	J_LSTEAMVR_DPAD_LEFT,	// left openvr DPad_Left ( not used )
+	J_LSTEAMVR_DPAD_UP,	// left openvr DPad_Up ( not used )
+	J_LSTEAMVR_DPAD_RIGHT,	// left openvr DPad_Right ( not used )
+	J_LSTEAMVR_DPAD_DOWN,	// left openvr DPad_Down ( not used )
 	J_LSTEAMVR_A,	// left openvr k_EButton_A
-	J_LV_PAD,	// left openvr 	k_EButton_SteamVR_Touchpad	
-	J_LV_TRIGGER,	// left openvr 	k_EButton_SteamVR_Trigger 
+	J_LV_PAD,	// left openvr 	k_EButton_SteamVR_Touchpad
+	J_LV_TRIGGER,	// left openvr 	k_EButton_SteamVR_Trigger
 	J_LSTEAMVR_8,	// left openvr 8
 	J_LSTEAMVR_9,	// left openvr 9
 	J_LSTEAMVR_10,	// left openvr 10
@@ -240,13 +240,13 @@ enum sys_jEvents
 	J_RV_SYS = J_RV_ACTION_FIRST, // right openvr Sys
 	J_RV_MENU,	// right openvr ApplicationMenu
 	J_RV_GRIP, // right openvr Grip
-	J_RSTEAMVR_DPAD_LEFT,	// right openvr DPad_Left ( not used ) 
-	J_RSTEAMVR_DPAD_UP,	// right openvr DPad_Up ( not used ) 
-	J_RSTEAMVR_DPAD_RIGHT,	// right openvr DPad_Right ( not used ) 
-	J_RSTEAMVR_DPAD_DOWN,	// right openvr DPad_Down ( not used ) 
+	J_RSTEAMVR_DPAD_LEFT,	// right openvr DPad_Left ( not used )
+	J_RSTEAMVR_DPAD_UP,	// right openvr DPad_Up ( not used )
+	J_RSTEAMVR_DPAD_RIGHT,	// right openvr DPad_Right ( not used )
+	J_RSTEAMVR_DPAD_DOWN,	// right openvr DPad_Down ( not used )
 	J_RSTEAMVR_A,	// right openvr k_EButton_A
-	J_RV_PAD,	// right openvr 	k_EButton_SteamVR_Touchpad	
-	J_RV_TRIGGER,	// right openvr 	k_EButton_SteamVR_Trigger 
+	J_RV_PAD,	// right openvr 	k_EButton_SteamVR_Touchpad
+	J_RV_TRIGGER,	// right openvr 	k_EButton_SteamVR_Trigger
 	J_RSTEAMVR_8,	// right openvr 8
 	J_RSTEAMVR_9,	// right openvr 9
 	J_RSTEAMVR_10,	// right openvr 10
@@ -260,7 +260,7 @@ enum sys_jEvents
 
 	J_ACTION_MAX = J_RSTEAMVR_15,
 
-	
+
 	J_AXIS_MIN,
 	J_AXIS_LEFT_X = J_AXIS_MIN + AXIS_LEFT_X,
 	J_AXIS_LEFT_Y = J_AXIS_MIN + AXIS_LEFT_Y,
@@ -276,7 +276,7 @@ enum sys_jEvents
 	J_AXIS_RIGHT_TOUCH_Y = J_AXIS_MIN + AXIS_RIGHT_TOUCH_Y,
 	J_AXIS_LEFT_TOUCH_TRIG = J_AXIS_MIN + AXIS_LEFT_TOUCH_TRIG,
 	J_AXIS_RIGHT_TOUCH_TRIG = J_AXIS_MIN + AXIS_RIGHT_TOUCH_TRIG,
-	
+
 	// Begin SteamVR left and right controllers
 	J_AXIS_LEFT_STEAMVR_X = J_AXIS_MIN + AXIS_LEFT_STEAMVR_X,
 	J_AXIS_LEFT_STEAMVR_Y = J_AXIS_MIN + AXIS_LEFT_STEAMVR_Y,
@@ -284,7 +284,7 @@ enum sys_jEvents
 	J_AXIS_RIGHT_STEAMVR_Y = J_AXIS_MIN + AXIS_RIGHT_STEAMVR_Y,
 	J_AXIS_LEFT_STEAMVR_TRIG = J_AXIS_MIN + AXIS_LEFT_STEAMVR_TRIG,
 	J_AXIS_RIGHT_STEAMVR_TRIG = J_AXIS_MIN + AXIS_RIGHT_STEAMVR_TRIG,
-		
+
 	//joysticks for WMR
 	J_AXIS_LEFT_JS_STEAMVR_X = J_AXIS_MIN + AXIS_LEFT_JS_STEAMVR_X,
 	J_AXIS_LEFT_JS_STEAMVR_Y = J_AXIS_MIN + AXIS_LEFT_JS_STEAMVR_Y,
@@ -292,12 +292,12 @@ enum sys_jEvents
 	J_AXIS_RIGHT_JS_STEAMVR_Y = J_AXIS_MIN + AXIS_RIGHT_JS_STEAMVR_Y,
 
 	J_AXIS_MAX = J_AXIS_MIN + MAX_JOYSTICK_AXIS - 1,
-	
+
 	J_DPAD_UP,
 	J_DPAD_DOWN,
 	J_DPAD_LEFT,
 	J_DPAD_RIGHT,
-	
+
 	J_TALK,
 	J_SAY_LIST,
 	J_SAY_LISTENSTART,
@@ -342,7 +342,7 @@ But they are duplicated here for console portability
 enum keyNum_t
 {
 	K_NONE,
-	
+
 	K_ESCAPE,
 	K_1,
 	K_2,
@@ -458,7 +458,7 @@ enum keyNum_t
 	K_VOLUMEDOWN    = 0xAE,
 	K_VOLUMEUP      = 0xB0,
 	K_WEBHOME       = 0xB2,
-	
+
 	K_KP_COMMA		= 0xB3,
 	K_KP_SLASH		= 0xB5,
 	K_PRINTSCREEN	= 0xB7, // aka SysRq
@@ -479,7 +479,7 @@ enum keyNum_t
 	K_APPS			= 0xDD,
 	K_POWER			= 0xDE,
 	K_SLEEP			= 0xDF,
-	
+
 	// DG: dinput has some more buttons, let's support them as well
 	K_WAKE			= 0xE3,
 	K_WEBSEARCH		= 0xE5,
@@ -491,11 +491,11 @@ enum keyNum_t
 	K_MYCOMPUTER	= 0xEB,
 	K_MAIL			= 0xEC,
 	K_MEDIASELECT	= 0xED,
-	
+
 	//------------------------
 	// K_JOY codes must be contiguous, too
 	//------------------------
-	
+
 	K_JOY1 = 256,
 	K_JOY2,
 	K_JOY3,
@@ -531,16 +531,16 @@ enum keyNum_t
 
 	// openVR controller buttons
 	// openVR left controller
-	K_JOY31,	// left openvr Sys 
+	K_JOY31,	// left openvr Sys
 	K_JOY32,	// left openvr ApplicationMenu
 	K_JOY33,	// left openvr Grip
 	K_JOY34,	// left openvr DPad_Left ( not used )
-	K_JOY35,	// left openvr DPad_Up ( not used ) 
-	K_JOY36,	// left openvr DPad_Right ( not used ) 
-	K_JOY37,	// left openvr DPad_Down ( not used ) 
+	K_JOY35,	// left openvr DPad_Up ( not used )
+	K_JOY36,	// left openvr DPad_Right ( not used )
+	K_JOY37,	// left openvr DPad_Down ( not used )
 	K_JOY38,	// left openvr k_EButton_A
-	K_JOY39,	// left openvr 	k_EButton_SteamVR_Touchpad	
-	K_JOY40,	// left openvr 	k_EButton_SteamVR_Trigger 
+	K_JOY39,	// left openvr 	k_EButton_SteamVR_Touchpad
+	K_JOY40,	// left openvr 	k_EButton_SteamVR_Trigger
 	K_JOY41,	// left openvr 8
 	K_JOY42,	// left openvr 9
 	K_JOY43,	// left openvr 10
@@ -549,18 +549,18 @@ enum keyNum_t
 	K_JOY46,	// left openvr 13
 	K_JOY47,	// left openvr 14
 	K_JOY48,	// left openvr 15
-	
+
 	//openVR right controller
 	K_JOY49,	// right openvr Sys
 	K_JOY50,	// right openvr ApplicationMenu
 	K_JOY51,	// right openvr Grip
-	K_JOY52,	// right openvr DPad_Left ( not used ) 
-	K_JOY53,	// right openvr DPad_Up ( not used ) 
-	K_JOY54,	// right openvr DPad_Right ( not used ) 
-	K_JOY55,	// right openvr DPad_Down ( not used ) 
+	K_JOY52,	// right openvr DPad_Left ( not used )
+	K_JOY53,	// right openvr DPad_Up ( not used )
+	K_JOY54,	// right openvr DPad_Right ( not used )
+	K_JOY55,	// right openvr DPad_Down ( not used )
 	K_JOY56,	// right openvr k_EButton_A
-	K_JOY57,	// right openvr 	k_EButton_SteamVR_Touchpad	
-	K_JOY58,	// right openvr 	k_EButton_SteamVR_Trigger 
+	K_JOY57,	// right openvr 	k_EButton_SteamVR_Touchpad
+	K_JOY58,	// right openvr 	k_EButton_SteamVR_Trigger
 	K_JOY59,	// right openvr 8
 	K_JOY60,	// right openvr 9
 	K_JOY61,	// right openvr 10
@@ -569,23 +569,23 @@ enum keyNum_t
 	K_JOY64,	// right openvr 13
 	K_JOY65,	// right openvr 14
 	K_JOY66,	// right openvr 15
-	// Koz end 
-	
+	// Koz end
+
 	K_JOY_STICK1_UP,
 	K_JOY_STICK1_DOWN,
 	K_JOY_STICK1_LEFT,
 	K_JOY_STICK1_RIGHT,
-	
+
 	K_JOY_STICK2_UP,
 	K_JOY_STICK2_DOWN,
 	K_JOY_STICK2_LEFT,
 	K_JOY_STICK2_RIGHT,
-	
+
 	K_JOY_TRIGGER1,
 	K_JOY_TRIGGER2,
-			
+
 	// Koz begin Oculus Touch sticks
-	K_TOUCH_LEFT_STICK_UP,  
+	K_TOUCH_LEFT_STICK_UP,
 	K_TOUCH_LEFT_STICK_DOWN,
 	K_TOUCH_LEFT_STICK_LEFT,
 	K_TOUCH_LEFT_STICK_RIGHT,
@@ -597,7 +597,7 @@ enum keyNum_t
 
 	K_L_TOUCHTRIG,
 	K_R_TOUCHTRIG,
-	
+
 	//  SteamVR
 	K_STEAMVR_LEFT_PAD_UP,
 	K_STEAMVR_LEFT_PAD_DOWN,
@@ -661,7 +661,7 @@ enum keyNum_t
 	//------------------------
 	// K_MOUSE enums must be contiguous (no char codes in the middle)
 	//------------------------
-	
+
 	K_MOUSE1,
 	K_MOUSE2,
 	K_MOUSE3,
@@ -670,7 +670,7 @@ enum keyNum_t
 	K_MOUSE6,
 	K_MOUSE7,
 	K_MOUSE8,
-	
+
 	// DG: add some more mouse buttons
 	K_MOUSE9,
 	K_MOUSE10,
@@ -681,11 +681,11 @@ enum keyNum_t
 	K_MOUSE15,
 	K_MOUSE16,
 	// DG end
-	
+
 	K_MWHEELDOWN,
 	K_MWHEELUP,
 
-  K_LAST_KEY
+	K_LAST_KEY
 };
 
 struct sysEvent_t
@@ -695,7 +695,7 @@ struct sysEvent_t
 	int				evValue2;
 	int				evPtrLength;		// bytes of data pointed to by evPtr, for journaling
 	void* 			evPtr;				// this must be manually freed if not NULL
-	
+
 	int				inputDevice;
 	bool			IsKeyEvent() const
 	{
@@ -857,8 +857,8 @@ void			Sys_EndKeyboardInputEvents();
 
 // DG: currently this is only used by idKeyInput::LocalizedKeyName() for !windows
 #ifndef _WIN32
-// return a human readable name for the key in the current keyboard layout (keynum is a directinput scancode)
-const char*		Sys_GetKeyName( keyNum_t keynum );
+	// return a human readable name for the key in the current keyboard layout (keynum is a directinput scancode)
+	const char*		Sys_GetKeyName( keyNum_t keynum );
 #endif
 // DG end
 
@@ -886,9 +886,9 @@ void			Sys_ShowConsole( int visLevel, bool quitOnClose );
 
 // RB begin
 #if defined(_WIN32)
-typedef HANDLE idFileHandle;
+	typedef HANDLE idFileHandle;
 #else
-typedef FILE* idFileHandle;
+	typedef FILE* idFileHandle;
 #endif
 // RB end
 
@@ -962,10 +962,10 @@ public:
 	// this just zeros netSocket and port
 	idUDP();
 	virtual		~idUDP();
-	
+
 	// if the InitForPort fails, the idUDP.port field will remain 0
 	bool		InitForPort( int portNumber );
-	
+
 	int			GetPort() const
 	{
 		return bound_to.port;
@@ -979,14 +979,14 @@ public:
 		return ( bound_to.ip[0] | bound_to.ip[1] << 8 | bound_to.ip[2] << 16 | bound_to.ip[3] << 24 );
 	}
 	void		Close();
-	
+
 	bool		GetPacket( netadr_t& from, void* data, int& size, int maxSize );
-	
+
 	bool		GetPacketBlocking( netadr_t& from, void* data, int& size, int maxSize,
 								   int timeout );
-								   
+
 	void		SendPacket( const netadr_t to, const void* data, int size );
-	
+
 	void		SetSilent( bool silent )
 	{
 		this->silent = silent;
@@ -995,18 +995,18 @@ public:
 	{
 		return silent;
 	}
-	
+
 	int			packetsRead;
 	int			bytesRead;
-	
+
 	int			packetsWritten;
 	int			bytesWritten;
-	
+
 	bool		IsOpen() const
 	{
 		return netSocket > 0;
 	}
-	
+
 private:
 	netadr_t	bound_to;		// interface and port
 	int			netSocket;		// OS specific socket
@@ -1042,7 +1042,7 @@ class idJoystick
 {
 public:
 	virtual			~idJoystick() { }
-	
+
 	virtual bool	Init()
 	{
 		return false;
@@ -1076,7 +1076,7 @@ class idSys
 public:
 	virtual void			DebugPrintf( VERIFY_FORMAT_STRING const char* fmt, ... ) = 0;
 	virtual void			DebugVPrintf( const char* fmt, va_list arg ) = 0;
-	
+
 	virtual double			GetClockTicks() = 0;
 	virtual double			ClockTicksPerSecond() = 0;
 	virtual cpuid_t			GetProcessorId() = 0;
@@ -1085,20 +1085,20 @@ public:
 	virtual bool			FPU_StackIsEmpty() = 0;
 	virtual void			FPU_SetFTZ( bool enable ) = 0;
 	virtual void			FPU_SetDAZ( bool enable ) = 0;
-	
+
 	virtual void			FPU_EnableExceptions( int exceptions ) = 0;
-	
+
 	virtual bool			LockMemory( void* ptr, int bytes ) = 0;
 	virtual bool			UnlockMemory( void* ptr, int bytes ) = 0;
-	
+
 	virtual int				DLL_Load( const char* dllName ) = 0;
 	virtual void* 			DLL_GetProcAddress( int dllHandle, const char* procName ) = 0;
 	virtual void			DLL_Unload( int dllHandle ) = 0;
 	virtual void			DLL_GetFileName( const char* baseName, char* dllName, int maxLength ) = 0;
-	
+
 	virtual sysEvent_t		GenerateMouseButtonEvent( int button, bool down ) = 0;
 	virtual sysEvent_t		GenerateMouseMoveEvent( int deltax, int deltay ) = 0;
-	
+
 	virtual void			OpenURL( const char* url, bool quit ) = 0;
 	virtual void			StartProcess( const char* exePath, bool quit ) = 0;
 };

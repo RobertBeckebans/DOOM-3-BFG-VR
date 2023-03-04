@@ -36,7 +36,7 @@ Event are used for scheduling tasks and for linking script commands.
 
 // Carl: For loading 32bit saved games on 64bit and vice versa
 #if defined(__x86_64__) || defined(_WIN64)
-#define IS64BIT
+	#define IS64BIT
 #endif
 
 #define D_EVENT_MAXARGS				8			// if changed, enable the CREATE_EVENT_CODE define in Event.cpp to generate switch statement for idClass::ProcessEventArgPtr.
@@ -79,13 +79,13 @@ private:
 	int							argOffset[ D_EVENT_MAXARGS ];
 	int							eventnum;
 	const idEventDef* 			next;
-	
+
 	static idEventDef* 			eventDefList[MAX_EVENTS];
 	static int					numEventDefs;
-	
+
 public:
 	idEventDef( const char* command, const char* formatspec = NULL, char returnType = 0 );
-	
+
 	const char*					GetName() const;
 	const char*					GetArgFormat() const;
 	unsigned int				GetFormatspecIndex() const;
@@ -112,39 +112,39 @@ private:
 	int							time;
 	idClass*						object;
 	const idTypeInfo*			typeinfo;
-	
+
 	idLinkList<idEvent>			eventNode;
-	
+
 	static idDynamicBlockAlloc<byte, 16 * 1024, 256> eventDataAllocator;
-	
-	
+
+
 public:
 	static bool					initialized;
-	
+
 	~idEvent();
-	
+
 	static idEvent*				Alloc( const idEventDef* evdef, int numargs, va_list args );
 	// RB: 64 bit fix, changed int to intptr_t
 	static void					CopyArgs( const idEventDef* evdef, int numargs, va_list args, intptr_t data[ D_EVENT_MAXARGS ] );
 	// RB end
-	
+
 	void						Free();
 	void						Schedule( idClass* object, const idTypeInfo* cls, int time );
 	byte*						GetData();
-	
+
 	static void					CancelEvents( const idClass* obj, const idEventDef* evdef = NULL );
 	static void					ClearEventList();
 	static void					ServiceEvents();
 	static void					ServiceFastEvents();
 	static void					Init();
 	static void					Shutdown();
-	
+
 	// save games
 	static void					Save( idSaveGame* savefile );					// archives object for save game file
 	static void					Restore( idRestoreGame* savefile );				// unarchives object from save game file
 	static void					SaveTrace( idSaveGame* savefile, const trace_t& trace );
 	static void					RestoreTrace( idRestoreGame* savefile, trace_t& trace );
-	
+
 };
 
 /*

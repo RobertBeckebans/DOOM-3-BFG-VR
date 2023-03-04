@@ -33,7 +33,7 @@ If you have questions concerning this license or the applicable additional terms
 #include "Framebuffer.h"
 
 #ifdef _WIN32
-#include "sys\win32\win_local.h"
+	#include "sys\win32\win_local.h"
 #endif
 
 //idList<Framebuffer*>	Framebuffer::framebuffers;
@@ -49,9 +49,9 @@ static void R_ListFramebuffers_f( const idCmdArgs& args )
 		common->Printf( "GL_EXT_framebuffer_object is not available.\n" );
 		return;
 	}
-	if ( framebuffers.Num() != 0 )
+	if( framebuffers.Num() != 0 )
 	{
-		for ( int i = 0; i < framebuffers.Num(); i++ )
+		for( int i = 0; i < framebuffers.Num(); i++ )
 		{
 			Framebuffer* fb = framebuffers[i];
 			idStr fbName = fb->GetName();
@@ -59,21 +59,21 @@ static void R_ListFramebuffers_f( const idCmdArgs& args )
 			common->Printf( "	Framebuffer # %d\n", fb->GetFramebuffer() );
 			common->Printf( "	Width x Height: %d x %d\n", fb->GetWidth(), fb->GetHeight() );
 			common->Printf( "	MSAA  " );
-			if ( fb->IsMSAA() )
-			{ 
+			if( fb->IsMSAA() )
+			{
 				common->Printf( "enabled with %d samples.\n", fb->GetSamples() );
 			}
 			else
 			{
 				common->Printf( " disabled.\n" );
 			}
-			if ( fb->GetDepthBuffer() )
+			if( fb->GetDepthBuffer() )
 			{
 				common->Printf( "	Depthbuffer %d format %x\n", fb->GetDepthBuffer(), fb->GetDepthFormat() );
 			}
-				for ( int j = 0; j < 16; j++ )
+			for( int j = 0; j < 16; j++ )
 			{
-				if ( fb->GetColorBuffer( j ) )
+				if( fb->GetColorBuffer( j ) )
 				{
 					common->Printf( "	Colorbuffer[%d] # %d format %x\n", j, fb->GetColorBuffer( j ), fb->GetColorFormat() );
 				}
@@ -90,14 +90,15 @@ resolveFBO will be bound after this operation.
 ====================
 */
 
-void ResolveMSAA( void ) 
+void ResolveMSAA( void )
 {
-	if ( commonVr->useFBO ) 
+	if( commonVr->useFBO )
 	{
 
-		if ( globalFramebuffers.primaryFBO->IsMSAA() )
-		{	// primary FBO is MSAA enabled, resolve to secondary FBO to perform antialiasing before copy
-		
+		if( globalFramebuffers.primaryFBO->IsMSAA() )
+		{
+			// primary FBO is MSAA enabled, resolve to secondary FBO to perform antialiasing before copy
+
 			glBindFramebuffer( GL_DRAW_FRAMEBUFFER, globalFramebuffers.resolveFBO->GetFramebuffer() );// bind resolve FBO for draw
 			glBindFramebuffer( GL_READ_FRAMEBUFFER, globalFramebuffers.primaryFBO->GetFramebuffer() ); // bind primary FBO for read
 			//glClearColor( 0, 0, 0, 0 );
@@ -105,7 +106,7 @@ void ResolveMSAA( void )
 			//GL_Clear( true, true, true, STENCIL_SHADOW_TEST_VALUE, 0, 0, 0, 0 );
 			glBlitFramebuffer( 0, 0, globalFramebuffers.primaryFBO->GetWidth(), globalFramebuffers.primaryFBO->GetHeight(), 0, 0, globalFramebuffers.resolveFBO->GetWidth(), globalFramebuffers.resolveFBO->GetHeight(), GL_COLOR_BUFFER_BIT, GL_LINEAR ); // blit from primary FBO to resolve MSAA antialiasing.
 			globalFramebuffers.resolveFBO->Bind();
-			
+
 		}
 	}
 }
@@ -114,18 +115,18 @@ void ResolveMSAA( void )
 Framebuffer::Framebuffer( const char* name, int w, int h, bool msaa )
 {
 	fboName = name;
-	
+
 	frameBuffer = 0;
-	
+
 	memset( colorBuffers, 0, sizeof( colorBuffers ) );
 	colorFormat = 0;
-	
+
 	depthBuffer = 0;
 	depthFormat = 0;
-	
+
 	stencilBuffer = 0;
 	stencilFormat = 0;
-	
+
 	width = w;
 	height = h;
 
@@ -134,9 +135,12 @@ Framebuffer::Framebuffer( const char* name, int w, int h, bool msaa )
 	msaaSamples = r_multiSamples.GetInteger();
 	//if ( !useMsaa ) msaaSamples = 0;
 	//common->Printf( "Use MSAA = %d Framebuffer msaaSamples = %d\n", useMsaa, msaaSamples ); // Koz fixme
-	if ( msaaSamples == 0 ) useMsaa = false;
+	if( msaaSamples == 0 )
+	{
+		useMsaa = false;
+	}
 	// Koz end
-	
+
 	glGenFramebuffers( 1, &frameBuffer );
 	framebuffers.Append( this );
 }
@@ -144,16 +148,16 @@ Framebuffer::Framebuffer( const char* name, int w, int h, bool msaa )
 void Framebuffer::Init()
 {
 	cmdSystem->AddCommand( "listFramebuffers", R_ListFramebuffers_f, CMD_FL_RENDERER, "lists framebuffers" );
-	
+
 	backEnd.glState.currentFramebuffer = NULL;
-	
+
 	int width, height;
 	width = height = r_shadowMapImageSize.GetInteger();
-	
+
 	for( int i = 0; i < MAX_SHADOWMAP_RESOLUTIONS; i++ )
 	{
 		width = height = shadowMapResolutions[i];
-		
+
 		globalFramebuffers.shadowFBO[i] = new Framebuffer( va( "_shadowMap%i", i ) , width, height, false ); // Koz
 		globalFramebuffers.shadowFBO[i]->Bind();
 		glDrawBuffers( 0, NULL );
@@ -175,7 +179,7 @@ void Framebuffer::Bind()
 		RB_LogComment( "--- Framebuffer::Bind( name = '%s' ) ---\n", fboName.c_str() );
 	}
 #endif
-	
+
 
 	if( backEnd.glState.currentFramebuffer != this )
 	{
@@ -195,7 +199,7 @@ void Framebuffer::BindDefault()
 		glBindRenderbuffer( GL_RENDERBUFFER, 0 );
 		backEnd.glState.currentFramebuffer = NULL;
 
-		if ( commonVr->useFBO )
+		if( commonVr->useFBO )
 		{
 			globalFramebuffers.primaryFBO->Bind();
 		}
@@ -216,17 +220,18 @@ void Framebuffer::AddColorBuffer( GLuint format, int index )
 	}
 	GL_CheckErrors();
 	colorFormat = format;
-	
+
 	bool notCreatedYet = colorBuffers[index] == 0;
 	if( notCreatedYet )
 	{
 		glGenRenderbuffers( 1, &colorBuffers[index] );
 		GL_CheckErrors();
 	}
-	
+
 	glBindRenderbuffer( GL_RENDERBUFFER, colorBuffers[index] );
 	GL_CheckErrors();
-	if ( useMsaa ) {
+	if( useMsaa )
+	{
 		common->Printf( "GlRenderBufferStorage GL_RENDERBUFFER, %d, %d, %d, %d\n", msaaSamples, format, width, height );
 		glRenderbufferStorageMultisample( GL_RENDERBUFFER, msaaSamples, format, width, height );
 		GL_CheckErrors();
@@ -236,23 +241,23 @@ void Framebuffer::AddColorBuffer( GLuint format, int index )
 		glRenderbufferStorage( GL_RENDERBUFFER, format, width, height );
 		GL_CheckErrors();
 	}
-	
+
 	if( notCreatedYet )
 	{
 		glFramebufferRenderbuffer( GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + index, GL_RENDERBUFFER, colorBuffers[index] );
 		GL_CheckErrors();
 	}
-	
+
 	GL_CheckErrors();
 }
 
 void Framebuffer::AddColorTexture( GLuint format )
 {
-	
+
 	colorFormat = format;
-	
+
 	bool notCreatedYet = colorTexnum == 0;
-	if ( notCreatedYet )
+	if( notCreatedYet )
 	{
 		glGenTextures( 1, &colorTexnum );
 	}
@@ -264,7 +269,7 @@ void Framebuffer::AddColorTexture( GLuint format )
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
 
 	glTexImage2DMultisample( GL_TEXTURE_2D_MULTISAMPLE, msaaSamples, format, width, height, false );
-	
+
 	glBindFramebuffer( GL_FRAMEBUFFER, frameBuffer );
 	glFramebufferTexture2D( GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, colorTexnum, 0 );
 	GL_CheckErrors();
@@ -273,44 +278,44 @@ void Framebuffer::AddColorTexture( GLuint format )
 void Framebuffer::AddDepthBuffer( GLuint format )
 {
 	depthFormat = format;
-	
+
 	bool notCreatedYet = depthBuffer == 0;
-	if ( notCreatedYet )
+	if( notCreatedYet )
 	{
 		glGenRenderbuffers( 1, &depthBuffer );
 	}
-	
+
 	glBindRenderbuffer( GL_RENDERBUFFER, depthBuffer );
-	
-	if ( useMsaa ) 
+
+	if( useMsaa )
 	{
 		glRenderbufferStorageMultisample( GL_RENDERBUFFER, msaaSamples, format, width, height );
 	}
-	else 
+	else
 	{
 		glRenderbufferStorage( GL_RENDERBUFFER, format, width, height );
 	}
-	
+
 	glBindRenderbuffer( GL_RENDERBUFFER, 0 );
-	
+
 	if( notCreatedYet )
 	{
-		
+
 		glBindFramebuffer( GL_FRAMEBUFFER, frameBuffer );
 		glFramebufferRenderbuffer( GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthBuffer );
-				
+
 	}
-	
+
 }
 
 void Framebuffer::AddDepthStencilBuffer( GLuint format )
 {
 	depthFormat = format;
 	AddDepthBuffer( depthFormat );
-	
+
 	bool notCreatedYet = stencilBuffer == 0;
-		
-	if ( notCreatedYet )
+
+	if( notCreatedYet )
 	{
 		glFramebufferRenderbuffer( GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, depthBuffer );
 		stencilBuffer = depthBuffer;
@@ -326,13 +331,13 @@ void Framebuffer::AttachImage2D( GLuint target, const idImage* image, int index 
 		common->Warning( "Framebuffer::AttachImage2D( %s ): invalid target", fboName.c_str() );
 		return;
 	}
-	
+
 	if( index < 0 || index >= glConfig.maxColorAttachments )
 	{
 		common->Warning( "Framebuffer::AttachImage2D( %s ): bad index = %i", fboName.c_str(), index );
 		return;
 	}
-	
+
 	glFramebufferTexture2D( GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + index, target, image->texnum, 0 );
 }
 
@@ -348,103 +353,103 @@ void Framebuffer::AttachImageDepthLayer( const idImage* image, int layer )
 
 int Framebuffer::Check()
 // Koz changed to return status of framebuffer and print message if found,
-// instead of just throwing an error.  
+// instead of just throwing an error.
 // added Framebuffer::Error ( int stautus ) that can be called
 // with the result of this check to throw error if needed.
 {
 	int prev;
 	glGetIntegerv( GL_FRAMEBUFFER_BINDING, &prev );
-	
+
 	glBindFramebuffer( GL_FRAMEBUFFER, frameBuffer );
-	
+
 	int status = glCheckFramebufferStatus( GL_FRAMEBUFFER );
 	if( status == GL_FRAMEBUFFER_COMPLETE )
 	{
 		glBindFramebuffer( GL_FRAMEBUFFER, prev );
 		return status;
 	}
-	
+
 	// something went wrong
 	switch( status )
 	{
 		case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
 			common->Printf( "Framebuffer::Check( %s ): Framebuffer incomplete, incomplete attachment", fboName.c_str() );
 			break;
-			
+
 		case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
 			common->Printf( "Framebuffer::Check( %s ): Framebuffer incomplete, missing attachment", fboName.c_str() );
 			break;
-			
+
 		case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER:
 			common->Printf( "Framebuffer::Check( %s ): Framebuffer incomplete, missing draw buffer", fboName.c_str() );
 			break;
-			
+
 		case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER:
 			common->Printf( "Framebuffer::Check( %s ): Framebuffer incomplete, missing read buffer", fboName.c_str() );
 			break;
-			
+
 		case GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS:
 			common->Printf( "Framebuffer::Check( %s ): Framebuffer incomplete, missing layer targets", fboName.c_str() );
 			break;
-			
+
 		case GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE:
 			common->Printf( "Framebuffer::Check( %s ): Framebuffer incomplete, missing multisample", fboName.c_str() );
 			break;
-			
+
 		case GL_FRAMEBUFFER_UNSUPPORTED:
 			common->Printf( "Framebuffer::Check( %s ): Unsupported framebuffer format", fboName.c_str() );
 			break;
-			
+
 		default:
 			common->Printf( "Framebuffer::Check( %s ): Unknown error 0x%X", fboName.c_str(), status );
 			break;
 	};
-	
+
 	glBindFramebuffer( GL_FRAMEBUFFER, prev );
 	return status;
 }
 
 void Framebuffer::Error( int status ) // Koz throw error if needed.
 {
-	if ( status == GL_FRAMEBUFFER_COMPLETE )
+	if( status == GL_FRAMEBUFFER_COMPLETE )
 	{
 		return;
 	}
-	
+
 	// something went wrong
-	switch ( status )
+	switch( status )
 	{
-	case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
-		common->Error( "Framebuffer::Check( %s ): Framebuffer incomplete, incomplete attachment", fboName.c_str() );
-		break;
+		case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
+			common->Error( "Framebuffer::Check( %s ): Framebuffer incomplete, incomplete attachment", fboName.c_str() );
+			break;
 
-	case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
-		common->Error( "Framebuffer::Check( %s ): Framebuffer incomplete, missing attachment", fboName.c_str() );
-		break;
+		case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
+			common->Error( "Framebuffer::Check( %s ): Framebuffer incomplete, missing attachment", fboName.c_str() );
+			break;
 
-	case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER:
-		common->Error( "Framebuffer::Check( %s ): Framebuffer incomplete, missing draw buffer", fboName.c_str() );
-		break;
+		case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER:
+			common->Error( "Framebuffer::Check( %s ): Framebuffer incomplete, missing draw buffer", fboName.c_str() );
+			break;
 
-	case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER:
-		common->Error( "Framebuffer::Check( %s ): Framebuffer incomplete, missing read buffer", fboName.c_str() );
-		break;
+		case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER:
+			common->Error( "Framebuffer::Check( %s ): Framebuffer incomplete, missing read buffer", fboName.c_str() );
+			break;
 
-	case GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS:
-		common->Error( "Framebuffer::Check( %s ): Framebuffer incomplete, missing layer targets", fboName.c_str() );
-		break;
+		case GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS:
+			common->Error( "Framebuffer::Check( %s ): Framebuffer incomplete, missing layer targets", fboName.c_str() );
+			break;
 
-	case GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE:
-		common->Error( "Framebuffer::Check( %s ): Framebuffer incomplete, missing multisample", fboName.c_str() );
-		break;
+		case GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE:
+			common->Error( "Framebuffer::Check( %s ): Framebuffer incomplete, missing multisample", fboName.c_str() );
+			break;
 
-	case GL_FRAMEBUFFER_UNSUPPORTED:
-		common->Error( "Framebuffer::Check( %s ): Unsupported framebuffer format", fboName.c_str() );
-		break;
+		case GL_FRAMEBUFFER_UNSUPPORTED:
+			common->Error( "Framebuffer::Check( %s ): Unsupported framebuffer format", fboName.c_str() );
+			break;
 
-	default:
-		common->Error( "Framebuffer::Check( %s ): Unknown error 0x%X", fboName.c_str(), status );
-		break;
+		default:
+			common->Error( "Framebuffer::Check( %s ): Unknown error 0x%X", fboName.c_str(), status );
+			break;
 	};
-	
+
 }

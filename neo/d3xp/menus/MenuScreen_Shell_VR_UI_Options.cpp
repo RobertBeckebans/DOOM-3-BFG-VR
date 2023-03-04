@@ -2,9 +2,9 @@
 ===========================================================================
 
 Doom 3 BFG Edition GPL Source Code
-Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company. 
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").  
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
 Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -44,23 +44,25 @@ int	AdjustOption( const int currentValue, const int values[], const int numValue
 idMenuScreen_Shell_VR_UI_Options::Initialize
 ========================
 */
-void idMenuScreen_Shell_VR_UI_Options::Initialize( idMenuHandler * data ) {
+void idMenuScreen_Shell_VR_UI_Options::Initialize( idMenuHandler* data )
+{
 	idMenuScreen::Initialize( data );
 
-	if ( data != NULL ) {
+	if( data != NULL )
+	{
 		menuGUI = data->GetGUI();
 	}
 
 	SetSpritePath( "menuSystemOptions" );
 
-	options = new (TAG_SWF) idMenuWidget_DynamicList();
+	options = new( TAG_SWF ) idMenuWidget_DynamicList();
 	options->SetNumVisibleOptions( NUM_VR_UI_OPTIONS_OPTIONS );
 	options->SetSpritePath( GetSpritePath(), "info", "options" );
 	options->SetWrappingAllowed( true );
 	options->SetControlList( true );
 	options->Initialize( data );
 
-	btnBack = new (TAG_SWF) idMenuWidget_Button();
+	btnBack = new( TAG_SWF ) idMenuWidget_Button();
 	btnBack->Initialize( data );
 	btnBack->SetLabel( "VR Options" ); // #str_swf_settings
 	btnBack->SetSpritePath( GetSpritePath(), "info", "btnBack" );
@@ -69,17 +71,17 @@ void idMenuScreen_Shell_VR_UI_Options::Initialize( idMenuHandler * data ) {
 	AddChild( options );
 	AddChild( btnBack );
 
-	idMenuWidget_ControlButton * control;
-		
-	control = new (TAG_SWF) idMenuWidget_ControlButton();
+	idMenuWidget_ControlButton* control;
+
+	control = new( TAG_SWF ) idMenuWidget_ControlButton();
 	control->SetOptionType( OPTION_BUTTON_TEXT );
 	control->SetLabel( "HUD Options" );
 	control->SetDataSource( &systemData, idMenuDataSource_VR_UI_Options::UI_OPTIONS_FIELD_HUD_OPTIONS );
 	control->SetupEvents( DEFAULT_REPEAT_TIME, options->GetChildren().Num() );
 	control->AddEventAction( WIDGET_EVENT_PRESS ).Set( WIDGET_ACTION_COMMAND, idMenuDataSource_VR_UI_Options::UI_OPTIONS_FIELD_HUD_OPTIONS );
 	options->AddChild( control );
-	
-	control = new (TAG_SWF)idMenuWidget_ControlButton();
+
+	control = new( TAG_SWF )idMenuWidget_ControlButton();
 	control->SetOptionType( OPTION_BUTTON_TEXT );
 	control->SetLabel( "PDA Options" );
 	control->SetDataSource( &systemData, idMenuDataSource_VR_UI_Options::UI_OPTIONS_FIELD_PDA_OPTIONS );
@@ -87,7 +89,7 @@ void idMenuScreen_Shell_VR_UI_Options::Initialize( idMenuHandler * data ) {
 	control->AddEventAction( WIDGET_EVENT_PRESS ).Set( WIDGET_ACTION_COMMAND, idMenuDataSource_VR_UI_Options::UI_OPTIONS_FIELD_PDA_OPTIONS );
 	options->AddChild( control );
 
-	control = new (TAG_SWF) idMenuWidget_ControlButton();
+	control = new( TAG_SWF ) idMenuWidget_ControlButton();
 	control->SetOptionType( OPTION_SLIDER_TEXT );
 	control->SetLabel( "Heading Beam" );
 	control->SetDataSource( &systemData, idMenuDataSource_VR_UI_Options::UI_OPTIONS_FIELD_HEADING_BEAM );
@@ -95,7 +97,7 @@ void idMenuScreen_Shell_VR_UI_Options::Initialize( idMenuHandler * data ) {
 	control->AddEventAction( WIDGET_EVENT_PRESS ).Set( WIDGET_ACTION_COMMAND, idMenuDataSource_VR_UI_Options::UI_OPTIONS_FIELD_HEADING_BEAM );
 	options->AddChild( control );
 
-	control = new (TAG_SWF)idMenuWidget_ControlButton();
+	control = new( TAG_SWF )idMenuWidget_ControlButton();
 	control->SetOptionType( OPTION_SLIDER_TEXT );
 	control->SetLabel( "Weapon Sight" );
 	control->SetDataSource( &systemData, idMenuDataSource_VR_UI_Options::UI_OPTIONS_FIELD_WEAPON_SIGHT );
@@ -103,7 +105,7 @@ void idMenuScreen_Shell_VR_UI_Options::Initialize( idMenuHandler * data ) {
 	control->AddEventAction( WIDGET_EVENT_PRESS ).Set( WIDGET_ACTION_COMMAND, idMenuDataSource_VR_UI_Options::UI_OPTIONS_FIELD_WEAPON_SIGHT );
 	options->AddChild( control );
 
-	control = new (TAG_SWF)idMenuWidget_ControlButton();
+	control = new( TAG_SWF )idMenuWidget_ControlButton();
 	control->SetOptionType( OPTION_SLIDER_TEXT );
 	control->SetLabel( "Sight to Surface" );
 	control->SetDataSource( &systemData, idMenuDataSource_VR_UI_Options::UI_OPTIONS_FIELD_SIGHT_TO_SURFACE );
@@ -111,15 +113,15 @@ void idMenuScreen_Shell_VR_UI_Options::Initialize( idMenuHandler * data ) {
 	control->AddEventAction( WIDGET_EVENT_PRESS ).Set( WIDGET_ACTION_COMMAND, idMenuDataSource_VR_UI_Options::UI_OPTIONS_FIELD_SIGHT_TO_SURFACE );
 	options->AddChild( control );
 
-	control = new (TAG_SWF)idMenuWidget_ControlButton();
-	control->SetOptionType(OPTION_SLIDER_TEXT);
-	control->SetLabel("Laser Sight Source");
-	control->SetDataSource(&systemData, idMenuDataSource_VR_UI_Options::UI_OPTIONS_FIELD_LASER_SOURCE);
-	control->SetupEvents(DEFAULT_REPEAT_TIME, options->GetChildren().Num());
-	control->AddEventAction(WIDGET_EVENT_PRESS).Set(WIDGET_ACTION_COMMAND, idMenuDataSource_VR_UI_Options::UI_OPTIONS_FIELD_LASER_SOURCE);
-	options->AddChild(control);
+	control = new( TAG_SWF )idMenuWidget_ControlButton();
+	control->SetOptionType( OPTION_SLIDER_TEXT );
+	control->SetLabel( "Laser Sight Source" );
+	control->SetDataSource( &systemData, idMenuDataSource_VR_UI_Options::UI_OPTIONS_FIELD_LASER_SOURCE );
+	control->SetupEvents( DEFAULT_REPEAT_TIME, options->GetChildren().Num() );
+	control->AddEventAction( WIDGET_EVENT_PRESS ).Set( WIDGET_ACTION_COMMAND, idMenuDataSource_VR_UI_Options::UI_OPTIONS_FIELD_LASER_SOURCE );
+	options->AddChild( control );
 
-	control = new (TAG_SWF)idMenuWidget_ControlButton();
+	control = new( TAG_SWF )idMenuWidget_ControlButton();
 	control->SetOptionType( OPTION_SLIDER_TEXT );
 	control->SetLabel( "Haptic Feedback" );
 	control->SetDataSource( &systemData, idMenuDataSource_VR_UI_Options::UI_OPTIONS_FIELD_HAPTICS );
@@ -127,22 +129,22 @@ void idMenuScreen_Shell_VR_UI_Options::Initialize( idMenuHandler * data ) {
 	control->AddEventAction( WIDGET_EVENT_PRESS ).Set( WIDGET_ACTION_COMMAND, idMenuDataSource_VR_UI_Options::UI_OPTIONS_FIELD_HAPTICS );
 	options->AddChild( control );
 
-	control = new (TAG_SWF)idMenuWidget_ControlButton();
+	control = new( TAG_SWF )idMenuWidget_ControlButton();
 	control->SetOptionType( OPTION_SLIDER_TEXT );
 	control->SetLabel( "Gui Mode" );
 	control->SetDataSource( &systemData, idMenuDataSource_VR_UI_Options::UI_OPTIONS_FIELD_GUI_MODE );
 	control->SetupEvents( DEFAULT_REPEAT_TIME, options->GetChildren().Num() );
 	control->AddEventAction( WIDGET_EVENT_PRESS ).Set( WIDGET_ACTION_COMMAND, idMenuDataSource_VR_UI_Options::UI_OPTIONS_FIELD_GUI_MODE );
 	options->AddChild( control );
-	
-	options->AddEventAction( WIDGET_EVENT_SCROLL_DOWN ).Set( new (TAG_SWF) idWidgetActionHandler( options, WIDGET_ACTION_EVENT_SCROLL_DOWN_START_REPEATER, WIDGET_EVENT_SCROLL_DOWN ) );
-	options->AddEventAction( WIDGET_EVENT_SCROLL_UP ).Set( new (TAG_SWF) idWidgetActionHandler( options, WIDGET_ACTION_EVENT_SCROLL_UP_START_REPEATER, WIDGET_EVENT_SCROLL_UP ) );
-	options->AddEventAction( WIDGET_EVENT_SCROLL_DOWN_RELEASE ).Set( new (TAG_SWF) idWidgetActionHandler( options, WIDGET_ACTION_EVENT_STOP_REPEATER, WIDGET_EVENT_SCROLL_DOWN_RELEASE ) );
-	options->AddEventAction( WIDGET_EVENT_SCROLL_UP_RELEASE ).Set( new (TAG_SWF) idWidgetActionHandler( options, WIDGET_ACTION_EVENT_STOP_REPEATER, WIDGET_EVENT_SCROLL_UP_RELEASE ) );
-	options->AddEventAction( WIDGET_EVENT_SCROLL_DOWN_LSTICK ).Set( new (TAG_SWF) idWidgetActionHandler( options, WIDGET_ACTION_EVENT_SCROLL_DOWN_START_REPEATER, WIDGET_EVENT_SCROLL_DOWN_LSTICK ) );
-	options->AddEventAction( WIDGET_EVENT_SCROLL_UP_LSTICK ).Set( new (TAG_SWF) idWidgetActionHandler( options, WIDGET_ACTION_EVENT_SCROLL_UP_START_REPEATER, WIDGET_EVENT_SCROLL_UP_LSTICK ) );
-	options->AddEventAction( WIDGET_EVENT_SCROLL_DOWN_LSTICK_RELEASE ).Set( new (TAG_SWF) idWidgetActionHandler( options, WIDGET_ACTION_EVENT_STOP_REPEATER, WIDGET_EVENT_SCROLL_DOWN_LSTICK_RELEASE ) );
-	options->AddEventAction( WIDGET_EVENT_SCROLL_UP_LSTICK_RELEASE ).Set( new (TAG_SWF) idWidgetActionHandler( options, WIDGET_ACTION_EVENT_STOP_REPEATER, WIDGET_EVENT_SCROLL_UP_LSTICK_RELEASE ) );
+
+	options->AddEventAction( WIDGET_EVENT_SCROLL_DOWN ).Set( new( TAG_SWF ) idWidgetActionHandler( options, WIDGET_ACTION_EVENT_SCROLL_DOWN_START_REPEATER, WIDGET_EVENT_SCROLL_DOWN ) );
+	options->AddEventAction( WIDGET_EVENT_SCROLL_UP ).Set( new( TAG_SWF ) idWidgetActionHandler( options, WIDGET_ACTION_EVENT_SCROLL_UP_START_REPEATER, WIDGET_EVENT_SCROLL_UP ) );
+	options->AddEventAction( WIDGET_EVENT_SCROLL_DOWN_RELEASE ).Set( new( TAG_SWF ) idWidgetActionHandler( options, WIDGET_ACTION_EVENT_STOP_REPEATER, WIDGET_EVENT_SCROLL_DOWN_RELEASE ) );
+	options->AddEventAction( WIDGET_EVENT_SCROLL_UP_RELEASE ).Set( new( TAG_SWF ) idWidgetActionHandler( options, WIDGET_ACTION_EVENT_STOP_REPEATER, WIDGET_EVENT_SCROLL_UP_RELEASE ) );
+	options->AddEventAction( WIDGET_EVENT_SCROLL_DOWN_LSTICK ).Set( new( TAG_SWF ) idWidgetActionHandler( options, WIDGET_ACTION_EVENT_SCROLL_DOWN_START_REPEATER, WIDGET_EVENT_SCROLL_DOWN_LSTICK ) );
+	options->AddEventAction( WIDGET_EVENT_SCROLL_UP_LSTICK ).Set( new( TAG_SWF ) idWidgetActionHandler( options, WIDGET_ACTION_EVENT_SCROLL_UP_START_REPEATER, WIDGET_EVENT_SCROLL_UP_LSTICK ) );
+	options->AddEventAction( WIDGET_EVENT_SCROLL_DOWN_LSTICK_RELEASE ).Set( new( TAG_SWF ) idWidgetActionHandler( options, WIDGET_ACTION_EVENT_STOP_REPEATER, WIDGET_EVENT_SCROLL_DOWN_LSTICK_RELEASE ) );
+	options->AddEventAction( WIDGET_EVENT_SCROLL_UP_LSTICK_RELEASE ).Set( new( TAG_SWF ) idWidgetActionHandler( options, WIDGET_ACTION_EVENT_STOP_REPEATER, WIDGET_EVENT_SCROLL_UP_LSTICK_RELEASE ) );
 }
 
 /*
@@ -150,39 +152,47 @@ void idMenuScreen_Shell_VR_UI_Options::Initialize( idMenuHandler * data ) {
 idMenuScreen_Shell_VR_UI_Options::Update
 ========================
 */
-void idMenuScreen_Shell_VR_UI_Options::Update() {
+void idMenuScreen_Shell_VR_UI_Options::Update()
+{
 
-	if ( menuData != NULL ) {
-		idMenuWidget_CommandBar * cmdBar = menuData->GetCmdBar();
-		if ( cmdBar != NULL ) {
+	if( menuData != NULL )
+	{
+		idMenuWidget_CommandBar* cmdBar = menuData->GetCmdBar();
+		if( cmdBar != NULL )
+		{
 			cmdBar->ClearAllButtons();
-			idMenuWidget_CommandBar::buttonInfo_t * buttonInfo;			
+			idMenuWidget_CommandBar::buttonInfo_t* buttonInfo;
 			buttonInfo = cmdBar->GetButton( idMenuWidget_CommandBar::BUTTON_JOY2 );
-			if ( menuData->GetPlatform() != 2 ) {
+			if( menuData->GetPlatform() != 2 )
+			{
 				buttonInfo->label = "#str_00395";
 			}
 			buttonInfo->action.Set( WIDGET_ACTION_GO_BACK );
 
 			buttonInfo = cmdBar->GetButton( idMenuWidget_CommandBar::BUTTON_JOY1 );
 			buttonInfo->action.Set( WIDGET_ACTION_PRESS_FOCUSED );
-		}		
+		}
 	}
-	
-	idSWFScriptObject & root = GetSWFObject()->GetRootObject();
-	if ( BindSprite( root ) ) {
-		idSWFTextInstance * heading = GetSprite()->GetScriptObject()->GetNestedText( "info", "txtHeading" );
-		if ( heading != NULL ) {
-			heading->SetText( "UI Options" );	
+
+	idSWFScriptObject& root = GetSWFObject()->GetRootObject();
+	if( BindSprite( root ) )
+	{
+		idSWFTextInstance* heading = GetSprite()->GetScriptObject()->GetNestedText( "info", "txtHeading" );
+		if( heading != NULL )
+		{
+			heading->SetText( "UI Options" );
 			heading->SetStrokeInfo( true, 0.75f, 1.75f );
 		}
 
-		idSWFSpriteInstance * gradient = GetSprite()->GetScriptObject()->GetNestedSprite( "info", "gradient" );
-		if ( gradient != NULL && heading != NULL ) {
+		idSWFSpriteInstance* gradient = GetSprite()->GetScriptObject()->GetNestedSprite( "info", "gradient" );
+		if( gradient != NULL && heading != NULL )
+		{
 			gradient->SetXPos( heading->GetTextLength() );
 		}
 	}
 
-	if ( btnBack != NULL ) {
+	if( btnBack != NULL )
+	{
 		btnBack->BindSprite( root );
 	}
 
@@ -194,10 +204,11 @@ void idMenuScreen_Shell_VR_UI_Options::Update() {
 idMenuScreen_Shell_VR_UI_Options::ShowScreen
 ========================
 */
-void idMenuScreen_Shell_VR_UI_Options::ShowScreen( const mainMenuTransition_t transitionType ) {
-	
+void idMenuScreen_Shell_VR_UI_Options::ShowScreen( const mainMenuTransition_t transitionType )
+{
+
 	systemData.LoadData();
-	
+
 	idMenuScreen::ShowScreen( transitionType );
 }
 
@@ -206,20 +217,27 @@ void idMenuScreen_Shell_VR_UI_Options::ShowScreen( const mainMenuTransition_t tr
 idMenuScreen_Shell_VR_UI_Options::HideScreen
 ========================
 */
-void idMenuScreen_Shell_VR_UI_Options::HideScreen( const mainMenuTransition_t transitionType ) {
+void idMenuScreen_Shell_VR_UI_Options::HideScreen( const mainMenuTransition_t transitionType )
+{
 
-	if ( systemData.IsRestartRequired() ) {
-		class idSWFScriptFunction_Restart : public idSWFScriptFunction_RefCounted {
+	if( systemData.IsRestartRequired() )
+	{
+		class idSWFScriptFunction_Restart : public idSWFScriptFunction_RefCounted
+		{
 		public:
-			idSWFScriptFunction_Restart( gameDialogMessages_t _msg, bool _restart ) {
+			idSWFScriptFunction_Restart( gameDialogMessages_t _msg, bool _restart )
+			{
 				msg = _msg;
 				restart = _restart;
 			}
-			idSWFScriptVar Call( idSWFScriptObject * thisObject, const idSWFParmList & parms ) {
+			idSWFScriptVar Call( idSWFScriptObject* thisObject, const idSWFParmList& parms )
+			{
 				common->Dialog().ClearDialog( msg );
-				if ( restart ) {
+				if( restart )
+				{
 					idStr cmdLine = Sys_GetCmdLine();
-					if ( cmdLine.Find( "com_skipIntroVideos" ) < 0 ) {
+					if( cmdLine.Find( "com_skipIntroVideos" ) < 0 )
+					{
 						cmdLine.Append( " +set com_skipIntroVideos 1" );
 					}
 					Sys_ReLaunch(); // Sys_ReLaunch no longer needs params
@@ -230,7 +248,7 @@ void idMenuScreen_Shell_VR_UI_Options::HideScreen( const mainMenuTransition_t tr
 			gameDialogMessages_t msg;
 			bool restart;
 		};
-		idStaticList<idSWFScriptFunction *, 4> callbacks;
+		idStaticList<idSWFScriptFunction*, 4> callbacks;
 		idStaticList<idStrId, 4> optionText;
 		callbacks.Append( new idSWFScriptFunction_Restart( GDM_GAME_RESTART_REQUIRED, false ) );
 		callbacks.Append( new idSWFScriptFunction_Restart( GDM_GAME_RESTART_REQUIRED, true ) );
@@ -239,7 +257,8 @@ void idMenuScreen_Shell_VR_UI_Options::HideScreen( const mainMenuTransition_t tr
 		common->Dialog().AddDynamicDialog( GDM_GAME_RESTART_REQUIRED, callbacks, optionText, true, idStr() );
 	}
 
-	if ( systemData.IsDataChanged() ) {
+	if( systemData.IsDataChanged() )
+	{
 		systemData.CommitData();
 	}
 
@@ -251,53 +270,65 @@ void idMenuScreen_Shell_VR_UI_Options::HideScreen( const mainMenuTransition_t tr
 idMenuScreen_Shell_VR_UI_Options::HandleAction h
 ========================
 */
-bool idMenuScreen_Shell_VR_UI_Options::HandleAction( idWidgetAction & action, const idWidgetEvent & event, idMenuWidget * widget, bool forceHandled ) {
+bool idMenuScreen_Shell_VR_UI_Options::HandleAction( idWidgetAction& action, const idWidgetEvent& event, idMenuWidget* widget, bool forceHandled )
+{
 
-	if ( menuData == NULL ) {
+	if( menuData == NULL )
+	{
 		return true;
 	}
-	
-	if ( menuData->ActiveScreen() != SHELL_AREA_VR_UI_OPTIONS ) {
+
+	if( menuData->ActiveScreen() != SHELL_AREA_VR_UI_OPTIONS )
+	{
 		return false;
 	}
 
 	widgetAction_t actionType = action.GetType();
-	const idSWFParmList & parms = action.GetParms();
+	const idSWFParmList& parms = action.GetParms();
 
-	switch ( actionType ) {
-		case WIDGET_ACTION_GO_BACK: {
-			if ( menuData != NULL ) {
+	switch( actionType )
+	{
+		case WIDGET_ACTION_GO_BACK:
+		{
+			if( menuData != NULL )
+			{
 				menuData->SetNextScreen( SHELL_AREA_VR_SETTINGS, MENU_TRANSITION_SIMPLE );
 			}
 			return true;
 		}
-		
-		case WIDGET_ACTION_COMMAND: {
 
-			if ( options == NULL ) {
+		case WIDGET_ACTION_COMMAND:
+		{
+
+			if( options == NULL )
+			{
 				return true;
 			}
 
 			int selectionIndex = options->GetFocusIndex();
-			if ( parms.Num() > 0 ) {
+			if( parms.Num() > 0 )
+			{
 				selectionIndex = parms[0].ToInteger();
 			}
 
-			if ( options && selectionIndex != options->GetFocusIndex() ) {
+			if( options && selectionIndex != options->GetFocusIndex() )
+			{
 				options->SetViewIndex( options->GetViewOffset() + selectionIndex );
 				options->SetFocusIndex( selectionIndex );
 			}
 
-			switch ( parms[0].ToInteger() ) {
+			switch( parms[0].ToInteger() )
+			{
 				case 0: // bullshit hard coded ref to hud options
-					menuData->SetNextScreen(SHELL_AREA_VR_HUD_OPTIONS, MENU_TRANSITION_SIMPLE);
+					menuData->SetNextScreen( SHELL_AREA_VR_HUD_OPTIONS, MENU_TRANSITION_SIMPLE );
 					break;
 
 				case 1: // bullshit hard coded ref to pda options
-					menuData->SetNextScreen(SHELL_AREA_VR_PDA_OPTIONS, MENU_TRANSITION_SIMPLE);
+					menuData->SetNextScreen( SHELL_AREA_VR_PDA_OPTIONS, MENU_TRANSITION_SIMPLE );
 					break;
 
-				default: {
+				default:
+				{
 					systemData.AdjustField( parms[0].ToInteger(), 1 );
 					options->Update();
 				}
@@ -305,15 +336,19 @@ bool idMenuScreen_Shell_VR_UI_Options::HandleAction( idWidgetAction & action, co
 
 			return true;
 		}
-		case WIDGET_ACTION_START_REPEATER: {
+		case WIDGET_ACTION_START_REPEATER:
+		{
 
-			if ( options == NULL ) {
+			if( options == NULL )
+			{
 				return true;
 			}
 
-			if ( parms.Num() == 4 ) {
+			if( parms.Num() == 4 )
+			{
 				int selectionIndex = parms[3].ToInteger();
-				if ( selectionIndex != options->GetFocusIndex() ) {
+				if( selectionIndex != options->GetFocusIndex() )
+				{
 					options->SetViewIndex( options->GetViewOffset() + selectionIndex );
 					options->SetFocusIndex( selectionIndex );
 				}
@@ -334,7 +369,8 @@ bool idMenuScreen_Shell_VR_UI_Options::HandleAction( idWidgetAction & action, co
 idMenuScreen_Shell_VR_UI_Options::idMenuDataSource_VR_UI_Options::idMenuDataSource_VR_UI_Options
 ========================
 */
-idMenuScreen_Shell_VR_UI_Options::idMenuDataSource_VR_UI_Options::idMenuDataSource_VR_UI_Options() {
+idMenuScreen_Shell_VR_UI_Options::idMenuDataSource_VR_UI_Options::idMenuDataSource_VR_UI_Options()
+{
 }
 
 /*
@@ -342,8 +378,9 @@ idMenuScreen_Shell_VR_UI_Options::idMenuDataSource_VR_UI_Options::idMenuDataSour
 idMenuScreen_Shell_VR_UI_Options::idMenuDataSource_VR_UI_Options::LoadData
 ========================
 */
-void idMenuScreen_Shell_VR_UI_Options::idMenuDataSource_VR_UI_Options::LoadData() {
-	
+void idMenuScreen_Shell_VR_UI_Options::idMenuDataSource_VR_UI_Options::LoadData()
+{
+
 	originalHeadingBeam = vr_headingBeamMode.GetInteger();
 	originalWeaponSight = vr_weaponSight.GetInteger();
 	originalWeaponSightSurface = vr_weaponSightToSurface.GetInteger();
@@ -357,7 +394,8 @@ void idMenuScreen_Shell_VR_UI_Options::idMenuDataSource_VR_UI_Options::LoadData(
 idMenuScreen_Shell_VR_UI_Options::idMenuDataSource_VR_UI_Options::IsRestartRequired
 ========================
 */
-bool idMenuScreen_Shell_VR_UI_Options::idMenuDataSource_VR_UI_Options::IsRestartRequired() const {
+bool idMenuScreen_Shell_VR_UI_Options::idMenuDataSource_VR_UI_Options::IsRestartRequired() const
+{
 	return false;
 }
 
@@ -366,7 +404,8 @@ bool idMenuScreen_Shell_VR_UI_Options::idMenuDataSource_VR_UI_Options::IsRestart
 idMenuScreen_Shell_VR_UI_Options::idMenuDataSource_VR_UI_Options::CommitData
 ========================
 */
-void idMenuScreen_Shell_VR_UI_Options::idMenuDataSource_VR_UI_Options::CommitData() {
+void idMenuScreen_Shell_VR_UI_Options::idMenuDataSource_VR_UI_Options::CommitData()
+{
 	cvarSystem->SetModifiedFlags( CVAR_ARCHIVE );
 }
 
@@ -376,154 +415,170 @@ void idMenuScreen_Shell_VR_UI_Options::idMenuDataSource_VR_UI_Options::CommitDat
 idMenuScreen_Shell_VR_UI_Options::idMenuDataSource_VR_UI_Options::AdjustField
 ========================
 */
-void idMenuScreen_Shell_VR_UI_Options::idMenuDataSource_VR_UI_Options::AdjustField( const int fieldIndex, const int adjustAmount ) {
-	switch ( fieldIndex ) {
-		
-		
-		
-		case UI_OPTIONS_FIELD_HEADING_BEAM: {
+void idMenuScreen_Shell_VR_UI_Options::idMenuDataSource_VR_UI_Options::AdjustField( const int fieldIndex, const int adjustAmount )
+{
+	switch( fieldIndex )
+	{
+
+
+
+		case UI_OPTIONS_FIELD_HEADING_BEAM:
+		{
 			static const int numValues = 4;
 			static const int values[numValues] = { 0, 1, 2, 3 };
 			vr_headingBeamMode.SetInteger( AdjustOption( vr_headingBeamMode.GetInteger(), values, numValues, adjustAmount ) );
 			break;
 		}
-		case UI_OPTIONS_FIELD_WEAPON_SIGHT: {
+		case UI_OPTIONS_FIELD_WEAPON_SIGHT:
+		{
 			static const int numValues = 8;
 			static const int values[numValues] = { -1, 0, 1, 2, 3, 4, 5, 6 };
 			vr_weaponSight.SetInteger( AdjustOption( vr_weaponSight.GetInteger(), values, numValues, adjustAmount ) );
 			break;
 		}
-		case UI_OPTIONS_FIELD_SIGHT_TO_SURFACE: {
+		case UI_OPTIONS_FIELD_SIGHT_TO_SURFACE:
+		{
 			static const int numValues = 2;
 			static const int values[numValues] = { 0, 1 };
 			vr_weaponSightToSurface.SetInteger( AdjustOption( vr_weaponSightToSurface.GetInteger(), values, numValues, adjustAmount ) );
 			break;
 		}
-		case UI_OPTIONS_FIELD_LASER_SOURCE: {
+		case UI_OPTIONS_FIELD_LASER_SOURCE:
+		{
 			static const int numValues = 2;
 			static const int values[numValues] = { 0, 1 };
 			vr_laserSightUseOffset.SetBool( AdjustOption( vr_laserSightUseOffset.GetInteger(), values, numValues, adjustAmount ) != 0 );
 		}
-		case UI_OPTIONS_FIELD_HAPTICS: {
+		case UI_OPTIONS_FIELD_HAPTICS:
+		{
 			static const int numValues = 2;
 			static const int values[numValues] = { 0, 1 };
 			vr_rumbleEnable.SetInteger( AdjustOption( vr_rumbleEnable.GetInteger(), values, numValues, adjustAmount ) );
 			break;
 		}
-		case UI_OPTIONS_FIELD_GUI_MODE: {
+		case UI_OPTIONS_FIELD_GUI_MODE:
+		{
 			static const int numValues = 3;
 			static const int values[numValues] = { 0, 1, 2 };
 			vr_guiMode.SetInteger( AdjustOption( vr_guiMode.GetInteger(), values, numValues, adjustAmount ) );
 			break;
 		}
-										
+
 	}
 	cvarSystem->ClearModifiedFlags( CVAR_ARCHIVE );
 }
 
 /*
 ========================
-idMenuScreen_Shell_VR_HMD_Options::idMenuDataSource_VR_HMD_Options::GetField	
+idMenuScreen_Shell_VR_HMD_Options::idMenuDataSource_VR_HMD_Options::GetField
 ========================
 */
-idSWFScriptVar idMenuScreen_Shell_VR_UI_Options::idMenuDataSource_VR_UI_Options::GetField( const int fieldIndex ) const {
-	switch ( fieldIndex ) 
+idSWFScriptVar idMenuScreen_Shell_VR_UI_Options::idMenuDataSource_VR_UI_Options::GetField( const int fieldIndex ) const
+{
+	switch( fieldIndex )
 	{
-		
+
 		case UI_OPTIONS_FIELD_HEADING_BEAM:
 		{
 			const int hb = vr_headingBeamMode.GetInteger();
-			if ( hb == 0 )
+			if( hb == 0 )
 			{
 				return "DISABLED";
 			}
-			if ( hb == 1 )
+			if( hb == 1 )
 			{
 				return "Solid";
 			}
-			if ( hb == 2 )
+			if( hb == 2 )
 			{
 				return "Arrows";
 			}
-			if ( hb == 3 )
+			if( hb == 3 )
 			{
 				return "Scrolling Arrows";
 			}
 		}
-		
+
 		case UI_OPTIONS_FIELD_WEAPON_SIGHT:
 		{
 			const int ws = vr_weaponSight.GetInteger();
-			
-			if ( ws == -1 )
+
+			if( ws == -1 )
 			{
 				return "Disabled";
 			}
-			if ( ws == 0 )
+			if( ws == 0 )
 			{
 				return "Laser Beam";
 			}
-			if ( ws == 1 )
+			if( ws == 1 )
 			{
 				return "Red Dot";
 			}
-			if ( ws == 2 )
+			if( ws == 2 )
 			{
 				return "Circle Dot";
 			}
-			if ( ws == 3 )
+			if( ws == 3 )
 			{
 				return "Crosshair";
 			}
-			if ( ws == 4 )
+			if( ws == 4 )
 			{
 				return "Laser + Dot";
 			}
-			if ( ws == 5 )
+			if( ws == 5 )
 			{
 				return "Laser + Circle";
 			}
-			if ( ws == 6 )
+			if( ws == 6 )
 			{
 				return "Laser + Cross";
 			}
 		}
 		case UI_OPTIONS_FIELD_SIGHT_TO_SURFACE:
-						if ( vr_weaponSightToSurface.GetInteger() == 0 ) {
+			if( vr_weaponSightToSurface.GetInteger() == 0 )
+			{
 				return "#str_swf_disabled";
-			} else {
+			}
+			else
+			{
 				return "#str_swf_enabled";
 			}
 		case UI_OPTIONS_FIELD_LASER_SOURCE:
-			if (vr_laserSightUseOffset.GetBool()) {
+			if( vr_laserSightUseOffset.GetBool() )
+			{
 				return "Laser Emitter";
 			}
-			else {
+			else
+			{
 				return "Barrel";
 			}
 
 		case UI_OPTIONS_FIELD_HAPTICS:
-			if ( vr_rumbleEnable.GetInteger() == 0 ) {
+			if( vr_rumbleEnable.GetInteger() == 0 )
+			{
 				return "#str_swf_disabled";
 			}
-			else {
+			else
+			{
 				return "#str_swf_enabled";
 			}
 
 		case UI_OPTIONS_FIELD_GUI_MODE:
 		{
 			const int gm = vr_guiMode.GetInteger();
-			if ( gm == 2 )
+			if( gm == 2 )
 			{
 				return "Touch Activated";
 			}
 
-			if ( gm == 1 )
+			if( gm == 1 )
 			{
 				return "Look Activated";
 			}
 
-			if ( gm == 0 )
+			if( gm == 0 )
 			{
 				return "Aim Activated";
 			}
@@ -535,40 +590,41 @@ idSWFScriptVar idMenuScreen_Shell_VR_UI_Options::idMenuDataSource_VR_UI_Options:
 
 /*
 ========================
-idMenuScreen_Shell_VR_HMD_Options::idMenuDataSource_VR_HMD_Options::IsDataChanged	
+idMenuScreen_Shell_VR_HMD_Options::idMenuDataSource_VR_HMD_Options::IsDataChanged
 ========================
 */
-bool idMenuScreen_Shell_VR_UI_Options::idMenuDataSource_VR_UI_Options::IsDataChanged() const {
-		
-	if ( originalHeadingBeam != vr_headingBeamMode.GetInteger() )
-	{
-		return true;
-	}
-	
-	if ( originalWeaponSight != vr_weaponSight.GetInteger() )
+bool idMenuScreen_Shell_VR_UI_Options::idMenuDataSource_VR_UI_Options::IsDataChanged() const
+{
+
+	if( originalHeadingBeam != vr_headingBeamMode.GetInteger() )
 	{
 		return true;
 	}
 
-	if ( originalWeaponSightSurface != vr_weaponSightToSurface.GetInteger() )
+	if( originalWeaponSight != vr_weaponSight.GetInteger() )
 	{
 		return true;
 	}
-	if (originalLaserSightUseOffset != vr_laserSightUseOffset.GetBool())
+
+	if( originalWeaponSightSurface != vr_weaponSightToSurface.GetInteger() )
+	{
+		return true;
+	}
+	if( originalLaserSightUseOffset != vr_laserSightUseOffset.GetBool() )
 	{
 		return true;
 	}
 
 
-	if ( originalHaptics != vr_rumbleEnable.GetInteger() )
+	if( originalHaptics != vr_rumbleEnable.GetInteger() )
 	{
 		return true;
 	}
 
-	if ( originalGuiMode != vr_guiMode.GetInteger() )
+	if( originalGuiMode != vr_guiMode.GetInteger() )
 	{
 		return true;
 	}
-	
+
 	return false;
 }

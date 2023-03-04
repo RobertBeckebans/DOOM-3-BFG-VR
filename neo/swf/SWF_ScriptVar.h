@@ -40,7 +40,7 @@ class idSWFScriptString : public idStr
 {
 public:
 	idSWFScriptString( const idStr& s ) : idStr( s ), refCount( 1 ) { }
-	
+
 	static idSWFScriptString* Alloc( const idStr& s )
 	{
 		return new( TAG_SWF ) idSWFScriptString( s );
@@ -56,7 +56,7 @@ public:
 			delete this;
 		}
 	}
-	
+
 private:
 	int refCount;
 };
@@ -106,13 +106,13 @@ public:
 		SetFunction( nf );
 	}
 	~idSWFScriptVar();
-	
+
 	idSWFScriptVar& operator=( const idSWFScriptVar& other );
-	
+
 	// implements ECMA 262 11.9.3
 	bool AbstractEquals( const idSWFScriptVar& other );
 	bool StrictEquals( const idSWFScriptVar& other );
-	
+
 	void SetString( idStrId s )
 	{
 		Free();
@@ -166,15 +166,15 @@ public:
 		type = SWF_VAR_INTEGER;
 		value.i = i;
 	}
-	
+
 	void SetObject( idSWFScriptObject* o );
 	void SetFunction( idSWFScriptFunction* f );
-	
+
 	idStr	ToString() const;
 	float	ToFloat() const;
 	bool	ToBool() const;
 	int32	ToInteger() const;
-	
+
 	idSWFScriptObject* 		GetObject()
 	{
 		assert( type == SWF_VAR_OBJECT );
@@ -192,17 +192,17 @@ public:
 	}
 	idSWFSpriteInstance* 	ToSprite();
 	idSWFTextInstance* 		ToText();
-	
+
 	idSWFScriptVar			GetNestedVar( const char* arg1, const char* arg2 = NULL, const char* arg3 = NULL, const char* arg4 = NULL, const char* arg5 = NULL, const char* arg6 = NULL );
 	idSWFScriptObject* 		GetNestedObj( const char* arg1, const char* arg2 = NULL, const char* arg3 = NULL, const char* arg4 = NULL, const char* arg5 = NULL, const char* arg6 = NULL );
 	idSWFSpriteInstance* 	GetNestedSprite( const char* arg1, const char* arg2 = NULL, const char* arg3 = NULL, const char* arg4 = NULL, const char* arg5 = NULL, const char* arg6 = NULL );
 	idSWFTextInstance* 		GetNestedText( const char* arg1, const char* arg2 = NULL, const char* arg3 = NULL, const char* arg4 = NULL, const char* arg5 = NULL, const char* arg6 = NULL );
-	
+
 	const char* 			TypeOf() const;
-	
+
 	// debug print of this variable to the console
 	void					PrintToConsole() const;
-	
+
 	bool IsString()		const
 	{
 		return ( type == SWF_VAR_STRING ) || ( type == SWF_VAR_STRINGID );
@@ -231,7 +231,7 @@ public:
 	{
 		return ( type == SWF_VAR_FLOAT ) || ( type == SWF_VAR_INTEGER ) || ( type == SWF_VAR_BOOL );
 	}
-	
+
 	enum swfScriptVarType
 	{
 		SWF_VAR_STRINGID,
@@ -244,16 +244,16 @@ public:
 		SWF_VAR_FUNCTION,
 		SWF_VAR_OBJECT
 	};
-	
+
 	swfScriptVarType	GetType() const
 	{
 		return type;
 	}
-	
+
 private:
 	void Free();
 	swfScriptVarType type;
-	
+
 	union swfScriptVarValue_t
 	{
 		float	f;

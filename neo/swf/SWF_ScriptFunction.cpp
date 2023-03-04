@@ -120,23 +120,23 @@ idSWFScriptFunction_Script::Call
 idSWFScriptVar idSWFScriptFunction_Script::Call( idSWFScriptObject* thisObject, const idSWFParmList& parms )
 {
 	idSWFBitStream bitstream( data, length, false );
-	
+
 	// We assume scope[0] is the global scope
 	assert( scope.Num() > 0 );
-	
+
 	if( thisObject == NULL )
 	{
 		thisObject = scope[0];
 	}
-	
+
 	idSWFScriptObject* locals = idSWFScriptObject::Alloc();
-	
+
 	idSWFStack stack;
 	stack.SetNum( parms.Num() + 1 );
 	for( int i = 0; i < parms.Num(); i++ )
 	{
 		stack[ parms.Num() - i - 1 ] = parms[i];
-		
+
 		// Unfortunately at this point we don't have the function name anymore, so our warning messages aren't very detailed
 		if( i < parameters.Num() )
 		{
@@ -157,7 +157,7 @@ idSWFScriptVar idSWFScriptFunction_Script::Call( idSWFScriptObject* thisObject, 
 		locals->Set( parameters[i].name, idSWFScriptVar() );
 	}
 	stack.A().SetInteger( parms.Num() );
-	
+
 	int preloadReg = 1;
 	if( flags & BIT( 0 ) )
 	{
@@ -175,35 +175,35 @@ idSWFScriptVar idSWFScriptFunction_Script::Call( idSWFScriptObject* thisObject, 
 		idSWFScriptObject* arguments = idSWFScriptObject::Alloc();
 		// load "arguments" into a register
 		arguments->MakeArray();
-		
+
 		int numElements = parms.Num();
-		
+
 		for( int i = 0; i < numElements; i++ )
 		{
 			arguments->Set( i, parms[i] );
 		}
-		
+
 		registers[ preloadReg ].SetObject( arguments );
 		preloadReg++;
-		
+
 		arguments->Release();
 	}
 	if( ( flags & BIT( 3 ) ) == 0 )
 	{
 		idSWFScriptObject* arguments = idSWFScriptObject::Alloc();
-		
+
 		// create "arguments"
 		arguments->MakeArray();
-		
+
 		int numElements = parms.Num();
-		
+
 		for( int i = 0; i < numElements; i++ )
 		{
 			arguments->Set( i, parms[i] );
 		}
-		
+
 		locals->Set( "arguments", idSWFScriptVar( arguments ) );
-		
+
 		arguments->Release();
 	}
 	if( flags & BIT( 4 ) )
@@ -242,13 +242,13 @@ idSWFScriptVar idSWFScriptFunction_Script::Call( idSWFScriptObject* thisObject, 
 		registers[ preloadReg ].SetObject( scope[0] );
 		preloadReg++;
 	}
-	
+
 	int scopeSize = scope.Num();
 	scope.Append( locals );
 	locals->AddRef();
-	
+
 	idSWFScriptVar retVal = Run( thisObject, stack, bitstream );
-	
+
 	assert( scope.Num() == scopeSize + 1 );
 	for( int i = scopeSize; i < scope.Num(); i++ )
 	{
@@ -258,10 +258,10 @@ idSWFScriptVar idSWFScriptFunction_Script::Call( idSWFScriptObject* thisObject, 
 		}
 	}
 	scope.SetNum( scopeSize );
-	
+
 	locals->Release();
 	locals = NULL;
-	
+
 	return retVal;
 }
 
@@ -330,7 +330,7 @@ const char* GetSwfActionName( swfAction_t code )
 	{
 		case Action_End:
 			return "Action_End";
-			
+
 		// swf 3
 		case Action_NextFrame:
 			return "Action_NextFrame";
@@ -344,7 +344,7 @@ const char* GetSwfActionName( swfAction_t code )
 			return "Action_ToggleQuality";
 		case Action_StopSounds:
 			return "Action_StopSounds";
-			
+
 		case Action_GotoFrame:
 			return "Action_GotoFrame";
 		case Action_GetURL:
@@ -355,7 +355,7 @@ const char* GetSwfActionName( swfAction_t code )
 			return "Action_SetTarget";
 		case Action_GoToLabel:
 			return "Action_GoToLabel";
-			
+
 		// swf 4
 		case Action_Add:
 			return "Action_Add";
@@ -425,7 +425,7 @@ const char* GetSwfActionName( swfAction_t code )
 			return "Action_MBCharToAscii";
 		case Action_MBAsciiToChar:
 			return "Action_MBAsciiToChar";
-			
+
 		case Action_WaitForFrame2:
 			return "Action_WaitForFrame2";
 		case Action_Push:
@@ -440,7 +440,7 @@ const char* GetSwfActionName( swfAction_t code )
 			return "Action_Call";
 		case Action_GotoFrame2:
 			return "Action_GotoFrame2";
-			
+
 		// swf 5
 		case Action_Delete:
 			return "Action_Delete";
@@ -506,7 +506,7 @@ const char* GetSwfActionName( swfAction_t code )
 			return "Action_BitRShift";
 		case Action_BitURShift:
 			return "Action_BitURShift";
-			
+
 		case Action_StoreRegister:
 			return "Action_StoreRegister";
 		case Action_ConstantPool:
@@ -515,7 +515,7 @@ const char* GetSwfActionName( swfAction_t code )
 			return "Action_With";
 		case Action_DefineFunction:
 			return "Action_DefineFunction";
-			
+
 		// swf 6
 		case Action_InstanceOf:
 			return "Action_InstanceOf";
@@ -527,7 +527,7 @@ const char* GetSwfActionName( swfAction_t code )
 			return "Action_Greater";
 		case Action_StringGreater:
 			return "Action_StringGreater";
-			
+
 		// swf 7
 		case Action_Extends:
 			return "Action_Extends";
@@ -539,7 +539,7 @@ const char* GetSwfActionName( swfAction_t code )
 			return "Action_Throw";
 		case Action_Try:
 			return "Action_Try";
-			
+
 		case Action_DefineFunction2:
 			return "Action_DefineFunction2";
 		default:
@@ -558,14 +558,14 @@ idSWFScriptVar idSWFScriptFunction_Script::Run( idSWFScriptObject* thisObject, i
 	static int callstackLevel = -1;
 	idSWFSpriteInstance* thisSprite = thisObject->GetSprite();
 	idSWFSpriteInstance* currentTarget = thisSprite;
-	
+
 	if( currentTarget == NULL )
 	{
 		thisSprite = currentTarget = defaultSprite;
 	}
-	
+
 	callstackLevel++;
-	
+
 	while( bitstream.Tell() < bitstream.Length() )
 	{
 		swfAction_t code = ( swfAction_t )bitstream.ReadU8();
@@ -574,7 +574,7 @@ idSWFScriptVar idSWFScriptFunction_Script::Run( idSWFScriptObject* thisObject, i
 		{
 			recordLength = bitstream.ReadU16();
 		}
-		
+
 		if( swf_debug.GetInteger() >= 3 )
 		{
 			// stack[0] is always 0 so don't read it
@@ -584,7 +584,7 @@ idSWFScriptVar idSWFScriptFunction_Script::Run( idSWFScriptObject* thisObject, i
 				{
 					idLib::Printf( "  %c: %s (%s)\n", ( char )( 64 + stack.Num() - i ), stack[i].ToString().c_str(), stack[i].TypeOf() );
 				}
-				
+
 				for( int i = 0; i < registers.Num(); i++ )
 				{
 					if( !registers[i].IsUndefined() )
@@ -593,10 +593,10 @@ idSWFScriptVar idSWFScriptFunction_Script::Run( idSWFScriptObject* thisObject, i
 					}
 				}
 			}
-			
+
 			idLib::Printf( "SWF%d: code %s\n", callstackLevel, GetSwfActionName( code ) );
 		}
-		
+
 		switch( code )
 		{
 			case Action_Return:
@@ -853,14 +853,14 @@ idSWFScriptVar idSWFScriptFunction_Script::Run( idSWFScriptObject* thisObject, i
 			}
 			case Action_GotoFrame2:
 			{
-			
+
 				uint32 frameNum = 0;
 				uint8 flags = bitstream.ReadU8();
 				if( flags & 2 )
 				{
 					frameNum += bitstream.ReadU16();
 				}
-				
+
 				if( verify( thisSprite != NULL ) )
 				{
 					if( stack.A().IsString() )
@@ -949,7 +949,7 @@ idSWFScriptVar idSWFScriptFunction_Script::Run( idSWFScriptObject* thisObject, i
 					}
 				}
 				stack.Pop( 1 );
-				
+
 				idSWFParmList parms;
 				parms.SetNum( stack.A().ToInteger() );
 				stack.Pop( 1 );
@@ -958,7 +958,7 @@ idSWFScriptVar idSWFScriptFunction_Script::Run( idSWFScriptObject* thisObject, i
 					parms[i] = stack.A();
 					stack.Pop( 1 );
 				}
-				
+
 				if( function.IsFunction() && verify( object ) )
 				{
 					stack.Alloc() = function.GetFunction()->Call( object, parms );
@@ -968,7 +968,7 @@ idSWFScriptVar idSWFScriptFunction_Script::Run( idSWFScriptObject* thisObject, i
 					idLib::PrintfIf( swf_debug.GetInteger() > 0, "SWF: unknown function %s\n", functionName.c_str() );
 					stack.Alloc().SetUndefined();
 				}
-				
+
 				break;
 			}
 			case Action_CallMethod:
@@ -994,9 +994,9 @@ idSWFScriptVar idSWFScriptFunction_Script::Run( idSWFScriptObject* thisObject, i
 				{
 					idLib::PrintfIf( swf_debug.GetInteger() > 1, "SWF: NULL object for method %s\n", functionName.c_str() );
 				}
-				
+
 				stack.Pop( 2 );
-				
+
 				idSWFParmList parms;
 				parms.SetNum( stack.A().ToInteger() );
 				stack.Pop( 1 );
@@ -1005,7 +1005,7 @@ idSWFScriptVar idSWFScriptFunction_Script::Run( idSWFScriptObject* thisObject, i
 					parms[i] = stack.A();
 					stack.Pop( 1 );
 				}
-				
+
 				if( function.IsFunction() )
 				{
 					stack.Alloc() = function.GetFunction()->Call( object, parms );
@@ -1029,12 +1029,12 @@ idSWFScriptVar idSWFScriptFunction_Script::Run( idSWFScriptObject* thisObject, i
 			case Action_DefineFunction:
 			{
 				idStr functionName = bitstream.ReadString();
-				
+
 				idSWFScriptFunction_Script* newFunction = idSWFScriptFunction_Script::Alloc();
 				newFunction->SetScope( scope );
 				newFunction->SetConstants( constants );
 				newFunction->SetDefaultSprite( defaultSprite );
-				
+
 				uint16 numParms = bitstream.ReadU16();
 				newFunction->AllocParameters( numParms );
 				for( int i = 0; i < numParms; i++ )
@@ -1043,7 +1043,7 @@ idSWFScriptVar idSWFScriptFunction_Script::Run( idSWFScriptObject* thisObject, i
 				}
 				uint16 codeSize = bitstream.ReadU16();
 				newFunction->SetData( bitstream.ReadData( codeSize ), codeSize );
-				
+
 				if( functionName.IsEmpty() )
 				{
 					stack.Alloc().SetFunction( newFunction );
@@ -1058,27 +1058,27 @@ idSWFScriptVar idSWFScriptFunction_Script::Run( idSWFScriptObject* thisObject, i
 			case Action_DefineFunction2:
 			{
 				idStr functionName = bitstream.ReadString();
-				
+
 				idSWFScriptFunction_Script* newFunction = idSWFScriptFunction_Script::Alloc();
 				newFunction->SetScope( scope );
 				newFunction->SetConstants( constants );
 				newFunction->SetDefaultSprite( defaultSprite );
-				
+
 				uint16 numParms = bitstream.ReadU16();
-				
+
 				// The number of registers is from 0 to 255, although valid values are 1 to 256.
 				// There must always be at least one register for DefineFunction2, to hold "this" or "super" when required.
 				uint8 numRegs = bitstream.ReadU8() + 1;
-				
+
 				// Note that SWF byte-ordering causes the flag bits to be reversed per-byte
 				// from how the swf_file_format_spec_v10.pdf document describes the ordering in ActionDefineFunction2.
 				// PreloadThisFlag is byte 0, not 7, PreloadGlobalFlag is 8, not 15.
 				uint16 flags = bitstream.ReadU16();
-				
+
 				newFunction->AllocParameters( numParms );
 				newFunction->AllocRegisters( numRegs );
 				newFunction->SetFlags( flags );
-				
+
 				for( int i = 0; i < numParms; i++ )
 				{
 					uint8 reg = bitstream.ReadU8();
@@ -1090,10 +1090,10 @@ idSWFScriptVar idSWFScriptFunction_Script::Run( idSWFScriptObject* thisObject, i
 					}
 					newFunction->SetParameter( i, reg, name );
 				}
-				
+
 				uint16 codeSize = bitstream.ReadU16();
 				newFunction->SetData( bitstream.ReadData( codeSize ), codeSize );
-				
+
 				if( functionName.IsEmpty() )
 				{
 					stack.Alloc().SetFunction( newFunction );
@@ -1211,7 +1211,7 @@ idSWFScriptVar idSWFScriptFunction_Script::Run( idSWFScriptObject* thisObject, i
 						// create it if it hasn't been already, and return it
 						idSWFScriptFunction* sfs = stack.B().GetFunction();
 						idSWFScriptObject* object = sfs->GetPrototype();
-						
+
 						if( object == NULL )
 						{
 							object = idSWFScriptObject::Alloc();
@@ -1221,7 +1221,7 @@ idSWFScriptVar idSWFScriptFunction_Script::Run( idSWFScriptObject* thisObject, i
 							object->Set( "__proto__", baseObj->GetPrototype() );
 							sfs->SetPrototype( object );
 						}
-						
+
 						stack.B() = idSWFScriptVar( object );
 					}
 					else
@@ -1257,59 +1257,59 @@ idSWFScriptVar idSWFScriptFunction_Script::Run( idSWFScriptObject* thisObject, i
 			{
 				idSWFScriptObject* object = idSWFScriptObject::Alloc();
 				object->MakeArray();
-				
+
 				int numElements = stack.A().ToInteger();
 				stack.Pop( 1 );
-				
+
 				for( int i = 0; i < numElements; i++ )
 				{
 					object->Set( i, stack.A() );
 					stack.Pop( 1 );
 				}
-				
+
 				stack.Alloc().SetObject( object );
-				
+
 				object->Release();
 				break;
 			}
 			case Action_InitObject:
 			{
 				idSWFScriptObject* object = idSWFScriptObject::Alloc();
-				
+
 				int numElements = stack.A().ToInteger();
 				stack.Pop( 1 );
-				
+
 				for( int i = 0; i < numElements; i++ )
 				{
 					object->Set( stack.B().ToString(), stack.A() );
 					stack.Pop( 2 );
 				}
-				
+
 				stack.Alloc().SetObject( object );
-				
+
 				object->Release();
 				break;
 			}
 			case Action_NewObject:
 			{
 				idSWFScriptObject* object = idSWFScriptObject::Alloc();
-				
+
 				idStr functionName = stack.A().ToString();
 				stack.Pop( 1 );
-				
+
 				if( functionName.Cmp( "Array" ) == 0 )
 				{
 					object->MakeArray();
-					
+
 					int numElements = stack.A().ToInteger();
 					stack.Pop( 1 );
-					
+
 					for( int i = 0; i < numElements; i++ )
 					{
 						object->Set( i, stack.A() );
 						stack.Pop( 1 );
 					}
-					
+
 					idSWFScriptVar baseObjConstructor = scope[0]->Get( "Object" );
 					idSWFScriptFunction* baseObj = baseObjConstructor.GetFunction();
 					object->Set( "__proto__", baseObj->GetPrototype() );
@@ -1325,7 +1325,7 @@ idSWFScriptVar idSWFScriptFunction_Script::Run( idSWFScriptObject* thisObject, i
 						parms[i] = stack.A();
 						stack.Pop( 1 );
 					}
-					
+
 					idSWFScriptVar objdef = scope[0]->Get( functionName );
 					if( objdef.IsFunction() )
 					{
@@ -1339,9 +1339,9 @@ idSWFScriptVar idSWFScriptFunction_Script::Run( idSWFScriptObject* thisObject, i
 						idLib::Warning( "SWF: Unknown class definition %s", functionName.c_str() );
 					}
 				}
-				
+
 				stack.Alloc().SetObject( object );
-				
+
 				object->Release();
 				break;
 			}
@@ -1350,14 +1350,14 @@ idSWFScriptVar idSWFScriptFunction_Script::Run( idSWFScriptObject* thisObject, i
 				idSWFScriptFunction* superclassConstructorFunction = stack.A().GetFunction();
 				idSWFScriptFunction* subclassConstructorFunction = stack.B().GetFunction();
 				stack.Pop( 2 );
-				
+
 				idSWFScriptObject* scriptObject = idSWFScriptObject::Alloc();
 				scriptObject->SetPrototype( superclassConstructorFunction->GetPrototype() );
 				scriptObject->Set( "__proto__", idSWFScriptVar( superclassConstructorFunction->GetPrototype() ) );
 				scriptObject->Set( "__constructor__", idSWFScriptVar( superclassConstructorFunction ) );
-				
+
 				subclassConstructorFunction->SetPrototype( scriptObject );
-				
+
 				scriptObject->Release();
 				break;
 			}
@@ -1581,12 +1581,12 @@ void idSWF::Invoke( const char* functionName, const idSWFParmList& parms )
 {
 	idSWFScriptObject* obj = mainspriteInstance->GetScriptObject();
 	idSWFScriptVar scriptVar = obj->Get( functionName );
-	
+
 	if( swf_debugInvoke.GetBool() )
 	{
 		idLib::Printf( "SWF: Invoke %s with %d parms (%s)\n", functionName, parms.Num(), GetName() );
 	}
-	
+
 	if( scriptVar.IsFunction() )
 	{
 		scriptVar.GetFunction()->Call( NULL, parms );
@@ -1609,7 +1609,7 @@ void idSWF::Invoke( const char* functionName, const idSWFParmList& parms, idSWFS
 	{
 		idSWFScriptObject* obj = mainspriteInstance->GetScriptObject();
 		scriptVar = obj->Get( functionName );
-		
+
 		if( scriptVar.IsFunction() )
 		{
 			scriptVar.GetFunction()->Call( NULL, parms );
@@ -1626,12 +1626,12 @@ void idSWF::Invoke( const char*   functionName, const idSWFParmList& parms, bool
 {
 	idSWFScriptObject* obj = mainspriteInstance->GetScriptObject();
 	idSWFScriptVar scriptVar = obj->Get( functionName );
-	
+
 	if( swf_debugInvoke.GetBool() )
 	{
 		idLib::Printf( "SWF: Invoke %s with %d parms (%s)\n", functionName, parms.Num(), GetName() );
 	}
-	
+
 	if( scriptVar.IsFunction() )
 	{
 		scriptVar.GetFunction()->Call( NULL, parms );

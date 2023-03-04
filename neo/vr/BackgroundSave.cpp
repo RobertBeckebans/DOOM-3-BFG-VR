@@ -2,9 +2,9 @@
 ===========================================================================
 
 Doom 3 BFG Edition GPL Source Code
-Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company. 
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").  
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
 Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@ If you have questions concerning this license or the applicable additional terms
 
 #include "vr/Vr.h"
 #ifdef _WIN32
-#include "sys\win32\win_local.h" 
+	#include "sys\win32\win_local.h"
 #endif
 #include "framework/Common_local.h"
 #include "vr/BackgroundSave.h"
@@ -45,7 +45,8 @@ const int BACKGROUND_SAVE_STACK_SIZE = 256 * 1024;
 BackgroundSave::BackgroundSave
 ============================
 */
-BackgroundSave::BackgroundSave() {
+BackgroundSave::BackgroundSave()
+{
 }
 
 /*
@@ -53,9 +54,10 @@ BackgroundSave::BackgroundSave() {
 BackgroundSave::Run
 ============================
 */
-int BackgroundSave::Run() {
-	
-	if ( saveType == BACKGROUND_SAVE )
+int BackgroundSave::Run()
+{
+
+	if( saveType == BACKGROUND_SAVE )
 	{
 		//common->SaveGame( "autosave" );
 		common->SaveGame( fileName.c_str() );
@@ -75,18 +77,18 @@ BackgroundSave::StartBackgroundSave
 ============================
 */
 
-void BackgroundSave::StartBackgroundSave( backgroundSaveType_t loadSave, idStr saveName ) 
-{	
-	
-	if ( commonVr->vrIsBackgroundSaving )
+void BackgroundSave::StartBackgroundSave( backgroundSaveType_t loadSave, idStr saveName )
+{
+
+	if( commonVr->vrIsBackgroundSaving )
 	{
 		common->Warning( "Warning: StartBackgroundSave called when already running.\n" );
 		return;
 	}
-	
-	common->Printf("Starting Background ");
-	if ( loadSave == BACKGROUND_SAVE ) 
-	{ 
+
+	common->Printf( "Starting Background " );
+	if( loadSave == BACKGROUND_SAVE )
+	{
 		common->Printf( " Save.\n" );
 	}
 	else
@@ -99,7 +101,7 @@ void BackgroundSave::StartBackgroundSave( backgroundSaveType_t loadSave, idStr s
 
 	//StartThread("BackgroundAutoSwaps", CORE_0B, THREAD_NORMAL, AUTO_RENDER_STACK_SIZE );
 	StartThread( "BackgroundSave", CORE_ANY, THREAD_LOWEST, BACKGROUND_SAVE_STACK_SIZE );
-	
+
 	commonVr->vrIsBackgroundSaving = true;
 
 }

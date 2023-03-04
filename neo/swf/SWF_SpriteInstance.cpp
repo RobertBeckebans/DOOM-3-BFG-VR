@@ -68,29 +68,29 @@ void idSWFSpriteInstance::Init( idSWFSprite* _sprite, idSWFSpriteInstance* _pare
 	sprite = _sprite;
 	parent = _parent;
 	depth = _depth;
-	
+
 	frameCount = sprite->frameCount;
-	
+
 	scriptObject = idSWFScriptObject::Alloc();
 	scriptObject->SetPrototype( &spriteInstanceScriptObjectPrototype );
 	scriptObject->SetSprite( this );
-	
+
 	firstRun = true;
-	
+
 	actionScript = idSWFScriptFunction_Script::Alloc();
-	
+
 	idList<idSWFScriptObject*, TAG_SWF> scope;
 	scope.Append( sprite->swf->globals );
 	scope.Append( scriptObject );
 	actionScript->SetScope( scope );
 	actionScript->SetDefaultSprite( this );
-	
+
 	for( int i = 0; i < sprite->doInitActions.Num(); i++ )
 	{
 		actionScript->SetData( sprite->doInitActions[i].Ptr(), sprite->doInitActions[i].Length() );
 		actionScript->Call( scriptObject, idSWFParmList() );
 	}
-	
+
 	Play();
 }
 
@@ -174,11 +174,11 @@ swfDisplayEntry_t* idSWFSpriteInstance::AddDisplayEntry( int depth, int characte
 			break;
 		}
 	}
-	
+
 	swfDisplayEntry_t& display = displayList[ displayList.Insert( swfDisplayEntry_t(), i ) ];
 	display.depth = depth;
 	display.characterID = characterID;
-	
+
 	idSWFDictionaryEntry* dictEntry = sprite->swf->FindDictionaryEntry( characterID );
 	if( dictEntry != NULL )
 	{
@@ -239,7 +239,7 @@ void idSWFSpriteInstance::SwapDepths( int depth1, int depth2 )
 		if( displayList[i].depth == depth1 )
 		{
 			displayList[i].depth = depth2;
-			
+
 		}
 		else if( displayList[i].depth == depth2 )
 		{
@@ -250,7 +250,7 @@ void idSWFSpriteInstance::SwapDepths( int depth1, int depth2 )
 			displayList[i].spriteInstance->depth = displayList[i].depth;
 		}
 	}
-	
+
 	displayList.SortWithTemplate( idSort_SpriteDepth() );
 }
 
@@ -265,7 +265,7 @@ bool idSWFSpriteInstance::Run()
 	{
 		return false;
 	}
-	
+
 	if( childrenRunning )
 	{
 		childrenRunning = false;
@@ -314,26 +314,26 @@ bool idSWFSpriteInstance::RunActions()
 		actions.SetNum( 0 );
 		return false;
 	}
-	
+
 	if( firstRun && scriptObject->HasProperty( "onLoad" ) )
 	{
 		firstRun = false;
 		idSWFScriptVar onLoad = scriptObject->Get( "onLoad" );
 		onLoad.GetFunction()->Call( scriptObject, idSWFParmList() );
 	}
-	
+
 	if( onEnterFrame.IsFunction() )
 	{
 		onEnterFrame.GetFunction()->Call( scriptObject, idSWFParmList() );
 	}
-	
+
 	for( int i = 0; i < actions.Num(); i++ )
 	{
 		actionScript->SetData( actions[i].data, actions[i].dataLength );
 		actionScript->Call( scriptObject, idSWFParmList() );
 	}
 	actions.SetNum( 0 );
-	
+
 	for( int i = 0; i < displayList.Num(); i++ )
 	{
 		if( displayList[i].spriteInstance != NULL )
@@ -348,7 +348,7 @@ bool idSWFSpriteInstance::RunActions()
 			displayList[i].spriteInstance->RunActions();
 		}
 	}
-	
+
 	return true;
 }
 
@@ -421,16 +421,16 @@ void idSWFSpriteInstance::RunTo( int targetFrame )
 	{
 		return;
 	}
-	
+
 	if( targetFrame > sprite->frameOffsets.Num() - 1 )
 	{
 		targetFrame = sprite->frameOffsets.Num() - 1;
 	}
-	
+
 	//actions.Clear();
-	
+
 	uint32 firstActionCommand = sprite->frameOffsets[ targetFrame - 1 ];
-	
+
 	for( uint32 c = sprite->frameOffsets[ currentFrame ]; c < sprite->frameOffsets[ targetFrame ]; c++ )
 	{
 		idSWFSprite::swfSpriteCommand_t& command = sprite->commands[ c ];
@@ -457,7 +457,7 @@ void idSWFSpriteInstance::RunTo( int targetFrame )
 				idLib::Printf( "Run Sprite: Unhandled tag %s\n", idSWF::GetTagName( command.tag ) );
 		}
 	}
-	
+
 	currentFrame = targetFrame;
 }
 
@@ -580,7 +580,7 @@ bool idSWFSpriteInstance::FrameExists( const char* labelName ) const
 	{
 		return frameNum <= sprite->frameCount;
 	}
-	
+
 	for( int i = 0; i < sprite->frameLabels.Num(); i++ )
 	{
 		if( sprite->frameLabels[i].frameLabel.Icmp( labelName ) == 0 )
@@ -588,7 +588,7 @@ bool idSWFSpriteInstance::FrameExists( const char* labelName ) const
 			return true;
 		}
 	}
-	
+
 	return false;
 }
 
@@ -611,7 +611,7 @@ idSWFSpriteInstance::SetMaterial
 void idSWFSpriteInstance::SetMaterial( const idMaterial* material, int width, int height )
 {
 	materialOverride = material;
-	
+
 	if( materialOverride != NULL )
 	{
 		// Converting this to a short should be safe since we don't support images larger than 8k anyway
@@ -633,12 +633,12 @@ void idSWFSpriteInstance::SetMaterial( const idMaterial* material, int width, in
 		materialWidth = 0;
 		materialHeight = 0;
 	}
-	
+
 	if( width >= 0 )
 	{
 		materialWidth = ( uint16 )width;
 	}
-	
+
 	if( height >= 0 )
 	{
 		materialHeight = ( uint16 )height;
@@ -717,14 +717,14 @@ float idSWFSpriteInstance::GetXPos() const
 	{
 		return 0.0f;
 	}
-	
+
 	swfDisplayEntry_t* thisDisplayEntry = parent->FindDisplayEntry( depth );
 	if( thisDisplayEntry == NULL || thisDisplayEntry->spriteInstance != this )
 	{
 		idLib::Warning( "GetXPos: Couldn't find our display entry in our parent's display list for depth %d", depth );
 		return 0.0f;
 	}
-	
+
 	return thisDisplayEntry->matrix.tx;
 }
 
@@ -739,14 +739,14 @@ float idSWFSpriteInstance::GetYPos( bool overallPos ) const
 	{
 		return 0.0f;
 	}
-	
+
 	swfDisplayEntry_t* thisDisplayEntry = parent->FindDisplayEntry( depth );
 	if( thisDisplayEntry == NULL || thisDisplayEntry->spriteInstance != this )
 	{
 		idLib::Warning( "GetYPos: Couldn't find our display entry in our parents display list for depth %d", depth );
 		return 0.0f;
 	}
-	
+
 	return thisDisplayEntry->matrix.ty;
 }
 
@@ -761,14 +761,14 @@ void idSWFSpriteInstance::SetXPos( float xPos )
 	{
 		return;
 	}
-	
+
 	swfDisplayEntry_t* thisDisplayEntry = parent->FindDisplayEntry( depth );
 	if( thisDisplayEntry == NULL || thisDisplayEntry->spriteInstance != this )
 	{
 		idLib::Warning( "_y: Couldn't find our display entry in our parents display list" );
 		return;
 	}
-	
+
 	thisDisplayEntry->matrix.tx = xPos;
 }
 
@@ -783,14 +783,14 @@ void idSWFSpriteInstance::SetYPos( float yPos )
 	{
 		return;
 	}
-	
+
 	swfDisplayEntry_t* thisDisplayEntry = parent->FindDisplayEntry( depth );
 	if( thisDisplayEntry == NULL || thisDisplayEntry->spriteInstance != this )
 	{
 		idLib::Warning( "_y: Couldn't find our display entry in our parents display list" );
 		return;
 	}
-	
+
 	thisDisplayEntry->matrix.ty = yPos;
 }
 
@@ -805,14 +805,14 @@ void idSWFSpriteInstance::SetPos( float xPos, float yPos )
 	{
 		return;
 	}
-	
+
 	swfDisplayEntry_t* thisDisplayEntry = parent->FindDisplayEntry( depth );
 	if( thisDisplayEntry == NULL || thisDisplayEntry->spriteInstance != this )
 	{
 		idLib::Warning( "_y: Couldn't find our display entry in our parents display list" );
 		return;
 	}
-	
+
 	thisDisplayEntry->matrix.tx = xPos;
 	thisDisplayEntry->matrix.ty = yPos;
 }
@@ -834,11 +834,11 @@ void idSWFSpriteInstance::SetRotation( float rot )
 		idLib::Warning( "_rotation: Couldn't find our display entry in our parents display list" );
 		return;
 	}
-	
+
 	swfMatrix_t& matrix = thisDisplayEntry->matrix;
 	float xscale = matrix.Scale( idVec2( 1.0f, 0.0f ) ).Length();
 	float yscale = matrix.Scale( idVec2( 0.0f, 1.0f ) ).Length();
-	
+
 	float s, c;
 	idMath::SinCos( DEG2RAD( rot ), s, c );
 	matrix.xx = c * xscale;
@@ -864,7 +864,7 @@ void idSWFSpriteInstance::SetScale( float x, float y )
 		idLib::Warning( "scale: Couldn't find our display entry in our parents display list" );
 		return;
 	}
-	
+
 	float newScale = x / 100.0f;
 	// this is done funky to maintain the current rotation
 	idVec2 currentScale = thisDisplayEntry->matrix.Scale( idVec2( 1.0f, 0.0f ) );
@@ -878,7 +878,7 @@ void idSWFSpriteInstance::SetScale( float x, float y )
 		thisDisplayEntry->matrix.xx = currentScale.x * newScale;
 		thisDisplayEntry->matrix.yx = currentScale.y * newScale;
 	}
-	
+
 	newScale = y / 100.0f;
 	// this is done funky to maintain the current rotation
 	currentScale = thisDisplayEntry->matrix.Scale( idVec2( 0.0f, 1.0f ) );
@@ -923,36 +923,36 @@ bool idSWFSpriteInstance::UpdateMoveToScale( float speed )
 		idLib::Warning( "SetMoveToScale: Couldn't find our display entry in our parents display list" );
 		return false;
 	}
-	
+
 	swfMatrix_t& matrix = thisDisplayEntry->matrix;
 	float xscale = matrix.Scale( idVec2( 1.0f, 0.0f ) ).Length() * 100.0f;
 	float yscale = matrix.Scale( idVec2( 0.0f, 1.0f ) ).Length() * 100.0f;
-	
+
 	float toX = xscale;
 	if( moveToXScale >= 0.0f )
 	{
 		toX = moveToXScale * 100.0f;
 	}
-	
+
 	float toY = yscale;
 	if( moveToYScale >= 0.0f )
 	{
 		toY = moveToYScale * 100.0f;
 	}
-	
+
 	int rXTo = idMath::Ftoi( toX + 0.5f );
 	int rYTo = idMath::Ftoi( toY + 0.5f );
 	int rXScale = idMath::Ftoi( xscale + 0.5f );
 	int rYScale = idMath::Ftoi( yscale + 0.5f );
-	
+
 	if( rXTo == rXScale && rYTo == rYScale )
 	{
 		return false;
 	}
-	
+
 	float newXScale = xscale;
 	float newYScale = yscale;
-	
+
 	if( rXTo != rXScale && toX >= 0.0f )
 	{
 		if( toX < xscale )
@@ -966,7 +966,7 @@ bool idSWFSpriteInstance::UpdateMoveToScale( float speed )
 			newXScale = idMath::ClampFloat( 0.0f, toX, newXScale );
 		}
 	}
-	
+
 	if( rYTo != rYScale && toY >= 0.0f )
 	{
 		if( toY < yscale )
@@ -980,7 +980,7 @@ bool idSWFSpriteInstance::UpdateMoveToScale( float speed )
 			newYScale = idMath::ClampFloat( 0.0f, toY, newYScale );
 		}
 	}
-	
+
 	SetScale( newXScale, newYScale );
 	return true;
 }
@@ -996,7 +996,7 @@ void idSWFSpriteInstance::SetAlpha( float val )
 	{
 		return;
 	}
-	
+
 	swfDisplayEntry_t* thisDisplayEntry = parent->FindDisplayEntry( depth );
 	if( thisDisplayEntry == NULL || thisDisplayEntry->spriteInstance != this )
 	{
@@ -1032,7 +1032,7 @@ idSWFScriptObject_SpriteInstancePrototype::idSWFScriptObject_SpriteInstanceProto
 	SWF_SPRITE_FUNCTION_SET( prevFrame );
 	SWF_SPRITE_FUNCTION_SET( play );
 	SWF_SPRITE_FUNCTION_SET( stop );
-	
+
 	SWF_SPRITE_NATIVE_VAR_SET( _x );
 	SWF_SPRITE_NATIVE_VAR_SET( _y );
 	SWF_SPRITE_NATIVE_VAR_SET( _xscale );
@@ -1056,14 +1056,14 @@ idSWFScriptObject_SpriteInstancePrototype::idSWFScriptObject_SpriteInstanceProto
 	SWF_SPRITE_NATIVE_VAR_SET( _quality );
 	SWF_SPRITE_NATIVE_VAR_SET( _mousex );
 	SWF_SPRITE_NATIVE_VAR_SET( _mousey );
-	
+
 	SWF_SPRITE_NATIVE_VAR_SET( _stereoDepth );
 	SWF_SPRITE_NATIVE_VAR_SET( _itemindex );
 	SWF_SPRITE_NATIVE_VAR_SET( material );
 	SWF_SPRITE_NATIVE_VAR_SET( materialWidth );
 	SWF_SPRITE_NATIVE_VAR_SET( materialHeight );
 	SWF_SPRITE_NATIVE_VAR_SET( xOffset );
-	
+
 	SWF_SPRITE_NATIVE_VAR_SET( onEnterFrame );
 	//SWF_SPRITE_NATIVE_VAR_SET( onLoad );
 }
@@ -1112,7 +1112,7 @@ SWF_SPRITE_NATIVE_VAR_DEFINE_SET( _height ) { }
 SWF_SPRITE_FUNCTION_DEFINE( duplicateMovieClip )
 {
 	SWF_SPRITE_PTHIS_FUNC( "duplicateMovieClip" );
-	
+
 	if( pThis->parent == NULL )
 	{
 		idLib::Warning( "Tried to duplicate root movie clip" );
@@ -1129,10 +1129,10 @@ SWF_SPRITE_FUNCTION_DEFINE( duplicateMovieClip )
 		idLib::Warning( "duplicateMovieClip: Couldn't find our display entry in our parents display list" );
 		return idSWFScriptVar();
 	}
-	
+
 	swfMatrix_t matrix = thisDisplayEntry->matrix;
 	swfColorXform_t cxf = thisDisplayEntry->cxf;
-	
+
 	swfDisplayEntry_t* display = pThis->parent->AddDisplayEntry( 16384 + parms[1].ToInteger(), thisDisplayEntry->characterID );
 	if( display == NULL )
 	{
@@ -1140,19 +1140,19 @@ SWF_SPRITE_FUNCTION_DEFINE( duplicateMovieClip )
 	}
 	display->matrix = matrix;
 	display->cxf = cxf;
-	
+
 	idStr name = parms[0].ToString();
 	pThis->parent->scriptObject->Set( name, display->spriteInstance->scriptObject );
 	display->spriteInstance->name = name;
 	display->spriteInstance->RunTo( 1 );
-	
+
 	return display->spriteInstance->scriptObject;
 }
 
 SWF_SPRITE_FUNCTION_DEFINE( gotoAndPlay )
 {
 	SWF_SPRITE_PTHIS_FUNC( "gotoAndPlay" );
-	
+
 	if( parms.Num() > 0 )
 	{
 		pThis->actions.Clear();
@@ -1169,7 +1169,7 @@ SWF_SPRITE_FUNCTION_DEFINE( gotoAndPlay )
 SWF_SPRITE_FUNCTION_DEFINE( gotoAndStop )
 {
 	SWF_SPRITE_PTHIS_FUNC( "gotoAndStop" );
-	
+
 	if( parms.Num() > 0 )
 	{
 		// Flash forces frames values less than 1 to 1.
@@ -1193,7 +1193,7 @@ SWF_SPRITE_FUNCTION_DEFINE( gotoAndStop )
 SWF_SPRITE_FUNCTION_DEFINE( swapDepths )
 {
 	SWF_SPRITE_PTHIS_FUNC( "swapDepths" );
-	
+
 	if( pThis->parent == NULL )
 	{
 		idLib::Warning( "Tried to swap depths on root movie clip" );
@@ -1365,7 +1365,7 @@ SWF_SPRITE_NATIVE_VAR_DEFINE_GET( _alpha )
 SWF_SPRITE_NATIVE_VAR_DEFINE_SET( _alpha )
 {
 	SWF_SPRITE_PTHIS_SET( "_alpha" );
-	
+
 	pThis->SetAlpha( value.ToFloat() );
 }
 
@@ -1482,7 +1482,7 @@ SWF_SPRITE_NATIVE_VAR_DEFINE_SET( _rotation )
 	swfMatrix_t& matrix = thisDisplayEntry->matrix;
 	float xscale = matrix.Scale( idVec2( 1.0f, 0.0f ) ).Length();
 	float yscale = matrix.Scale( idVec2( 0.0f, 1.0f ) ).Length();
-	
+
 	float s, c;
 	idMath::SinCos( DEG2RAD( value.ToFloat() ), s, c );
 	matrix.xx = c * xscale;

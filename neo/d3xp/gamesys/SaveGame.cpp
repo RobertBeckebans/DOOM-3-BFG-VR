@@ -72,11 +72,11 @@ idSaveGame::idSaveGame( idFile* savefile, idFile* stringTableFile, int saveVersi
 	file = savefile;
 	stringFile = stringTableFile;
 	version = saveVersion;
-	
+
 	// Put NULL at the start of the list so we can skip over it.
 	objects.Clear();
 	objects.Append( NULL );
-	
+
 	curStringTableOffset = 0;
 }
 
@@ -89,7 +89,7 @@ idSaveGame::~idSaveGame()
 {
 	//compressor->FinishCompress();
 	//delete compressor;
-	
+
 	if( objects.Num() )
 	{
 		Close();
@@ -104,31 +104,31 @@ idSaveGame::Close
 void idSaveGame::Close()
 {
 	WriteSoundCommands();
-	
+
 	// read trace models
 	idClipModel::SaveTraceModels( this );
-	
+
 	for( int i = 1; i < objects.Num(); i++ )
 	{
 		CallSave_r( objects[ i ]->GetType(), objects[ i ] );
 	}
-	
+
 	objects.Clear();
-	
+
 	// Save out the string table at the end of the file
 	for( int i = 0; i < stringTable.Num(); ++i )
 	{
 		stringFile->WriteString( stringTable[i].string );
 	}
-	
+
 	stringHash.Free();
 	stringTable.Clear();
-	
+
 	if( file->Length() > MIN_SAVEGAME_SIZE_BYTES || stringFile->Length() > MAX_SAVEGAME_STRING_TABLE_SIZE )
 	{
 		idLib::FatalError( "OVERFLOWED SAVE GAME FILE BUFFER" );
 	}
-	
+
 #ifdef ID_DEBUG_MEMORY
 	idStr gameState = file->GetName();
 	gameState.StripFileExtension();
@@ -200,7 +200,7 @@ void idSaveGame::CallSave_r( const idTypeInfo* cls, const idClass* obj )
 			return;
 		}
 	}
-	
+
 	( obj->*cls->Save )( this );
 }
 
@@ -306,7 +306,7 @@ void idSaveGame::WriteString( const char* string )
 		WriteInt( -1 );
 		return;
 	}
-	
+
 	// If we already have this string in our hash, write out of the offset in the table and return
 	int hash = stringHash.GenerateKey( string );
 	for( int i = stringHash.First( hash ); i != -1; i = stringHash.Next( i ) )
@@ -317,13 +317,13 @@ void idSaveGame::WriteString( const char* string )
 			return;
 		}
 	}
-	
+
 	// Add the string to our hash, generate the index, and update our current table offset
 	stringTableIndex_s& tableIndex = stringTable.Alloc();
 	tableIndex.offset = curStringTableOffset;
 	tableIndex.string = string;
 	stringHash.Add( hash, stringTable.Num() - 1 );
-	
+
 	WriteInt( curStringTableOffset );
 	curStringTableOffset += ( strlen( string ) + 4 );
 }
@@ -424,16 +424,16 @@ idSaveGame::WriteObject
 void idSaveGame::WriteObject( const idClass* obj )
 {
 	int index;
-	
+
 	index = objects.FindIndex( obj );
 	if( index < 0 )
 	{
 		gameLocal.DPrintf( "idSaveGame::WriteObject - WriteObject FindIndex failed\n" );
-		
+
 		// Use the NULL index
 		index = 0;
 	}
-	
+
 	WriteInt( index );
 }
 
@@ -573,7 +573,7 @@ idSaveGame::WriteSoundShader
 void idSaveGame::WriteSoundShader( const idSoundShader* shader )
 {
 	const char* name;
-	
+
 	if( !shader )
 	{
 		WriteString( "" );
@@ -593,7 +593,7 @@ idSaveGame::WriteModel
 void idSaveGame::WriteModel( const idRenderModel* model )
 {
 	const char* name;
-	
+
 	if( !model )
 	{
 		WriteString( "" );
@@ -613,7 +613,7 @@ idSaveGame::WriteUserInterface
 void idSaveGame::WriteUserInterface( const idUserInterface* ui, bool unique )
 {
 	const char* name;
-	
+
 	if( !ui )
 	{
 		WriteString( "" );
@@ -638,28 +638,28 @@ idSaveGame::WriteRenderEntity
 void idSaveGame::WriteRenderEntity( const renderEntity_t& renderEntity )
 {
 	int i;
-	
+
 	WriteModel( renderEntity.hModel );
-	
+
 	WriteInt( renderEntity.entityNum );
 	WriteInt( renderEntity.bodyId );
-	
+
 	WriteBounds( renderEntity.bounds );
-	
+
 	// callback is set by class's Restore function
-	
+
 	WriteInt( renderEntity.suppressSurfaceInViewID );
 	WriteInt( renderEntity.suppressShadowInViewID );
 	WriteInt( renderEntity.suppressShadowInLightID );
 	WriteInt( renderEntity.allowSurfaceInViewID );
-	
+
 	WriteVec3( renderEntity.origin );
 	WriteMat3( renderEntity.axis );
-	
+
 	WriteMaterial( renderEntity.customShader );
 	WriteMaterial( renderEntity.referenceShader );
 	WriteSkin( renderEntity.customSkin );
-	
+
 	if( renderEntity.referenceSound != NULL )
 	{
 		WriteInt( renderEntity.referenceSound->Index() );
@@ -668,26 +668,26 @@ void idSaveGame::WriteRenderEntity( const renderEntity_t& renderEntity )
 	{
 		WriteInt( 0 );
 	}
-	
+
 	for( i = 0; i < MAX_ENTITY_SHADER_PARMS; i++ )
 	{
 		WriteFloat( renderEntity.shaderParms[ i ] );
 	}
-	
+
 	for( i = 0; i < MAX_RENDERENTITY_GUI; i++ )
 	{
 		WriteUserInterface( renderEntity.gui[ i ], renderEntity.gui[ i ] ? renderEntity.gui[ i ]->IsUniqued() : false );
 	}
-	
+
 	WriteFloat( renderEntity.modelDepthHack );
-	
+
 	WriteBool( renderEntity.noSelfShadow );
 	WriteBool( renderEntity.noShadow );
 	WriteBool( renderEntity.noDynamicInteractions );
 	WriteBool( renderEntity.weaponDepthHack );
-	
+
 	WriteInt( renderEntity.forceUpdate );
-	
+
 	WriteInt( renderEntity.timeGroup );
 	WriteInt( renderEntity.xrayIndex );
 }
@@ -700,38 +700,38 @@ idSaveGame::WriteRenderLight
 void idSaveGame::WriteRenderLight( const renderLight_t& renderLight )
 {
 	int i;
-	
+
 	WriteMat3( renderLight.axis );
 	WriteVec3( renderLight.origin );
-	
+
 	WriteInt( renderLight.suppressLightInViewID );
 	WriteInt( renderLight.allowLightInViewID );
 	WriteBool( renderLight.noShadows );
 	WriteBool( renderLight.noSpecular );
 	WriteBool( renderLight.pointLight );
 	WriteBool( renderLight.parallel );
-	
+
 	WriteVec3( renderLight.lightRadius );
 	WriteVec3( renderLight.lightCenter );
-	
+
 	WriteVec3( renderLight.target );
 	WriteVec3( renderLight.right );
 	WriteVec3( renderLight.up );
 	WriteVec3( renderLight.start );
 	WriteVec3( renderLight.end );
-	
+
 	// only idLight has a prelightModel and it's always based on the entityname, so we'll restore it there
 	// WriteModel( renderLight.prelightModel );
-	
+
 	WriteInt( renderLight.lightId );
-	
+
 	WriteMaterial( renderLight.shader );
-	
+
 	for( i = 0; i < MAX_ENTITY_SHADER_PARMS; i++ )
 	{
 		WriteFloat( renderLight.shaderParms[ i ] );
 	}
-	
+
 	if( renderLight.referenceSound != NULL )
 	{
 		WriteInt( renderLight.referenceSound->Index() );
@@ -762,7 +762,7 @@ void idSaveGame::WriteRefSound( const refSound_t& refSound )
 	WriteSoundShader( refSound.shader );
 	WriteFloat( refSound.diversity );
 	WriteBool( refSound.waitfortrigger );
-	
+
 	WriteFloat( refSound.parms.minDistance );
 	WriteFloat( refSound.parms.maxDistance );
 	WriteFloat( refSound.parms.volume );
@@ -779,22 +779,22 @@ idSaveGame::WriteRenderView
 void idSaveGame::WriteRenderView( const renderView_t& view )
 {
 	int i;
-	
+
 	WriteInt( view.viewID );
 	WriteInt( 0 /* view.x */ );
 	WriteInt( 0 /* view.y */ );
 	WriteInt( 0 /* view.width */ );
 	WriteInt( 0 /* view.height */ );
-	
+
 	WriteFloat( view.fov_x );
 	WriteFloat( view.fov_y );
 	WriteVec3( view.vieworg );
 	WriteMat3( view.viewaxis );
-	
+
 	WriteBool( view.cramZNear );
-	
+
 	WriteInt( view.time[0] );
-	
+
 	for( i = 0; i < MAX_GLOBAL_SHADER_PARMS; i++ )
 	{
 		WriteFloat( view.shaderParms[ i ] );
@@ -860,7 +860,7 @@ void idSaveGame::WriteTrace( const trace_t& trace )
 void idSaveGame::WriteTraceModel( const idTraceModel& trace )
 {
 	int j, k;
-	
+
 	WriteInt( ( int& )trace.type );
 	WriteInt( trace.numVerts );
 	for( j = 0; j < MAX_TRACEMODEL_VERTS; j++ )
@@ -966,7 +966,7 @@ idRestoreGame::ReadDecls
 ================
 Carl: We already read the first declName in the list while reading the script variables.
 */
-void idRestoreGame::ReadDecls( idStr& first_decl_string, idStr& second_decl_string)
+void idRestoreGame::ReadDecls( idStr& first_decl_string, idStr& second_decl_string )
 {
 	idStr declName;
 	bool first = true;
@@ -977,20 +977,20 @@ void idRestoreGame::ReadDecls( idStr& first_decl_string, idStr& second_decl_stri
 	{
 		while( true )
 		{
-			if (first)
+			if( first )
 			{
 				declName = first_decl_string;
 				first = false;
 				second = true;
 			}
-			else if (second)
+			else if( second )
 			{
 				declName = second_decl_string;
 				second = false;
 			}
 			else
 			{
-				ReadString(declName);
+				ReadString( declName );
 			}
 			if( declName.IsEmpty() )
 			{
@@ -1014,15 +1014,15 @@ void idRestoreGame::CreateObjects()
 	int i, num;
 	idStr classname;
 	idTypeInfo* type;
-	
+
 	//int start = file->Tell(); //Carl debug
 	ReadInt( num );
 	//common->Printf("idRestoreGame::CreateObjects() start num=%d, %d\n", num, start); //Carl debug
-	
+
 	// create all the objects
 	objects.SetNum( num + 1 );
 	memset( objects.Ptr(), 0, sizeof( objects[ 0 ] ) * objects.Num() );
-	
+
 	for( i = 1; i < objects.Num(); i++ )
 	{
 		ReadString( classname );
@@ -1033,7 +1033,7 @@ void idRestoreGame::CreateObjects()
 			return;
 		}
 		objects[ i ] = type->CreateInstance();
-		
+
 #ifdef ID_DEBUG_MEMORY
 		InitTypeVariables( objects[i], type->classname, 0xce );
 #endif
@@ -1049,24 +1049,24 @@ void idRestoreGame::RestoreObjects
 void idRestoreGame::RestoreObjects()
 {
 	int i = 0;
-	
+
 	//int start = file->Tell(); //Carl debug
 	//common->Printf("%d: ReadSoundCommands() start, %d\n", i, start); //Carl debug
 	ReadSoundCommands();
 	//int end = file->Tell(); //Carl debug
 	//common->Printf("%d: ReadSoundCommands() %d bytes, %d\n", i, end - start, start); //Carl debug
-	
+
 	// read trace models
 	//start = end; //Carl debug
 	//common->Printf("%d: idClipModel::RestoreTraceModels() start, %d\n", i, start); //Carl debug
 	idClipModel::RestoreTraceModels( this );
 	//common->Printf("%d: idClipModel::RestoreTraceModels() %d bytes, %d\n", i, file->Tell() - start, start); //Carl debug
-	
+
 	// restore all the objects
 	for( i = 1; i < objects.Num(); i++ )
 	{
 		//start = file->Tell(); //Carl debug
-		if (objects[i])
+		if( objects[i] )
 		{
 			//common->Printf("%d: %s::Restore() start, %d\n", i, objects[i]->GetType()->classname, start); //Carl debug
 			CallRestore_r( objects[ i ]->GetType(), objects[ i ] );
@@ -1088,11 +1088,11 @@ void idRestoreGame::RestoreObjects()
 			bool manualControl;
 
 
-			ReadInt(threadNum);
+			ReadInt( threadNum );
 
-			ReadObject(reinterpret_cast<idClass*&>(waitingForThread));
-			ReadInt(waitingFor);
-			ReadInt(waitingUntil);
+			ReadObject( reinterpret_cast<idClass*&>( waitingForThread ) );
+			ReadInt( waitingFor );
+			ReadInt( waitingUntil );
 
 			// interpreter.Restore(this);
 			prstack_t			callStack[MAX_STACK_DEPTH];
@@ -1113,51 +1113,51 @@ void idRestoreGame::RestoreObjects()
 			bool				terminateOnExit;
 			bool				debug;
 
-			ReadInt(callStackDepth);
-			for (int j = 0; j < callStackDepth; j++)
+			ReadInt( callStackDepth );
+			for( int j = 0; j < callStackDepth; j++ )
 			{
-				ReadInt(callStack[j].s);
+				ReadInt( callStack[j].s );
 
-				ReadInt(func_index);
+				ReadInt( func_index );
 
-				ReadInt(callStack[j].stackbase);
+				ReadInt( callStack[j].stackbase );
 			}
-			ReadInt(maxStackDepth);
+			ReadInt( maxStackDepth );
 
-			ReadInt(localstackUsed);
-			Read(&localstack, localstackUsed);
+			ReadInt( localstackUsed );
+			Read( &localstack, localstackUsed );
 
-			ReadInt(localstackBase);
-			ReadInt(maxLocalstackUsed);
+			ReadInt( localstackBase );
+			ReadInt( maxLocalstackUsed );
 
-			ReadInt(func_index);
-			ReadInt(instructionPointer);
+			ReadInt( func_index );
+			ReadInt( instructionPointer );
 
-			ReadInt(popParms);
+			ReadInt( popParms );
 
-			ReadString(funcname);
+			ReadString( funcname );
 
-			ReadObject(reinterpret_cast<idClass*&>(eventEntity));
-			ReadObject(reinterpret_cast<idClass*&>(thread));
+			ReadObject( reinterpret_cast<idClass*&>( eventEntity ) );
+			ReadObject( reinterpret_cast<idClass*&>( thread ) );
 
-			ReadBool(doneProcessing);
-			ReadBool(threadDying);
-			ReadBool(terminateOnExit);
-			ReadBool(debug);
+			ReadBool( doneProcessing );
+			ReadBool( threadDying );
+			ReadBool( terminateOnExit );
+			ReadBool( debug );
 			// end interpreter.Restore(this);
 
-			ReadDict(&spawnArgs);
-			ReadString(threadName);
+			ReadDict( &spawnArgs );
+			ReadString( threadName );
 
-			ReadInt(lastExecuteTime);
-			ReadInt(creationTime);
+			ReadInt( lastExecuteTime );
+			ReadInt( creationTime );
 
-			ReadBool(manualControl);
+			ReadBool( manualControl );
 			//end = file->Tell(); //Carl debug
 			//common->Printf("%d: Dummy idThread::Restore(NULL) %d bytes, %d\n", i, end - start, start); //Carl debug
 		}
 	}
-	
+
 	// regenerate render entities and render lights because are not saved
 	for( i = 1; i < objects.Num(); i++ )
 	{
@@ -1168,7 +1168,7 @@ void idRestoreGame::RestoreObjects()
 			ent->Present();
 		}
 	}
-	
+
 #ifdef ID_DEBUG_MEMORY
 	idStr gameState = file->GetName();
 	gameState.StripFileExtension();
@@ -1188,7 +1188,7 @@ void idRestoreGame::DeleteObjects()
 
 	// Remove the NULL object before deleting
 	objects.RemoveIndex( 0 );
-	
+
 	objects.DeleteContents( true );
 }
 
@@ -1201,13 +1201,13 @@ void idRestoreGame::Error( const char* fmt, ... )
 {
 	va_list	argptr;
 	char	text[ 1024 ];
-	
+
 	va_start( argptr, fmt );
 	vsprintf( text, fmt, argptr );
 	va_end( argptr );
-	
+
 	objects.DeleteContents( true );
-	
+
 	gameLocal.Error( "%s", text );
 }
 
@@ -1227,7 +1227,7 @@ void idRestoreGame::CallRestore_r( const idTypeInfo* cls, idClass* obj )
 			return;
 		}
 	}
-	
+
 	( obj->*cls->Restore )( this );
 }
 
@@ -1319,19 +1319,19 @@ idRestoreGame::ReadString
 void idRestoreGame::ReadString( idStr& string )
 {
 	string.Empty();
-	
+
 	int start = file->Tell(); //Carl debug
 	int offset = -1;
 	ReadInt( offset );
-	
+
 	if( offset < 0 )
 	{
 		return;
 	}
-	
+
 	stringFile->Seek( offset, FS_SEEK_SET );
 	stringFile->ReadString( string );
-	
+
 	//common->Printf("  ReadString(\"%s\") 4 bytes, start %d offset %d\n", string.c_str(), start, offset ); //Carl debug
 
 	return;
@@ -1433,7 +1433,7 @@ bool idRestoreGame::ReadObject( idClass*& obj )
 {
 	//int start = file->Tell(); //Carl debug
 	int index;
-	
+
 	ReadInt( index );
 	if( ( index < 0 ) || ( index >= objects.Num() ) )
 	{
@@ -1462,7 +1462,7 @@ void idRestoreGame::ReadStaticObject( idClass& obj )
 idRestoreGame::ReadDict
 ================
 */
-void idRestoreGame::ReadDict(idDict* dict)
+void idRestoreGame::ReadDict( idDict* dict )
 {
 	int start = file->Tell(); //Carl debug
 	int num;
@@ -1470,19 +1470,19 @@ void idRestoreGame::ReadDict(idDict* dict)
 	idStr key;
 	idStr value;
 
-	ReadInt(num);
+	ReadInt( num );
 	//common->Printf("idRestoreGame::ReadDict() num=%d @%d\n", num, start); //Npi debug
 
-	if (num < 0)
+	if( num < 0 )
 	{
 		dict = NULL;
 	}
-	else if (num > MAX_DICT_ELEMENTS)
+	else if( num > MAX_DICT_ELEMENTS )
 	{
 		dict = NULL;
-		Error("idRestoreGame::ReadDict: Wrong number of dict read from save game (%d).", num);
+		Error( "idRestoreGame::ReadDict: Wrong number of dict read from save game (%d).", num );
 	}
-	else 
+	else
 	{
 		dict->Clear();
 		for( i = 0; i < num; i++ )
@@ -1507,7 +1507,7 @@ idRestoreGame::ReadMaterial
 void idRestoreGame::ReadMaterial( const idMaterial*& material )
 {
 	idStr name;
-	
+
 	ReadString( name );
 	if( !name.Length() )
 	{
@@ -1527,7 +1527,7 @@ idRestoreGame::ReadSkin
 void idRestoreGame::ReadSkin( const idDeclSkin*& skin )
 {
 	idStr name;
-	
+
 	ReadString( name );
 	if( !name.Length() )
 	{
@@ -1547,7 +1547,7 @@ idRestoreGame::ReadParticle
 void idRestoreGame::ReadParticle( const idDeclParticle*& particle )
 {
 	idStr name;
-	
+
 	ReadString( name );
 	if( !name.Length() )
 	{
@@ -1567,7 +1567,7 @@ idRestoreGame::ReadFX
 void idRestoreGame::ReadFX( const idDeclFX*& fx )
 {
 	idStr name;
-	
+
 	ReadString( name );
 	if( !name.Length() )
 	{
@@ -1587,7 +1587,7 @@ idRestoreGame::ReadSoundShader
 void idRestoreGame::ReadSoundShader( const idSoundShader*& shader )
 {
 	idStr name;
-	
+
 	ReadString( name );
 	if( !name.Length() )
 	{
@@ -1607,7 +1607,7 @@ idRestoreGame::ReadModelDef
 void idRestoreGame::ReadModelDef( const idDeclModelDef*& modelDef )
 {
 	idStr name;
-	
+
 	ReadString( name );
 	if( !name.Length() )
 	{
@@ -1627,7 +1627,7 @@ idRestoreGame::ReadModel
 void idRestoreGame::ReadModel( idRenderModel*& model )
 {
 	idStr name;
-	
+
 	ReadString( name );
 	if( !name.Length() )
 	{
@@ -1647,7 +1647,7 @@ idRestoreGame::ReadUserInterface
 void idRestoreGame::ReadUserInterface( idUserInterface*& ui )
 {
 	idStr name;
-	
+
 	ReadString( name );
 	if( !name.Length() )
 	{
@@ -1681,58 +1681,58 @@ void idRestoreGame::ReadRenderEntity( renderEntity_t& renderEntity )
 {
 	int i;
 	int index;
-	
+
 	ReadModel( renderEntity.hModel );
-	
+
 	ReadInt( renderEntity.entityNum );
 	ReadInt( renderEntity.bodyId );
-	
+
 	ReadBounds( renderEntity.bounds );
-	
+
 	// callback is set by class's Restore function
 	renderEntity.callback = NULL;
 	renderEntity.callbackData = NULL;
-	
+
 	ReadInt( renderEntity.suppressSurfaceInViewID );
 	ReadInt( renderEntity.suppressShadowInViewID );
 	ReadInt( renderEntity.suppressShadowInLightID );
 	ReadInt( renderEntity.allowSurfaceInViewID );
-	
+
 	ReadVec3( renderEntity.origin );
 	ReadMat3( renderEntity.axis );
-	
+
 	ReadMaterial( renderEntity.customShader );
 	ReadMaterial( renderEntity.referenceShader );
 	ReadSkin( renderEntity.customSkin );
-	
+
 	ReadInt( index );
 	renderEntity.referenceSound = gameSoundWorld->EmitterForIndex( index );
-	
+
 	for( i = 0; i < MAX_ENTITY_SHADER_PARMS; i++ )
 	{
 		ReadFloat( renderEntity.shaderParms[ i ] );
 	}
-	
+
 	for( i = 0; i < MAX_RENDERENTITY_GUI; i++ )
 	{
 		ReadUserInterface( renderEntity.gui[ i ] );
 	}
-	
+
 	// idEntity will restore "cameraTarget", which will be used in idEntity::Present to restore the remoteRenderView
 	renderEntity.remoteRenderView = NULL;
-	
+
 	renderEntity.joints = NULL;
 	renderEntity.numJoints = 0;
-	
+
 	ReadFloat( renderEntity.modelDepthHack );
-	
+
 	ReadBool( renderEntity.noSelfShadow );
 	ReadBool( renderEntity.noShadow );
 	ReadBool( renderEntity.noDynamicInteractions );
 	ReadBool( renderEntity.weaponDepthHack );
-	
+
 	ReadInt( renderEntity.forceUpdate );
-	
+
 	ReadInt( renderEntity.timeGroup );
 	ReadInt( renderEntity.xrayIndex );
 }
@@ -1746,39 +1746,39 @@ void idRestoreGame::ReadRenderLight( renderLight_t& renderLight )
 {
 	int index;
 	int i;
-	
+
 	ReadMat3( renderLight.axis );
 	ReadVec3( renderLight.origin );
-	
+
 	ReadInt( renderLight.suppressLightInViewID );
 	ReadInt( renderLight.allowLightInViewID );
 	ReadBool( renderLight.noShadows );
 	ReadBool( renderLight.noSpecular );
 	ReadBool( renderLight.pointLight );
 	ReadBool( renderLight.parallel );
-	
+
 	ReadVec3( renderLight.lightRadius );
 	ReadVec3( renderLight.lightCenter );
-	
+
 	ReadVec3( renderLight.target );
 	ReadVec3( renderLight.right );
 	ReadVec3( renderLight.up );
 	ReadVec3( renderLight.start );
 	ReadVec3( renderLight.end );
-	
+
 	// only idLight has a prelightModel and it's always based on the entityname, so we'll restore it there
 	// ReadModel( renderLight.prelightModel );
 	renderLight.prelightModel = NULL;
-	
+
 	ReadInt( renderLight.lightId );
-	
+
 	ReadMaterial( renderLight.shader );
-	
+
 	for( i = 0; i < MAX_ENTITY_SHADER_PARMS; i++ )
 	{
 		ReadFloat( renderLight.shaderParms[ i ] );
 	}
-	
+
 	ReadInt( index );
 	renderLight.referenceSound = gameSoundWorld->EmitterForIndex( index );
 }
@@ -1792,14 +1792,14 @@ void idRestoreGame::ReadRefSound( refSound_t& refSound )
 {
 	int		index;
 	ReadInt( index );
-	
+
 	refSound.referenceSound = gameSoundWorld->EmitterForIndex( index );
 	ReadVec3( refSound.origin );
 	ReadInt( refSound.listenerId );
 	ReadSoundShader( refSound.shader );
 	ReadFloat( refSound.diversity );
 	ReadBool( refSound.waitfortrigger );
-	
+
 	ReadFloat( refSound.parms.minDistance );
 	ReadFloat( refSound.parms.maxDistance );
 	ReadFloat( refSound.parms.volume );
@@ -1816,22 +1816,22 @@ idRestoreGame::ReadRenderView
 void idRestoreGame::ReadRenderView( renderView_t& view )
 {
 	int i;
-	
+
 	ReadInt( view.viewID );
 	ReadInt( i /* view.x */ );
 	ReadInt( i /* view.y */ );
 	ReadInt( i /* view.width */ );
 	ReadInt( i /* view.height */ );
-	
+
 	ReadFloat( view.fov_x );
 	ReadFloat( view.fov_y );
 	ReadVec3( view.vieworg );
 	ReadMat3( view.viewaxis );
-	
+
 	ReadBool( view.cramZNear );
-	
+
 	ReadInt( view.time[0] );
-	
+
 	for( i = 0; i < MAX_GLOBAL_SHADER_PARMS; i++ )
 	{
 		ReadFloat( view.shaderParms[ i ] );
@@ -1897,7 +1897,7 @@ void idRestoreGame::ReadTrace( trace_t& trace )
 void idRestoreGame::ReadTraceModel( idTraceModel& trace )
 {
 	int j, k;
-	
+
 	ReadInt( ( int& )trace.type );
 	ReadInt( trace.numVerts );
 	for( j = 0; j < MAX_TRACEMODEL_VERTS; j++ )
@@ -1939,7 +1939,7 @@ idRestoreGame::ReadClipModel
 void idRestoreGame::ReadClipModel( idClipModel*& clipModel )
 {
 	bool restoreClipModel;
-	
+
 	ReadBool( restoreClipModel );
 	if( restoreClipModel )
 	{

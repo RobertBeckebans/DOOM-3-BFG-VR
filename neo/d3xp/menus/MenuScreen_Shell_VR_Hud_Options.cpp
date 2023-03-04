@@ -2,9 +2,9 @@
 ===========================================================================
 
 Doom 3 BFG Edition GPL Source Code
-Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company. 
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").  
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
 Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -44,23 +44,25 @@ int	AdjustOption( const int currentValue, const int values[], const int numValue
 idMenuScreen_Shell_VR_HUD_Options::Initialize
 ========================
 */
-void idMenuScreen_Shell_VR_HUD_Options::Initialize( idMenuHandler * data ) {
+void idMenuScreen_Shell_VR_HUD_Options::Initialize( idMenuHandler* data )
+{
 	idMenuScreen::Initialize( data );
 
-	if ( data != NULL ) {
+	if( data != NULL )
+	{
 		menuGUI = data->GetGUI();
 	}
 
 	SetSpritePath( "menuSystemOptions" );
-	
-	options = new (TAG_SWF) idMenuWidget_DynamicList();
+
+	options = new( TAG_SWF ) idMenuWidget_DynamicList();
 	options->SetNumVisibleOptions( NUM_SYSTEM_VR_HUD_OPTIONS );
 	options->SetSpritePath( GetSpritePath(), "info", "options" );
 	options->SetWrappingAllowed( true );
 	options->SetControlList( true );
 	options->Initialize( data );
 
-	btnBack = new (TAG_SWF) idMenuWidget_Button();
+	btnBack = new( TAG_SWF ) idMenuWidget_Button();
 	btnBack->Initialize( data );
 	btnBack->SetLabel( "VR UI Options" );
 	btnBack->SetSpritePath( GetSpritePath(), "info", "btnBack" );
@@ -69,9 +71,9 @@ void idMenuScreen_Shell_VR_HUD_Options::Initialize( idMenuHandler * data ) {
 	AddChild( options );
 	AddChild( btnBack );
 
-	idMenuWidget_ControlButton * control;
-			
-	control = new (TAG_SWF)idMenuWidget_ControlButton();
+	idMenuWidget_ControlButton* control;
+
+	control = new( TAG_SWF )idMenuWidget_ControlButton();
 	control->SetOptionType( OPTION_SLIDER_TEXT );
 	control->SetLabel( "Location" );
 	control->SetDataSource( &systemData, idMenuDataSource_Shell_VR_HUD_Options::HUD_OPTIONS_FIELD_HUD_LOCATION );
@@ -79,7 +81,7 @@ void idMenuScreen_Shell_VR_HUD_Options::Initialize( idMenuHandler * data ) {
 	control->AddEventAction( WIDGET_EVENT_PRESS ).Set( WIDGET_ACTION_COMMAND, idMenuDataSource_Shell_VR_HUD_Options::HUD_OPTIONS_FIELD_HUD_LOCATION );
 	options->AddChild( control );
 
-	control = new (TAG_SWF)idMenuWidget_ControlButton();
+	control = new( TAG_SWF )idMenuWidget_ControlButton();
 	control->SetOptionType( OPTION_SLIDER_TEXT );
 	control->SetLabel( "HUD Mode" );
 	control->SetDataSource( &systemData, idMenuDataSource_Shell_VR_HUD_Options::HUD_OPTIONS_FIELD_HUD_MODE );
@@ -87,7 +89,7 @@ void idMenuScreen_Shell_VR_HUD_Options::Initialize( idMenuHandler * data ) {
 	control->AddEventAction( WIDGET_EVENT_PRESS ).Set( WIDGET_ACTION_COMMAND, idMenuDataSource_Shell_VR_HUD_Options::HUD_OPTIONS_FIELD_HUD_MODE );
 	options->AddChild( control );
 
-	control = new (TAG_SWF)idMenuWidget_ControlButton();
+	control = new( TAG_SWF )idMenuWidget_ControlButton();
 	control->SetOptionType( OPTION_SLIDER_TEXT );
 	control->SetLabel( "Reveal Angle" );
 	control->SetDataSource( &systemData, idMenuDataSource_Shell_VR_HUD_Options::HUD_OPTIONS_FIELD_HUD_REVEAL_ANGLE );
@@ -95,7 +97,7 @@ void idMenuScreen_Shell_VR_HUD_Options::Initialize( idMenuHandler * data ) {
 	control->AddEventAction( WIDGET_EVENT_PRESS ).Set( WIDGET_ACTION_COMMAND, idMenuDataSource_Shell_VR_HUD_Options::HUD_OPTIONS_FIELD_HUD_REVEAL_ANGLE );
 	options->AddChild( control );
 
-	control = new (TAG_SWF)idMenuWidget_ControlButton();
+	control = new( TAG_SWF )idMenuWidget_ControlButton();
 	control->SetOptionType( OPTION_SLIDER_TEXT );
 	control->SetLabel( "Low Health Reveal" );
 	control->SetDataSource( &systemData, idMenuDataSource_Shell_VR_HUD_Options::HUD_OPTIONS_FIELD_HUD_LOW_HEAlTH );
@@ -103,14 +105,14 @@ void idMenuScreen_Shell_VR_HUD_Options::Initialize( idMenuHandler * data ) {
 	control->AddEventAction( WIDGET_EVENT_PRESS ).Set( WIDGET_ACTION_COMMAND, idMenuDataSource_Shell_VR_HUD_Options::HUD_OPTIONS_FIELD_HUD_LOW_HEAlTH );
 	options->AddChild( control );
 
-	control = new (TAG_SWF)idMenuWidget_ControlButton();
+	control = new( TAG_SWF )idMenuWidget_ControlButton();
 	control->SetOptionType( OPTION_BUTTON_TEXT );
 	control->SetLabel( "Adjust HUD Position" );
 	control->SetDataSource( &systemData, idMenuDataSource_Shell_VR_HUD_Options::HUD_OPTIONS_FIELD_HUD_ADJUST_POSITION );
 	control->SetupEvents( DEFAULT_REPEAT_TIME, options->GetChildren().Num() );
 	control->AddEventAction( WIDGET_EVENT_PRESS ).Set( WIDGET_ACTION_COMMAND, idMenuDataSource_Shell_VR_HUD_Options::HUD_OPTIONS_FIELD_HUD_ADJUST_POSITION );
 	options->AddChild( control );
-		
+
 	/*
 	control = new (TAG_SWF)idMenuWidget_ControlButton();
 	control->SetOptionType( OPTION_BUTTON_TEXT );
@@ -121,14 +123,14 @@ void idMenuScreen_Shell_VR_HUD_Options::Initialize( idMenuHandler * data ) {
 	options->AddChild( control );
 	*/
 
-	options->AddEventAction( WIDGET_EVENT_SCROLL_DOWN ).Set( new (TAG_SWF) idWidgetActionHandler( options, WIDGET_ACTION_EVENT_SCROLL_DOWN_START_REPEATER, WIDGET_EVENT_SCROLL_DOWN ) );
-	options->AddEventAction( WIDGET_EVENT_SCROLL_UP ).Set( new (TAG_SWF) idWidgetActionHandler( options, WIDGET_ACTION_EVENT_SCROLL_UP_START_REPEATER, WIDGET_EVENT_SCROLL_UP ) );
-	options->AddEventAction( WIDGET_EVENT_SCROLL_DOWN_RELEASE ).Set( new (TAG_SWF) idWidgetActionHandler( options, WIDGET_ACTION_EVENT_STOP_REPEATER, WIDGET_EVENT_SCROLL_DOWN_RELEASE ) );
-	options->AddEventAction( WIDGET_EVENT_SCROLL_UP_RELEASE ).Set( new (TAG_SWF) idWidgetActionHandler( options, WIDGET_ACTION_EVENT_STOP_REPEATER, WIDGET_EVENT_SCROLL_UP_RELEASE ) );
-	options->AddEventAction( WIDGET_EVENT_SCROLL_DOWN_LSTICK ).Set( new (TAG_SWF) idWidgetActionHandler( options, WIDGET_ACTION_EVENT_SCROLL_DOWN_START_REPEATER, WIDGET_EVENT_SCROLL_DOWN_LSTICK ) );
-	options->AddEventAction( WIDGET_EVENT_SCROLL_UP_LSTICK ).Set( new (TAG_SWF) idWidgetActionHandler( options, WIDGET_ACTION_EVENT_SCROLL_UP_START_REPEATER, WIDGET_EVENT_SCROLL_UP_LSTICK ) );
-	options->AddEventAction( WIDGET_EVENT_SCROLL_DOWN_LSTICK_RELEASE ).Set( new (TAG_SWF) idWidgetActionHandler( options, WIDGET_ACTION_EVENT_STOP_REPEATER, WIDGET_EVENT_SCROLL_DOWN_LSTICK_RELEASE ) );
-	options->AddEventAction( WIDGET_EVENT_SCROLL_UP_LSTICK_RELEASE ).Set( new (TAG_SWF) idWidgetActionHandler( options, WIDGET_ACTION_EVENT_STOP_REPEATER, WIDGET_EVENT_SCROLL_UP_LSTICK_RELEASE ) );
+	options->AddEventAction( WIDGET_EVENT_SCROLL_DOWN ).Set( new( TAG_SWF ) idWidgetActionHandler( options, WIDGET_ACTION_EVENT_SCROLL_DOWN_START_REPEATER, WIDGET_EVENT_SCROLL_DOWN ) );
+	options->AddEventAction( WIDGET_EVENT_SCROLL_UP ).Set( new( TAG_SWF ) idWidgetActionHandler( options, WIDGET_ACTION_EVENT_SCROLL_UP_START_REPEATER, WIDGET_EVENT_SCROLL_UP ) );
+	options->AddEventAction( WIDGET_EVENT_SCROLL_DOWN_RELEASE ).Set( new( TAG_SWF ) idWidgetActionHandler( options, WIDGET_ACTION_EVENT_STOP_REPEATER, WIDGET_EVENT_SCROLL_DOWN_RELEASE ) );
+	options->AddEventAction( WIDGET_EVENT_SCROLL_UP_RELEASE ).Set( new( TAG_SWF ) idWidgetActionHandler( options, WIDGET_ACTION_EVENT_STOP_REPEATER, WIDGET_EVENT_SCROLL_UP_RELEASE ) );
+	options->AddEventAction( WIDGET_EVENT_SCROLL_DOWN_LSTICK ).Set( new( TAG_SWF ) idWidgetActionHandler( options, WIDGET_ACTION_EVENT_SCROLL_DOWN_START_REPEATER, WIDGET_EVENT_SCROLL_DOWN_LSTICK ) );
+	options->AddEventAction( WIDGET_EVENT_SCROLL_UP_LSTICK ).Set( new( TAG_SWF ) idWidgetActionHandler( options, WIDGET_ACTION_EVENT_SCROLL_UP_START_REPEATER, WIDGET_EVENT_SCROLL_UP_LSTICK ) );
+	options->AddEventAction( WIDGET_EVENT_SCROLL_DOWN_LSTICK_RELEASE ).Set( new( TAG_SWF ) idWidgetActionHandler( options, WIDGET_ACTION_EVENT_STOP_REPEATER, WIDGET_EVENT_SCROLL_DOWN_LSTICK_RELEASE ) );
+	options->AddEventAction( WIDGET_EVENT_SCROLL_UP_LSTICK_RELEASE ).Set( new( TAG_SWF ) idWidgetActionHandler( options, WIDGET_ACTION_EVENT_STOP_REPEATER, WIDGET_EVENT_SCROLL_UP_LSTICK_RELEASE ) );
 }
 
 /*
@@ -136,39 +138,47 @@ void idMenuScreen_Shell_VR_HUD_Options::Initialize( idMenuHandler * data ) {
 idMenuScreen_Shell_VR_HUD_Options::Update
 ========================
 */
-void idMenuScreen_Shell_VR_HUD_Options::Update() {
+void idMenuScreen_Shell_VR_HUD_Options::Update()
+{
 
-	if ( menuData != NULL ) {
-		idMenuWidget_CommandBar * cmdBar = menuData->GetCmdBar();
-		if ( cmdBar != NULL ) {
+	if( menuData != NULL )
+	{
+		idMenuWidget_CommandBar* cmdBar = menuData->GetCmdBar();
+		if( cmdBar != NULL )
+		{
 			cmdBar->ClearAllButtons();
-			idMenuWidget_CommandBar::buttonInfo_t * buttonInfo;			
+			idMenuWidget_CommandBar::buttonInfo_t* buttonInfo;
 			buttonInfo = cmdBar->GetButton( idMenuWidget_CommandBar::BUTTON_JOY2 );
-			if ( menuData->GetPlatform() != 2 ) {
+			if( menuData->GetPlatform() != 2 )
+			{
 				buttonInfo->label = "#str_00395";
 			}
 			buttonInfo->action.Set( WIDGET_ACTION_GO_BACK );
 
 			buttonInfo = cmdBar->GetButton( idMenuWidget_CommandBar::BUTTON_JOY1 );
 			buttonInfo->action.Set( WIDGET_ACTION_PRESS_FOCUSED );
-		}		
+		}
 	}
 
-	idSWFScriptObject & root = GetSWFObject()->GetRootObject();
-	if ( BindSprite( root ) ) {
-		idSWFTextInstance * heading = GetSprite()->GetScriptObject()->GetNestedText( "info", "txtHeading" );
-		if ( heading != NULL ) {
-			heading->SetText( "VR HUD Options" );	
+	idSWFScriptObject& root = GetSWFObject()->GetRootObject();
+	if( BindSprite( root ) )
+	{
+		idSWFTextInstance* heading = GetSprite()->GetScriptObject()->GetNestedText( "info", "txtHeading" );
+		if( heading != NULL )
+		{
+			heading->SetText( "VR HUD Options" );
 			heading->SetStrokeInfo( true, 0.75f, 1.75f );
 		}
 
-		idSWFSpriteInstance * gradient = GetSprite()->GetScriptObject()->GetNestedSprite( "info", "gradient" );
-		if ( gradient != NULL && heading != NULL ) {
+		idSWFSpriteInstance* gradient = GetSprite()->GetScriptObject()->GetNestedSprite( "info", "gradient" );
+		if( gradient != NULL && heading != NULL )
+		{
 			gradient->SetXPos( heading->GetTextLength() );
 		}
 	}
 
-	if ( btnBack != NULL ) {
+	if( btnBack != NULL )
+	{
 		btnBack->BindSprite( root );
 	}
 
@@ -180,10 +190,11 @@ void idMenuScreen_Shell_VR_HUD_Options::Update() {
 idMenuScreen_Shell_VR_HUD_Options::ShowScreen
 ========================
 */
-void idMenuScreen_Shell_VR_HUD_Options::ShowScreen( const mainMenuTransition_t transitionType ) {
-	
+void idMenuScreen_Shell_VR_HUD_Options::ShowScreen( const mainMenuTransition_t transitionType )
+{
+
 	systemData.LoadData();
-	
+
 	idMenuScreen::ShowScreen( transitionType );
 }
 
@@ -192,20 +203,27 @@ void idMenuScreen_Shell_VR_HUD_Options::ShowScreen( const mainMenuTransition_t t
 idMenuScreen_Shell_VR_HUD_Options::HideScreen
 ========================
 */
-void idMenuScreen_Shell_VR_HUD_Options::HideScreen( const mainMenuTransition_t transitionType ) {
+void idMenuScreen_Shell_VR_HUD_Options::HideScreen( const mainMenuTransition_t transitionType )
+{
 
-	if ( systemData.IsRestartRequired() ) {
-		class idSWFScriptFunction_Restart : public idSWFScriptFunction_RefCounted {
+	if( systemData.IsRestartRequired() )
+	{
+		class idSWFScriptFunction_Restart : public idSWFScriptFunction_RefCounted
+		{
 		public:
-			idSWFScriptFunction_Restart( gameDialogMessages_t _msg, bool _restart ) {
+			idSWFScriptFunction_Restart( gameDialogMessages_t _msg, bool _restart )
+			{
 				msg = _msg;
 				restart = _restart;
 			}
-			idSWFScriptVar Call( idSWFScriptObject * thisObject, const idSWFParmList & parms ) {
+			idSWFScriptVar Call( idSWFScriptObject* thisObject, const idSWFParmList& parms )
+			{
 				common->Dialog().ClearDialog( msg );
-				if ( restart ) {
+				if( restart )
+				{
 					idStr cmdLine = Sys_GetCmdLine();
-					if ( cmdLine.Find( "com_skipIntroVideos" ) < 0 ) {
+					if( cmdLine.Find( "com_skipIntroVideos" ) < 0 )
+					{
 						cmdLine.Append( " +set com_skipIntroVideos 1" );
 					}
 					Sys_ReLaunch(); // Sys_ReLaunch no longer needs params
@@ -216,7 +234,7 @@ void idMenuScreen_Shell_VR_HUD_Options::HideScreen( const mainMenuTransition_t t
 			gameDialogMessages_t msg;
 			bool restart;
 		};
-		idStaticList<idSWFScriptFunction *, 4> callbacks;
+		idStaticList<idSWFScriptFunction*, 4> callbacks;
 		idStaticList<idStrId, 4> optionText;
 		callbacks.Append( new idSWFScriptFunction_Restart( GDM_GAME_RESTART_REQUIRED, false ) );
 		callbacks.Append( new idSWFScriptFunction_Restart( GDM_GAME_RESTART_REQUIRED, true ) );
@@ -225,7 +243,8 @@ void idMenuScreen_Shell_VR_HUD_Options::HideScreen( const mainMenuTransition_t t
 		common->Dialog().AddDynamicDialog( GDM_GAME_RESTART_REQUIRED, callbacks, optionText, true, idStr() );
 	}
 
-	if ( systemData.IsDataChanged() ) {
+	if( systemData.IsDataChanged() )
+	{
 		systemData.CommitData();
 	}
 
@@ -237,63 +256,76 @@ void idMenuScreen_Shell_VR_HUD_Options::HideScreen( const mainMenuTransition_t t
 idMenuScreen_Shell_VR_HUD_Options::HandleAction h
 ========================
 */
-bool idMenuScreen_Shell_VR_HUD_Options::HandleAction( idWidgetAction & action, const idWidgetEvent & event, idMenuWidget * widget, bool forceHandled ) {
+bool idMenuScreen_Shell_VR_HUD_Options::HandleAction( idWidgetAction& action, const idWidgetEvent& event, idMenuWidget* widget, bool forceHandled )
+{
 
-	if ( menuData == NULL ) {
+	if( menuData == NULL )
+	{
 		return true;
 	}
-	
-	if ( menuData->ActiveScreen() != SHELL_AREA_VR_HUD_OPTIONS ) {
+
+	if( menuData->ActiveScreen() != SHELL_AREA_VR_HUD_OPTIONS )
+	{
 		return false;
 	}
 
 	widgetAction_t actionType = action.GetType();
-	const idSWFParmList & parms = action.GetParms();
-	switch ( actionType ) {
-		case WIDGET_ACTION_GO_BACK: {
-			if ( menuData != NULL ) {
+	const idSWFParmList& parms = action.GetParms();
+	switch( actionType )
+	{
+		case WIDGET_ACTION_GO_BACK:
+		{
+			if( menuData != NULL )
+			{
 				menuData->SetNextScreen( SHELL_AREA_VR_UI_OPTIONS, MENU_TRANSITION_SIMPLE );
 			}
 			return true;
 		}
 
-		
+
 		case WIDGET_ACTION_PRESS_FOCUSED:
-			
+
 			common->Printf( "Options Focus Index = %d\n", options->GetFocusIndex() );
-			if ( options->GetFocusIndex() == 4 ) { // bullshit hard coded reference to hud position button 
+			if( options->GetFocusIndex() == 4 )    // bullshit hard coded reference to hud position button
+			{
 				menuData->SetNextScreen( SHELL_AREA_VR_HUD_POSITION_OPTIONS, MENU_TRANSITION_SIMPLE );
 				return true;
 			}
 
-			/*
-			if ( widget->GetDataSourceFieldIndex() == idMenuDataSource_Shell_VR_HUD_Options::HUD_OPTIONS_FIELD_HUD_SELECT_ELEMENTS ) {
-				menuData->SetNextScreen( SHELL_AREA_VR_HUD_POSITION_OPTIONS, MENU_TRANSITION_SIMPLE );
-				return true;
-			}
-			break; 
-			*/
+		/*
+		if ( widget->GetDataSourceFieldIndex() == idMenuDataSource_Shell_VR_HUD_Options::HUD_OPTIONS_FIELD_HUD_SELECT_ELEMENTS ) {
+			menuData->SetNextScreen( SHELL_AREA_VR_HUD_POSITION_OPTIONS, MENU_TRANSITION_SIMPLE );
+			return true;
+		}
+		break;
+		*/
 
-		case WIDGET_ACTION_COMMAND: {
+		case WIDGET_ACTION_COMMAND:
+		{
 
-			if ( options == NULL ) {
+			if( options == NULL )
+			{
 				return true;
 			}
 
 			int selectionIndex = options->GetFocusIndex();
-			if ( parms.Num() > 0 ) {
+			if( parms.Num() > 0 )
+			{
 				selectionIndex = parms[0].ToInteger();
 			}
 
-			if ( options && selectionIndex != options->GetFocusIndex() ) {
+			if( options && selectionIndex != options->GetFocusIndex() )
+			{
 				options->SetViewIndex( options->GetViewOffset() + selectionIndex );
 				options->SetFocusIndex( selectionIndex );
 			}
 
-			switch ( parms[0].ToInteger() ) {
-			case 1: 
+			switch( parms[0].ToInteger() )
+			{
+				case 1:
 
-				default: {
+				default:
+				{
 					systemData.AdjustField( parms[0].ToInteger(), 1 );
 					options->Update();
 				}
@@ -301,15 +333,19 @@ bool idMenuScreen_Shell_VR_HUD_Options::HandleAction( idWidgetAction & action, c
 
 			return true;
 		}
-		case WIDGET_ACTION_START_REPEATER: {
+		case WIDGET_ACTION_START_REPEATER:
+		{
 
-			if ( options == NULL ) {
+			if( options == NULL )
+			{
 				return true;
 			}
 
-			if ( parms.Num() == 4 ) {
+			if( parms.Num() == 4 )
+			{
 				int selectionIndex = parms[3].ToInteger();
-				if ( selectionIndex != options->GetFocusIndex() ) {
+				if( selectionIndex != options->GetFocusIndex() )
+				{
 					options->SetViewIndex( options->GetViewOffset() + selectionIndex );
 					options->SetFocusIndex( selectionIndex );
 				}
@@ -330,7 +366,8 @@ bool idMenuScreen_Shell_VR_HUD_Options::HandleAction( idWidgetAction & action, c
 idMenuScreen_Shell_VR_HUD_Options::idMenuDataSource_Shell_VR_HUD_Options::idMenuDataSource_Shell_VR_HUD_Options
 ========================
 */
-idMenuScreen_Shell_VR_HUD_Options::idMenuDataSource_Shell_VR_HUD_Options::idMenuDataSource_Shell_VR_HUD_Options() {
+idMenuScreen_Shell_VR_HUD_Options::idMenuDataSource_Shell_VR_HUD_Options::idMenuDataSource_Shell_VR_HUD_Options()
+{
 }
 
 /*
@@ -338,13 +375,14 @@ idMenuScreen_Shell_VR_HUD_Options::idMenuDataSource_Shell_VR_HUD_Options::idMenu
 idMenuScreen_Shell_VR_HUD_Options::idMenuDataSource_Shell_VR_HUD_Options::LoadData
 ========================
 */
-void idMenuScreen_Shell_VR_HUD_Options::idMenuDataSource_Shell_VR_HUD_Options::LoadData() {
+void idMenuScreen_Shell_VR_HUD_Options::idMenuDataSource_Shell_VR_HUD_Options::LoadData()
+{
 
 	originalHudLocation = vr_hudPosLock.GetInteger();
 	originalHudMode = vr_hudType.GetInteger();
 	originalHudReveal = vr_hudRevealAngle.GetFloat();
 	originalHudHealth = vr_hudLowHealth.GetInteger();
-	
+
 }
 
 /*
@@ -352,7 +390,8 @@ void idMenuScreen_Shell_VR_HUD_Options::idMenuDataSource_Shell_VR_HUD_Options::L
 idMenuScreen_Shell_VR_HUD_Options::idMenuDataSource_Shell_VR_HUD_Options::IsRestartRequired
 ========================
 */
-bool idMenuScreen_Shell_VR_HUD_Options::idMenuDataSource_Shell_VR_HUD_Options::IsRestartRequired() const {
+bool idMenuScreen_Shell_VR_HUD_Options::idMenuDataSource_Shell_VR_HUD_Options::IsRestartRequired() const
+{
 	return false;
 }
 
@@ -361,7 +400,8 @@ bool idMenuScreen_Shell_VR_HUD_Options::idMenuDataSource_Shell_VR_HUD_Options::I
 idMenuScreen_Shell_VR_HUD_Options::idMenuDataSource_Shell_VR_HUD_Options::CommitData
 ========================
 */
-void idMenuScreen_Shell_VR_HUD_Options::idMenuDataSource_Shell_VR_HUD_Options::CommitData() {
+void idMenuScreen_Shell_VR_HUD_Options::idMenuDataSource_Shell_VR_HUD_Options::CommitData()
+{
 	cvarSystem->SetModifiedFlags( CVAR_ARCHIVE );
 }
 
@@ -371,17 +411,18 @@ void idMenuScreen_Shell_VR_HUD_Options::idMenuDataSource_Shell_VR_HUD_Options::C
 idMenuScreen_Shell_VR_HUD_Options::idMenuDataSource_Shell_VR_HUD_Options::AdjustField
 ========================
 */
-void idMenuScreen_Shell_VR_HUD_Options::idMenuDataSource_Shell_VR_HUD_Options::AdjustField( const int fieldIndex, const int adjustAmount ) {
-	
+void idMenuScreen_Shell_VR_HUD_Options::idMenuDataSource_Shell_VR_HUD_Options::AdjustField( const int fieldIndex, const int adjustAmount )
+{
+
 	/*HUD_OPTIONS_FIELD_HUD_LOCATION,
 	HUD_OPTIONS_FIELD_HUD_MODE,
 	HUD_OPTIONS_FIELD_HUD_REVEAL_ANGLE,
 	HUD_OPTIONS_FIELD_HUD_LOW_HEAlTH,
 	HUD_OPTIONS_FIELD_HUD_ADJUST_POSITION,
 	HUD_OPTIONS_FIELD_HUD_SELECT_ELEMENTS,*/
-	
-	
-	switch ( fieldIndex )
+
+
+	switch( fieldIndex )
 	{
 
 		case HUD_OPTIONS_FIELD_HUD_LOCATION:
@@ -404,8 +445,14 @@ void idMenuScreen_Shell_VR_HUD_Options::idMenuDataSource_Shell_VR_HUD_Options::A
 		{
 			float ra = vr_hudRevealAngle.GetFloat();
 			ra += adjustAmount * .5;
-			if ( ra < -100 ) ra = -100;
-			if ( ra > 150 ) ra = 150;
+			if( ra < -100 )
+			{
+				ra = -100;
+			}
+			if( ra > 150 )
+			{
+				ra = 150;
+			}
 			vr_hudRevealAngle.SetFloat( ra );
 			break;
 		}
@@ -414,8 +461,14 @@ void idMenuScreen_Shell_VR_HUD_Options::idMenuDataSource_Shell_VR_HUD_Options::A
 		{
 			int lh = vr_hudLowHealth.GetInteger();
 			lh += adjustAmount;
-			if ( lh < 0 ) lh = 0;
-			if ( lh > 100 ) lh = 100;
+			if( lh < 0 )
+			{
+				lh = 0;
+			}
+			if( lh > 100 )
+			{
+				lh = 100;
+			}
 			vr_hudLowHealth.SetInteger( lh );
 			break;
 		}
@@ -426,16 +479,17 @@ void idMenuScreen_Shell_VR_HUD_Options::idMenuDataSource_Shell_VR_HUD_Options::A
 
 /*
 ========================
-idMenuScreen_Shell_VR_HUD_Options::idMenuDataSource_Shell_VR_HUD_Options::GetField	
+idMenuScreen_Shell_VR_HUD_Options::idMenuDataSource_Shell_VR_HUD_Options::GetField
 ========================
 */
-idSWFScriptVar idMenuScreen_Shell_VR_HUD_Options::idMenuDataSource_Shell_VR_HUD_Options::GetField( const int fieldIndex ) const {
-		
-	switch ( fieldIndex )
+idSWFScriptVar idMenuScreen_Shell_VR_HUD_Options::idMenuDataSource_Shell_VR_HUD_Options::GetField( const int fieldIndex ) const
+{
+
+	switch( fieldIndex )
 	{
 
 		case HUD_OPTIONS_FIELD_HUD_LOCATION:
-			if ( vr_hudPosLock.GetInteger() == 0 )
+			if( vr_hudPosLock.GetInteger() == 0 )
 			{
 				return "Lock to View";
 			}
@@ -448,23 +502,23 @@ idSWFScriptVar idMenuScreen_Shell_VR_HUD_Options::idMenuDataSource_Shell_VR_HUD_
 		{
 			const int mm = vr_hudType.GetInteger();
 
-			if ( mm == 0 )
+			if( mm == 0 )
 			{
 				return "Disabled";
 			}
 
-			if ( mm == 1 )
+			if( mm == 1 )
 			{
 				return "Full On";
 			}
 
-			if ( mm == 2 )
+			if( mm == 2 )
 			{
 				return "Pitch Activate";
 			}
 		}
 
-	
+
 		case HUD_OPTIONS_FIELD_HUD_REVEAL_ANGLE:
 
 			return va( "%.0f", vr_hudRevealAngle.GetFloat() );
@@ -473,7 +527,7 @@ idSWFScriptVar idMenuScreen_Shell_VR_HUD_Options::idMenuDataSource_Shell_VR_HUD_
 		case HUD_OPTIONS_FIELD_HUD_LOW_HEAlTH:
 		{
 			const int health = vr_hudLowHealth.GetInteger();
-			if ( health == 0 )
+			if( health == 0 )
 			{
 				return "Disabled";
 			}
@@ -489,27 +543,28 @@ idSWFScriptVar idMenuScreen_Shell_VR_HUD_Options::idMenuDataSource_Shell_VR_HUD_
 
 /*
 ========================
-idMenuScreen_Shell_VR_HUD_Options::idMenuDataSource_Shell_VR_HUD_Options::IsDataChanged	
+idMenuScreen_Shell_VR_HUD_Options::idMenuDataSource_Shell_VR_HUD_Options::IsDataChanged
 ========================
 */
-bool idMenuScreen_Shell_VR_HUD_Options::idMenuDataSource_Shell_VR_HUD_Options::IsDataChanged() const {
-		
-	if ( originalHudLocation != vr_hudPosLock.GetInteger() )
+bool idMenuScreen_Shell_VR_HUD_Options::idMenuDataSource_Shell_VR_HUD_Options::IsDataChanged() const
+{
+
+	if( originalHudLocation != vr_hudPosLock.GetInteger() )
 	{
 		return true;
 	}
-	
-	if ( originalHudMode != vr_hudType.GetInteger() )
+
+	if( originalHudMode != vr_hudType.GetInteger() )
 	{
 		return true;
 	}
-	
-	if ( originalHudReveal != vr_hudRevealAngle.GetFloat() )
+
+	if( originalHudReveal != vr_hudRevealAngle.GetFloat() )
 	{
 		return true;
 	}
-	
-	if ( originalHudHealth != vr_hudLowHealth.GetInteger() )
+
+	if( originalHudHealth != vr_hudLowHealth.GetInteger() )
 	{
 		return true;
 	}

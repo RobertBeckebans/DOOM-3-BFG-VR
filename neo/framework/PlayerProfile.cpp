@@ -76,7 +76,7 @@ idPlayerProfile::idPlayerProfile
 idPlayerProfile::idPlayerProfile()
 {
 	SetDefaults();
-	
+
 	// Don't have these in SetDefaults because they're used for state management and SetDefaults is called when
 	// loading the profile
 	state				= IDLE;
@@ -95,13 +95,13 @@ void idPlayerProfile::SetDefaults()
 	achievementBits = 0;
 	achievementBits2	= 0;
 	dlcReleaseVersion	= 0;
-	
+
 	stats.SetNum( MAX_PLAYER_PROFILE_STATS );
 	for( int i = 0; i < MAX_PLAYER_PROFILE_STATS; ++i )
 	{
 		stats[i].i = 0;
 	}
-	
+
 	leftyFlip = false;
 	customConfig = false;
 	configSet = 0;
@@ -125,30 +125,30 @@ bool idPlayerProfile::Serialize( idSerializer& ser )
 {
 	// NOTE:
 	// See comments at top of file on versioning rules
-	
+
 	// Default to current tag/version
 	int32 magicNumber = 0;
 	magicNumber += PROFILE_TAG << 16;
 	magicNumber += PROFILE_VER_MAJOR << 8;
 	magicNumber += PROFILE_VER_MINOR;
-	
+
 	// Serialize version
 	ser.SerializePacked( magicNumber );
 	int16 tag = ( magicNumber >> 16 ) & 0xffff;
 	int8 majorVersion = ( magicNumber >> 8 ) & 0xff;
 	int8 minorVersion = magicNumber & 0xff;
 	minorVersion;
-	
+
 	if( tag != PROFILE_TAG )
 	{
 		return false;
 	}
-	
+
 	if( majorVersion != PROFILE_VER_MAJOR )
 	{
 		return false;
 	}
-	
+
 	// Archived cvars (all the menu settings for Doom3 are archived cvars)
 	idDict cvarDict;
 	cvarSystem->MoveCVarsToDict( CVAR_ARCHIVE, cvarDict );
@@ -165,14 +165,14 @@ bool idPlayerProfile::Serialize( idSerializer& ser )
 		common->StartupVariable( NULL );
 	}
 #endif
-	
+
 	// The dlcReleaseVersion is used to determine that new content is available
 	ser.SerializePacked( dlcReleaseVersion );
-	
+
 	// New setting to save to make sure that we have or haven't seen this achievement before used to pass TRC R149d
 	ser.Serialize( achievementBits );
 	ser.Serialize( achievementBits2 );
-	
+
 	// Check to map sure we are on a valid map before we save, this helps prevent someone from creating a test map and
 	// gaining a bunch of achievements from it
 	int numStats = stats.Num();
@@ -182,17 +182,17 @@ bool idPlayerProfile::Serialize( idSerializer& ser )
 	{
 		ser.SerializePacked( stats[i].i );
 	}
-	
+
 	ser.Serialize( leftyFlip );
 	ser.Serialize( configSet );
-	
+
 	if( ser.IsReading() )
 	{
 		// Which binding is used on the console?
 		ser.Serialize( customConfig );
-		
+
 		ExecConfig( false );
-		
+
 		if( customConfig )
 		{
 			for( int i = 0; i < K_LAST_KEY; ++i )
@@ -207,22 +207,22 @@ bool idPlayerProfile::Serialize( idSerializer& ser )
 	}
 	else
 	{
-	
+
 		if( !customConfig )
 		{
 			ExecConfig( false );
 		}
-		
+
 		customConfig = true;
 		ser.Serialize( customConfig );
-		
+
 		for( int i = 0; i < K_LAST_KEY; ++i )
 		{
 			idStr bind = idKeyInput::GetBinding( i );
 			ser.SerializeString( bind );
 		}
 	}
-	
+
 	return true;
 }
 
@@ -316,7 +316,7 @@ void idPlayerProfile::SetAchievement( const int id )
 		assert( false );		// FIXME: add another set of achievement bit flags
 		return;
 	}
-	
+
 	uint64 mask = 0;
 	if( id < 64 )
 	{
@@ -330,7 +330,7 @@ void idPlayerProfile::SetAchievement( const int id )
 		achievementBits2 |= ( int64 )1 << ( id - 64 );
 		mask = ~mask & achievementBits2;
 	}
-	
+
 	// Mark the profile dirty if achievement bits changed
 	if( mask != 0 )
 	{
@@ -350,7 +350,7 @@ void idPlayerProfile::ClearAchievement( const int id )
 		assert( false );		// FIXME: add another set of achievement bit flags
 		return;
 	}
-	
+
 	if( id < 64 )
 	{
 		achievementBits &= ~( ( int64 )1 << id );
@@ -359,7 +359,7 @@ void idPlayerProfile::ClearAchievement( const int id )
 	{
 		achievementBits2 &= ~( ( int64 )1 << ( id - 64 ) );
 	}
-	
+
 	MarkDirty( true );
 }
 
@@ -375,7 +375,7 @@ bool idPlayerProfile::GetAchievement( const int id ) const
 		assert( false );		// FIXME: add another set of achievement bit flags
 		return false;
 	}
-	
+
 	if( id < 64 )
 	{
 		return ( achievementBits & ( int64 )1 << id ) != 0;
@@ -431,13 +431,13 @@ void idPlayerProfile::ExecConfig( bool save, bool forceDefault )
 	{
 		flags = cvarSystem->GetModifiedFlags();
 	}
-	
+
 	if( !customConfig || forceDefault )
 	{
 		cmdSystem->AppendCommandText( "exec default.cfg\n" );
 		cmdSystem->AppendCommandText( "exec joy_360_0.cfg\n" );
 	}
-	
+
 	if( leftyFlip )
 	{
 		cmdSystem->AppendCommandText( "exec joy_lefty.cfg\n" );
@@ -448,33 +448,33 @@ void idPlayerProfile::ExecConfig( bool save, bool forceDefault )
 		cmdSystem->AppendCommandText( "exec joy_righty.cfg\n" );
 		cmdSystem->AppendCommandText( "exec joy_360_0.cfg\n" );
 	}
-	
-	if ( game->isVR )
+
+	if( game->isVR )
 	{
 		//cmdSystem->AppendCommandText( "exec vr_default.cfg\n" );
 		//cmdSystem->AppendCommandText( "exec vr.cfg\n" );
 
-		if ( commonVr->hasOculusRift )
+		if( commonVr->hasOculusRift )
 		{
 			cmdSystem->AppendCommandText( "exec vr_oculus_default.cfg\n" );
 		}
-		else if ( commonVr->hasHMD )
+		else if( commonVr->hasHMD )
 		{
 			cmdSystem->AppendCommandText( "exec vr_openvr_default.cfg\n" );
 		}
 
-		if ( commonVr->hasOculusRift )
+		if( commonVr->hasOculusRift )
 		{
 			cmdSystem->AppendCommandText( "exec vr_oculus.cfg\n" );
 		}
-		else if ( commonVr->hasHMD )
+		else if( commonVr->hasHMD )
 		{
 			cmdSystem->AppendCommandText( "exec vr_openvr.cfg\n" );
 		}
-		
+
 	}
 	cmdSystem->ExecuteCommandBuffer();
-		
+
 	if( !save )
 	{
 		cvarSystem->ClearModifiedFlags( CVAR_ARCHIVE );

@@ -88,13 +88,13 @@ RB_SetBuffer
 static void	RB_SetBuffer( const void* data )
 {
 	// see which draw buffer we want to render the frame to
-	
+
 	const setBufferCommand_t* cmd = ( const setBufferCommand_t* )data;
-	
+
 	RENDERLOG_PRINTF( "---------- RB_SetBuffer ---------- to buffer # %d\n", cmd->buffer );
-	
+
 	GL_Scissor( 0, 0, tr.GetWidth(), tr.GetHeight() );
-	
+
 	// clear screen for debugging
 	// automatically enable this with several other debug tools
 	// that might leave unrendered portions of the screen
@@ -130,16 +130,16 @@ We want to exit this with the GPU idle, right at vsync
 const void GL_BlockingSwapBuffers()
 {
 	RENDERLOG_PRINTF( "***************** GL_BlockingSwapBuffers *****************\n\n\n" );
-		
+
 	const int beforeFinish = Sys_Milliseconds();
 
-	if ( !glConfig.syncAvailable )
+	if( !glConfig.syncAvailable )
 	{
 		glFinish();
 	}
 
 	const int beforeSwap = Sys_Milliseconds();
-	if ( r_showSwapBuffers.GetBool() && beforeSwap - beforeFinish > 1 )
+	if( r_showSwapBuffers.GetBool() && beforeSwap - beforeFinish > 1 )
 	{
 		common->Printf( "%i msec to glFinish\n", beforeSwap - beforeFinish );
 	}
@@ -147,22 +147,22 @@ const void GL_BlockingSwapBuffers()
 
 	GLimp_SwapBuffers();
 
-	if ( game->isVR && !commonVr->hasOculusRift )
+	if( game->isVR && !commonVr->hasOculusRift )
 	{
 		commonVr->FrameStart();
 	}
-	
+
 	const int beforeFence = Sys_Milliseconds();
-	if ( r_showSwapBuffers.GetBool() && beforeFence - beforeSwap > 1 )
+	if( r_showSwapBuffers.GetBool() && beforeFence - beforeSwap > 1 )
 	{
 		common->Printf( "%i msec to swapBuffers\n", beforeFence - beforeSwap );
 	}
 
-	if ( glConfig.syncAvailable )
+	if( glConfig.syncAvailable )
 	{
 		swapIndex ^= 1;
 
-		if ( glIsSync( renderSync[swapIndex] ) )
+		if( glIsSync( renderSync[swapIndex] ) )
 		{
 			glDeleteSync( renderSync[swapIndex] );
 		}
@@ -173,13 +173,13 @@ const void GL_BlockingSwapBuffers()
 		glClear( GL_COLOR_BUFFER_BIT );
 		renderSync[swapIndex] = glFenceSync( GL_SYNC_GPU_COMMANDS_COMPLETE, 0 );
 		const int end = Sys_Milliseconds();
-		if ( r_showSwapBuffers.GetBool() && end - start > 1 )
+		if( r_showSwapBuffers.GetBool() && end - start > 1 )
 		{
 			common->Printf( "%i msec to start fence\n", end - start );
 		}
 
 		GLsync	syncToWaitOn;
-		if ( r_syncEveryFrame.GetBool() )
+		if( r_syncEveryFrame.GetBool() )
 		{
 			syncToWaitOn = renderSync[swapIndex];
 		}
@@ -188,23 +188,23 @@ const void GL_BlockingSwapBuffers()
 			syncToWaitOn = renderSync[!swapIndex];
 		}
 
-		if ( glIsSync( syncToWaitOn ) )
+		if( glIsSync( syncToWaitOn ) )
 		{
-			for ( GLenum r = GL_TIMEOUT_EXPIRED; r == GL_TIMEOUT_EXPIRED; )
+			for( GLenum r = GL_TIMEOUT_EXPIRED; r == GL_TIMEOUT_EXPIRED; )
 			{
 				r = glClientWaitSync( syncToWaitOn, GL_SYNC_FLUSH_COMMANDS_BIT, 1000 * 1000 );
 			}
 		}
 	}
-	
+
 	const int afterFence = Sys_Milliseconds();
 	if( r_showSwapBuffers.GetBool() && afterFence - beforeFence > 1 )
 	{
 		common->Printf( "%i msec to wait on fence\n", afterFence - beforeFence );
 	}
-	
+
 	const int64 exitBlockTime = Sys_Microseconds();
-	
+
 	static int64 prevBlockTime;
 	if( r_showSwapBuffers.GetBool() && prevBlockTime )
 	{
@@ -240,7 +240,7 @@ Renders the draw list twice, with slight modifications for left eye / right eye
 void RB_StereoRenderExecuteBackEndCommands( const emptyCommand_t* const allCmds )
 {
 	uint64 backEndStartTime = Sys_Microseconds();
-	
+
 	// If we are in a monoscopic context, this draws to the only buffer, and is
 	// the same as GL_BACK.  In a quad-buffer stereo context, this is necessary
 	// to prevent GL from forcing the rendering to go to both BACK_LEFT and
@@ -248,9 +248,9 @@ void RB_StereoRenderExecuteBackEndCommands( const emptyCommand_t* const allCmds 
 	// To allow stereo deghost processing, the views have to be copied to separate
 	// textures anyway, so there isn't any benefit to rendering to BACK_RIGHT for
 	// that eye.
-	
+
 	// Koz begin
-	if ( commonVr->useFBO )
+	if( commonVr->useFBO )
 	{
 		globalFramebuffers.primaryFBO->Bind();
 	}
@@ -260,38 +260,38 @@ void RB_StereoRenderExecuteBackEndCommands( const emptyCommand_t* const allCmds 
 	}
 	// Koz end
 
-		
+
 	// create the stereoRenderImage if we haven't already
-	static idImage * stereoRenderImages[2];
-	for ( int i = 0; i < 2; i++ )
+	static idImage* stereoRenderImages[2];
+	for( int i = 0; i < 2; i++ )
 	{
-		
-		if ( stereoRenderImages[i] == NULL )
+
+		if( stereoRenderImages[i] == NULL )
 		{
 			stereoRenderImages[i] = globalImages->ImageFromFunction( va( "_stereoRender%i", i ), R_MakeStereoRenderImage );
 		}
-		if ( stereoRenderImages[i]->GetUploadWidth() != renderSystem->GetWidth() ||
-			stereoRenderImages[i]->GetUploadHeight() != renderSystem->GetHeight() )
+		if( stereoRenderImages[i]->GetUploadWidth() != renderSystem->GetWidth() ||
+				stereoRenderImages[i]->GetUploadHeight() != renderSystem->GetHeight() )
 		{
 			stereoRenderImages[i]->Resize( renderSystem->GetWidth(), renderSystem->GetHeight() );
 		}
 	}
-	
+
 	// In stereoRender mode, the front end has generated two RC_DRAW_VIEW commands
 	// with slightly different origins for each eye.
-	
+
 	// TODO: only do the copy after the final view has been rendered, not mirror subviews?
-	
+
 	// Render the 3D draw views from the screen origin so all the screen relative
 	// texture mapping works properly, then copy the portion we are going to use
 	// off to a texture.
 	bool foundEye[2] = { false, false };
-	
+
 	for( int stereoEye = 1; stereoEye >= -1; stereoEye -= 2 )
 	{
 		// set up the target texture we will draw to
 		int targetEye = ( stereoEye == 1 ) ? 1 : 0;
-		
+
 		// Set the back end into a known default state to fix any stale render state issues
 		GL_SetDefaultState();
 		renderProgManager.Unbind();
@@ -307,13 +307,13 @@ void RB_StereoRenderExecuteBackEndCommands( const emptyCommand_t* const allCmds 
 				{
 					const drawSurfsCommand_t* const dsc = ( const drawSurfsCommand_t* )cmds;
 					const viewDef_t&			eyeViewDef = *dsc->viewDef;
-					
+
 					if( eyeViewDef.renderView.viewEyeBuffer && eyeViewDef.renderView.viewEyeBuffer != stereoEye )
 					{
 						// this is the render view for the other eye
 						continue;
 					}
-					
+
 					foundEye[ targetEye ] = true;
 					RB_DrawView( dsc, stereoEye );
 					if( cmds->commandId == RC_DRAW_VIEW_GUI )
@@ -342,32 +342,35 @@ void RB_StereoRenderExecuteBackEndCommands( const emptyCommand_t* const allCmds 
 					break;
 			}
 		}
-		
+
 		// copy to the target
 		stereoRenderImages[targetEye]->CopyFramebuffer( 0, 0, renderSystem->GetWidth(), renderSystem->GetHeight() );
 		commonVr->hmdCurrentRender[targetEye] = stereoRenderImages[targetEye];
 	}
-	
+
 	// perform the final compositing / warping / deghosting to the actual framebuffer(s)
 	assert( foundEye[0] && foundEye[1] );
-	
+
 	GL_SetDefaultState();
-		
+
 	RB_SetMVP( renderMatrix_identity );
-	
+
 	// If we are in quad-buffer pixel format but testing another 3D mode,
 	// make sure we draw to both eyes.  This is likely to be sub-optimal
 	// performance on most cards and drivers, but it is better than getting
 	// a confusing, half-ghosted view.
 	if( renderSystem->GetStereo3DMode() != STEREO3D_QUAD_BUFFER )
 	{
-		if ( !commonVr->useFBO ) glDrawBuffer( GL_BACK ); // Koz fixme
-	    
+		if( !commonVr->useFBO )
+		{
+			glDrawBuffer( GL_BACK );    // Koz fixme
+		}
+
 	}
-	
+
 	GL_State( GLS_DEPTHFUNC_ALWAYS );
 	GL_Cull( CT_TWO_SIDED );
-	
+
 	// We just want to do a quad pass - so make sure we disable any texgen and
 	// set the texture matrix to the identity so we don't get anomalies from
 	// any stale uniform data being present from a previous draw call
@@ -375,15 +378,15 @@ void RB_StereoRenderExecuteBackEndCommands( const emptyCommand_t* const allCmds 
 	const float texT[4] = { 0.0f, 1.0f, 0.0f, 0.0f };
 	renderProgManager.SetRenderParm( RENDERPARM_TEXTUREMATRIX_S, texS );
 	renderProgManager.SetRenderParm( RENDERPARM_TEXTUREMATRIX_T, texT );
-	
+
 	// disable any texgen
 	const float texGenEnabled[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
 	renderProgManager.SetRenderParm( RENDERPARM_TEXGEN_0_ENABLED, texGenEnabled );
-	
+
 	renderProgManager.BindShader_Texture();
 	GL_Color( 1, 1, 1, 1 );
-	
-		
+
+
 	//common->Printf( "SREBEC Rendering frame %d\n", idLib::frameNumber );
 	switch( renderSystem->GetStereo3DMode() )
 	{
@@ -394,14 +397,14 @@ void RB_StereoRenderExecuteBackEndCommands( const emptyCommand_t* const allCmds 
 			GL_SelectTexture( 1 );
 			stereoRenderImages[0]->Bind();
 			RB_DrawElementsWithCounters( &backEnd.unitSquareSurface );
-			
+
 			glDrawBuffer( GL_BACK_LEFT );
 			GL_SelectTexture( 1 );
 			stereoRenderImages[1]->Bind();
 			GL_SelectTexture( 0 );
 			stereoRenderImages[0]->Bind();
 			RB_DrawElementsWithCounters( &backEnd.unitSquareSurface );
-			
+
 			break;
 		case STEREO3D_HDMI_720:
 			// HDMI 720P 3D
@@ -411,49 +414,49 @@ void RB_StereoRenderExecuteBackEndCommands( const emptyCommand_t* const allCmds 
 			stereoRenderImages[0]->Bind();
 			GL_ViewportAndScissor( 0, 0, 1280, 720 );
 			RB_DrawElementsWithCounters( &backEnd.unitSquareSurface );
-			
+
 			GL_SelectTexture( 0 );
 			stereoRenderImages[0]->Bind();
 			GL_SelectTexture( 1 );
 			stereoRenderImages[1]->Bind();
 			GL_ViewportAndScissor( 0, 750, 1280, 720 );
 			RB_DrawElementsWithCounters( &backEnd.unitSquareSurface );
-			
+
 			// force the HDMI 720P 3D guard band to a constant color
 			glScissor( 0, 720, 1280, 30 );
 			glClear( GL_COLOR_BUFFER_BIT );
 			break;
-		default:		
-		
+		default:
+
 		case STEREO3D_HMD:
-			
+
 			// Koz begin
 			// This is the rift.
-			
-			if ( game->isVR ) 
+
+			if( game->isVR )
 			{
-			
-				
-				if ( commonVr->playerDead || (game->Shell_IsActive() && !commonVr->PDAforced && !commonVr->PDAforcetoggle ) || (!commonVr->PDAforced && common->Dialog().IsDialogActive() )
-					|| commonVr->isLoading || commonVr->showingIntroVideo || session->GetState() == idSession::LOADING || ( gameLocal.inCinematic && vr_cinematics.GetInteger() == 2 && vr_flicksyncCharacter.GetInteger() == 0))
+
+
+				if( commonVr->playerDead || ( game->Shell_IsActive() && !commonVr->PDAforced && !commonVr->PDAforcetoggle ) || ( !commonVr->PDAforced && common->Dialog().IsDialogActive() )
+						|| commonVr->isLoading || commonVr->showingIntroVideo || session->GetState() == idSession::LOADING || ( gameLocal.inCinematic && vr_cinematics.GetInteger() == 2 && vr_flicksyncCharacter.GetInteger() == 0 ) )
 				{
 					commonVr->HMDTrackStatic( !commonVr->isLoading && !commonVr->showingIntroVideo && session->GetState() != idSession::LOADING );//  && (gameLocal.inCinematic && vr_cinematics.GetInteger() == 0) );
-					
+
 				}
 				else
 				{
-					commonVr->HMDRender( stereoRenderImages[0], stereoRenderImages[1] ); 
+					commonVr->HMDRender( stereoRenderImages[0], stereoRenderImages[1] );
 				}
 
 				// Koz GL_CheckErrors();
-				
+
 			}
 			break;
-			// Koz end		
-		
-		
+		// Koz end
+
+
 		case STEREO3D_SIDE_BY_SIDE:
-			
+
 		// a non-warped side-by-side-uncompressed (dual input cable) is rendered
 		// just like STEREO3D_SIDE_BY_SIDE_COMPRESSED, so fall through.
 		case STEREO3D_SIDE_BY_SIDE_COMPRESSED:
@@ -463,7 +466,7 @@ void RB_StereoRenderExecuteBackEndCommands( const emptyCommand_t* const allCmds 
 			stereoRenderImages[1]->Bind();
 			GL_ViewportAndScissor( 0, 0, renderSystem->GetWidth(), renderSystem->GetHeight() );
 			RB_DrawElementsWithCounters( &backEnd.unitSquareSurface );
-			
+
 			GL_SelectTexture( 0 );
 			stereoRenderImages[1]->Bind();
 			GL_SelectTexture( 1 );
@@ -471,7 +474,7 @@ void RB_StereoRenderExecuteBackEndCommands( const emptyCommand_t* const allCmds 
 			GL_ViewportAndScissor( renderSystem->GetWidth(), 0, renderSystem->GetWidth(), renderSystem->GetHeight() );
 			RB_DrawElementsWithCounters( &backEnd.unitSquareSurface );
 			break;
-			
+
 		case STEREO3D_TOP_AND_BOTTOM_COMPRESSED:
 			GL_SelectTexture( 1 );
 			stereoRenderImages[0]->Bind();
@@ -479,7 +482,7 @@ void RB_StereoRenderExecuteBackEndCommands( const emptyCommand_t* const allCmds 
 			stereoRenderImages[1]->Bind();
 			GL_ViewportAndScissor( 0, 0, renderSystem->GetWidth(), renderSystem->GetHeight() );
 			RB_DrawElementsWithCounters( &backEnd.unitSquareSurface );
-			
+
 			GL_SelectTexture( 1 );
 			stereoRenderImages[1]->Bind();
 			GL_SelectTexture( 0 );
@@ -487,42 +490,42 @@ void RB_StereoRenderExecuteBackEndCommands( const emptyCommand_t* const allCmds 
 			GL_ViewportAndScissor( 0, renderSystem->GetHeight(), renderSystem->GetWidth(), renderSystem->GetHeight() );
 			RB_DrawElementsWithCounters( &backEnd.unitSquareSurface );
 			break;
-			
+
 		case STEREO3D_INTERLACED:
 			// every other scanline
 			GL_SelectTexture( 0 );
 			stereoRenderImages[0]->Bind();
 			glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
 			glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
-			
+
 			GL_SelectTexture( 1 );
 			stereoRenderImages[1]->Bind();
 			glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
 			glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
-			
+
 			GL_ViewportAndScissor( 0, 0, renderSystem->GetWidth(), renderSystem->GetHeight() * 2 );
 			renderProgManager.BindShader_StereoInterlace();
 			RB_DrawElementsWithCounters( &backEnd.unitSquareSurface );
-			
+
 			GL_SelectTexture( 0 );
 			glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
 			glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-			
+
 			GL_SelectTexture( 1 );
 			glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
 			glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-			
+
 			break;
 	}
-	
+
 	// debug tool
 	RB_DrawFlickerBox();
-	
+
 	// make sure the drawing is actually started
 	glFlush();
-	
+
 	// we may choose to sync to the swapbuffers before the next frame
-	
+
 	// stop rendering on this thread
 	uint64 backEndFinishTime = Sys_Microseconds();
 	backEnd.pc.totalMicroSec = backEndFinishTime - backEndStartTime;
@@ -543,34 +546,37 @@ void RB_ExecuteBackEndCommands( const emptyCommand_t* cmds )
 	int c_draw2d = 0;
 	int c_setBuffers = 0;
 	int c_copyRenders = 0;
-	
+
 	resolutionScale.SetCurrentGPUFrameTime( commonLocal.GetRendererGPUMicroseconds() );
-	
+
 	renderLog.StartFrame();
-	
+
 	if( cmds->commandId == RC_NOP && !cmds->next )
 	{
 		return;
 	}
-	
+
 	if( renderSystem->GetStereo3DMode() != STEREO3D_OFF )
 	{
 		RB_StereoRenderExecuteBackEndCommands( cmds );
 		renderLog.EndFrame();
 		return;
 	}
-	
+
 	uint64 backEndStartTime = Sys_Microseconds();
-	
+
 	// needed for editor rendering
 	GL_SetDefaultState();
-	
+
 	// If we have a stereo pixel format, this will draw to both
 	// the back left and back right buffers, which will have a
 	// performance penalty.
-	if ( !commonVr->useFBO ) glDrawBuffer( GL_BACK ); // Koz
-	
-	
+	if( !commonVr->useFBO )
+	{
+		glDrawBuffer( GL_BACK );    // Koz
+	}
+
+
 	for( ; cmds != NULL; cmds = ( const emptyCommand_t* )cmds->next )
 	{
 		switch( cmds->commandId )
@@ -604,18 +610,18 @@ void RB_ExecuteBackEndCommands( const emptyCommand_t* cmds )
 				break;
 		}
 	}
-	
+
 	RB_DrawFlickerBox();
-	
+
 	// Fix for the steam overlay not showing up while in game without Shell/Debug/Console/Menu also rendering
 	glColorMask( 1, 1, 1, 1 );
-	
+
 	glFlush();
-	
+
 	// stop rendering on this thread
 	uint64 backEndFinishTime = Sys_Microseconds();
 	backEnd.pc.totalMicroSec = backEndFinishTime - backEndStartTime;
-	
+
 	if( r_debugRenderToTexture.GetInteger() == 1 )
 	{
 		common->Printf( "3d: %i, 2d: %i, SetBuf: %i, CpyRenders: %i, CpyFrameBuf: %i\n", c_draw3d, c_draw2d, c_setBuffers, c_copyRenders, backEnd.pc.c_copyFrameBuffer );

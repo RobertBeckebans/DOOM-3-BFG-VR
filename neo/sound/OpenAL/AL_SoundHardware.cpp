@@ -39,7 +39,7 @@ idCVar s_device( "s_device", "-1", CVAR_INTEGER | CVAR_ARCHIVE, "Which audio dev
 idCVar s_showPerfData( "s_showPerfData", "0", CVAR_BOOL, "Show XAudio2 Performance data" );
 extern idCVar s_volume_dB;
 
-extern idCVar vr_forceOculusAudio; 
+extern idCVar vr_forceOculusAudio;
 /*
 ========================
 idSoundHardware_OpenAL::idSoundHardware_OpenAL
@@ -49,23 +49,23 @@ idSoundHardware_OpenAL::idSoundHardware_OpenAL()
 {
 	openalDevice = NULL;
 	openalContext = NULL;
-	
+
 	//vuMeterRMS = NULL;
 	//vuMeterPeak = NULL;
-	
+
 	//outputChannels = 0;
 	//channelMask = 0;
-	
+
 	voices.SetNum( 0 );
 	zombieVoices.SetNum( 0 );
 	freeVoices.SetNum( 0 );
-	
+
 	lastResetTime = 0;
 }
 
 void idSoundHardware_OpenAL::PrintDeviceList( const char* list )
 {
-	
+
 	int devNum = 0;
 
 	if( !list || *list == '\0' )
@@ -76,7 +76,7 @@ void idSoundHardware_OpenAL::PrintDeviceList( const char* list )
 	{
 		do
 		{
-			idLib::Printf( "%d:    %s\n", devNum++,list );
+			idLib::Printf( "%d:    %s\n", devNum++, list );
 			list += strlen( list ) + 1;
 		}
 		while( *list != '\0' );
@@ -86,7 +86,7 @@ void idSoundHardware_OpenAL::PrintDeviceList( const char* list )
 void idSoundHardware_OpenAL::PrintALCInfo( ALCdevice* device )
 {
 	ALCint major, minor;
-	
+
 	if( device )
 	{
 		const ALCchar* devname = NULL;
@@ -95,24 +95,26 @@ void idSoundHardware_OpenAL::PrintALCInfo( ALCdevice* device )
 		{
 			devname = alcGetString( device, ALC_ALL_DEVICES_SPECIFIER );
 		}
-		
+
 		if( CheckALCErrors( device ) != ALC_NO_ERROR || !devname )
 		{
 			devname = alcGetString( device, ALC_DEVICE_SPECIFIER );
 		}
-		
+
 		idLib::Printf( "** Info for device \"%s\" **\n", devname );
 	}
 	alcGetIntegerv( device, ALC_MAJOR_VERSION, 1, &major );
 	alcGetIntegerv( device, ALC_MINOR_VERSION, 1, &minor );
-	
+
 	if( CheckALCErrors( device ) == ALC_NO_ERROR )
+	{
 		idLib::Printf( "ALC version: %d.%d\n", major, minor );
-		
+	}
+
 	if( device )
 	{
 		idLib::Printf( "OpenAL extensions: %s", alGetString( AL_EXTENSIONS ) );
-		
+
 		//idLib::Printf("ALC extensions:");
 		//printList(alcGetString(device, ALC_EXTENSIONS), ' ');
 		CheckALCErrors( device );
@@ -140,17 +142,17 @@ void listDevices_f( const idCmdArgs& args )
 	{
 		idSoundHardware_OpenAL::PrintDeviceList( alcGetString( NULL, ALC_DEVICE_SPECIFIER ) );
 	}
-	
+
 	//idLib::Printf("Available capture devices:\n");
 	//printDeviceList(alcGetString(NULL, ALC_CAPTURE_DEVICE_SPECIFIER));
-	
-	if ( vr_forceOculusAudio.GetBool() == true )
+
+	if( vr_forceOculusAudio.GetBool() == true )
 	{
 		common->Printf( "\nCurrent mode: auto detect Rift Audio.\n ( vr_forceOculusAudio = 1 ) \n\n" );
 	}
 	else
 	{
-		if ( s_device.GetInteger() == -1 )
+		if( s_device.GetInteger() == -1 )
 		{
 			common->Printf( "\nCurrently mode: use default audio device.\n ( s_device = -1, vr_forceOculusAudio = 0 )\n\n" );
 		}
@@ -168,7 +170,7 @@ void listDevices_f( const idCmdArgs& args )
 	{
 		idLib::Printf( "Default playback device:\n %s\n",  alcGetString( NULL, ALC_DEFAULT_DEVICE_SPECIFIER ) );
 	}
-	
+
 	idLib::Printf( "Use showDeviceInfo to see extended info for current audio device.\n" );
 }
 
@@ -178,7 +180,7 @@ void showDeviceInfo_f( const idCmdArgs& args )
 
 	idSoundHardware_OpenAL::PrintALCInfo( NULL );
 
-	idSoundHardware_OpenAL::PrintALCInfo( (ALCdevice*)soundSystem->GetOpenALDevice() );
+	idSoundHardware_OpenAL::PrintALCInfo( ( ALCdevice* )soundSystem->GetOpenALDevice() );
 }
 
 /*
@@ -190,17 +192,17 @@ void idSoundHardware_OpenAL::Init()
 {
 	cmdSystem->AddCommand( "listDevices", listDevices_f, 0, "Lists the connected sound devices\n", NULL );
 	cmdSystem->AddCommand( "showDeviceInfo", showDeviceInfo_f, 0, "Shows info for current sound device.\n", NULL );
-	
+
 	common->Printf( "Setup OpenAL device and context...\n " );
-	
-	if ( commonVr->hasHMD && vr_forceOculusAudio.GetBool() && alcIsExtensionPresent( NULL, "ALC_ENUMERATION_EXT" ) != AL_FALSE )
+
+	if( commonVr->hasHMD && vr_forceOculusAudio.GetBool() && alcIsExtensionPresent( NULL, "ALC_ENUMERATION_EXT" ) != AL_FALSE )
 	{
-				
+
 		const char* list = alcGetString( NULL, ALC_ALL_DEVICES_SPECIFIER );
 		common->Printf( "Searching for Rift Audio.\nGetting openAL devices via ALC_ALL_DEVICES_SPECIFIER\n" );
 		bool riftFound = false;
 
-		if ( !list || *list == '\0' )
+		if( !list || *list == '\0' )
 		{
 			idLib::Printf( "    !!! No devices found !!!\n" );
 		}
@@ -209,11 +211,11 @@ void idSoundHardware_OpenAL::Init()
 			do
 			{
 				idLib::Printf( "Found:    %s\n", list );
-				if ( strstr( list, "Rift" ) )
+				if( strstr( list, "Rift" ) )
 				{
 					riftFound = true;
 					common->Printf( "Rift audio found. Attempting to initialize openAL audio device %s\n", list );
-					
+
 					/*
 					common->Printf( "%s\n (Length %d)\n", list, strlen( list ) );
 					for ( int c = 0; c < strlen( list ); c++ )
@@ -223,33 +225,34 @@ void idSoundHardware_OpenAL::Init()
 					*/
 
 					openalDevice = alcOpenDevice( list );
-					
+
 				}
 				list += strlen( list ) + 1;
-			} while ( !riftFound &&  (*list != '\0')  );
+			}
+			while( !riftFound && ( *list != '\0' ) );
 
-			if ( openalDevice == NULL || riftFound == false )
+			if( openalDevice == NULL || riftFound == false )
 			{
 				common->Printf( "Rift audio not found or failed to open. Attempting to initialize default openAL audio device. \n" );
 				openalDevice = alcOpenDevice( NULL );
 			}
 		}
 	}
-	else if ( s_device.GetInteger() == -1 || alcIsExtensionPresent( NULL, "ALC_ENUMERATION_EXT" ) == AL_FALSE )
-	// use the default sound device if specified or if enum extenstion not present.
+	else if( s_device.GetInteger() == -1 || alcIsExtensionPresent( NULL, "ALC_ENUMERATION_EXT" ) == AL_FALSE )
+		// use the default sound device if specified or if enum extenstion not present.
 	{
 		openalDevice = alcOpenDevice( NULL );
 	}
 	else
 	{
-		// s_device contains the dev # of the desired sound device, and enum extension is present. 
+		// s_device contains the dev # of the desired sound device, and enum extension is present.
 		// get a list of sound devices, and try to open the index in the list matching s_device
 		int desiredDev = s_device.GetInteger();
 		int currentDev = 0;
 		bool found = false;
 		const char* list = alcGetString( NULL, ALC_ALL_DEVICES_SPECIFIER );
-		
-		if ( !list || *list == '\0' )
+
+		if( !list || *list == '\0' )
 		{
 			common->Printf( "Sound device (s_device) specified as %d , but unable to obtain device list.\n Attempting to open default sound device.\n", desiredDev );
 			openalDevice = alcOpenDevice( NULL );
@@ -258,7 +261,7 @@ void idSoundHardware_OpenAL::Init()
 		{
 			do
 			{
-				if ( currentDev == desiredDev )
+				if( currentDev == desiredDev )
 				{
 					found = true;
 					common->Printf( "Attempting to initialize openAL audio device # %d: %s\n", currentDev, list );
@@ -266,9 +269,10 @@ void idSoundHardware_OpenAL::Init()
 				}
 				list += strlen( list ) + 1;
 				currentDev++;
-			} while ( !found && (*list != '\0') );
+			}
+			while( !found && ( *list != '\0' ) );
 
-			if ( openalDevice == NULL || found == false )
+			if( openalDevice == NULL || found == false )
 			{
 				common->Printf( "Audio device # %d specified but failed to open.\nAttempting to initialize default openAL audio device. \n", desiredDev );
 				openalDevice = alcOpenDevice( NULL );
@@ -278,78 +282,78 @@ void idSoundHardware_OpenAL::Init()
 
 
 	// something should have been initialized by now, if not, bail.
-	if ( openalDevice == NULL )
+	if( openalDevice == NULL )
 	{
 		common->FatalError( "idSoundHardware_OpenAL::Init: alcOpenDevice() failed\n" );
 		return;
 	}
-	
+
 	openalContext = alcCreateContext( openalDevice, NULL );
 	if( alcMakeContextCurrent( openalContext ) == 0 )
 	{
 		common->FatalError( "idSoundHardware_OpenAL::Init: alcMakeContextCurrent( %p) failed\n", openalContext );
 		return;
 	}
-	
+
 	common->Printf( "Done.\n" );
-	
+
 	common->Printf( "OpenAL vendor: %s\n", alGetString( AL_VENDOR ) );
 	common->Printf( "OpenAL renderer: %s\n", alGetString( AL_RENDERER ) );
 	common->Printf( "OpenAL version: %s\n", alGetString( AL_VERSION ) );
 	common->Printf( "OpenAL extensions: %s\n", alGetString( AL_EXTENSIONS ) );
-	
+
 	//pMasterVoice->SetVolume( DBtoLinear( s_volume_dB.GetFloat() ) );
-	
+
 	//outputChannels = deviceDetails.OutputFormat.Format.nChannels;
 	//channelMask = deviceDetails.OutputFormat.dwChannelMask;
-	
+
 	//idSoundVoice::InitSurround( outputChannels, channelMask );
-	
+
 	// ---------------------
 	// Initialize the Doom classic sound system.
 	// ---------------------
 	I_InitSoundHardware( voices.Max(), 0 );
-	
+
 	// ---------------------
 	// Create VU Meter Effect
 	// ---------------------
 	/*
 	IUnknown* vuMeter = NULL;
 	XAudio2CreateVolumeMeter( &vuMeter, 0 );
-	
+
 	XAUDIO2_EFFECT_DESCRIPTOR descriptor;
 	descriptor.InitialState = true;
 	descriptor.OutputChannels = outputChannels;
 	descriptor.pEffect = vuMeter;
-	
+
 	XAUDIO2_EFFECT_CHAIN chain;
 	chain.EffectCount = 1;
 	chain.pEffectDescriptors = &descriptor;
-	
+
 	pMasterVoice->SetEffectChain( &chain );
-	
+
 	vuMeter->Release();
 	*/
-	
+
 	// ---------------------
 	// Create VU Meter Graph
 	// ---------------------
-	
+
 	/*
 	vuMeterRMS = console->CreateGraph( outputChannels );
 	vuMeterPeak = console->CreateGraph( outputChannels );
 	vuMeterRMS->Enable( false );
 	vuMeterPeak->Enable( false );
-	
+
 	memset( vuMeterPeakTimes, 0, sizeof( vuMeterPeakTimes ) );
-	
+
 	vuMeterPeak->SetFillMode( idDebugGraph::GRAPH_LINE );
 	vuMeterPeak->SetBackgroundColor( idVec4( 0.0f, 0.0f, 0.0f, 0.0f ) );
-	
+
 	vuMeterRMS->AddGridLine( 0.500f, idVec4( 0.5f, 0.5f, 0.5f, 1.0f ) );
 	vuMeterRMS->AddGridLine( 0.250f, idVec4( 0.5f, 0.5f, 0.5f, 1.0f ) );
 	vuMeterRMS->AddGridLine( 0.125f, idVec4( 0.5f, 0.5f, 0.5f, 1.0f ) );
-	
+
 	const char* channelNames[] = { "L", "R", "C", "S", "Lb", "Rb", "Lf", "Rf", "Cb", "Ls", "Rs" };
 	for( int i = 0, ci = 0; ci < sizeof( channelNames ) / sizeof( channelNames[0] ); ci++ )
 	{
@@ -361,7 +365,7 @@ void idSoundHardware_OpenAL::Init()
 		i++;
 	}
 	*/
-	
+
 	// OpenAL doesn't really impose a maximum number of sources
 	voices.SetNum( voices.Max() );
 	freeVoices.SetNum( voices.Max() );
@@ -386,20 +390,20 @@ void idSoundHardware_OpenAL::Shutdown()
 	voices.Clear();
 	freeVoices.Clear();
 	zombieVoices.Clear();
-	
+
 	// ---------------------
 	// Shutdown the Doom classic sound system.
 	// ---------------------
 	I_ShutdownSoundHardware();
-	
+
 	alcMakeContextCurrent( NULL );
-	
+
 	alcDestroyContext( openalContext );
 	openalContext = NULL;
-	
+
 	alcCloseDevice( openalDevice );
 	openalDevice = NULL;
-	
+
 	/*
 	if( vuMeterRMS != NULL )
 	{
@@ -433,7 +437,7 @@ idSoundVoice* idSoundHardware_OpenAL::AllocateVoice( const idSoundSample* leadin
 			loopingSample = NULL;
 		}
 	}
-	
+
 	// Try to find a free voice that matches the format
 	// But fallback to the last free voice if none match the format
 	idSoundVoice* voice = NULL;
@@ -455,7 +459,7 @@ idSoundVoice* idSoundHardware_OpenAL::AllocateVoice( const idSoundSample* leadin
 		freeVoices.Remove( voice );
 		return voice;
 	}
-	
+
 	return NULL;
 }
 
@@ -467,7 +471,7 @@ idSoundHardware_OpenAL::FreeVoice
 void idSoundHardware_OpenAL::FreeVoice( idSoundVoice* voice )
 {
 	voice->Stop();
-	
+
 	// Stop() is asyncronous, so we won't flush bufferes until the
 	// voice on the zombie channel actually returns !IsPlaying()
 	zombieVoices.Append( voice );
@@ -490,7 +494,7 @@ void idSoundHardware_OpenAL::Update()
 		}
 		return;
 	}
-	
+
 	if( soundSystem->IsMuted() )
 	{
 		alListenerf( AL_GAIN, 0.0f );
@@ -499,7 +503,7 @@ void idSoundHardware_OpenAL::Update()
 	{
 		alListenerf( AL_GAIN, DBtoLinear( s_volume_dB.GetFloat() ) );
 	}
-	
+
 	// IXAudio2SourceVoice::Stop() has been called for every sound on the
 	// zombie list, but it is documented as asyncronous, so we have to wait
 	// until it actually reports that it is no longer playing.
@@ -518,7 +522,7 @@ void idSoundHardware_OpenAL::Update()
 			playingZombies++;
 		}
 	}
-	
+
 	/*
 	if( s_showPerfData.GetBool() )
 	{
@@ -527,17 +531,17 @@ void idSoundHardware_OpenAL::Update()
 		idLib::Printf( "Voices: %d/%d CPU: %.2f%% Mem: %dkb\n", perfData.ActiveSourceVoiceCount, perfData.TotalSourceVoiceCount, perfData.AudioCyclesSinceLastQuery / ( float )perfData.TotalCyclesSinceLastQuery, perfData.MemoryUsageInBytes / 1024 );
 	}
 	*/
-	
+
 	/*
 	if( vuMeterRMS == NULL )
 	{
 		// Init probably hasn't been called yet
 		return;
 	}
-	
+
 	vuMeterRMS->Enable( s_showLevelMeter.GetBool() );
 	vuMeterPeak->Enable( s_showLevelMeter.GetBool() );
-	
+
 	if( !s_showLevelMeter.GetBool() )
 	{
 		pMasterVoice->DisableEffect( 0 );
@@ -547,22 +551,22 @@ void idSoundHardware_OpenAL::Update()
 	{
 		pMasterVoice->EnableEffect( 0 );
 	}
-	
+
 	float peakLevels[ 8 ];
 	float rmsLevels[ 8 ];
-	
+
 	XAUDIO2FX_VOLUMEMETER_LEVELS levels;
 	levels.ChannelCount = outputChannels;
 	levels.pPeakLevels = peakLevels;
 	levels.pRMSLevels = rmsLevels;
-	
+
 	if( levels.ChannelCount > 8 )
 	{
 		levels.ChannelCount = 8;
 	}
-	
+
 	pMasterVoice->GetEffectParameters( 0, &levels, sizeof( levels ) );
-	
+
 	int currentTime = Sys_Milliseconds();
 	for( int i = 0; i < outputChannels; i++ )
 	{
@@ -571,17 +575,17 @@ void idSoundHardware_OpenAL::Update()
 			vuMeterPeak->SetValue( i, vuMeterPeak->GetValue( i ) * 0.9f, colorRed );
 		}
 	}
-	
+
 	float width = 20.0f;
 	float height = 200.0f;
 	float left = 100.0f;
 	float top = 100.0f;
-	
+
 	sscanf( s_meterPosition.GetString(), "%f %f %f %f", &left, &top, &width, &height );
-	
+
 	vuMeterRMS->SetPosition( left, top, width * levels.ChannelCount, height );
 	vuMeterPeak->SetPosition( left, top, width * levels.ChannelCount, height );
-	
+
 	for( uint32 i = 0; i < levels.ChannelCount; i++ )
 	{
 		vuMeterRMS->SetValue( i, rmsLevels[ i ], idVec4( 0.5f, 1.0f, 0.0f, 1.00f ) );

@@ -44,12 +44,12 @@ idSWFScriptObject* idSWF::HitTest( idSWFSpriteInstance* spriteInstance, const sw
 			return NULL;
 		}
 	}
-	
+
 	if( !spriteInstance->isVisible )
 	{
 		return NULL;
 	}
-	
+
 	if( spriteInstance->scriptObject->HasValidProperty( "onRelease" )
 			|| spriteInstance->scriptObject->HasValidProperty( "onPress" )
 			|| spriteInstance->scriptObject->HasValidProperty( "onRollOver" )
@@ -59,13 +59,13 @@ idSWFScriptObject* idSWF::HitTest( idSWFSpriteInstance* spriteInstance, const sw
 	{
 		parentObject = spriteInstance->scriptObject;
 	}
-	
+
 	// rather than returning the first object we find, we actually want to return the last object we find
 	idSWFScriptObject* returnObject = NULL;
-	
+
 	float xOffset = spriteInstance->xOffset;
 	float yOffset = spriteInstance->yOffset;
-	
+
 	for( int i = 0; i < spriteInstance->displayList.Num(); i++ )
 	{
 		const swfDisplayEntry_t& display = spriteInstance->displayList[i];
@@ -77,7 +77,7 @@ idSWFScriptObject* idSWF::HitTest( idSWFSpriteInstance* spriteInstance, const sw
 		swfRenderState_t renderState2;
 		renderState2.matrix = display.matrix.Multiply( renderState.matrix );
 		renderState2.ratio = display.ratio;
-		
+
 		if( entry->type == SWF_DICT_SPRITE )
 		{
 			idSWFScriptObject* object = HitTest( display.spriteInstance, renderState2, x, y, parentObject );
@@ -97,16 +97,16 @@ idSWFScriptObject* idSWF::HitTest( idSWFSpriteInstance* spriteInstance, const sw
 					idVec2 xy1 = renderState2.matrix.Transform( fill.startVerts[fill.indices[j + 0]] );
 					idVec2 xy2 = renderState2.matrix.Transform( fill.startVerts[fill.indices[j + 1]] );
 					idVec2 xy3 = renderState2.matrix.Transform( fill.startVerts[fill.indices[j + 2]] );
-					
+
 					idMat3 edgeEquations;
 					edgeEquations[0].Set( xy1.x + xOffset, xy1.y + yOffset, 1.0f );
 					edgeEquations[1].Set( xy2.x + xOffset, xy2.y + yOffset, 1.0f );
 					edgeEquations[2].Set( xy3.x + xOffset, xy3.y + yOffset, 1.0f );
 					edgeEquations.InverseSelf();
-					
+
 					idVec3 p( x, y, 1.0f );
 					idVec3 signs = p * edgeEquations;
-					
+
 					bool bx = signs.x > 0;
 					bool by = signs.y > 0;
 					bool bz = signs.z > 0;
@@ -129,7 +129,7 @@ idSWFScriptObject* idSWF::HitTest( idSWFSpriteInstance* spriteInstance, const sw
 		else if( entry->type == SWF_DICT_EDITTEXT )
 		{
 			idSWFScriptObject* editObject = NULL;
-			
+
 			if( display.textInstance->scriptObject.HasProperty( "onRelease" ) || display.textInstance->scriptObject.HasProperty( "onPress" ) )
 			{
 				// if the edit box itself can be clicked, then we want to return it when it's clicked on
@@ -140,33 +140,33 @@ idSWFScriptObject* idSWF::HitTest( idSWFSpriteInstance* spriteInstance, const sw
 				// otherwise, we want to return the parent object
 				editObject = parentObject;
 			}
-			
+
 			if( editObject == NULL )
 			{
 				continue;
 			}
-			
+
 			if( display.textInstance->text.IsEmpty() )
 			{
 				continue;
 			}
-			
+
 			const idSWFEditText* shape = entry->edittext;
 			const idSWFEditText* text = display.textInstance->GetEditText();
 			float textLength = display.textInstance->GetTextLength();
-			
+
 			float lengthDiff = fabs( shape->bounds.br.x - shape->bounds.tl.x ) - textLength;
-			
+
 			idVec3 tl;
 			idVec3 tr;
 			idVec3 br;
 			idVec3 bl;
-			
+
 			float xOffset = spriteInstance->xOffset;
 			float yOffset = spriteInstance->yOffset;
-			
+
 			float topOffset = 0.0f;
-			
+
 			if( text->align == SWF_ET_ALIGN_LEFT )
 			{
 				tl.ToVec2() = renderState2.matrix.Transform( idVec2( shape->bounds.tl.x  + xOffset, shape->bounds.tl.y + topOffset + yOffset ) );
@@ -196,21 +196,21 @@ idSWFScriptObject* idSWF::HitTest( idSWFSpriteInstance* spriteInstance, const sw
 				br.ToVec2() = renderState2.matrix.Transform( idVec2( shape->bounds.br.x + xOffset, shape->bounds.br.y + topOffset + yOffset ) );
 				bl.ToVec2() = renderState2.matrix.Transform( idVec2( shape->bounds.tl.x + xOffset, shape->bounds.br.y + topOffset + yOffset ) );
 			}
-			
+
 			tl.z = 1.0f;
 			tr.z = 1.0f;
 			br.z = 1.0f;
 			bl.z = 1.0f;
-			
+
 			idMat3 edgeEquations;
 			edgeEquations[0] = tl;
 			edgeEquations[1] = tr;
 			edgeEquations[2] = br;
 			edgeEquations.InverseSelf();
-			
+
 			idVec3 p( x, y, 1.0f );
 			idVec3 signs = p * edgeEquations;
-			
+
 			bool bx = signs.x > 0;
 			bool by = signs.y > 0;
 			bool bz = signs.z > 0;
@@ -219,13 +219,13 @@ idSWFScriptObject* idSWF::HitTest( idSWFSpriteInstance* spriteInstance, const sw
 				// point inside top right triangle
 				returnObject = editObject;
 			}
-			
+
 			edgeEquations[0] = tl;
 			edgeEquations[1] = br;
 			edgeEquations[2] = bl;
 			edgeEquations.InverseSelf();
 			signs = p * edgeEquations;
-			
+
 			bx = signs.x > 0;
 			by = signs.y > 0;
 			bz = signs.z > 0;
@@ -246,11 +246,11 @@ idSWF::HandleEvent
 */
 bool idSWF::HandleEvent( const sysEvent_t* event )
 {
-	if ( !IsLoaded() || !IsActive() || (!inhibitControl && useInhibtControl) )
+	if( !IsLoaded() || !IsActive() || ( !inhibitControl && useInhibtControl ) )
 	{
 		return false;
 	}
-	if ( event->evType == SE_KEY )
+	if( event->evType == SE_KEY )
 	{
 
 		/*	Koz PDA - if the user is in VR, and the PDA menu is up,
@@ -262,30 +262,30 @@ bool idSWF::HandleEvent( const sysEvent_t* event )
 		and still want to select something with a controller,
 		so add some controller buttons too.
 		*/
-	
+
 		//common->Printf( "SWFEvents SE_KEY = %d\n", event->evValue );
-			
-		if (  event->evValue == K_MOUSE1
+
+		if( event->evValue == K_MOUSE1
 				|| ( commonVr->scanningPDA && (
-				   event->evValue == K_L_TOUCHTRIG 	
-				|| event->evValue == K_R_TOUCHTRIG 	
-				|| event->evValue == K_JOY_TRIGGER1
-				|| event->evValue == K_JOY_TRIGGER2
-				|| event->evValue == K_L_STEAMVRTRIG
-				|| event->evValue == K_R_STEAMVRTRIG 
-				|| event->evValue == K_JOY40 // button for steam trig
-				|| event->evValue == K_JOY58// button for steam trig
-				))
-			)
+						 event->evValue == K_L_TOUCHTRIG
+						 || event->evValue == K_R_TOUCHTRIG
+						 || event->evValue == K_JOY_TRIGGER1
+						 || event->evValue == K_JOY_TRIGGER2
+						 || event->evValue == K_L_STEAMVRTRIG
+						 || event->evValue == K_R_STEAMVRTRIG
+						 || event->evValue == K_JOY40 // button for steam trig
+						 || event->evValue == K_JOY58// button for steam trig
+					 ) )
+		  )
 		{
 
 			mouseEnabled = true;
 			idSWFScriptVar var;
-			if ( event->evValue2 )
+			if( event->evValue2 )
 			{
 
 				idSWFScriptVar waitInput = globals->Get( "waitInput" );
-				if ( waitInput.IsFunction() )
+				if( waitInput.IsFunction() )
 				{
 					useMouse = false;
 					idSWFParmList waitParms;
@@ -297,15 +297,15 @@ bool idSWF::HandleEvent( const sysEvent_t* event )
 				{
 					useMouse = true;
 				}
-				
+
 				idSWFScriptObject* hitObject = HitTest( mainspriteInstance, swfRenderState_t(), mouseX, mouseY, NULL );
-				if ( hitObject != NULL )
+				if( hitObject != NULL )
 				{
 					mouseObject = hitObject;
 					mouseObject->AddRef();
 
 					var = hitObject->Get( "onPress" );
-					if ( var.IsFunction() )
+					if( var.IsFunction() )
 					{
 						idSWFParmList parms;
 						parms.Append( event->inputDevice );
@@ -315,7 +315,7 @@ bool idSWF::HandleEvent( const sysEvent_t* event )
 					}
 
 					idSWFScriptVar var = hitObject->Get( "onDrag" );
-					if ( var.IsFunction() )
+					if( var.IsFunction() )
 					{
 						idSWFParmList parms;
 						parms.Append( mouseX );
@@ -334,10 +334,10 @@ bool idSWF::HandleEvent( const sysEvent_t* event )
 			}
 			else
 			{
-				if ( mouseObject )
+				if( mouseObject )
 				{
 					var = mouseObject->Get( "onRelease" );
-					if ( var.IsFunction() )
+					if( var.IsFunction() )
 					{
 						idSWFParmList parms;
 						parms.Append( mouseObject ); // FIXME: Remove this
@@ -346,13 +346,13 @@ bool idSWF::HandleEvent( const sysEvent_t* event )
 					mouseObject->Release();
 					mouseObject = NULL;
 				}
-				if ( hoverObject )
+				if( hoverObject )
 				{
 					hoverObject->Release();
 					hoverObject = NULL;
 				}
 
-				if ( var.IsFunction() )
+				if( var.IsFunction() )
 				{
 					return true;
 				}
@@ -393,7 +393,7 @@ bool idSWF::HandleEvent( const sysEvent_t* event )
 												K_STEAMVR_RIGHT_JS_DOWN, K_STEAMVR_LEFT_JS_DOWN,
 												K_STEAMVR_RIGHT_JS_LEFT, K_STEAMVR_LEFT_JS_LEFT,
 												K_STEAMVR_RIGHT_JS_RIGHT, K_STEAMVR_LEFT_JS_RIGHT
-											}; // will map right sticks to left sticks for nav 
+											}; // will map right sticks to left sticks for nav
 
 
 		const int rightStick = 0;
@@ -403,75 +403,82 @@ bool idSWF::HandleEvent( const sysEvent_t* event )
 		static idStr lastMenu = "none";
 		bool inPDAmenu = false;
 
-		keyNum_t keyValue = (keyNum_t)event->evValue;
+		keyNum_t keyValue = ( keyNum_t )event->evValue;
 
-		if ( vr_joystickMenuMapping.GetBool() ) 
+		if( vr_joystickMenuMapping.GetBool() )
 		{
 			idStr thisMenu = GetName();
 
-			if ( thisMenu.Icmp( lastMenu.c_str() ) != 0 ) 
+			if( thisMenu.Icmp( lastMenu.c_str() ) != 0 )
 			{
 				//start new menus or screen with either stick.
 				commonVr->forceLeftStick = true;
 				lastMenu = thisMenu;
 			}
 
-			if ( thisMenu.Icmp( "swf/pda.swf" ) == 0 ) 
+			if( thisMenu.Icmp( "swf/pda.swf" ) == 0 )
 			{
 				inPDAmenu = true;
 			}
 
-			if ( !inPDAmenu ) // not in the PDA menu, force all stick axis movement to the left stick for menu control
-			{ 
+			if( !inPDAmenu )  // not in the PDA menu, force all stick axis movement to the left stick for menu control
+			{
 				commonVr->forceLeftStick = true;
 			}
-			else 
-			{ // we are in the PDA menu. handle toggling sticks and changing mappings as needed
+			else
+			{
+				// we are in the PDA menu. handle toggling sticks and changing mappings as needed
 
-				if ( !commonVr->forceLeftStick ) 
+				if( !commonVr->forceLeftStick )
 				{
-					if ( keyValue == K_TOUCH_RIGHT_STICK_LEFT ||
-						keyValue == K_TOUCH_LEFT_STICK_LEFT ||
-						keyValue == K_JOY_STICK1_LEFT ||
-						keyValue == K_JOY_STICK2_LEFT ||
-						keyValue == K_STEAMVR_RIGHT_PAD_LEFT ||
-						keyValue == K_STEAMVR_LEFT_PAD_LEFT	||
-						keyValue == K_STEAMVR_RIGHT_JS_LEFT ||
-						keyValue == K_STEAMVR_LEFT_JS_LEFT)
+					if( keyValue == K_TOUCH_RIGHT_STICK_LEFT ||
+							keyValue == K_TOUCH_LEFT_STICK_LEFT ||
+							keyValue == K_JOY_STICK1_LEFT ||
+							keyValue == K_JOY_STICK2_LEFT ||
+							keyValue == K_STEAMVR_RIGHT_PAD_LEFT ||
+							keyValue == K_STEAMVR_LEFT_PAD_LEFT	||
+							keyValue == K_STEAMVR_RIGHT_JS_LEFT ||
+							keyValue == K_STEAMVR_LEFT_JS_LEFT )
 					{
 						commonVr->forceLeftStick = true;
 					}
 				}
-				else 
+				else
 				{
-					if ( keyValue == K_TOUCH_RIGHT_STICK_RIGHT ||
-						keyValue == K_TOUCH_LEFT_STICK_RIGHT ||
-						keyValue == K_JOY_STICK1_RIGHT ||
-						keyValue == K_JOY_STICK2_RIGHT ||
-						keyValue == K_STEAMVR_RIGHT_PAD_RIGHT ||
-						keyValue == K_STEAMVR_LEFT_PAD_RIGHT ||
-						keyValue == K_STEAMVR_RIGHT_JS_RIGHT ||
-						keyValue == K_STEAMVR_LEFT_JS_RIGHT)
+					if( keyValue == K_TOUCH_RIGHT_STICK_RIGHT ||
+							keyValue == K_TOUCH_LEFT_STICK_RIGHT ||
+							keyValue == K_JOY_STICK1_RIGHT ||
+							keyValue == K_JOY_STICK2_RIGHT ||
+							keyValue == K_STEAMVR_RIGHT_PAD_RIGHT ||
+							keyValue == K_STEAMVR_LEFT_PAD_RIGHT ||
+							keyValue == K_STEAMVR_RIGHT_JS_RIGHT ||
+							keyValue == K_STEAMVR_LEFT_JS_RIGHT )
 					{
 						commonVr->forceLeftStick = false;
 					}
 				}
 			}
 
-			if ( commonVr->forceLeftStick ) { // in the pda map right stick movement to the left sticks if forced
+			if( commonVr->forceLeftStick )    // in the pda map right stick movement to the left sticks if forced
+			{
 				sourceAxis = rightStick;
 				destAxis = leftStick;
 			}
-			else {
+			else
+			{
 				sourceAxis = leftStick; // map left sticks to right if in submenus
 				destAxis = rightStick;
 			}
 
-			for ( int j = 0; j < 16; j++ ) 
-			{ // swap the axis if needed
-				if ( joyAxisSwap[j][sourceAxis] == keyValue ) keyValue = joyAxisSwap[j][destAxis];
+			for( int j = 0; j < 16; j++ )
+			{
+				// swap the axis if needed
+				if( joyAxisSwap[j][sourceAxis] == keyValue )
+				{
+					keyValue = joyAxisSwap[j][destAxis];
+				}
 			}
-				
+
 		}// Koz end joy remapping if enabled
 
 		// Koz begin
@@ -479,44 +486,44 @@ bool idSWF::HandleEvent( const sysEvent_t* event )
 		const char* keyName = idKeyInput::KeyNumToString( keyValue );
 		// Koz end
 		// debug common->Printf( "Keyname %s\n", keyName );
-	
+
 		idSWFScriptVar var = shortcutKeys->Get( keyName );
 		// anything more than 32 levels of indirection we can be pretty sure is an infinite loop
-		for ( int runaway = 0; runaway < 32; runaway++ )
+		for( int runaway = 0; runaway < 32; runaway++ )
 		{
 			idSWFParmList eventParms;
 			eventParms.Clear();
 			eventParms.Append( event->inputDevice );
-			if ( var.IsString() )
+			if( var.IsString() )
 			{
 				// alias to another key
 				var = shortcutKeys->Get( var.ToString() );
 				continue;
 			}
-			else if ( var.IsObject() )
+			else if( var.IsObject() )
 			{
 				// if this object is a sprite, send fake mouse events to it
 				idSWFScriptObject* object = var.GetObject();
 				// make sure we don't send an onRelease event unless we have already sent that object an onPress
 				bool wasPressed = object->Get( "_pressed" ).ToBool();
 				object->Set( "_pressed", event->evValue2 );
-				if ( event->evValue2 )
+				if( event->evValue2 )
 				{
 					var = object->Get( "onPress" );
 				}
-				else if ( wasPressed )
+				else if( wasPressed )
 				{
 					var = object->Get( "onRelease" );
 				}
-				if ( var.IsFunction() )
+				if( var.IsFunction() )
 				{
 					var.GetFunction()->Call( object, eventParms );
 					return true;
 				}
 			}
-			else if ( var.IsFunction() )
+			else if( var.IsFunction() )
 			{
-				if ( event->evValue2 )
+				if( event->evValue2 )
 				{
 					// anonymous functions only respond to key down events
 					var.GetFunction()->Call( NULL, eventParms );
@@ -526,23 +533,23 @@ bool idSWF::HandleEvent( const sysEvent_t* event )
 			}
 
 			idSWFScriptVar useFunction = globals->Get( "useFunction" );
-			if ( useFunction.IsFunction() && event->evValue2 )
+			if( useFunction.IsFunction() && event->evValue2 )
 			{
 				// Koz begin
 				//const char* action = idKeyInput::GetBinding( event->evValue );
-				const char * action = idKeyInput::GetBinding( keyValue );
+				const char* action = idKeyInput::GetBinding( keyValue );
 				// Koz end
-				if ( idStr::Cmp( "_use", action ) == 0 )
+				if( idStr::Cmp( "_use", action ) == 0 )
 				{
 					useFunction.GetFunction()->Call( NULL, idSWFParmList() );
 				}
 			}
 
 			idSWFScriptVar waitInput = globals->Get( "waitInput" );
-			if ( waitInput.IsFunction() )
+			if( waitInput.IsFunction() )
 			{
 				useMouse = false;
-				if ( event->evValue2 )
+				if( event->evValue2 )
 				{
 					idSWFParmList waitParms;
 					// Koz begin
@@ -559,17 +566,17 @@ bool idSWF::HandleEvent( const sysEvent_t* event )
 			}
 
 			idSWFScriptVar focusWindow = globals->Get( "focusWindow" );
-			if ( focusWindow.IsObject() )
+			if( focusWindow.IsObject() )
 			{
 				idSWFScriptVar onKey = focusWindow.GetObject()->Get( "onKey" );
-				if ( onKey.IsFunction() )
+				if( onKey.IsFunction() )
 				{
 
 					// make sure we don't send an onRelease event unless we have already sent that object an onPress
 					idSWFScriptObject* object = focusWindow.GetObject();
 					bool wasPressed = object->Get( "_kpressed" ).ToBool();
 					object->Set( "_kpressed", event->evValue2 );
-					if ( event->evValue2 || wasPressed )
+					if( event->evValue2 || wasPressed )
 					{
 						idSWFParmList parms;
 						parms.Append( keyValue );// Koz parms.Append(event->evValue);
@@ -578,7 +585,7 @@ bool idSWF::HandleEvent( const sysEvent_t* event )
 						return true;
 					}
 					//else if( event->evValue == K_LSHIFT || event->evValue == K_RSHIFT )
-					else if ( keyValue == K_LSHIFT || keyValue == K_RSHIFT )// Koz
+					else if( keyValue == K_LSHIFT || keyValue == K_RSHIFT ) // Koz
 					{
 						idSWFParmList parms;
 						parms.Append( keyValue );// Koz parms.Append(event->evValue);
@@ -591,35 +598,35 @@ bool idSWF::HandleEvent( const sysEvent_t* event )
 		}
 		idLib::Warning( "Circular reference in %s shortcutKeys.%s", filename.c_str(), keyName );
 	}
-	else if ( event->evType == SE_CHAR )
+	else if( event->evType == SE_CHAR )
 	{
 		idSWFScriptVar focusWindow = globals->Get( "focusWindow" );
-		if ( focusWindow.IsObject() )
+		if( focusWindow.IsObject() )
 		{
 			idSWFScriptVar onChar = focusWindow.GetObject()->Get( "onChar" );
-			if ( onChar.IsFunction() )
+			if( onChar.IsFunction() )
 			{
 				idSWFParmList parms;
 				parms.Append( event->evValue );
-				parms.Append( idKeyInput::KeyNumToString( (keyNum_t)event->evValue ) );
+				parms.Append( idKeyInput::KeyNumToString( ( keyNum_t )event->evValue ) );
 				onChar.GetFunction()->Call( focusWindow.GetObject(), parms ).ToBool();
 				return true;
 			}
 		}
 	}
-	else if ( event->evType == SE_MOUSE_ABSOLUTE || event->evType == SE_MOUSE )
+	else if( event->evType == SE_MOUSE_ABSOLUTE || event->evType == SE_MOUSE )
 	{
 		mouseEnabled = true;
 		isMouseInClientArea = true;
 
 		// Mouse position in screen space needs to be converted to SWF space
-		if ( event->evType == SE_MOUSE_ABSOLUTE )
+		if( event->evType == SE_MOUSE_ABSOLUTE )
 		{
 			const float pixelAspect = renderSystem->GetPixelAspect();
-			float sysWidth = renderSystem->GetWidth() * (pixelAspect > 1.0f ? pixelAspect : 1.0f);
-			float sysHeight = renderSystem->GetHeight() / (pixelAspect < 1.0f ? pixelAspect : 1.0f);
-			
-			if ( commonVr->swfRenderMode == RENDERING_PDA ) // We dont need to render a full resolution PDA, it will be scaled down to fit the model in VR.  
+			float sysWidth = renderSystem->GetWidth() * ( pixelAspect > 1.0f ? pixelAspect : 1.0f );
+			float sysHeight = renderSystem->GetHeight() / ( pixelAspect < 1.0f ? pixelAspect : 1.0f );
+
+			if( commonVr->swfRenderMode == RENDERING_PDA )  // We dont need to render a full resolution PDA, it will be scaled down to fit the model in VR.
 			{
 				sysWidth = 640;
 				sysHeight = 480;
@@ -627,45 +634,45 @@ bool idSWF::HandleEvent( const sysEvent_t* event )
 				//sysHeight = 960;
 
 			}
-						
-			float scale = swfScale * sysHeight / (float)frameHeight;
+
+			float scale = swfScale * sysHeight / ( float )frameHeight;
 
 			// Koz
-			if ( game->isVR  )
+			if( game->isVR )
 			{
-				if ( commonVr->VR_GAME_PAUSED )
+				if( commonVr->VR_GAME_PAUSED )
 				{
 					scale *= 0.8f;
 				}
 				else
 				{
-					switch ( commonVr->swfRenderMode )
+					switch( commonVr->swfRenderMode )
 					{
-					case RENDERING_PDA:
-						scale *= 1.25;
-						break;
+						case RENDERING_PDA:
+							scale *= 1.25;
+							break;
 
-					case RENDERING_HUD:
-						scale = vr_guiScale.GetFloat();
-						break;
+						case RENDERING_HUD:
+							scale = vr_guiScale.GetFloat();
+							break;
 
-					case RENDERING_NORMAL:
-					default:
-						scale =  vr_guiScale.GetFloat();
+						case RENDERING_NORMAL:
+						default:
+							scale =  vr_guiScale.GetFloat();
 					}
 				}
 			}
 			// Koz end
 
-			sysWidth = renderSystem->GetWidth() * (pixelAspect > 1.0f ? pixelAspect : 1.0f);
-			sysHeight = renderSystem->GetHeight() / (pixelAspect < 1.0f ? pixelAspect : 1.0f);
-			
-			float invScale = 1.0f / scale;
-			float tx = 0.5f * (sysWidth - (frameWidth * scale));
-			float ty = 0.5f * (sysHeight - (frameHeight * scale));
+			sysWidth = renderSystem->GetWidth() * ( pixelAspect > 1.0f ? pixelAspect : 1.0f );
+			sysHeight = renderSystem->GetHeight() / ( pixelAspect < 1.0f ? pixelAspect : 1.0f );
 
-			mouseX = idMath::Ftoi( (static_cast<float>(event->evValue) - tx) * invScale );
-			mouseY = idMath::Ftoi( (static_cast<float>(event->evValue2) - ty) * invScale );
+			float invScale = 1.0f / scale;
+			float tx = 0.5f * ( sysWidth - ( frameWidth * scale ) );
+			float ty = 0.5f * ( sysHeight - ( frameHeight * scale ) );
+
+			mouseX = idMath::Ftoi( ( static_cast<float>( event->evValue ) - tx ) * invScale );
+			mouseY = idMath::Ftoi( ( static_cast<float>( event->evValue2 ) - ty ) * invScale );
 
 			//common->Printf( "Sysw %f sysH %f fw %f fh %f scale %f  tx %f ty %f mx %d my %d\n", sysWidth, sysHeight, frameWidth, frameHeight, scale, tx, ty, mouseX, mouseY );
 		}
@@ -682,7 +689,7 @@ bool idSWF::HandleEvent( const sysEvent_t* event )
 		bool retVal = false;
 
 		idSWFScriptObject* hitObject = HitTest( mainspriteInstance, swfRenderState_t(), mouseX, mouseY, NULL );
-		if ( hitObject != NULL )
+		if( hitObject != NULL )
 		{
 			hasHitObject = true;
 		}
@@ -691,13 +698,13 @@ bool idSWF::HandleEvent( const sysEvent_t* event )
 			hasHitObject = false;
 		}
 
-		if ( hitObject != hoverObject )
+		if( hitObject != hoverObject )
 		{
 			// First check to see if we should call onRollOut on our previous hoverObject
-			if ( hoverObject != NULL )
+			if( hoverObject != NULL )
 			{
 				idSWFScriptVar var = hoverObject->Get( "onRollOut" );
-				if ( var.IsFunction() )
+				if( var.IsFunction() )
 				{
 					var.GetFunction()->Call( hoverObject, idSWFParmList() );
 					retVal = true;
@@ -706,22 +713,22 @@ bool idSWF::HandleEvent( const sysEvent_t* event )
 				hoverObject = NULL;
 			}
 			// Then call onRollOver on our hitObject
-			if ( hitObject != NULL )
+			if( hitObject != NULL )
 			{
 				hoverObject = hitObject;
 				hoverObject->AddRef();
 				idSWFScriptVar var = hitObject->Get( "onRollOver" );
-				if ( var.IsFunction() )
+				if( var.IsFunction() )
 				{
 					var.GetFunction()->Call( hitObject, idSWFParmList() );
 					retVal = true;
 				}
 			}
 		}
-		if ( mouseObject != NULL )
+		if( mouseObject != NULL )
 		{
 			idSWFScriptVar var = mouseObject->Get( "onDrag" );
-			if ( var.IsFunction() )
+			if( var.IsFunction() )
 			{
 				idSWFParmList parms;
 				parms.Append( mouseX );
@@ -733,11 +740,11 @@ bool idSWF::HandleEvent( const sysEvent_t* event )
 		}
 		return retVal;
 	}
-	else if ( event->evType == SE_MOUSE_LEAVE )
+	else if( event->evType == SE_MOUSE_LEAVE )
 	{
 		isMouseInClientArea = false;
 	}
-	else if ( event->evType == SE_JOYSTICK )
+	else if( event->evType == SE_JOYSTICK )
 	{
 		idSWFParmList parms;
 		parms.Append( event->evValue );

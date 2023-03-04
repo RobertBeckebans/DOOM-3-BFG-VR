@@ -71,7 +71,7 @@ class idCinematicLocal : public idCinematic
 public:
 	idCinematicLocal();
 	virtual					~idCinematicLocal();
-	
+
 	virtual bool			InitFromFile( const char* qpath, bool looping );
 	virtual cinData_t		ImageForTime( int milliseconds );
 	virtual int				AnimationLength();
@@ -80,7 +80,7 @@ public:
 	// RB end
 	virtual void			Close();
 	virtual void			ResetTime( int time );
-	
+
 private:
 
 #if defined(USE_FFMPEG)
@@ -93,14 +93,14 @@ private:
 	SwsContext*				img_convert_ctx;
 	bool					hasFrame;
 	long					framePos;
-	
+
 	cinData_t				ImageForTimeFFMPEG( int milliseconds );
 	bool					InitFromFFMPEGFile( const char* qpath, bool looping );
 	void					FFMPEGReset();
 #endif
 	idImage*				img;
 	bool					isRoQ;
-	
+
 	// RB: 64 bit fixes, changed long to int
 	size_t					mcomp[256];
 	// RB end
@@ -130,34 +130,34 @@ private:
 	int						roqFPS;
 	int						drawX, drawY;
 	// RB end
-	
+
 	int						animationLength;
 	int						startTime;
 	float					frameRate;
-	
+
 	byte* 					image;
-	
+
 	bool					looping;
 	bool					dirty;
 	bool					half;
 	bool					smootheddouble;
 	bool					inMemory;
-	
+
 	void					RoQ_init();
 	void					blitVQQuad32fs( byte** status, unsigned char* data );
 	void					RoQShutdown();
 	void					RoQInterrupt();
-	
+
 	void					move8_32( byte* src, byte* dst, int spl );
 	void					move4_32( byte* src, byte* dst, int spl );
 	void					blit8_32( byte* src, byte* dst, int spl );
 	void					blit4_32( byte* src, byte* dst, int spl );
 	void					blit2_32( byte* src, byte* dst, int spl );
-	
+
 	// RB: 64 bit fixes, changed long to int
 	unsigned short			yuv_to_rgb( int y, int u, int v );
 	unsigned int			yuv_to_rgb24( int y, int u, int v );
-	
+
 	void					decodeCodeBook( byte* input, unsigned short roq_flags );
 	void					recurseQuad( int startX, int startY, int quadSize, int xOff, int yOff );
 	void					setupQuad( int xOff, int yOff );
@@ -215,11 +215,11 @@ void idCinematic::InitCinematic()
 	avcodec_register_all();
 	av_register_all();
 #endif
-	
+
 	// Carl: Doom 3 ROQ:
 	float t_ub, t_vr, t_ug, t_vg;
 	int i;
-	
+
 	// generate YUV tables
 	t_ub = ( 1.77200f / 2.0f ) * ( float )( 1 << 6 ) + 0.5f;
 	t_vr = ( 1.40200f / 2.0f ) * ( float )( 1 << 6 ) + 0.5f;
@@ -228,19 +228,19 @@ void idCinematic::InitCinematic()
 	for( i = 0; i < 256; i++ )
 	{
 		float x = ( float )( 2 * i - 255 );
-		
+
 		ROQ_UB_tab[i] = ( int )( ( t_ub * x ) + ( 1 << 5 ) );
 		ROQ_VR_tab[i] = ( int )( ( t_vr * x ) + ( 1 << 5 ) );
 		ROQ_UG_tab[i] = ( int )( ( -t_ug * x ) );
 		ROQ_VG_tab[i] = ( int )( ( -t_vg * x ) + ( 1 << 5 ) );
 		ROQ_YY_tab[i] = ( int )( ( i << 6 ) | ( i >> 2 ) );
 	}
-	
+
 	file = ( byte* )Mem_Alloc( 65536, TAG_CINEMATIC );
 	vq2 = ( word* )Mem_Alloc( 256 * 16 * 4 * sizeof( word ), TAG_CINEMATIC );
 	vq4 = ( word* )Mem_Alloc( 256 * 64 * 4 * sizeof( word ), TAG_CINEMATIC );
 	vq8 = ( word* )Mem_Alloc( 256 * 256 * 4 * sizeof( word ), TAG_CINEMATIC );
-	
+
 }
 
 /*
@@ -381,7 +381,7 @@ idCinematicLocal::idCinematicLocal()
 {
 	qStatus[0] = ( byte** )Mem_Alloc( 32768 * sizeof( byte* ), TAG_CINEMATIC );
 	qStatus[1] = ( byte** )Mem_Alloc( 32768 * sizeof( byte* ), TAG_CINEMATIC );
-	
+
 #if defined(USE_FFMPEG)
 	// Carl: ffmpeg stuff, for bink and normal video files:
 	isRoQ = false;
@@ -399,7 +399,7 @@ idCinematicLocal::idCinematicLocal()
 	img_convert_ctx = NULL;
 	hasFrame = false;
 #endif
-	
+
 	// Carl: Original Doom 3 RoQ files:
 	image = NULL;
 	status = FMV_EOF;
@@ -416,7 +416,7 @@ idCinematicLocal::idCinematicLocal()
 		opts.numLevels = 1;
 		img->AllocImage( opts, TF_LINEAR, TR_REPEAT );
 	}
-	
+
 }
 
 /*
@@ -427,16 +427,16 @@ idCinematicLocal::~idCinematicLocal
 idCinematicLocal::~idCinematicLocal()
 {
 	Close();
-	
+
 	// Carl: Original Doom 3 RoQ files:
 	Mem_Free( qStatus[0] );
 	qStatus[0] = NULL;
 	Mem_Free( qStatus[1] );
 	qStatus[1] = NULL;
-	
+
 #if defined(USE_FFMPEG)
 	// Carl: ffmpeg for bink and other video files:
-	
+
 	// RB: TODO double check this. It seems we have different versions of ffmpeg on Kubuntu 13.10 and the win32 development files
 #if defined(_WIN32) || defined(_WIN64)
 	av_frame_free( &frame );
@@ -445,18 +445,18 @@ idCinematicLocal::~idCinematicLocal()
 	av_freep( &frame );
 	av_freep( &frame2 );
 #endif
-	
+
 	if( fmt_ctx )
 	{
 		avformat_free_context( fmt_ctx );
 	}
-	
+
 	if( img_convert_ctx )
 	{
 		sws_freeContext( img_convert_ctx );
 	}
 #endif
-	
+
 	delete img;
 	img = NULL;
 }
@@ -475,7 +475,7 @@ bool idCinematicLocal::InitFromFFMPEGFile( const char* qpath, bool amilooping )
 	isRoQ = false;
 	CIN_HEIGHT = DEFAULT_CIN_HEIGHT;
 	CIN_WIDTH  =  DEFAULT_CIN_WIDTH;
-	
+
 	idStr fullpath;
 	idFile* testFile = fileSystem->OpenFileRead( qpath );
 	if( testFile )
@@ -488,7 +488,7 @@ bool idCinematicLocal::InitFromFFMPEGFile( const char* qpath, bool amilooping )
 	{
 		idStr newPath( qpath );
 		newPath.Replace( "sound/vo", "sound/VO" );
-		
+
 		testFile = fileSystem->OpenFileRead( newPath );
 		if( testFile )
 		{
@@ -501,9 +501,9 @@ bool idCinematicLocal::InitFromFFMPEGFile( const char* qpath, bool amilooping )
 			return false;
 		}
 	}
-	
+
 	//idStr fullpath = fileSystem->RelativePathToOSPath( qpath, "fs_basepath" );
-	
+
 	if( ( ret = avformat_open_input( &fmt_ctx, fullpath, NULL, NULL ) ) < 0 )
 	{
 		common->Warning( "idCinematic: Cannot open FFMPEG video file: '%s', %d\n", qpath, looping );
@@ -529,7 +529,7 @@ bool idCinematicLocal::InitFromFFMPEGFile( const char* qpath, bool amilooping )
 		common->Warning( "idCinematic: Cannot open video decoder for: '%s', %d\n", qpath, looping );
 		return false;
 	}
-	
+
 	CIN_WIDTH = dec_ctx->width;
 	CIN_HEIGHT = dec_ctx->height;
 	/** Calculate Duration in seconds
@@ -564,13 +564,13 @@ bool idCinematicLocal::InitFromFFMPEGFile( const char* qpath, bool amilooping )
 	}
 	img_convert_ctx = sws_getContext( dec_ctx->width, dec_ctx->height, dec_ctx->pix_fmt, CIN_WIDTH, CIN_HEIGHT, AV_PIX_FMT_BGR32, SWS_BICUBIC, NULL, NULL, NULL );
 	status = FMV_PLAY;
-	
+
 	startTime = 0;
 	ImageForTime( 0 );
 	status = ( looping ) ? FMV_PLAY : FMV_IDLE;
-	
+
 	//startTime = Sys_Milliseconds();
-	
+
 	return true;
 }
 #endif
@@ -585,9 +585,9 @@ void idCinematicLocal::FFMPEGReset()
 {
 	// RB: don't reset startTime here because that breaks video replays in the PDAs
 	//startTime = 0;
-	
+
 	framePos = -1;
-	
+
 	if( av_seek_frame( fmt_ctx, video_stream_index, 0, 0 ) >= 0 )
 	{
 		status = FMV_LOOPED;
@@ -608,12 +608,12 @@ idCinematicLocal::InitFromFile
 bool idCinematicLocal::InitFromFile( const char* qpath, bool amilooping )
 {
 	unsigned short RoQID;
-	
+
 	Close();
-	
+
 	inMemory = 0;
 	animationLength = 100000;
-	
+
 	// Carl: if no folder is specified, look in the video folder
 	if( strstr( qpath, "/" ) == NULL && strstr( qpath, "\\" ) == NULL )
 	{
@@ -631,9 +631,9 @@ bool idCinematicLocal::InitFromFile( const char* qpath, bool amilooping )
 	//if (fileName == "video\\loadvideo.roq") {
 	//	fileName = "video\\idlogo.roq";
 	//}
-	
+
 	iFile = fileSystem->OpenFileRead( fileName );
-	
+
 	// Carl: If the RoQ file doesn't exist, try using ffmpeg instead:
 	if( !iFile )
 	{
@@ -654,25 +654,25 @@ bool idCinematicLocal::InitFromFile( const char* qpath, bool amilooping )
 	// Carl: The rest of this function is for original Doom 3 RoQ files:
 	isRoQ = true;
 	ROQSize = iFile->Length();
-	
+
 	looping = amilooping;
-	
+
 	CIN_HEIGHT = DEFAULT_CIN_HEIGHT;
 	CIN_WIDTH  =  DEFAULT_CIN_WIDTH;
 	samplesPerPixel = 4;
 	startTime = 0;	//Sys_Milliseconds();
 	buf = NULL;
-	
+
 	iFile->Read( file, 16 );
-	
+
 	RoQID = ( unsigned short )( file[0] ) + ( unsigned short )( file[1] ) * 256;
-	
+
 	frameRate = file[6];
 	if( frameRate == 32.0f )
 	{
 		frameRate = 1000.0f / 32.0f;
 	}
-	
+
 	if( RoQID == ROQ_FILE )
 	{
 		RoQ_init();
@@ -681,7 +681,7 @@ bool idCinematicLocal::InitFromFile( const char* qpath, bool amilooping )
 		status = ( looping ) ? FMV_PLAY : FMV_IDLE;
 		return true;
 	}
-	
+
 	RoQShutdown();
 	return false;
 }
@@ -700,26 +700,26 @@ void idCinematicLocal::Close()
 		buf = NULL;
 		status = FMV_EOF;
 	}
-	
+
 	RoQShutdown();
-	
+
 #if defined(USE_FFMPEG)
 	hasFrame = false;
-	
+
 	if( !isRoQ )
 	{
 		if( img_convert_ctx )
 		{
 			sws_freeContext( img_convert_ctx );
 		}
-		
+
 		img_convert_ctx = NULL;
-		
+
 		if( dec_ctx )
 		{
 			avcodec_close( dec_ctx );
 		}
-		
+
 		if( fmt_ctx )
 		{
 			avformat_close_input( &fmt_ctx );
@@ -767,41 +767,43 @@ cinData_t idCinematicLocal::ImageForTime( int thisTime )
 #if defined(USE_FFMPEG)
 	// Carl: Handle BFG format BINK videos separately
 	if( !isRoQ )
+	{
 		return ImageForTimeFFMPEG( thisTime );
+	}
 #endif
-		
+
 	// Carl: Handle original Doom 3 RoQ video files
 	cinData_t	cinData;
-	
+
 	if( thisTime == 0 )
 	{
 		thisTime = Sys_Milliseconds();
 	}
-	
+
 	if( thisTime < 0 )
 	{
 		thisTime = 0;
 	}
-	
+
 	memset( &cinData, 0, sizeof( cinData ) );
-	
+
 //	if ( r_skipROQ.GetBool() ) {
 	if( r_skipDynamicTextures.GetBool() )
 	{
 		return cinData;
 	}
-	
+
 	if( !iFile )
 	{
 		// RB: neither .bik or .roq found
 		return cinData;
 	}
-	
+
 	if( status == FMV_EOF || status == FMV_IDLE )
 	{
 		return cinData;
 	}
-	
+
 	if( buf == NULL || startTime == -1 )
 	{
 		if( startTime == -1 )
@@ -810,21 +812,21 @@ cinData_t idCinematicLocal::ImageForTime( int thisTime )
 		}
 		startTime = thisTime;
 	}
-	
+
 	tfps = ( ( thisTime - startTime ) * frameRate ) / 1000;
-	
+
 	if( tfps < 0 )
 	{
 		tfps = 0;
 	}
-	
+
 	if( tfps < numQuads )
 	{
 		RoQReset();
 		buf = NULL;
 		status = FMV_PLAY;
 	}
-	
+
 	if( buf == NULL )
 	{
 		while( buf == NULL )
@@ -839,7 +841,7 @@ cinData_t idCinematicLocal::ImageForTime( int thisTime )
 			RoQInterrupt();
 		}
 	}
-	
+
 	if( status == FMV_LOOPED )
 	{
 		status = FMV_PLAY;
@@ -849,7 +851,7 @@ cinData_t idCinematicLocal::ImageForTime( int thisTime )
 		}
 		startTime = thisTime;
 	}
-	
+
 	if( status == FMV_EOF )
 	{
 		if( looping )
@@ -872,13 +874,13 @@ cinData_t idCinematicLocal::ImageForTime( int thisTime )
 			RoQShutdown();
 		}
 	}
-	
+
 	cinData.imageWidth = CIN_WIDTH;
 	cinData.imageHeight = CIN_HEIGHT;
 	cinData.status = status;
 	img->UploadScratch( image, CIN_WIDTH, CIN_HEIGHT );
 	cinData.image = img;
-	
+
 	return cinData;
 }
 
@@ -891,24 +893,24 @@ idCinematicLocal::ImageForTimeFFMPEG
 cinData_t idCinematicLocal::ImageForTimeFFMPEG( int thisTime )
 {
 	cinData_t	cinData;
-	
+
 	if( thisTime <= 0 )
 	{
 		thisTime = Sys_Milliseconds();
 	}
-	
+
 	memset( &cinData, 0, sizeof( cinData ) );
 	if( r_skipDynamicTextures.GetBool() || status == FMV_EOF || status == FMV_IDLE )
 	{
 		return cinData;
 	}
-	
+
 	if( !fmt_ctx )
 	{
 		// RB: .bik requested but not found
 		return cinData;
 	}
-	
+
 	if( ( !hasFrame ) || startTime == -1 )
 	{
 		if( startTime == -1 )
@@ -917,18 +919,18 @@ cinData_t idCinematicLocal::ImageForTimeFFMPEG( int thisTime )
 		}
 		startTime = thisTime;
 	}
-	
+
 	long desiredFrame = ( ( thisTime - startTime ) * frameRate ) / 1000;
 	if( desiredFrame < 0 )
 	{
 		desiredFrame = 0;
 	}
-	
+
 	if( desiredFrame < framePos )
 	{
 		FFMPEGReset();
 	}
-	
+
 	if( hasFrame && desiredFrame == framePos )
 	{
 		cinData.imageWidth = CIN_WIDTH;
@@ -937,12 +939,12 @@ cinData_t idCinematicLocal::ImageForTimeFFMPEG( int thisTime )
 		cinData.image = img;
 		return cinData;
 	}
-	
+
 	AVPacket packet;
 	while( framePos < desiredFrame )
 	{
 		int frameFinished = 0;
-		
+
 		// Do a single frame by getting packets until we have a full frame
 		while( !frameFinished )
 		{
@@ -979,10 +981,10 @@ cinData_t idCinematicLocal::ImageForTimeFFMPEG( int thisTime )
 			// Free the packet that was allocated by av_read_frame
 			av_free_packet( &packet );
 		}
-		
+
 		framePos++;
 	}
-	
+
 	// We have reached the desired frame
 	// Convert the image from its native format to RGB
 	sws_scale( img_convert_ctx, frame->data, frame->linesize, 0, dec_ctx->height, frame2->data, frame2->linesize );
@@ -992,7 +994,7 @@ cinData_t idCinematicLocal::ImageForTimeFFMPEG( int thisTime )
 	img->UploadScratch( image, CIN_WIDTH, CIN_HEIGHT );
 	hasFrame = true;
 	cinData.image = img;
-	
+
 	return cinData;
 }
 #endif
@@ -1007,11 +1009,11 @@ void idCinematicLocal::move8_32( byte* src, byte* dst, int spl )
 #if 1
 	int* dsrc, *ddst;
 	int dspl;
-	
+
 	dsrc = ( int* )src;
 	ddst = ( int* )dst;
 	dspl = spl >> 2;
-	
+
 	ddst[0 * dspl + 0] = dsrc[0 * dspl + 0];
 	ddst[0 * dspl + 1] = dsrc[0 * dspl + 1];
 	ddst[0 * dspl + 2] = dsrc[0 * dspl + 2];
@@ -1020,7 +1022,7 @@ void idCinematicLocal::move8_32( byte* src, byte* dst, int spl )
 	ddst[0 * dspl + 5] = dsrc[0 * dspl + 5];
 	ddst[0 * dspl + 6] = dsrc[0 * dspl + 6];
 	ddst[0 * dspl + 7] = dsrc[0 * dspl + 7];
-	
+
 	ddst[1 * dspl + 0] = dsrc[1 * dspl + 0];
 	ddst[1 * dspl + 1] = dsrc[1 * dspl + 1];
 	ddst[1 * dspl + 2] = dsrc[1 * dspl + 2];
@@ -1029,7 +1031,7 @@ void idCinematicLocal::move8_32( byte* src, byte* dst, int spl )
 	ddst[1 * dspl + 5] = dsrc[1 * dspl + 5];
 	ddst[1 * dspl + 6] = dsrc[1 * dspl + 6];
 	ddst[1 * dspl + 7] = dsrc[1 * dspl + 7];
-	
+
 	ddst[2 * dspl + 0] = dsrc[2 * dspl + 0];
 	ddst[2 * dspl + 1] = dsrc[2 * dspl + 1];
 	ddst[2 * dspl + 2] = dsrc[2 * dspl + 2];
@@ -1038,7 +1040,7 @@ void idCinematicLocal::move8_32( byte* src, byte* dst, int spl )
 	ddst[2 * dspl + 5] = dsrc[2 * dspl + 5];
 	ddst[2 * dspl + 6] = dsrc[2 * dspl + 6];
 	ddst[2 * dspl + 7] = dsrc[2 * dspl + 7];
-	
+
 	ddst[3 * dspl + 0] = dsrc[3 * dspl + 0];
 	ddst[3 * dspl + 1] = dsrc[3 * dspl + 1];
 	ddst[3 * dspl + 2] = dsrc[3 * dspl + 2];
@@ -1047,7 +1049,7 @@ void idCinematicLocal::move8_32( byte* src, byte* dst, int spl )
 	ddst[3 * dspl + 5] = dsrc[3 * dspl + 5];
 	ddst[3 * dspl + 6] = dsrc[3 * dspl + 6];
 	ddst[3 * dspl + 7] = dsrc[3 * dspl + 7];
-	
+
 	ddst[4 * dspl + 0] = dsrc[4 * dspl + 0];
 	ddst[4 * dspl + 1] = dsrc[4 * dspl + 1];
 	ddst[4 * dspl + 2] = dsrc[4 * dspl + 2];
@@ -1056,7 +1058,7 @@ void idCinematicLocal::move8_32( byte* src, byte* dst, int spl )
 	ddst[4 * dspl + 5] = dsrc[4 * dspl + 5];
 	ddst[4 * dspl + 6] = dsrc[4 * dspl + 6];
 	ddst[4 * dspl + 7] = dsrc[4 * dspl + 7];
-	
+
 	ddst[5 * dspl + 0] = dsrc[5 * dspl + 0];
 	ddst[5 * dspl + 1] = dsrc[5 * dspl + 1];
 	ddst[5 * dspl + 2] = dsrc[5 * dspl + 2];
@@ -1065,7 +1067,7 @@ void idCinematicLocal::move8_32( byte* src, byte* dst, int spl )
 	ddst[5 * dspl + 5] = dsrc[5 * dspl + 5];
 	ddst[5 * dspl + 6] = dsrc[5 * dspl + 6];
 	ddst[5 * dspl + 7] = dsrc[5 * dspl + 7];
-	
+
 	ddst[6 * dspl + 0] = dsrc[6 * dspl + 0];
 	ddst[6 * dspl + 1] = dsrc[6 * dspl + 1];
 	ddst[6 * dspl + 2] = dsrc[6 * dspl + 2];
@@ -1074,7 +1076,7 @@ void idCinematicLocal::move8_32( byte* src, byte* dst, int spl )
 	ddst[6 * dspl + 5] = dsrc[6 * dspl + 5];
 	ddst[6 * dspl + 6] = dsrc[6 * dspl + 6];
 	ddst[6 * dspl + 7] = dsrc[6 * dspl + 7];
-	
+
 	ddst[7 * dspl + 0] = dsrc[7 * dspl + 0];
 	ddst[7 * dspl + 1] = dsrc[7 * dspl + 1];
 	ddst[7 * dspl + 2] = dsrc[7 * dspl + 2];
@@ -1086,11 +1088,11 @@ void idCinematicLocal::move8_32( byte* src, byte* dst, int spl )
 #else
 	double* dsrc, *ddst;
 	int dspl;
-	
+
 	dsrc = ( double* )src;
 	ddst = ( double* )dst;
 	dspl = spl >> 3;
-	
+
 	ddst[0] = dsrc[0];
 	ddst[1] = dsrc[1];
 	ddst[2] = dsrc[2];
@@ -1150,26 +1152,26 @@ void idCinematicLocal::move4_32( byte* src, byte* dst, int spl )
 #if 1
 	int* dsrc, *ddst;
 	int dspl;
-	
+
 	dsrc = ( int* )src;
 	ddst = ( int* )dst;
 	dspl = spl >> 2;
-	
+
 	ddst[0 * dspl + 0] = dsrc[0 * dspl + 0];
 	ddst[0 * dspl + 1] = dsrc[0 * dspl + 1];
 	ddst[0 * dspl + 2] = dsrc[0 * dspl + 2];
 	ddst[0 * dspl + 3] = dsrc[0 * dspl + 3];
-	
+
 	ddst[1 * dspl + 0] = dsrc[1 * dspl + 0];
 	ddst[1 * dspl + 1] = dsrc[1 * dspl + 1];
 	ddst[1 * dspl + 2] = dsrc[1 * dspl + 2];
 	ddst[1 * dspl + 3] = dsrc[1 * dspl + 3];
-	
+
 	ddst[2 * dspl + 0] = dsrc[2 * dspl + 0];
 	ddst[2 * dspl + 1] = dsrc[2 * dspl + 1];
 	ddst[2 * dspl + 2] = dsrc[2 * dspl + 2];
 	ddst[2 * dspl + 3] = dsrc[2 * dspl + 3];
-	
+
 	ddst[3 * dspl + 0] = dsrc[3 * dspl + 0];
 	ddst[3 * dspl + 1] = dsrc[3 * dspl + 1];
 	ddst[3 * dspl + 2] = dsrc[3 * dspl + 2];
@@ -1177,11 +1179,11 @@ void idCinematicLocal::move4_32( byte* src, byte* dst, int spl )
 #else
 	double* dsrc, *ddst;
 	int dspl;
-	
+
 	dsrc = ( double* )src;
 	ddst = ( double* )dst;
 	dspl = spl >> 3;
-	
+
 	ddst[0] = dsrc[0];
 	ddst[1] = dsrc[1];
 	dsrc += dspl;
@@ -1209,11 +1211,11 @@ void idCinematicLocal::blit8_32( byte* src, byte* dst, int spl )
 #if 1
 	int* dsrc, *ddst;
 	int dspl;
-	
+
 	dsrc = ( int* )src;
 	ddst = ( int* )dst;
 	dspl = spl >> 2;
-	
+
 	ddst[0 * dspl + 0] = dsrc[ 0];
 	ddst[0 * dspl + 1] = dsrc[ 1];
 	ddst[0 * dspl + 2] = dsrc[ 2];
@@ -1222,7 +1224,7 @@ void idCinematicLocal::blit8_32( byte* src, byte* dst, int spl )
 	ddst[0 * dspl + 5] = dsrc[ 5];
 	ddst[0 * dspl + 6] = dsrc[ 6];
 	ddst[0 * dspl + 7] = dsrc[ 7];
-	
+
 	ddst[1 * dspl + 0] = dsrc[ 8];
 	ddst[1 * dspl + 1] = dsrc[ 9];
 	ddst[1 * dspl + 2] = dsrc[10];
@@ -1231,7 +1233,7 @@ void idCinematicLocal::blit8_32( byte* src, byte* dst, int spl )
 	ddst[1 * dspl + 5] = dsrc[13];
 	ddst[1 * dspl + 6] = dsrc[14];
 	ddst[1 * dspl + 7] = dsrc[15];
-	
+
 	ddst[2 * dspl + 0] = dsrc[16];
 	ddst[2 * dspl + 1] = dsrc[17];
 	ddst[2 * dspl + 2] = dsrc[18];
@@ -1240,7 +1242,7 @@ void idCinematicLocal::blit8_32( byte* src, byte* dst, int spl )
 	ddst[2 * dspl + 5] = dsrc[21];
 	ddst[2 * dspl + 6] = dsrc[22];
 	ddst[2 * dspl + 7] = dsrc[23];
-	
+
 	ddst[3 * dspl + 0] = dsrc[24];
 	ddst[3 * dspl + 1] = dsrc[25];
 	ddst[3 * dspl + 2] = dsrc[26];
@@ -1249,7 +1251,7 @@ void idCinematicLocal::blit8_32( byte* src, byte* dst, int spl )
 	ddst[3 * dspl + 5] = dsrc[29];
 	ddst[3 * dspl + 6] = dsrc[30];
 	ddst[3 * dspl + 7] = dsrc[31];
-	
+
 	ddst[4 * dspl + 0] = dsrc[32];
 	ddst[4 * dspl + 1] = dsrc[33];
 	ddst[4 * dspl + 2] = dsrc[34];
@@ -1258,7 +1260,7 @@ void idCinematicLocal::blit8_32( byte* src, byte* dst, int spl )
 	ddst[4 * dspl + 5] = dsrc[37];
 	ddst[4 * dspl + 6] = dsrc[38];
 	ddst[4 * dspl + 7] = dsrc[39];
-	
+
 	ddst[5 * dspl + 0] = dsrc[40];
 	ddst[5 * dspl + 1] = dsrc[41];
 	ddst[5 * dspl + 2] = dsrc[42];
@@ -1267,7 +1269,7 @@ void idCinematicLocal::blit8_32( byte* src, byte* dst, int spl )
 	ddst[5 * dspl + 5] = dsrc[45];
 	ddst[5 * dspl + 6] = dsrc[46];
 	ddst[5 * dspl + 7] = dsrc[47];
-	
+
 	ddst[6 * dspl + 0] = dsrc[48];
 	ddst[6 * dspl + 1] = dsrc[49];
 	ddst[6 * dspl + 2] = dsrc[50];
@@ -1276,7 +1278,7 @@ void idCinematicLocal::blit8_32( byte* src, byte* dst, int spl )
 	ddst[6 * dspl + 5] = dsrc[53];
 	ddst[6 * dspl + 6] = dsrc[54];
 	ddst[6 * dspl + 7] = dsrc[55];
-	
+
 	ddst[7 * dspl + 0] = dsrc[56];
 	ddst[7 * dspl + 1] = dsrc[57];
 	ddst[7 * dspl + 2] = dsrc[58];
@@ -1288,11 +1290,11 @@ void idCinematicLocal::blit8_32( byte* src, byte* dst, int spl )
 #else
 	double* dsrc, *ddst;
 	int dspl;
-	
+
 	dsrc = ( double* )src;
 	ddst = ( double* )dst;
 	dspl = spl >> 3;
-	
+
 	ddst[0] = dsrc[0];
 	ddst[1] = dsrc[1];
 	ddst[2] = dsrc[2];
@@ -1352,11 +1354,11 @@ void idCinematicLocal::blit4_32( byte* src, byte* dst, int spl )
 #if 1
 	int* dsrc, *ddst;
 	int dspl;
-	
+
 	dsrc = ( int* )src;
 	ddst = ( int* )dst;
 	dspl = spl >> 2;
-	
+
 	ddst[0 * dspl + 0] = dsrc[ 0];
 	ddst[0 * dspl + 1] = dsrc[ 1];
 	ddst[0 * dspl + 2] = dsrc[ 2];
@@ -1376,11 +1378,11 @@ void idCinematicLocal::blit4_32( byte* src, byte* dst, int spl )
 #else
 	double* dsrc, *ddst;
 	int dspl;
-	
+
 	dsrc = ( double* )src;
 	ddst = ( double* )dst;
 	dspl = spl >> 3;
-	
+
 	ddst[0] = dsrc[0];
 	ddst[1] = dsrc[1];
 	dsrc += 2;
@@ -1408,11 +1410,11 @@ void idCinematicLocal::blit2_32( byte* src, byte* dst, int spl )
 #if 1
 	int* dsrc, *ddst;
 	int dspl;
-	
+
 	dsrc = ( int* )src;
 	ddst = ( int* )dst;
 	dspl = spl >> 2;
-	
+
 	ddst[0 * dspl + 0] = dsrc[0];
 	ddst[0 * dspl + 1] = dsrc[1];
 	ddst[1 * dspl + 0] = dsrc[2];
@@ -1420,11 +1422,11 @@ void idCinematicLocal::blit2_32( byte* src, byte* dst, int spl )
 #else
 	double* dsrc, *ddst;
 	int dspl;
-	
+
 	dsrc = ( double* )src;
 	ddst = ( double* )dst;
 	dspl = spl >> 3;
-	
+
 	ddst[0] = dsrc[0];
 	ddst[dspl] = dsrc[1];
 #endif
@@ -1439,11 +1441,11 @@ void idCinematicLocal::blitVQQuad32fs( byte** status, unsigned char* data )
 {
 	unsigned short	newd, celdata, code;
 	unsigned int	index, i;
-	
+
 	newd	= 0;
 	celdata = 0;
 	index	= 0;
-	
+
 	do
 	{
 		if( !newd )
@@ -1456,10 +1458,10 @@ void idCinematicLocal::blitVQQuad32fs( byte** status, unsigned char* data )
 		{
 			newd--;
 		}
-		
+
 		code = ( unsigned short )( celdata & 0xc000 );
 		celdata <<= 2;
-		
+
 		switch( code )
 		{
 			case	0x8000:													// vq code
@@ -1481,10 +1483,10 @@ void idCinematicLocal::blitVQQuad32fs( byte** status, unsigned char* data )
 					{
 						newd--;
 					}
-					
+
 					code = ( unsigned short )( celdata & 0xc000 );
 					celdata <<= 2;
-					
+
 					switch( code )  											// code in top two bits of code
 					{
 						case	0x8000:										// 4x4 vq code
@@ -1567,18 +1569,36 @@ idCinematicLocal::yuv_to_rgb
 unsigned short idCinematicLocal::yuv_to_rgb( int y, int u, int v )
 {
 	int r, g, b, YY = ( int )( ROQ_YY_tab[( y )] );
-	
+
 	r = ( YY + ROQ_VR_tab[v] ) >> 9;
 	g = ( YY + ROQ_UG_tab[u] + ROQ_VG_tab[v] ) >> 8;
 	b = ( YY + ROQ_UB_tab[u] ) >> 9;
-	
-	if( r < 0 ) r = 0;
-	if( g < 0 ) g = 0;
-	if( b < 0 ) b = 0;
-	if( r > 31 ) r = 31;
-	if( g > 63 ) g = 63;
-	if( b > 31 ) b = 31;
-	
+
+	if( r < 0 )
+	{
+		r = 0;
+	}
+	if( g < 0 )
+	{
+		g = 0;
+	}
+	if( b < 0 )
+	{
+		b = 0;
+	}
+	if( r > 31 )
+	{
+		r = 31;
+	}
+	if( g > 63 )
+	{
+		g = 63;
+	}
+	if( b > 31 )
+	{
+		b = 31;
+	}
+
 	return ( unsigned short )( ( r << 11 ) + ( g << 5 ) + ( b ) );
 }
 // RB end
@@ -1593,18 +1613,36 @@ idCinematicLocal::yuv_to_rgb24
 unsigned int idCinematicLocal::yuv_to_rgb24( int y, int u, int v )
 {
 	int r, g, b, YY = ( int )( ROQ_YY_tab[( y )] );
-	
+
 	r = ( YY + ROQ_VR_tab[v] ) >> 6;
 	g = ( YY + ROQ_UG_tab[u] + ROQ_VG_tab[v] ) >> 6;
 	b = ( YY + ROQ_UB_tab[u] ) >> 6;
-	
-	if( r < 0 ) r = 0;
-	if( g < 0 ) g = 0;
-	if( b < 0 ) b = 0;
-	if( r > 255 ) r = 255;
-	if( g > 255 ) g = 255;
-	if( b > 255 ) b = 255;
-	
+
+	if( r < 0 )
+	{
+		r = 0;
+	}
+	if( g < 0 )
+	{
+		g = 0;
+	}
+	if( b < 0 )
+	{
+		b = 0;
+	}
+	if( r > 255 )
+	{
+		r = 255;
+	}
+	if( g > 255 )
+	{
+		g = 255;
+	}
+	if( b > 255 )
+	{
+		b = 255;
+	}
+
 	return LittleLong( ( r ) + ( g << 8 ) + ( b << 16 ) );
 }
 // RB end
@@ -1621,7 +1659,7 @@ void idCinematicLocal::decodeCodeBook( byte* input, unsigned short roq_flags )
 	unsigned short*	aptr, *bptr, *cptr, *dptr;
 	int	y0, y1, y2, y3, cr, cb;
 	unsigned int* iaptr, *ibptr, *icptr, *idptr;
-	
+
 	if( !roq_flags )
 	{
 		two = four = 256;
@@ -1629,14 +1667,17 @@ void idCinematicLocal::decodeCodeBook( byte* input, unsigned short roq_flags )
 	else
 	{
 		two  = roq_flags >> 8;
-		if( !two ) two = 256;
+		if( !two )
+		{
+			two = 256;
+		}
 		four = roq_flags & 0xff;
 	}
-	
+
 	four *= 2;
-	
+
 	bptr = ( unsigned short* )vq2;
-	
+
 	if( !half )
 	{
 		if( !smootheddouble )
@@ -1659,16 +1700,18 @@ void idCinematicLocal::decodeCodeBook( byte* input, unsigned short roq_flags )
 					*bptr++ = yuv_to_rgb( y2, cr, cb );
 					*bptr++ = yuv_to_rgb( y3, cr, cb );
 				}
-				
+
 				cptr = ( unsigned short* )vq4;
 				dptr = ( unsigned short* )vq8;
-				
+
 				for( i = 0; i < four; i++ )
 				{
 					aptr = ( unsigned short* )vq2 + ( *input++ ) * 4;
 					bptr = ( unsigned short* )vq2 + ( *input++ ) * 4;
 					for( j = 0; j < 2; j++ )
+					{
 						VQ2TO4( aptr, bptr, cptr, dptr );
+					}
 				}
 			}
 			else if( samplesPerPixel == 4 )
@@ -1687,16 +1730,18 @@ void idCinematicLocal::decodeCodeBook( byte* input, unsigned short roq_flags )
 					*ibptr++ = yuv_to_rgb24( y2, cr, cb );
 					*ibptr++ = yuv_to_rgb24( y3, cr, cb );
 				}
-				
+
 				icptr = ( unsigned int* )vq4;
 				idptr = ( unsigned int* )vq8;
-				
+
 				for( i = 0; i < four; i++ )
 				{
 					iaptr = ( unsigned int* )vq2 + ( *input++ ) * 4;
 					ibptr = ( unsigned int* )vq2 + ( *input++ ) * 4;
 					for( j = 0; j < 2; j++ )
+					{
 						VQ2TO4( iaptr, ibptr, icptr, idptr );
+					}
 				}
 			}
 		}
@@ -1724,10 +1769,10 @@ void idCinematicLocal::decodeCodeBook( byte* input, unsigned short roq_flags )
 					*bptr++ = yuv_to_rgb( y2, cr, cb );
 					*bptr++ = yuv_to_rgb( y3, cr, cb );
 				}
-				
+
 				cptr = ( unsigned short* )vq4;
 				dptr = ( unsigned short* )vq8;
-				
+
 				for( i = 0; i < four; i++ )
 				{
 					aptr = ( unsigned short* )vq2 + ( *input++ ) * 8;
@@ -1759,10 +1804,10 @@ void idCinematicLocal::decodeCodeBook( byte* input, unsigned short roq_flags )
 					*ibptr++ = yuv_to_rgb24( y2, cr, cb );
 					*ibptr++ = yuv_to_rgb24( y3, cr, cb );
 				}
-				
+
 				icptr = ( unsigned int* )vq4;
 				idptr = ( unsigned int* )vq8;
-				
+
 				for( i = 0; i < four; i++ )
 				{
 					iaptr = ( unsigned int* )vq2 + ( *input++ ) * 8;
@@ -1794,10 +1839,10 @@ void idCinematicLocal::decodeCodeBook( byte* input, unsigned short roq_flags )
 				*bptr++ = yuv_to_rgb( y0, cr, cb );
 				*bptr++ = yuv_to_rgb( y2, cr, cb );
 			}
-			
+
 			cptr = ( unsigned short* )vq4;
 			dptr = ( unsigned short* )vq8;
-			
+
 			for( i = 0; i < four; i++ )
 			{
 				aptr = ( unsigned short* )vq2 + ( *input++ ) * 2;
@@ -1822,10 +1867,10 @@ void idCinematicLocal::decodeCodeBook( byte* input, unsigned short roq_flags )
 				*ibptr++ = yuv_to_rgb24( y0, cr, cb );
 				*ibptr++ = yuv_to_rgb24( y2, cr, cb );
 			}
-			
+
 			icptr = ( unsigned int* )vq4;
 			idptr = ( unsigned int* )vq8;
-			
+
 			for( i = 0; i < four; i++ )
 			{
 				iaptr = ( unsigned int* )vq2 + ( *input++ ) * 2;
@@ -1851,25 +1896,31 @@ void idCinematicLocal::recurseQuad( int startX, int startY, int quadSize, int xO
 	byte* scroff;
 	int bigx, bigy, lowx, lowy, useY;
 	int offset;
-	
+
 	offset = screenDelta;
-	
+
 	lowx = lowy = 0;
 	bigx = xsize;
 	bigy = ysize;
-	
-	if( bigx > CIN_WIDTH ) bigx = CIN_WIDTH;
-	if( bigy > CIN_HEIGHT ) bigy = CIN_HEIGHT;
-	
+
+	if( bigx > CIN_WIDTH )
+	{
+		bigx = CIN_WIDTH;
+	}
+	if( bigy > CIN_HEIGHT )
+	{
+		bigy = CIN_HEIGHT;
+	}
+
 	if( ( startX >= lowx ) && ( startX + quadSize ) <= ( bigx ) && ( startY + quadSize ) <= ( bigy ) && ( startY >= lowy ) && quadSize <= MAXSIZE )
 	{
 		useY = startY;
 		scroff = image + ( useY + ( ( CIN_HEIGHT - bigy ) >> 1 ) + yOff ) * ( samplesPerLine ) + ( ( ( startX + xOff ) ) * samplesPerPixel );
-		
+
 		qStatus[0][onQuad  ] = scroff;
 		qStatus[1][onQuad++] = scroff + offset;
 	}
-	
+
 	if( quadSize != MINSIZE )
 	{
 		quadSize >>= 1;
@@ -1891,23 +1942,25 @@ void idCinematicLocal::setupQuad( int xOff, int yOff )
 {
 	int numQuadCels, i, x, y;
 	byte* temp;
-	
+
 	numQuadCels  = ( CIN_WIDTH * CIN_HEIGHT ) / ( 16 );
 	numQuadCels += numQuadCels / 4 + numQuadCels / 16;
 	numQuadCels += 64;							  // for overflow
-	
+
 	numQuadCels  = ( xsize * ysize ) / ( 16 );
 	numQuadCels += numQuadCels / 4;
 	numQuadCels += 64;							  // for overflow
-	
+
 	onQuad = 0;
-	
+
 	for( y = 0; y < ( int )ysize; y += 16 )
 		for( x = 0; x < ( int )xsize; x += 16 )
+		{
 			recurseQuad( x, y, 16, xOff, yOff );
-			
+		}
+
 	temp = NULL;
-	
+
 	for( i = ( numQuadCels - 64 ); i < numQuadCels; i++ )
 	{
 		qStatus[0][i] = temp;			  // eoq
@@ -1927,26 +1980,26 @@ void idCinematicLocal::readQuadInfo( byte* qData )
 	ysize    = qData[2] + qData[3] * 256;
 	maxsize  = qData[4] + qData[5] * 256;
 	minsize  = qData[6] + qData[7] * 256;
-	
+
 	CIN_HEIGHT = ysize;
 	CIN_WIDTH  = xsize;
-	
+
 	samplesPerLine = CIN_WIDTH * samplesPerPixel;
 	screenDelta = CIN_HEIGHT * samplesPerLine;
-	
+
 	if( !image )
 	{
 		image = ( byte* )Mem_Alloc( CIN_WIDTH * CIN_HEIGHT * samplesPerPixel * 2, TAG_CINEMATIC );
 	}
-	
+
 	half = false;
 	smootheddouble = false;
-	
+
 	// RB: 64 bit fixes, changed unsigned int to ptrdiff_t
 	t[0] = ( 0 - ( ptrdiff_t )image ) + ( ptrdiff_t )image + screenDelta;
 	t[1] = ( 0 - ( ( ptrdiff_t )image + screenDelta ) ) + ( ptrdiff_t )image;
 	// RB end
-	
+
 	drawX = CIN_WIDTH;
 	drawY = CIN_HEIGHT;
 }
@@ -1960,7 +2013,7 @@ idCinematicLocal::RoQPrepMcomp
 void idCinematicLocal::RoQPrepMcomp( int xoff, int yoff )
 {
 	int i, j, x, y, temp, temp2;
-	
+
 	i = samplesPerLine;
 	j = samplesPerPixel;
 	if( xsize == ( ysize * 4 ) && !half )
@@ -1968,7 +2021,7 @@ void idCinematicLocal::RoQPrepMcomp( int xoff, int yoff )
 		j = j + j;
 		i = i + i;
 	}
-	
+
 	for( y = 0; y < 16; y++ )
 	{
 		temp2 = ( y + yoff - 8 ) * i;
@@ -1999,7 +2052,7 @@ void idCinematicLocal::RoQReset()
 typedef struct
 {
 	struct jpeg_source_mgr pub;	/* public fields */
-	
+
 	byte*   infile;		/* source stream */
 	JOCTET* buffer;		/* start of buffer */
 	boolean start_of_file;	/* have we gotten any data yet? */
@@ -2047,17 +2100,20 @@ struct jpeg_error_mgr jerr;
  */
 
 #ifdef USE_NEWER_JPEG
-METHODDEF( boolean )
+	METHODDEF( boolean )
 #else
-METHODDEF boolean
+	METHODDEF boolean
 #endif
 fill_input_buffer( j_decompress_ptr cinfo )
 {
 	my_src_ptr src = ( my_src_ptr ) cinfo->src;
 	int nbytes;
-	
+
 	nbytes = INPUT_BUF_SIZE;
-	if( nbytes > src->memsize ) nbytes = src->memsize;
+	if( nbytes > src->memsize )
+	{
+		nbytes = src->memsize;
+	}
 	if( nbytes == 0 )
 	{
 		/* Insert a fake EOI marker */
@@ -2074,7 +2130,7 @@ fill_input_buffer( j_decompress_ptr cinfo )
 	src->pub.next_input_byte = src->buffer;
 	src->pub.bytes_in_buffer = nbytes;
 	src->start_of_file = FALSE;
-	
+
 	return TRUE;
 }
 /*
@@ -2083,14 +2139,14 @@ fill_input_buffer( j_decompress_ptr cinfo )
  */
 
 #ifdef USE_NEWER_JPEG
-METHODDEF( void )
+	METHODDEF( void )
 #else
-METHODDEF void
+	METHODDEF void
 #endif
 init_source( j_decompress_ptr cinfo )
 {
 	my_src_ptr src = ( my_src_ptr ) cinfo->src;
-	
+
 	/* We reset the empty-input-file flag for each image,
 	 * but we don't clear the input buffer.
 	 * This is correct behavior for reading a series of images from one source.
@@ -2111,14 +2167,14 @@ init_source( j_decompress_ptr cinfo )
  */
 
 #ifdef USE_NEWER_JPEG
-METHODDEF( void )
+	METHODDEF( void )
 #else
-METHODDEF void
+	METHODDEF void
 #endif
 skip_input_data( j_decompress_ptr cinfo, long num_bytes )
 {
 	my_src_ptr src = ( my_src_ptr ) cinfo->src;
-	
+
 	/* Just a dumb implementation for now.  Could use fseek() except
 	 * it doesn't work on pipes.  Not clear that being smart is worth
 	 * any trouble anyway --- large skips are infrequent.
@@ -2151,9 +2207,9 @@ skip_input_data( j_decompress_ptr cinfo, long num_bytes )
  */
 
 #ifdef USE_NEWER_JPEG
-METHODDEF( void )
+	METHODDEF( void )
 #else
-METHODDEF void
+	METHODDEF void
 #endif
 term_source( j_decompress_ptr cinfo )
 {
@@ -2162,14 +2218,14 @@ term_source( j_decompress_ptr cinfo )
 }
 
 #ifdef USE_NEWER_JPEG
-GLOBAL( void )
+	GLOBAL( void )
 #else
-GLOBAL void
+	GLOBAL void
 #endif
 jpeg_memory_src( j_decompress_ptr cinfo, byte* infile, int size )
 {
 	my_src_ptr src;
-	
+
 	/* The source object and input buffer are made permanent so that a series
 	 * of JPEG images can be read from the same file by calling jpeg_stdio_src
 	 * only before the first one.  (If we discarded the buffer at the end of
@@ -2187,7 +2243,7 @@ jpeg_memory_src( j_decompress_ptr cinfo, byte* infile, int size )
 					  ( *cinfo->mem->alloc_small )( ( j_common_ptr ) cinfo, JPOOL_PERMANENT,
 							  INPUT_BUF_SIZE * sizeof( JOCTET ) );
 	}
-	
+
 	src = ( my_src_ptr ) cinfo->src;
 	src->pub.init_source = init_source;
 	src->pub.fill_input_buffer = fill_input_buffer;
@@ -2213,36 +2269,36 @@ int JPEGBlit( byte* wStatus, byte* data, int datasize )
 	/* More stuff */
 	JSAMPARRAY buffer;		/* Output row buffer */
 	int row_stride;		/* physical row width in output buffer */
-	
+
 	/* Step 1: allocate and initialize JPEG decompression object */
-	
+
 	/* We set up the normal JPEG error routines, then override error_exit. */
 	cinfo.err = jpeg_std_error( &jerr );
-	
+
 	/* Now we can initialize the JPEG decompression object. */
 	jpeg_create_decompress( &cinfo );
-	
+
 	/* Step 2: specify data source (eg, a file) */
-	
+
 	jpeg_memory_src( &cinfo, data, datasize );
-	
+
 	/* Step 3: read file parameters with jpeg_read_header() */
-	
+
 	jpeg_read_header( &cinfo, TRUE );
 	/* We can ignore the return value from jpeg_read_header since
 	 *   (a) suspension is not possible with the stdio data source, and
 	 *   (b) we passed TRUE to reject a tables-only JPEG file as an error.
 	 * See libjpeg.doc for more info.
 	 */
-	
+
 	/* Step 4: set parameters for decompression */
-	
+
 	/* In this example, we don't need to change any of the defaults set by
 	 * jpeg_read_header(), so we do nothing here.
 	 */
-	
+
 	/* Step 5: Start decompressor */
-	
+
 	cinfo.dct_method = JDCT_IFAST;
 	cinfo.dct_method = JDCT_FASTEST;
 	cinfo.dither_mode = JDITHER_NONE;
@@ -2253,7 +2309,7 @@ int JPEGBlit( byte* wStatus, byte* data, int datasize )
 	/* We can ignore the return value since suspension is not possible
 	 * with the stdio data source.
 	 */
-	
+
 	/* We may need to do some setup of our own at this point before reading
 	 * the data.  After jpeg_start_decompress() we have the correct scaled
 	 * output image dimensions available, as well as the output colormap
@@ -2262,18 +2318,18 @@ int JPEGBlit( byte* wStatus, byte* data, int datasize )
 	 */
 	/* JSAMPLEs per row in output buffer */
 	row_stride = cinfo.output_width * cinfo.output_components;
-	
+
 	/* Make a one-row-high sample array that will go away when done with image */
 	buffer = ( *cinfo.mem->alloc_sarray )
 			 ( ( j_common_ptr ) &cinfo, JPOOL_IMAGE, row_stride, 1 );
-			 
+
 	/* Step 6: while (scan lines remain to be read) */
 	/*           jpeg_read_scanlines(...); */
-	
+
 	/* Here we use the library's state variable cinfo.output_scanline as the
 	 * loop counter, so that we don't have to keep track ourselves.
 	 */
-	
+
 	wStatus += ( cinfo.output_height - 1 ) * row_stride;
 	while( cinfo.output_scanline < cinfo.output_height )
 	{
@@ -2282,7 +2338,7 @@ int JPEGBlit( byte* wStatus, byte* data, int datasize )
 		 * more than one scanline at a time if that's more convenient.
 		 */
 		jpeg_read_scanlines( &cinfo, &buffer[0], 1 );
-		
+
 		/* Assume put_scanline_someplace wants a pointer and sample count. */
 		memcpy( wStatus, &buffer[0][0], row_stride );
 		/*
@@ -2300,23 +2356,23 @@ int JPEGBlit( byte* wStatus, byte* data, int datasize )
 		*/
 		wStatus -= row_stride;
 	}
-	
+
 	/* Step 7: Finish decompression */
-	
+
 	jpeg_finish_decompress( &cinfo );
 	/* We can ignore the return value since suspension is not possible
 	 * with the stdio data source.
 	 */
-	
+
 	/* Step 8: Release JPEG decompression object */
-	
+
 	/* This is an important step since it will release a good deal of memory. */
 	jpeg_destroy_decompress( &cinfo );
-	
+
 	/* At this point you may want to check to see whether any corrupt-data
 	 * warnings occurred (test whether jerr.pub.num_warnings is nonzero).
 	 */
-	
+
 	/* And we're done! */
 	return 1;
 }
@@ -2329,7 +2385,7 @@ idCinematicLocal::RoQInterrupt
 void idCinematicLocal::RoQInterrupt()
 {
 	byte*				framedata;
-	
+
 	iFile->Read( file, RoQFrameSize + 8 );
 	if( RoQPlayed >= ROQSize )
 	{
@@ -2343,7 +2399,7 @@ void idCinematicLocal::RoQInterrupt()
 		}
 		return;
 	}
-	
+
 	framedata = file;
 //
 // new frame is ready
@@ -2386,7 +2442,10 @@ redump:
 				readQuadInfo( framedata );
 				setupQuad( 0, 0 );
 			}
-			if( numQuads != 1 ) numQuads = 0;
+			if( numQuads != 1 )
+			{
+				numQuads = 0;
+			}
 			break;
 		case	ROQ_PACKET:
 			inMemory = ( roq_flags != 0 );
@@ -2423,14 +2482,14 @@ redump:
 		}
 		return;
 	}
-	
+
 	framedata		 += RoQFrameSize;
 	roq_id		 = framedata[0] + framedata[1] * 256;
 	RoQFrameSize = framedata[2] + framedata[3] * 256 + framedata[4] * 65536;
 	roq_flags	 = framedata[6] + framedata[7] * 256;
 	roqF0		 = ( char )framedata[7];
 	roqF1		 = ( char )framedata[6];
-	
+
 	if( RoQFrameSize > 65536 || roq_id == 0x1084 )
 	{
 		common->DPrintf( "roq_size>65536||roq_id==0x1084\n" );
@@ -2464,14 +2523,17 @@ void idCinematicLocal::RoQ_init()
 {
 
 	RoQPlayed = 24;
-	
+
 	/*	get frame rate */
 	roqFPS	 = file[ 6] + file[ 7] * 256;
-	
-	if( !roqFPS ) roqFPS = 30;
-	
+
+	if( !roqFPS )
+	{
+		roqFPS = 30;
+	}
+
 	numQuads = -1;
-	
+
 	roq_id		= file[ 8] + file[ 9] * 256;
 	RoQFrameSize = file[10] + file[11] * 256 + file[12] * 65536;
 	roq_flags	= file[14] + file[15] * 256;
@@ -2489,13 +2551,13 @@ void idCinematicLocal::RoQShutdown()
 		return;
 	}
 	status = FMV_IDLE;
-	
+
 	if( iFile )
 	{
 		fileSystem->CloseFile( iFile );
 		iFile = NULL;
 	}
-	
+
 	fileName = "";
 }
 
@@ -2509,7 +2571,7 @@ idSndWindow::InitFromFile
 bool idSndWindow::InitFromFile( const char* qpath, bool looping )
 {
 	idStr fname = qpath;
-	
+
 	fname.ToLower();
 	if( !fname.Icmp( "waveform" ) )
 	{

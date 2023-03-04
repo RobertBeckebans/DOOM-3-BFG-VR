@@ -143,7 +143,7 @@ void idCameraView::Event_Activate( idEntity* activator )
 			{
 				gameLocal.Printf( "%d: '%s' start\n", gameLocal.framenum, GetName() );
 			}
-			
+
 			gameLocal.SetCamera( this );
 		}
 		else
@@ -202,9 +202,9 @@ void idCameraView::Spawn()
 		spawnArgs.Set( "cameraTarget", spawnArgs.GetString( "name" ) );
 	}
 	fov = spawnArgs.GetFloat( "fov", "90" );
-	
+
 	PostEventMS( &EV_Camera_SetAttachments, 0 );
-	
+
 	UpdateChangeableSpawnArgs( NULL );
 }
 
@@ -216,15 +216,15 @@ idCameraView::GetViewParms
 void idCameraView::GetViewParms( renderView_t* view )
 {
 	assert( view );
-	
+
 	if( view == NULL )
 	{
 		return;
 	}
-	
+
 	idVec3 dir;
 	idEntity* ent;
-	
+
 	if( attachedTo )
 	{
 		ent = attachedTo;
@@ -233,7 +233,7 @@ void idCameraView::GetViewParms( renderView_t* view )
 	{
 		ent = this;
 	}
-	
+
 	view->vieworg = ent->GetPhysics()->GetOrigin();
 	if( attachedView )
 	{
@@ -245,7 +245,7 @@ void idCameraView::GetViewParms( renderView_t* view )
 	{
 		view->viewaxis = ent->GetPhysics()->GetAxis();
 	}
-	
+
 	gameLocal.CalcFov( fov, view->fov_x, view->fov_y );
 }
 
@@ -281,7 +281,7 @@ idCameraAnim::idCameraAnim()
 	cycle = 1;
 	starttime = 0;
 	activator = NULL;
-	
+
 }
 
 /*
@@ -325,7 +325,7 @@ void idCameraAnim::Restore( idRestoreGame* savefile )
 	savefile->ReadInt( starttime );
 	savefile->ReadInt( cycle );
 	activator.Restore( savefile );
-	
+
 	LoadAnim();
 }
 
@@ -344,10 +344,10 @@ void idCameraAnim::Spawn()
 	{
 		offset.Zero();
 	}
-	
+
 	// always think during cinematics
 	cinematic = true;
-	
+
 	LoadAnim();
 }
 
@@ -366,41 +366,41 @@ void idCameraAnim::LoadAnim()
 	int			i;
 	idStr		filename;
 	const char*	key;
-	
+
 	key = spawnArgs.GetString( "anim" );
 	if( !key )
 	{
 		gameLocal.Error( "Missing 'anim' key on '%s'", name.c_str() );
 	}
-	
+
 	filename = spawnArgs.GetString( va( "anim %s", key ) );
 	if( !filename.Length() )
 	{
 		gameLocal.Error( "Missing 'anim %s' key on '%s'", key, name.c_str() );
 	}
-	
+
 	filename.SetFileExtension( MD5_CAMERA_EXT );
 	if( !parser.LoadFile( filename ) )
 	{
 		gameLocal.Error( "Unable to load '%s' on '%s'", filename.c_str(), name.c_str() );
 	}
-	
+
 	cameraCuts.Clear();
 	cameraCuts.SetGranularity( 1 );
 	camera.Clear();
 	camera.SetGranularity( 1 );
-	
+
 	parser.ExpectTokenString( MD5_VERSION_STRING );
 	version = parser.ParseInt();
 	if( version != MD5_VERSION )
 	{
 		parser.Error( "Invalid version %d.  Should be version %d\n", version, MD5_VERSION );
 	}
-	
+
 	// skip the commandline
 	parser.ExpectTokenString( "commandline" );
 	parser.ReadToken( &token );
-	
+
 	// parse num frames
 	parser.ExpectTokenString( "numFrames" );
 	numFrames = parser.ParseInt();
@@ -408,7 +408,7 @@ void idCameraAnim::LoadAnim()
 	{
 		parser.Error( "Invalid number of frames: %d", numFrames );
 	}
-	
+
 	// parse framerate
 	parser.ExpectTokenString( "frameRate" );
 	frameRate = parser.ParseInt();
@@ -416,7 +416,7 @@ void idCameraAnim::LoadAnim()
 	{
 		parser.Error( "Invalid framerate: %d", frameRate );
 	}
-	
+
 	// parse num cuts
 	parser.ExpectTokenString( "numCuts" );
 	numCuts = parser.ParseInt();
@@ -424,15 +424,15 @@ void idCameraAnim::LoadAnim()
 	{
 		parser.Error( "Invalid number of camera cuts: %d", numCuts );
 	}
-	
+
 	// parse the camera cuts
 	// Koz Begin : add support for camera cuts to include overrides for position and rotation at each cut location.
 	// this allows better camera control when using 'immersive' cutscenes without having to re-write the entire camera file.
-	
+
 	parser.ExpectTokenString( "cuts" );
 	parser.ExpectTokenString( "{" );
 	cameraCuts.SetNum( numCuts );
-	
+
 	idToken cutToken; // Koz
 
 	for( i = 0; i < numCuts; i++ )
@@ -441,7 +441,7 @@ void idCameraAnim::LoadAnim()
 		cameraCuts[i].rotOverride = false;
 		cameraCuts[i].posNew = vec3_zero;
 		cameraCuts[i].rotNew.Set( 0.0f, 0.0f, 0.0f );
-				
+
 		cameraCuts[ i ].cutFrame = parser.ParseInt();
 		if( ( cameraCuts[ i ].cutFrame < 0 ) || ( cameraCuts[ i ].cutFrame >= numFrames ) ) // Koz - changed to allow camera cut on first frame.
 		{
@@ -449,24 +449,24 @@ void idCameraAnim::LoadAnim()
 		}
 
 		// Koz read pos and rot override values if present.
-		if ( parser.PeekTokenString( "pos" ) )
+		if( parser.PeekTokenString( "pos" ) )
 		{
 			parser.ReadToken( &cutToken );
 			parser.Parse1DMatrix( 3, cameraCuts[i].posNew.ToFloatPtr() );
 			cameraCuts[i].posOverride = true;
 		}
 
-		if ( parser.PeekTokenString( "rotA" ) ) // read rotation in angles - easier for manual editing.
+		if( parser.PeekTokenString( "rotA" ) )  // read rotation in angles - easier for manual editing.
 		{
 			parser.ReadToken( &cutToken );
-			
+
 			idAngles ta;
 			parser.Parse1DMatrix( 3, &ta[0] );
 			cameraCuts[i].rotNew = ta.ToQuat().ToCQuat();
 			cameraCuts[i].rotOverride = true;
 		}
 
-		if ( parser.PeekTokenString( "rot" ) ) // read rotation quat - easier to copy from exitsing frame.
+		if( parser.PeekTokenString( "rot" ) )  // read rotation quat - easier to copy from exitsing frame.
 		{
 			parser.ReadToken( &cutToken );
 			parser.Parse1DMatrix( 3, cameraCuts[i].rotNew.ToFloatPtr() );
@@ -475,9 +475,9 @@ void idCameraAnim::LoadAnim()
 	}
 
 	// Koz End
-	
+
 	parser.ExpectTokenString( "}" );
-	
+
 	// parse the camera frames
 	parser.ExpectTokenString( "camera" );
 	parser.ExpectTokenString( "{" );
@@ -503,16 +503,16 @@ void idCameraAnim::Start()
 	{
 		cycle = 1;
 	}
-	
+
 	if( g_debugCinematic.GetBool() )
 	{
 		gameLocal.Printf( "%d: '%s' start\n", gameLocal.framenum, GetName() );
 	}
-	
+
 	starttime = gameLocal.time;
 	gameLocal.SetCamera( this );
 	BecomeActive( TH_THINK );
-	
+
 	// if the player has already created the renderview for this frame, have him update it again so that the camera starts this frame
 	if( gameLocal.GetLocalPlayer()->GetRenderView()->time[TIME_GROUP2] == gameLocal.fast.time )
 	{
@@ -533,7 +533,7 @@ void idCameraAnim::Stop()
 		{
 			gameLocal.Printf( "%d: '%s' stop\n", gameLocal.framenum, GetName() );
 		}
-		
+
 		BecomeInactive( TH_THINK );
 		gameLocal.SetCamera( NULL );
 		if( threadNum )
@@ -571,43 +571,43 @@ void idCameraAnim::GetViewParms( renderView_t* view )
 
 	cameraFrame_t	cutFrame;
 	bool			cutRotOverride;
-	
+
 	int				i;
 	int				cut;
 	idQuat			q1, q2, q3;
-	
+
 	assert( view );
 	if( !view )
 	{
 		return;
 	}
-	
+
 	if( camera.Num() == 0 )
 	{
 		// we most likely are in the middle of a restore
 		// FIXME: it would be better to fix it so this doesn't get called during a restore
 		return;
 	}
-	
+
 	SetTimeState ts( timeGroup );
-	
+
 	frameTime	= ( gameLocal.time - starttime ) * frameRate;
 	frame		= frameTime / 1000;
 	lerp		= ( frameTime % 1000 ) * 0.001f;
-	
+
 	// skip any frames where camera cuts occur
 	realFrame = frame;
 	cut = 0;
 	camFrame2 = &camera[0]; // Koz
-	
+
 	cutFrame.fov = camFrame2[ 0 ].fov;
 	cutFrame.q = camFrame2[ 0 ].q;
 	cutFrame.t = camFrame2[ 0 ].t;
 
 	cutRotOverride = false;
-	for ( i = 0; i < cameraCuts.Num(); i++ )
+	for( i = 0; i < cameraCuts.Num(); i++ )
 	{
-		if ( frame < cameraCuts[i].cutFrame )
+		if( frame < cameraCuts[i].cutFrame )
 		{
 			break;
 		}
@@ -615,37 +615,37 @@ void idCameraAnim::GetViewParms( renderView_t* view )
 		cut++;
 		int cf = idMath::ClampInt( 0, camera.Num() - 2, cameraCuts[i].cutFrame + 1 );
 		camFrame2 = &camera[ cf /*cameraCuts[i].cutFrame*/ ];
-		
+
 		cutFrame.fov = camFrame2[0].fov;
 		cutFrame.q = camFrame2[0].q;
 		cutFrame.t = camFrame2[0].t;
 
-		if ( vr_cinematics.GetInteger() == 0 ) // only use replacement positions/rotations if using immersive cinematics.
+		if( vr_cinematics.GetInteger() == 0 )  // only use replacement positions/rotations if using immersive cinematics.
 		{
 			cutRotOverride = false;
-			if ( cameraCuts[i].posOverride )
+			if( cameraCuts[i].posOverride )
 			{
 				cutFrame.t = cameraCuts[i].posNew;
 			}
-			if ( cameraCuts[i].rotOverride )
+			if( cameraCuts[i].rotOverride )
 			{
 				cutFrame.q = cameraCuts[i].rotNew;
 				cutRotOverride = true;
 			}
 		}
 	}
-	
+
 	if( g_debugCinematic.GetBool() )
 	{
-		if ( gameLocal.GetCamera() )
+		if( gameLocal.GetCamera() )
 		{
 			common->Printf( "Time %d - Camera %s cut %d rot Quat %s : rot Angles %s : pos %s\n", Sys_Milliseconds(), gameLocal.GetCamera()->GetName(), cut, cutFrame.q.ToString(), cutFrame.q.ToAngles().ToString(), cutFrame.t.ToString() );
 		}
-				
+
 		int prevFrameTime	= ( gameLocal.previousTime - starttime ) * frameRate;
 		int prevFrame		= prevFrameTime / 1000;
 		int prevCut;
-		
+
 		prevCut = 0;
 		for( i = 0; i < cameraCuts.Num(); i++ )
 		{
@@ -656,13 +656,13 @@ void idCameraAnim::GetViewParms( renderView_t* view )
 			prevFrame++;
 			prevCut++;
 		}
-		
+
 		if( prevCut != cut )
 		{
 			gameLocal.Printf( "%d: '%s' cut %d\n", gameLocal.framenum, GetName(), cut );
 		}
 	}
-	
+
 	// clamp to the first frame.  also check if this is a one frame anim.  one frame anims would end immediately,
 	// but since they're mainly used for static cams anyway, just stay on it infinitely.
 	if( ( frame < 0 ) || ( camera.Num() < 2 ) )
@@ -677,7 +677,7 @@ void idCameraAnim::GetViewParms( renderView_t* view )
 		{
 			cycle--;
 		}
-		
+
 		if( cycle != 0 )
 		{
 			// advance start time so that we loop
@@ -685,7 +685,7 @@ void idCameraAnim::GetViewParms( renderView_t* view )
 			GetViewParms( view );
 			return;
 		}
-		
+
 		Stop();
 		if( gameLocal.GetCamera() != NULL )
 		{
@@ -720,238 +720,341 @@ void idCameraAnim::GetViewParms( renderView_t* view )
 		view->vieworg = camFrame[ 0 ].t * invlerp + camFrame[ 1 ].t * lerp + offset;
 		view->fov_x = camFrame[ 0 ].fov * invlerp + camFrame[ 1 ].fov * lerp;
 	}
-	
+
 	// Koz begin
-	if ( game->isVR && (vr_cinematics.GetInteger() == 0 && vr_flicksyncCharacter.GetInteger() == 0) )
+	if( game->isVR && ( vr_cinematics.GetInteger() == 0 && vr_flicksyncCharacter.GetInteger() == 0 ) )
 	{
-		// Clamp the camera origin to camera cut locations. 
+		// Clamp the camera origin to camera cut locations.
 		// This eliminates camera panning and smooth movements in cutscenes,
 		// while allowing the player to look around from
 		// the camera origin. Not perfect but less vomitous.
-		
+
 		// Update: camera files have been updated with additional cuts, and pos/rot overrides at cut locations
-		// for better 'immersive' cutscenes. Player also has option to use cropped or projected cutscenes 
+		// for better 'immersive' cutscenes. Player also has option to use cropped or projected cutscenes
 		// where the pos/rot overrides are ignored and cameras are not clamped to cuts.
 
 		// Flicksync camera
 		idEntity* ent = NULL;
 		static idEntity* hiddenEnt = NULL;
-		switch ( vr_flicksyncCharacter.GetInteger() )
+		switch( vr_flicksyncCharacter.GetInteger() )
 		{
-		case FLICK_BETRUGER:
-			ent = gameLocal.FindEntity( "marscity_cinematic_betruger_1" );
-			if ( !ent )
-				ent = gameLocal.FindEntity( "marscity_cinematic_betruger_speech" );
-			if ( !ent )
-				ent = gameLocal.FindEntity( "delta3_betruger_1" );
-			if ( !ent )
-				ent = gameLocal.FindEntity( "delta3_betruger_2" );
-			if ( !ent )
-				ent = gameLocal.FindEntity( "delta4_betruger_1" );
-			if ( !ent )
-				ent = gameLocal.FindEntity( "monorail_raisecommando_betruger_1" );
-			if ( !ent )
-				ent = gameLocal.FindEntity( "char_betruger_2" );
-			if ( !ent )
-				ent = gameLocal.FindEntity( "char_betruger_1" );
-			// maledict_death_skull_1
-			if ( !ent )
-				ent = gameLocal.FindEntity( "maledict_intro_cinematic_1" );
-			if ( !ent )
-				ent = gameLocal.FindEntity( "jay_hell_maledict_intro_cinematic_1" );
-			if ( !ent )
-				ent = gameLocal.FindEntity( "monster_boss_d3xp_maledict_1" );
-			if ( !ent )
-				ent = gameLocal.FindEntity( "monster_boss_maledict_cinematic_1" ); // Doom 3 Hellhole
-			if ( !ent )
-				ent = gameLocal.FindEntity( "monster_boss_maledict_cinematic_2" ); // Doom 3 Hellhole
-			if ( !ent )
-				ent = gameLocal.FindEntity( "maledict_death_cinematic_1" );
-			if ( !ent )
-				ent = gameLocal.FindEntity( "maledict_death_cinematic_flyin" );
-			if ( !ent )
-				ent = gameLocal.FindEntity( "maledict_death_cinematic_death" );
-			break;
-		case FLICK_TOWER:
-			ent = gameLocal.FindEntity( "marscity_sec_window_1" );
-			if ( !ent )
-				ent = gameLocal.FindEntity( "marscity_sec_window2_1" );
-			if ( !ent )
-				ent = gameLocal.FindEntity( "erebus1_intro_scientist_1" );
-			break;
-		case FLICK_SWANN:
-			ent = gameLocal.FindEntity( "marscity_cinematic_swann_1" );
-			if ( !ent )
-				ent = gameLocal.FindEntity( "marscity_cinematic_swann_speech" );
-			if ( !ent )
-				ent = gameLocal.FindEntity( "marscity_walking_swann_1" );
-			if ( !ent || ent->IsHidden() )
-				ent = gameLocal.FindEntity( "admin_overhear_swann_1" );
-			if ( !ent || ent->IsHidden() )
-				ent = gameLocal.FindEntity( "admin_overhear_swann_2" );
-			if ( !ent )
-				ent = gameLocal.FindEntity( "enpro_swann_2" );
-			if ( !ent )
-				ent = gameLocal.FindEntity( "enpro_swann_3" );
-			if ( !ent )
-				ent = gameLocal.FindEntity( "char_swann_1" );
-			if ( !ent )
-				ent = gameLocal.FindEntity( "delta5_wounded_swann_1" );
-			break;
-		case FLICK_CAMPBELL:
-			ent = gameLocal.FindEntity( "marscity_cinematic_campbell_1" );
-			if ( !ent || ent->IsHidden() )
-				ent = gameLocal.FindEntity( "marscity_cinematic_campbell_2" );
-			if ( !ent || ent->IsHidden() )
-				ent = gameLocal.FindEntity( "admin_overhear_campbell_3" );
-			if ( !ent || ent->IsHidden() )
-				ent = gameLocal.FindEntity( "char_campbell_bfgcase_1" );
-			if ( !ent || ent->IsHidden() )
-				ent = gameLocal.FindEntity( "admin_overhear_campbell_1" );
-			if ( !ent || ent->IsHidden() )
-				ent = gameLocal.FindEntity( "admin_overhear_campbell_2" );
-			if ( !ent || ent->IsHidden() )
-				ent = gameLocal.FindEntity( "cpu1_camphunt_campbell_1" );
-			if ( !ent || ent->IsHidden() )
-				ent = gameLocal.FindEntity( "cpu1_wounded_campbell_1" );
-			if ( !ent )
-				ent = gameLocal.FindEntity( "enpro_campbell_2" );
-			if ( !ent )
-				ent = gameLocal.FindEntity( "enpro_campbell_3" );
-			if ( !ent || ent->IsHidden() )
-				ent = gameLocal.FindEntity( "char_campbell_bfg_1" );
-			if ( !ent || ent->IsHidden() )
-				ent = gameLocal.FindEntity( "char_campbell_bfg_2" );
-			break;
-			// 
-		case FLICK_RECEPTION:
-			ent = gameLocal.FindEntity( "marscity_receptionist_full" );
-			break;
-		case FLICK_SARGE:
-			ent = gameLocal.FindEntity( "marscity_cinematic_sarge2_1" );
-			if ( !ent || ent->IsHidden() )
-				ent = gameLocal.FindEntity( "marscity_cinematic_sarge2_1_head" );
-			if ( !ent || ent->IsHidden() )
-				ent = gameLocal.FindEntity( "marscity_cinematic_sarge_1" );
-			if ( !ent || ent->IsHidden() )
-				ent = gameLocal.FindEntity( "sarge_secondary" );
-			break;
-		case FLICK_SCIENTIST:
-			ent = gameLocal.FindEntity( "underground_crazy_sci_1" );
-			if ( !ent )
-				ent = gameLocal.FindEntity( "underground_crazy_zombie_1" );
-			if ( !ent )
-				ent = gameLocal.FindEntity( "delta2a_scientist_1" );
-			break;
-		case FLICK_MCNEIL:
-			ent = gameLocal.FindEntity( "erebus1_intro_mcneil_1" );
-			if ( !ent )
-				ent = gameLocal.FindEntity( "phobos2_cinematic_mcneil_1" );
-			if ( !ent )
-				ent = gameLocal.FindEntity( "phobos2_mcneil_typing_1" );
-			// phobos2_mcneil_chair_cine_1
-			break;
-		case FLICK_MARINE_PDA:
-			ent = gameLocal.FindEntity( "erebus1_intro_marine1_1" );
-			if ( !ent )
-				ent = gameLocal.FindEntity( "enpro_soldier2_1" );
-			break;
-		case FLICK_MARINE_TORCH:
-			ent = gameLocal.FindEntity( "erebus1_intro_marine2_1" );
-			if ( !ent )
-				ent = gameLocal.FindEntity( "enpro_soldier4_1" );
-			break;
-		case FLICK_POINT:
-			ent = gameLocal.FindEntity( "erebus1_intro_detonate_1" );
-			if ( !ent )
-				ent = gameLocal.FindEntity( "enpro_soldier1_1" );
-			if ( !ent )
-				ent = gameLocal.FindEntity( "erebus1_cinematic_marine_gravitygun_end_1" );
-			break;
-		case FLICK_BRAVO_LEAD:
-			ent = gameLocal.FindEntity( "enpro_soldier3_1" );
-		case FLICK_PLAYER:
-			static const char * player_entities[] = {
-				"marscity_cinematic_player_1",
-				"marscity_reception_player_1",
-				"playerspeech",
-				"marscity_cinematic_player_sarge",
-				"admin_overhear_player_1_pinky",
-				"admin_overhear_player_2",
-				"admin_overhear_player_3",
-				"alphalabs1_player_2",
-				"alphalabs1_player_3",
-				"alphalabs3_vagaryintro_player_1",
-				"alphalabs3_vagaryintro_player_2",
-				"cpuboss_cin_player_1",
-				"delta2a_player_2",
-				"delta2a_player_3",
-				"delta4_cin_player_1",
-				"delta4_cin_player_2",
-				"enpro_cin_player_1",
-				"enpro_cin_player_2",
-				"enpro_cin_player_5",
-				"enpro_cin_player_7",
-				"wounded_marine_cinematic_player",
-				"erebus1_cinematic_player_fill_1",
-				"erebus1_cinematic_player_start_1",
-				"erebus1_cinematic_player_end_1",
-				"erebus2_cinematic_player_vulgarintro_1",
-				"ht_erebus2_cinematic_player",
-				"ht_erebus2_cinematic_player_end",
-				"erebus5_envirosuit_player_1",
-				"erebus5_cloud_player_cinematic_1",
-				"erebus5_envirosuit_player_3",
-				"ber_erebus6_cinematic_player",
-				"ber_erebus6_cinematic_player_end",
-				"maledict_death_player_turnrun_1",
-				"maledict_death_player_run_1",
-				"maledict_death_player_rocket_1",
-				"maledict_death_player_heart_1",
-				"maledict_death_player_heart_2",
-				"maledict_death_player_heart_flyin",
-				"hell1_cin_player_3",
-				"hellhole_cin_player_1",
-				"hellhole_cin_player_2",
-				"player1",
-			};
-			for ( int e = 0; e < sizeof( player_entities ) / sizeof( player_entities[0] ); e++ )
-			{
-				ent = gameLocal.FindEntity( player_entities[e] );
-				if ( ent )
-					break;
-			}
+			case FLICK_BETRUGER:
+				ent = gameLocal.FindEntity( "marscity_cinematic_betruger_1" );
+				if( !ent )
+				{
+					ent = gameLocal.FindEntity( "marscity_cinematic_betruger_speech" );
+				}
+				if( !ent )
+				{
+					ent = gameLocal.FindEntity( "delta3_betruger_1" );
+				}
+				if( !ent )
+				{
+					ent = gameLocal.FindEntity( "delta3_betruger_2" );
+				}
+				if( !ent )
+				{
+					ent = gameLocal.FindEntity( "delta4_betruger_1" );
+				}
+				if( !ent )
+				{
+					ent = gameLocal.FindEntity( "monorail_raisecommando_betruger_1" );
+				}
+				if( !ent )
+				{
+					ent = gameLocal.FindEntity( "char_betruger_2" );
+				}
+				if( !ent )
+				{
+					ent = gameLocal.FindEntity( "char_betruger_1" );
+				}
+				// maledict_death_skull_1
+				if( !ent )
+				{
+					ent = gameLocal.FindEntity( "maledict_intro_cinematic_1" );
+				}
+				if( !ent )
+				{
+					ent = gameLocal.FindEntity( "jay_hell_maledict_intro_cinematic_1" );
+				}
+				if( !ent )
+				{
+					ent = gameLocal.FindEntity( "monster_boss_d3xp_maledict_1" );
+				}
+				if( !ent )
+				{
+					ent = gameLocal.FindEntity( "monster_boss_maledict_cinematic_1" );    // Doom 3 Hellhole
+				}
+				if( !ent )
+				{
+					ent = gameLocal.FindEntity( "monster_boss_maledict_cinematic_2" );    // Doom 3 Hellhole
+				}
+				if( !ent )
+				{
+					ent = gameLocal.FindEntity( "maledict_death_cinematic_1" );
+				}
+				if( !ent )
+				{
+					ent = gameLocal.FindEntity( "maledict_death_cinematic_flyin" );
+				}
+				if( !ent )
+				{
+					ent = gameLocal.FindEntity( "maledict_death_cinematic_death" );
+				}
+				break;
+			case FLICK_TOWER:
+				ent = gameLocal.FindEntity( "marscity_sec_window_1" );
+				if( !ent )
+				{
+					ent = gameLocal.FindEntity( "marscity_sec_window2_1" );
+				}
+				if( !ent )
+				{
+					ent = gameLocal.FindEntity( "erebus1_intro_scientist_1" );
+				}
+				break;
+			case FLICK_SWANN:
+				ent = gameLocal.FindEntity( "marscity_cinematic_swann_1" );
+				if( !ent )
+				{
+					ent = gameLocal.FindEntity( "marscity_cinematic_swann_speech" );
+				}
+				if( !ent )
+				{
+					ent = gameLocal.FindEntity( "marscity_walking_swann_1" );
+				}
+				if( !ent || ent->IsHidden() )
+				{
+					ent = gameLocal.FindEntity( "admin_overhear_swann_1" );
+				}
+				if( !ent || ent->IsHidden() )
+				{
+					ent = gameLocal.FindEntity( "admin_overhear_swann_2" );
+				}
+				if( !ent )
+				{
+					ent = gameLocal.FindEntity( "enpro_swann_2" );
+				}
+				if( !ent )
+				{
+					ent = gameLocal.FindEntity( "enpro_swann_3" );
+				}
+				if( !ent )
+				{
+					ent = gameLocal.FindEntity( "char_swann_1" );
+				}
+				if( !ent )
+				{
+					ent = gameLocal.FindEntity( "delta5_wounded_swann_1" );
+				}
+				break;
+			case FLICK_CAMPBELL:
+				ent = gameLocal.FindEntity( "marscity_cinematic_campbell_1" );
+				if( !ent || ent->IsHidden() )
+				{
+					ent = gameLocal.FindEntity( "marscity_cinematic_campbell_2" );
+				}
+				if( !ent || ent->IsHidden() )
+				{
+					ent = gameLocal.FindEntity( "admin_overhear_campbell_3" );
+				}
+				if( !ent || ent->IsHidden() )
+				{
+					ent = gameLocal.FindEntity( "char_campbell_bfgcase_1" );
+				}
+				if( !ent || ent->IsHidden() )
+				{
+					ent = gameLocal.FindEntity( "admin_overhear_campbell_1" );
+				}
+				if( !ent || ent->IsHidden() )
+				{
+					ent = gameLocal.FindEntity( "admin_overhear_campbell_2" );
+				}
+				if( !ent || ent->IsHidden() )
+				{
+					ent = gameLocal.FindEntity( "cpu1_camphunt_campbell_1" );
+				}
+				if( !ent || ent->IsHidden() )
+				{
+					ent = gameLocal.FindEntity( "cpu1_wounded_campbell_1" );
+				}
+				if( !ent )
+				{
+					ent = gameLocal.FindEntity( "enpro_campbell_2" );
+				}
+				if( !ent )
+				{
+					ent = gameLocal.FindEntity( "enpro_campbell_3" );
+				}
+				if( !ent || ent->IsHidden() )
+				{
+					ent = gameLocal.FindEntity( "char_campbell_bfg_1" );
+				}
+				if( !ent || ent->IsHidden() )
+				{
+					ent = gameLocal.FindEntity( "char_campbell_bfg_2" );
+				}
+				break;
+			//
+			case FLICK_RECEPTION:
+				ent = gameLocal.FindEntity( "marscity_receptionist_full" );
+				break;
+			case FLICK_SARGE:
+				ent = gameLocal.FindEntity( "marscity_cinematic_sarge2_1" );
+				if( !ent || ent->IsHidden() )
+				{
+					ent = gameLocal.FindEntity( "marscity_cinematic_sarge2_1_head" );
+				}
+				if( !ent || ent->IsHidden() )
+				{
+					ent = gameLocal.FindEntity( "marscity_cinematic_sarge_1" );
+				}
+				if( !ent || ent->IsHidden() )
+				{
+					ent = gameLocal.FindEntity( "sarge_secondary" );
+				}
+				break;
+			case FLICK_SCIENTIST:
+				ent = gameLocal.FindEntity( "underground_crazy_sci_1" );
+				if( !ent )
+				{
+					ent = gameLocal.FindEntity( "underground_crazy_zombie_1" );
+				}
+				if( !ent )
+				{
+					ent = gameLocal.FindEntity( "delta2a_scientist_1" );
+				}
+				break;
+			case FLICK_MCNEIL:
+				ent = gameLocal.FindEntity( "erebus1_intro_mcneil_1" );
+				if( !ent )
+				{
+					ent = gameLocal.FindEntity( "phobos2_cinematic_mcneil_1" );
+				}
+				if( !ent )
+				{
+					ent = gameLocal.FindEntity( "phobos2_mcneil_typing_1" );
+				}
+				// phobos2_mcneil_chair_cine_1
+				break;
+			case FLICK_MARINE_PDA:
+				ent = gameLocal.FindEntity( "erebus1_intro_marine1_1" );
+				if( !ent )
+				{
+					ent = gameLocal.FindEntity( "enpro_soldier2_1" );
+				}
+				break;
+			case FLICK_MARINE_TORCH:
+				ent = gameLocal.FindEntity( "erebus1_intro_marine2_1" );
+				if( !ent )
+				{
+					ent = gameLocal.FindEntity( "enpro_soldier4_1" );
+				}
+				break;
+			case FLICK_POINT:
+				ent = gameLocal.FindEntity( "erebus1_intro_detonate_1" );
+				if( !ent )
+				{
+					ent = gameLocal.FindEntity( "enpro_soldier1_1" );
+				}
+				if( !ent )
+				{
+					ent = gameLocal.FindEntity( "erebus1_cinematic_marine_gravitygun_end_1" );
+				}
+				break;
+			case FLICK_BRAVO_LEAD:
+				ent = gameLocal.FindEntity( "enpro_soldier3_1" );
+			case FLICK_PLAYER:
+				static const char* player_entities[] =
+				{
+					"marscity_cinematic_player_1",
+					"marscity_reception_player_1",
+					"playerspeech",
+					"marscity_cinematic_player_sarge",
+					"admin_overhear_player_1_pinky",
+					"admin_overhear_player_2",
+					"admin_overhear_player_3",
+					"alphalabs1_player_2",
+					"alphalabs1_player_3",
+					"alphalabs3_vagaryintro_player_1",
+					"alphalabs3_vagaryintro_player_2",
+					"cpuboss_cin_player_1",
+					"delta2a_player_2",
+					"delta2a_player_3",
+					"delta4_cin_player_1",
+					"delta4_cin_player_2",
+					"enpro_cin_player_1",
+					"enpro_cin_player_2",
+					"enpro_cin_player_5",
+					"enpro_cin_player_7",
+					"wounded_marine_cinematic_player",
+					"erebus1_cinematic_player_fill_1",
+					"erebus1_cinematic_player_start_1",
+					"erebus1_cinematic_player_end_1",
+					"erebus2_cinematic_player_vulgarintro_1",
+					"ht_erebus2_cinematic_player",
+					"ht_erebus2_cinematic_player_end",
+					"erebus5_envirosuit_player_1",
+					"erebus5_cloud_player_cinematic_1",
+					"erebus5_envirosuit_player_3",
+					"ber_erebus6_cinematic_player",
+					"ber_erebus6_cinematic_player_end",
+					"maledict_death_player_turnrun_1",
+					"maledict_death_player_run_1",
+					"maledict_death_player_rocket_1",
+					"maledict_death_player_heart_1",
+					"maledict_death_player_heart_2",
+					"maledict_death_player_heart_flyin",
+					"hell1_cin_player_3",
+					"hellhole_cin_player_1",
+					"hellhole_cin_player_2",
+					"player1",
+				};
+				for( int e = 0; e < sizeof( player_entities ) / sizeof( player_entities[0] ); e++ )
+				{
+					ent = gameLocal.FindEntity( player_entities[e] );
+					if( ent )
+					{
+						break;
+					}
+				}
 		}
-		static idEntity *last_ent = NULL;
+		static idEntity* last_ent = NULL;
 		// only use character if it's not hidden, and it's within range of current camera
-		if ( ent && (ent == hiddenEnt || !ent->IsHidden()) && (ent->GetPhysics()->GetOrigin() - view->vieworg).LengthSqr() <= 550 * 550 )
+		if( ent && ( ent == hiddenEnt || !ent->IsHidden() ) && ( ent->GetPhysics()->GetOrigin() - view->vieworg ).LengthSqr() <= 550 * 550 )
 		{
-			if ( g_debugCinematic.GetBool() && ent != last_ent )
+			if( g_debugCinematic.GetBool() && ent != last_ent )
+			{
 				gameLocal.Printf( "%d: Flicksync using character %s (%s)\n", gameLocal.framenum, ent->name.c_str(), ent->GetClassname() );
+			}
 			last_ent = ent;
 			idVec3 camPos = view->vieworg;
-			if ( ent->GetPhysics()->IsType( idPhysics_Actor::Type ) )
+			if( ent->GetPhysics()->IsType( idPhysics_Actor::Type ) )
 			{
-				idActor* actor = static_cast<idActor*>(ent);
+				idActor* actor = static_cast<idActor*>( ent );
 				actor->GetViewPos( view->vieworg, view->viewaxis );
-				if ( (view->vieworg - actor->GetPhysics()->GetOrigin()).z <= 32 )
+				if( ( view->vieworg - actor->GetPhysics()->GetOrigin() ).z <= 32 )
+				{
 					view->vieworg.z = actor->GetPhysics()->GetOrigin().z + pm_normalviewheight.GetFloat();
+				}
 				idEntity* head = actor->GetHeadEntity();
-				if ( head )
+				if( head )
 				{
 					//head->GetRenderEntity()->suppressSurfaceInViewID = entityNumber + 1; //view->viewID;
 					head->GetRenderEntity()->allowSurfaceInViewID = 666;
 					view->vieworg = head->GetPhysics()->GetOrigin() + idVec3( 0, 0, 10 );
 				}
-				if ( vr_playerBodyMode.GetInteger() > 0 || !head )
+				if( vr_playerBodyMode.GetInteger() > 0 || !head )
 				{
 					//actor->GetRenderEntity()->suppressSurfaceInViewID = entityNumber + 1; //view->viewID;
 					actor->GetRenderEntity()->allowSurfaceInViewID = 666;
 				}
 				// Fix facing backwards as Betruger in the meeting cutscene.
-				if ( actor->name == "marscity_cinematic_betruger_speech" || actor->name == "monorail_raisecommando_betruger_1"
-					|| actor->name == "phobos2_cinematic_mcneil_1" || actor->name == "monster_boss_maledict_cinematic_1" || actor->name == "monster_boss_maledict_cinematic_2" )
+				if( actor->name == "marscity_cinematic_betruger_speech" || actor->name == "monorail_raisecommando_betruger_1"
+						|| actor->name == "phobos2_cinematic_mcneil_1" || actor->name == "monster_boss_maledict_cinematic_1" || actor->name == "monster_boss_maledict_cinematic_2" )
+				{
 					view->viewaxis = idAngles( 0, view->viewaxis.ToAngles().yaw + 180, 0 ).ToMat3();
+				}
 			}
 			else
 			{
@@ -963,22 +1066,22 @@ void idCameraAnim::GetViewParms( renderView_t* view )
 		}
 		else
 		{
-			if ( g_debugCinematic.GetBool() && ent != last_ent )
+			if( g_debugCinematic.GetBool() && ent != last_ent )
 			{
 				gameLocal.Printf( "%d: Flicksync using camera %s\n", gameLocal.framenum, this->name.c_str() );
 
 			}
-			
+
 			last_ent = ent;
-			
-			
+
+
 			view->viewaxis = cutFrame.q.ToMat3();
 			view->vieworg = cutFrame.t + offset;
 		}
 
 		// if the rotation wasn't overridden, remove camera pitch & roll, this is uncomfortable in VR.
 
-		if ( !cutRotOverride )
+		if( !cutRotOverride )
 		{
 			idAngles angles = view->viewaxis.ToAngles();
 			angles.pitch = 0;
@@ -986,21 +1089,21 @@ void idCameraAnim::GetViewParms( renderView_t* view )
 			view->viewaxis = angles.ToMat3();
 		}
 	}
-	
-	if ( game->isVR && gameLocal.inCinematic )
+
+	if( game->isVR && gameLocal.inCinematic )
 	{
 		// override any camera fov changes. Unless you *like* the taste of hurl.
 
-		const idPlayer	*player = gameLocal.GetLocalPlayer();
+		const idPlayer*	player = gameLocal.GetLocalPlayer();
 		view->fov_x = player->DefaultFov();
 	}
 	// Koz end
-	
+
 	gameLocal.CalcFov( view->fov_x, view->fov_x, view->fov_y );
-		
+
 	// setup the pvs for this frame
 	UpdatePVSAreas( view->vieworg );
-	
+
 #if 0
 	static int lastFrame = 0;
 	static idVec3 lastFrameVec( 0.0f, 0.0f, 0.0f );
@@ -1015,7 +1118,7 @@ void idCameraAnim::GetViewParms( renderView_t* view )
 		lastFrame = gameLocal.time;
 	}
 #endif
-	
+
 	if( g_showcamerainfo.GetBool() )
 	{
 		idStr		filename;
@@ -1023,11 +1126,11 @@ void idCameraAnim::GetViewParms( renderView_t* view )
 
 		key = spawnArgs.GetString( "anim" );
 		filename = spawnArgs.GetString( va( "anim %s", key ) );
-		
+
 		gameLocal.Printf( "^5Frame: ^7%d/%d\n", realFrame + 1, camera.Num() - cameraCuts.Num() );
-		
-		if ( key && filename.Length() )
-		{ 
+
+		if( key && filename.Length() )
+		{
 			gameLocal.Printf( "Name %s\nKey %s\nFilename %s\n\n\n", name.c_str(), key, filename.c_str() );
 		}
 	}

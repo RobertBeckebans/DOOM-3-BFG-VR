@@ -183,9 +183,9 @@ void			GL_Finish();	// wait for the GPU to have executed all commands
 // RB begin
 bool			GL_CheckErrors_( const char* filename, int line );
 #if 1 // !defined(RETAIL)
-#define         GL_CheckErrors()	GL_CheckErrors_(__FILE__, __LINE__)
+	#define         GL_CheckErrors()	GL_CheckErrors_(__FILE__, __LINE__)
 #else
-#define         GL_CheckErrors()	false
+	#define         GL_CheckErrors()	false
 #endif
 // RB end
 

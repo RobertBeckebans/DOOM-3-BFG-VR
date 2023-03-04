@@ -292,14 +292,14 @@ idStr idSWFScriptVar::ToString() const
 			return idStrId( value.i ).GetLocalizedString();
 		case SWF_VAR_STRING:
 			return *value.string;
-			
+
 		case SWF_VAR_FLOAT:
 			return va( "%g", value.f );
 		case SWF_VAR_BOOL:
 			return value.b ? "true" : "false";
 		case SWF_VAR_INTEGER:
 			return va( "%i", value.i );
-			
+
 		case SWF_VAR_NULL:
 			return "[null]";
 		case SWF_VAR_UNDEF:
@@ -332,17 +332,17 @@ float idSWFScriptVar::ToFloat() const
 	{
 		case SWF_VAR_STRING:
 			return atof( *value.string );
-			
+
 		case SWF_VAR_FLOAT:
 			return value.f;
 		case SWF_VAR_BOOL:
 			return ( float )value.b;
 		case SWF_VAR_INTEGER:
 			return ( float )value.i;
-			
+
 		case SWF_VAR_OBJECT:
 			return value.object->DefaultValue( false ).ToFloat();
-			
+
 		case SWF_VAR_FUNCTION:
 		case SWF_VAR_NULL:
 		case SWF_VAR_UNDEF:
@@ -364,17 +364,17 @@ bool idSWFScriptVar::ToBool() const
 	{
 		case SWF_VAR_STRING:
 			return ( value.string->Icmp( "true" ) == 0 || value.string->Icmp( "1" ) == 0 );
-			
+
 		case SWF_VAR_FLOAT:
 			return ( value.f != 0.0f );
 		case SWF_VAR_BOOL:
 			return value.b;
 		case SWF_VAR_INTEGER:
 			return value.i != 0;
-			
+
 		case SWF_VAR_OBJECT:
 			return value.object->DefaultValue( false ).ToBool();
-			
+
 		case SWF_VAR_FUNCTION:
 		case SWF_VAR_NULL:
 		case SWF_VAR_UNDEF:
@@ -396,18 +396,18 @@ int32 idSWFScriptVar::ToInteger() const
 	{
 		case SWF_VAR_STRING:
 			return atoi( *value.string );
-			
+
 		case SWF_VAR_FLOAT:
 			return idMath::Ftoi( value.f );
-			
+
 		case SWF_VAR_BOOL:
 			return value.b ? 1 : 0;
 		case SWF_VAR_INTEGER:
 			return value.i;
-			
+
 		case SWF_VAR_OBJECT:
 			return value.object->DefaultValue( false ).ToInteger();
-			
+
 		case SWF_VAR_FUNCTION:
 		case SWF_VAR_NULL:
 		case SWF_VAR_UNDEF:
@@ -429,7 +429,7 @@ idSWFSpriteInstance* idSWFScriptVar::ToSprite()
 	{
 		return value.object->GetSprite();
 	}
-	
+
 	return NULL;
 }
 
@@ -444,7 +444,7 @@ idSWFTextInstance* idSWFScriptVar::ToText()
 	{
 		return value.object->GetText();
 	}
-	
+
 	return NULL;
 }
 
@@ -459,7 +459,7 @@ idSWFScriptVar idSWFScriptVar::GetNestedVar( const char* arg1, const char* arg2,
 	{
 		return idSWFScriptVar();
 	}
-	
+
 	return GetObject()->GetNestedVar( arg1, arg2, arg3, arg4, arg5, arg6 );
 }
 
@@ -474,7 +474,7 @@ idSWFScriptObject* idSWFScriptVar::GetNestedObj( const char* arg1, const char* a
 	{
 		return NULL;
 	}
-	
+
 	return GetObject()->GetNestedObj( arg1, arg2, arg3, arg4, arg5, arg6 );
 }
 
@@ -489,7 +489,7 @@ idSWFSpriteInstance* idSWFScriptVar::GetNestedSprite( const char* arg1, const ch
 	{
 		return NULL;
 	}
-	
+
 	return GetObject()->GetNestedSprite( arg1, arg2, arg3, arg4, arg5, arg6 );
 }
 
@@ -504,7 +504,7 @@ idSWFTextInstance* idSWFScriptVar::GetNestedText( const char* arg1, const char* 
 	{
 		return NULL;
 	}
-	
+
 	return GetObject()->GetNestedText( arg1, arg2, arg3, arg4, arg5, arg6 );
 }
 
@@ -521,14 +521,14 @@ const char* idSWFScriptVar::TypeOf() const
 			return "stringid";
 		case SWF_VAR_STRING:
 			return "string";
-			
+
 		case SWF_VAR_FLOAT:
 			return "number";
 		case SWF_VAR_BOOL:
 			return "boolean";
 		case SWF_VAR_INTEGER:
 			return "number";
-			
+
 		case SWF_VAR_OBJECT:
 			if( value.object->GetSprite() != NULL )
 			{
@@ -542,7 +542,7 @@ const char* idSWFScriptVar::TypeOf() const
 			{
 				return "object";
 			}
-			
+
 		case SWF_VAR_FUNCTION:
 			return "function";
 		case SWF_VAR_NULL:
@@ -563,7 +563,7 @@ idSWFScriptVar::PrintToConsole
 void idSWFScriptVar::PrintToConsole() const
 {
 	idLib::Printf( "Object type: %s\n", TypeOf() );
-	
+
 	if( IsObject() )
 	{
 		GetObject()->PrintToConsole();

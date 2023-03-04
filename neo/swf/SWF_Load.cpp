@@ -48,24 +48,24 @@ bool idSWF::LoadSWF( const char* fullpath )
 		idLib::Printf( "SWF File not found %s\n", fullpath );
 		return false;
 	}
-	
+
 	swfHeader_t header;
 	rawfile->Read( &header, sizeof( header ) );
-	
+
 	if( header.W != 'W' || header.S != 'S' )
 	{
 		idLib::Warning( "Wrong signature bytes" );
 		delete rawfile;
 		return false;
 	}
-	
+
 	if( header.version > 9 )
 	{
 		idLib::Warning( "Unsupported version %d", header.version );
 		delete rawfile;
 		return false;
 	}
-	
+
 	bool compressed;
 	if( header.compression == 'F' )
 	{
@@ -82,15 +82,15 @@ bool idSWF::LoadSWF( const char* fullpath )
 		return false;
 	}
 	idSwap::Little( header.fileLength );
-	
+
 	// header.fileLength somewhat annoyingly includes the size of the header
 	uint32 fileLength2 = header.fileLength - ( uint32 )sizeof( swfHeader_t );
-	
+
 	// slurp the raw file into a giant array, which is somewhat atrocious when loading from the preload since it's already an idFile_Memory
 	byte* fileData = ( byte* )Mem_Alloc( fileLength2, TAG_SWF );
 	size_t fileSize = rawfile->Read( fileData, fileLength2 );
 	delete rawfile;
-	
+
 	if( compressed )
 	{
 		byte* uncompressed = ( byte* )Mem_Alloc( fileLength2, TAG_SWF );
@@ -104,33 +104,33 @@ bool idSWF::LoadSWF( const char* fullpath )
 		fileData = uncompressed;
 	}
 	idSWFBitStream bitstream( fileData, fileLength2, false );
-	
+
 	swfRect_t frameSize;
 	bitstream.ReadRect( frameSize );
-	
+
 	if( !frameSize.tl.Compare( vec2_zero ) )
 	{
 		idLib::Warning( "Invalid frameSize top left" );
 		Mem_Free( fileData );
 		return false;
 	}
-	
+
 	frameWidth = frameSize.br.x;
 	frameHeight = frameSize.br.y;
 	frameRate = bitstream.ReadU16();
-	
+
 	// parse everything
 	mainsprite->Load( bitstream, true );
-	
+
 	// now that all images have been loaded, write out the combined image
 	idStr atlasFileName = "generated/";
 	atlasFileName += fullpath;
 	atlasFileName.SetFileExtension( ".tga" );
-	
+
 	WriteSwfImageAtlas( atlasFileName );
-	
+
 	Mem_Free( fileData );
-	
+
 	return true;
 }
 
@@ -146,36 +146,36 @@ bool idSWF::LoadBinary( const char* bfilename, ID_TIME_T sourceTimeStamp )
 	{
 		return false;
 	}
-	
+
 	uint32 magic = 0;
 	ID_TIME_T btimestamp = 0;
 	f->ReadBig( magic );
 	f->ReadBig( btimestamp );
-	
+
 	// RB: source might be from .resources, so we ignore the time stamp and assume a release build
-	if ( magic != BSWF_MAGIC || ( !fileSystem->InProductionMode() && ( sourceTimeStamp != FILE_NOT_FOUND_TIMESTAMP ) && ( sourceTimeStamp != 0 ) && ( sourceTimeStamp != btimestamp )) )
+	if( magic != BSWF_MAGIC || ( !fileSystem->InProductionMode() && ( sourceTimeStamp != FILE_NOT_FOUND_TIMESTAMP ) && ( sourceTimeStamp != 0 ) && ( sourceTimeStamp != btimestamp ) ) )
 	{
 		delete f;
 		return false;
 	}
 	// RB end
-	
+
 	f->ReadBig( frameWidth );
 	f->ReadBig( frameHeight );
 	f->ReadBig( frameRate );
-	
+
 	if( mouseX == -1 )
 	{
 		mouseX = ( frameWidth / 2 );
 	}
-	
+
 	if( mouseY == -1 )
 	{
 		mouseY = ( frameHeight / 2 );
 	}
-	
+
 	mainsprite->Read( f );
-	
+
 	int num = 0;
 	f->ReadBig( num );
 	dictionary.SetNum( num );
@@ -352,7 +352,7 @@ bool idSWF::LoadBinary( const char* bfilename, ID_TIME_T sourceTimeStamp )
 		}
 	}
 	delete f;
-	
+
 	return true;
 }
 
@@ -370,13 +370,13 @@ void idSWF::WriteBinary( const char* bfilename )
 	}
 	file->WriteBig( BSWF_MAGIC );
 	file->WriteBig( timestamp );
-	
+
 	file->WriteBig( frameWidth );
 	file->WriteBig( frameHeight );
 	file->WriteBig( frameRate );
-	
+
 	mainsprite->Write( file );
-	
+
 	file->WriteBig( dictionary.Num() );
 	for( int i = 0; i < dictionary.Num(); i++ )
 	{

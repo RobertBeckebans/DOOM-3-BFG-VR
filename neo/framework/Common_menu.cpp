@@ -87,7 +87,7 @@ void idCommonLocal::OnStartHosting( idMatchParameters& parms )
 	{
 		return; // This is the party lobby or a SP match
 	}
-	
+
 	// If we were searching for a random match but didn't find one, we'll need to select parameters now
 	if( parms.gameMap < 0 )
 	{
@@ -146,21 +146,21 @@ idCommonLocal::StartMainMenu
 */
 void idCommonLocal::StartMenu( bool playIntro )
 {
-	
+
 	//common->Printf( "idCommonLocal::StartMenu\n" ); // Koz debug
 	if( game && game->Shell_IsActive() )
 	{
 		return;
 	}
-	
+
 	// Koz fixme pause menu
 	//if escape is pressed while the pda is rising, it will bring up the pause menu when we really want to close the pda, so hack that shit here for now.
-	if ( game && game->isVR )
-	{	
-		if ( Sys_Milliseconds() - commonVr->pdaToggleTime < 3000 )
+	if( game && game->isVR )
+	{
+		if( Sys_Milliseconds() - commonVr->pdaToggleTime < 3000 )
 		{
 			idPlayer* player = gameLocal.GetLocalPlayer();
-			if ( player != NULL )
+			if( player != NULL )
 			{
 				player->TogglePDA();
 				return;
@@ -174,15 +174,15 @@ void idCommonLocal::StartMenu( bool playIntro )
 		// if we're playing a demo, esc kills it
 		UnloadMap();
 	}
-	
+
 	if( game )
 	{
 		game->Shell_Show( true );
 		game->Shell_SyncWithSession();
 	}
-	
+
 	console->Close();
-	
+
 }
 
 /*
@@ -212,17 +212,17 @@ bool idCommonLocal::MenuEvent( const sysEvent_t* event )
 	{
 		return true;
 	}
-	
+
 	if( game && game->Shell_IsActive() )
 	{
 		return game->Shell_HandleGuiEvent( event );
 	}
-	
+
 	if( game )
 	{
 		return game->HandlePlayerGuiEvent( event );
 	}
-	
+
 	return false;
 }
 

@@ -43,39 +43,75 @@ class Framebuffer
 public:
 
 	Framebuffer( const char* name, int width, int height, bool msaa ); // Koz add MSAA support
-	
+
 	static void				Init();
 	static void				Shutdown();
-	
+
 	// deletes OpenGL object but leaves structure intact for reloading
 	void					PurgeFramebuffer();
-	
+
 	void					Bind();
 	static void				BindDefault();
-	
+
 	void					AddColorBuffer( GLuint format, int index );
 	void					AddColorTexture( GLuint format );
 	void					AddDepthBuffer( GLuint format );
 	void					AddDepthStencilBuffer( GLuint format ); // Koz bind depth buffer as stencil attachment also.
-	
+
 	void					AttachImage2D( GLuint target, const idImage* image, int index );
 	void					AttachImage3D( const idImage* image );
 	void					AttachImageDepth( const idImage* image );
 	void					AttachImageDepthLayer( const idImage* image, int layer );
 
 	// Koz begin
-	int						GetWidth() const { return width; }
-	int						GetHeight() const { return height; }
-	int						GetSamples() const { return msaaSamples; }
-	int						GetDepthBuffer() const { return depthBuffer; }
-	int						GetDepthFormat() const { return depthFormat; }
-	int						GetStencilBuffer() const { return stencilBuffer; }
-	int						GetStencilFormat() const { return stencilFormat; }
-	int						GetColorFormat() const { return colorFormat; }
-	int						GetColorBuffer( int cb ) const { return colorBuffers[cb]; }
-	int						GetMSAATexnum() const { return colorTexnum; }
-	bool					IsMSAA() const { return useMsaa; }
-	idStr					GetName() const { return fboName; }
+	int						GetWidth() const
+	{
+		return width;
+	}
+	int						GetHeight() const
+	{
+		return height;
+	}
+	int						GetSamples() const
+	{
+		return msaaSamples;
+	}
+	int						GetDepthBuffer() const
+	{
+		return depthBuffer;
+	}
+	int						GetDepthFormat() const
+	{
+		return depthFormat;
+	}
+	int						GetStencilBuffer() const
+	{
+		return stencilBuffer;
+	}
+	int						GetStencilFormat() const
+	{
+		return stencilFormat;
+	}
+	int						GetColorFormat() const
+	{
+		return colorFormat;
+	}
+	int						GetColorBuffer( int cb ) const
+	{
+		return colorBuffers[cb];
+	}
+	int						GetMSAATexnum() const
+	{
+		return colorTexnum;
+	}
+	bool					IsMSAA() const
+	{
+		return useMsaa;
+	}
+	idStr					GetName() const
+	{
+		return fboName;
+	}
 	// Koz end
 
 	// check for OpenGL errors
@@ -85,22 +121,22 @@ public:
 	{
 		return frameBuffer;
 	}
-	
+
 private:
 	idStr					fboName;
-	
+
 	// FBO object
 	uint32_t				frameBuffer;
-	
+
 	uint32_t				colorBuffers[16];
 	int						colorFormat;
-	
+
 	uint32_t				depthBuffer;
 	int						depthFormat;
-	
+
 	uint32_t				stencilBuffer;
 	int						stencilFormat;
-	
+
 	int						width;
 	int						height;
 
@@ -110,7 +146,7 @@ private:
 	GLuint					colorTexnum;
 	GLuint					depthTexnum;
 
-	
+
 	//static idList<Framebuffer*>	framebuffers;
 };
 

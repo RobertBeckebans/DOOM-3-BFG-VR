@@ -84,10 +84,10 @@ public:
 	void			Init( bool restart = false );
 	void			Shutdown();
 	void			PurgeAll();
-	
+
 	// call on loading a new map
 	void			FreeStaticData();
-	
+
 	// this data is only valid for one frame of rendering
 	vertCacheHandle_t	AllocVertex( const void* data, int bytes )
 	{
@@ -101,7 +101,7 @@ public:
 	{
 		return ActuallyAlloc( frameData[listNum], data, bytes, CACHE_JOINT );
 	}
-	
+
 	// this data is valid until the next map load
 	vertCacheHandle_t	AllocStaticVertex( const void* data, int bytes )
 	{
@@ -119,7 +119,7 @@ public:
 		}
 		return ActuallyAlloc( staticData, data, bytes, CACHE_INDEX );
 	}
-	
+
 	byte* 			MappedVertexBuffer( vertCacheHandle_t handle )
 	{
 		release_assert( !CacheIsStatic( handle ) );
@@ -128,7 +128,7 @@ public:
 		release_assert( frameNum == ( currentFrame & VERTCACHE_FRAME_MASK ) );
 		return frameData[ listNum ].mappedVertexBase + offset;
 	}
-	
+
 	byte* 			MappedIndexBuffer( vertCacheHandle_t handle )
 	{
 		release_assert( !CacheIsStatic( handle ) );
@@ -137,7 +137,7 @@ public:
 		release_assert( frameNum == ( currentFrame & VERTCACHE_FRAME_MASK ) );
 		return frameData[ listNum ].mappedIndexBase + offset;
 	}
-	
+
 	// Returns false if it's been purged
 	// This can only be called by the front end, the back end should only be looking at
 	// vertCacheHandle_t that are already validated.
@@ -155,32 +155,32 @@ public:
 		}
 		return true;
 	}
-	
+
 	static bool		CacheIsStatic( const vertCacheHandle_t handle )
 	{
 		return ( handle & VERTCACHE_STATIC ) != 0;
 	}
-	
+
 	// vb/ib is a temporary reference -- don't store it
 	bool			GetVertexBuffer( vertCacheHandle_t handle, idVertexBuffer* vb );
 	bool			GetIndexBuffer( vertCacheHandle_t handle, idIndexBuffer* ib );
 	bool			GetJointBuffer( vertCacheHandle_t handle, idJointBuffer* jb );
-	
+
 	void			BeginBackEnd();
-	
+
 public:
 	int				currentFrame;	// for determining the active buffers
 	int				listNum;		// currentFrame % VERTCACHE_NUM_FRAMES
 	int				drawListNum;	// (currentFrame-1) % VERTCACHE_NUM_FRAMES
-	
+
 	geoBufferSet_t	staticData;
 	geoBufferSet_t	frameData[VERTCACHE_NUM_FRAMES];
-	
+
 	// High water marks for the per-frame buffers
 	int				mostUsedVertex;
 	int				mostUsedIndex;
 	int				mostUsedJoint;
-	
+
 	// Try to make room for <bytes> bytes
 	vertCacheHandle_t	ActuallyAlloc( geoBufferSet_t& vcs, const void* data, int bytes, cacheType_t type );
 };

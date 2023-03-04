@@ -44,23 +44,25 @@ int	AdjustOption( const int currentValue, const int values[], const int numValue
 idMenuScreen_Shell_VR_HUD_Position_Options::Initialize
 ========================
 */
-void idMenuScreen_Shell_VR_HUD_Position_Options::Initialize( idMenuHandler * data ) {
+void idMenuScreen_Shell_VR_HUD_Position_Options::Initialize( idMenuHandler* data )
+{
 	idMenuScreen::Initialize( data );
 
-	if ( data != NULL ) {
+	if( data != NULL )
+	{
 		menuGUI = data->GetGUI();
 	}
 
 	SetSpritePath( "menuSystemOptions" );
-	
-	options = new (TAG_SWF)idMenuWidget_DynamicList();
+
+	options = new( TAG_SWF )idMenuWidget_DynamicList();
 	options->SetNumVisibleOptions( NUM_SYSTEM_VR_HUD_POSITION_OPTIONS );
 	options->SetSpritePath( GetSpritePath(), "info", "options" );
 	options->SetWrappingAllowed( true );
 	options->SetControlList( true );
 	options->Initialize( data );
 
-	btnBack = new (TAG_SWF)idMenuWidget_Button();
+	btnBack = new( TAG_SWF )idMenuWidget_Button();
 	btnBack->Initialize( data );
 	btnBack->SetLabel( "VR HUD Options" );
 	btnBack->SetSpritePath( GetSpritePath(), "info", "btnBack" );
@@ -69,10 +71,10 @@ void idMenuScreen_Shell_VR_HUD_Position_Options::Initialize( idMenuHandler * dat
 	AddChild( options );
 	AddChild( btnBack );
 
-	idMenuWidget_ControlButton * control;
-	
+	idMenuWidget_ControlButton* control;
 
-	control = new (TAG_SWF)idMenuWidget_ControlButton();
+
+	control = new( TAG_SWF )idMenuWidget_ControlButton();
 	control->SetOptionType( OPTION_SLIDER_TEXT );
 	control->SetLabel( "HUD Position Dist" );
 	control->SetDataSource( &systemData, idMenuDataSource_Shell_VR_HUD_Position_Options::HUD_POSITION_OPTIONS_FIELD_DISTANCE );
@@ -80,7 +82,7 @@ void idMenuScreen_Shell_VR_HUD_Position_Options::Initialize( idMenuHandler * dat
 	control->AddEventAction( WIDGET_EVENT_PRESS ).Set( WIDGET_ACTION_COMMAND, idMenuDataSource_Shell_VR_HUD_Position_Options::HUD_POSITION_OPTIONS_FIELD_DISTANCE );
 	options->AddChild( control );
 
-	control = new (TAG_SWF)idMenuWidget_ControlButton();
+	control = new( TAG_SWF )idMenuWidget_ControlButton();
 	control->SetOptionType( OPTION_SLIDER_TEXT );
 	control->SetLabel( "HUD Position Vert" );
 	control->SetDataSource( &systemData, idMenuDataSource_Shell_VR_HUD_Position_Options::HUD_POSITION_OPTIONS_FIELD_VERTICAL );
@@ -88,7 +90,7 @@ void idMenuScreen_Shell_VR_HUD_Position_Options::Initialize( idMenuHandler * dat
 	control->AddEventAction( WIDGET_EVENT_PRESS ).Set( WIDGET_ACTION_COMMAND, idMenuDataSource_Shell_VR_HUD_Position_Options::HUD_POSITION_OPTIONS_FIELD_VERTICAL );
 	options->AddChild( control );
 
-	control = new (TAG_SWF)idMenuWidget_ControlButton();
+	control = new( TAG_SWF )idMenuWidget_ControlButton();
 	control->SetOptionType( OPTION_SLIDER_TEXT );
 	control->SetLabel( "HUD Position Horiz" );
 	control->SetDataSource( &systemData, idMenuDataSource_Shell_VR_HUD_Position_Options::HUD_POSITION_OPTIONS_FIELD_HORIZONTAL );
@@ -96,7 +98,7 @@ void idMenuScreen_Shell_VR_HUD_Position_Options::Initialize( idMenuHandler * dat
 	control->AddEventAction( WIDGET_EVENT_PRESS ).Set( WIDGET_ACTION_COMMAND, idMenuDataSource_Shell_VR_HUD_Position_Options::HUD_POSITION_OPTIONS_FIELD_HORIZONTAL );
 	options->AddChild( control );
 
-	control = new (TAG_SWF)idMenuWidget_ControlButton();
+	control = new( TAG_SWF )idMenuWidget_ControlButton();
 	control->SetOptionType( OPTION_SLIDER_TEXT );
 	control->SetLabel( "HUD Pitch" );
 	control->SetDataSource( &systemData, idMenuDataSource_Shell_VR_HUD_Position_Options::HUD_POSITION_OPTIONS_FIELD_PITCH );
@@ -104,7 +106,7 @@ void idMenuScreen_Shell_VR_HUD_Position_Options::Initialize( idMenuHandler * dat
 	control->AddEventAction( WIDGET_EVENT_PRESS ).Set( WIDGET_ACTION_COMMAND, idMenuDataSource_Shell_VR_HUD_Position_Options::HUD_POSITION_OPTIONS_FIELD_PITCH );
 	options->AddChild( control );
 
-	control = new (TAG_SWF)idMenuWidget_ControlButton();
+	control = new( TAG_SWF )idMenuWidget_ControlButton();
 	control->SetOptionType( OPTION_SLIDER_TEXT );
 	control->SetLabel( "HUD Scale" );
 	control->SetDataSource( &systemData, idMenuDataSource_Shell_VR_HUD_Position_Options::HUD_POSITION_OPTIONS_FIELD_SCALE );
@@ -112,7 +114,7 @@ void idMenuScreen_Shell_VR_HUD_Position_Options::Initialize( idMenuHandler * dat
 	control->AddEventAction( WIDGET_EVENT_PRESS ).Set( WIDGET_ACTION_COMMAND, idMenuDataSource_Shell_VR_HUD_Position_Options::HUD_POSITION_OPTIONS_FIELD_SCALE );
 	options->AddChild( control );
 
-	control = new (TAG_SWF)idMenuWidget_ControlButton();
+	control = new( TAG_SWF )idMenuWidget_ControlButton();
 	control->SetOptionType( OPTION_SLIDER_TEXT );
 	control->SetLabel( "Talk Cursor Adj" );
 	control->SetDataSource( &systemData, idMenuDataSource_Shell_VR_HUD_Position_Options::HUD_POSITION_OPTIONS_FIELD_TALK_CURSOR );
@@ -120,14 +122,14 @@ void idMenuScreen_Shell_VR_HUD_Position_Options::Initialize( idMenuHandler * dat
 	control->AddEventAction( WIDGET_EVENT_PRESS ).Set( WIDGET_ACTION_COMMAND, idMenuDataSource_Shell_VR_HUD_Position_Options::HUD_POSITION_OPTIONS_FIELD_TALK_CURSOR );
 	options->AddChild( control );
 
-	options->AddEventAction( WIDGET_EVENT_SCROLL_DOWN ).Set( new (TAG_SWF)idWidgetActionHandler( options, WIDGET_ACTION_EVENT_SCROLL_DOWN_START_REPEATER, WIDGET_EVENT_SCROLL_DOWN ) );
-	options->AddEventAction( WIDGET_EVENT_SCROLL_UP ).Set( new (TAG_SWF)idWidgetActionHandler( options, WIDGET_ACTION_EVENT_SCROLL_UP_START_REPEATER, WIDGET_EVENT_SCROLL_UP ) );
-	options->AddEventAction( WIDGET_EVENT_SCROLL_DOWN_RELEASE ).Set( new (TAG_SWF)idWidgetActionHandler( options, WIDGET_ACTION_EVENT_STOP_REPEATER, WIDGET_EVENT_SCROLL_DOWN_RELEASE ) );
-	options->AddEventAction( WIDGET_EVENT_SCROLL_UP_RELEASE ).Set( new (TAG_SWF)idWidgetActionHandler( options, WIDGET_ACTION_EVENT_STOP_REPEATER, WIDGET_EVENT_SCROLL_UP_RELEASE ) );
-	options->AddEventAction( WIDGET_EVENT_SCROLL_DOWN_LSTICK ).Set( new (TAG_SWF)idWidgetActionHandler( options, WIDGET_ACTION_EVENT_SCROLL_DOWN_START_REPEATER, WIDGET_EVENT_SCROLL_DOWN_LSTICK ) );
-	options->AddEventAction( WIDGET_EVENT_SCROLL_UP_LSTICK ).Set( new (TAG_SWF)idWidgetActionHandler( options, WIDGET_ACTION_EVENT_SCROLL_UP_START_REPEATER, WIDGET_EVENT_SCROLL_UP_LSTICK ) );
-	options->AddEventAction( WIDGET_EVENT_SCROLL_DOWN_LSTICK_RELEASE ).Set( new (TAG_SWF)idWidgetActionHandler( options, WIDGET_ACTION_EVENT_STOP_REPEATER, WIDGET_EVENT_SCROLL_DOWN_LSTICK_RELEASE ) );
-	options->AddEventAction( WIDGET_EVENT_SCROLL_UP_LSTICK_RELEASE ).Set( new (TAG_SWF)idWidgetActionHandler( options, WIDGET_ACTION_EVENT_STOP_REPEATER, WIDGET_EVENT_SCROLL_UP_LSTICK_RELEASE ) );
+	options->AddEventAction( WIDGET_EVENT_SCROLL_DOWN ).Set( new( TAG_SWF )idWidgetActionHandler( options, WIDGET_ACTION_EVENT_SCROLL_DOWN_START_REPEATER, WIDGET_EVENT_SCROLL_DOWN ) );
+	options->AddEventAction( WIDGET_EVENT_SCROLL_UP ).Set( new( TAG_SWF )idWidgetActionHandler( options, WIDGET_ACTION_EVENT_SCROLL_UP_START_REPEATER, WIDGET_EVENT_SCROLL_UP ) );
+	options->AddEventAction( WIDGET_EVENT_SCROLL_DOWN_RELEASE ).Set( new( TAG_SWF )idWidgetActionHandler( options, WIDGET_ACTION_EVENT_STOP_REPEATER, WIDGET_EVENT_SCROLL_DOWN_RELEASE ) );
+	options->AddEventAction( WIDGET_EVENT_SCROLL_UP_RELEASE ).Set( new( TAG_SWF )idWidgetActionHandler( options, WIDGET_ACTION_EVENT_STOP_REPEATER, WIDGET_EVENT_SCROLL_UP_RELEASE ) );
+	options->AddEventAction( WIDGET_EVENT_SCROLL_DOWN_LSTICK ).Set( new( TAG_SWF )idWidgetActionHandler( options, WIDGET_ACTION_EVENT_SCROLL_DOWN_START_REPEATER, WIDGET_EVENT_SCROLL_DOWN_LSTICK ) );
+	options->AddEventAction( WIDGET_EVENT_SCROLL_UP_LSTICK ).Set( new( TAG_SWF )idWidgetActionHandler( options, WIDGET_ACTION_EVENT_SCROLL_UP_START_REPEATER, WIDGET_EVENT_SCROLL_UP_LSTICK ) );
+	options->AddEventAction( WIDGET_EVENT_SCROLL_DOWN_LSTICK_RELEASE ).Set( new( TAG_SWF )idWidgetActionHandler( options, WIDGET_ACTION_EVENT_STOP_REPEATER, WIDGET_EVENT_SCROLL_DOWN_LSTICK_RELEASE ) );
+	options->AddEventAction( WIDGET_EVENT_SCROLL_UP_LSTICK_RELEASE ).Set( new( TAG_SWF )idWidgetActionHandler( options, WIDGET_ACTION_EVENT_STOP_REPEATER, WIDGET_EVENT_SCROLL_UP_LSTICK_RELEASE ) );
 }
 
 /*
@@ -135,15 +137,19 @@ void idMenuScreen_Shell_VR_HUD_Position_Options::Initialize( idMenuHandler * dat
 idMenuScreen_Shell_VR_HUD_Position_Options::Update
 ========================
 */
-void idMenuScreen_Shell_VR_HUD_Position_Options::Update() {
+void idMenuScreen_Shell_VR_HUD_Position_Options::Update()
+{
 
-	if ( menuData != NULL ) {
-		idMenuWidget_CommandBar * cmdBar = menuData->GetCmdBar();
-		if ( cmdBar != NULL ) {
+	if( menuData != NULL )
+	{
+		idMenuWidget_CommandBar* cmdBar = menuData->GetCmdBar();
+		if( cmdBar != NULL )
+		{
 			cmdBar->ClearAllButtons();
-			idMenuWidget_CommandBar::buttonInfo_t * buttonInfo;
+			idMenuWidget_CommandBar::buttonInfo_t* buttonInfo;
 			buttonInfo = cmdBar->GetButton( idMenuWidget_CommandBar::BUTTON_JOY2 );
-			if ( menuData->GetPlatform() != 2 ) {
+			if( menuData->GetPlatform() != 2 )
+			{
 				buttonInfo->label = "#str_00395";
 			}
 			buttonInfo->action.Set( WIDGET_ACTION_GO_BACK );
@@ -153,21 +159,25 @@ void idMenuScreen_Shell_VR_HUD_Position_Options::Update() {
 		}
 	}
 
-	idSWFScriptObject & root = GetSWFObject()->GetRootObject();
-	if ( BindSprite( root ) ) {
-		idSWFTextInstance * heading = GetSprite()->GetScriptObject()->GetNestedText( "info", "txtHeading" );
-		if ( heading != NULL ) {
+	idSWFScriptObject& root = GetSWFObject()->GetRootObject();
+	if( BindSprite( root ) )
+	{
+		idSWFTextInstance* heading = GetSprite()->GetScriptObject()->GetNestedText( "info", "txtHeading" );
+		if( heading != NULL )
+		{
 			heading->SetText( "VR HUD Pos Options" );
 			heading->SetStrokeInfo( true, 0.75f, 1.75f );
 		}
 
-		idSWFSpriteInstance * gradient = GetSprite()->GetScriptObject()->GetNestedSprite( "info", "gradient" );
-		if ( gradient != NULL && heading != NULL ) {
+		idSWFSpriteInstance* gradient = GetSprite()->GetScriptObject()->GetNestedSprite( "info", "gradient" );
+		if( gradient != NULL && heading != NULL )
+		{
 			gradient->SetXPos( heading->GetTextLength() );
 		}
 	}
 
-	if ( btnBack != NULL ) {
+	if( btnBack != NULL )
+	{
 		btnBack->BindSprite( root );
 	}
 
@@ -179,7 +189,8 @@ void idMenuScreen_Shell_VR_HUD_Position_Options::Update() {
 idMenuScreen_Shell_VR_HUD_Position_Options::ShowScreen
 ========================
 */
-void idMenuScreen_Shell_VR_HUD_Position_Options::ShowScreen( const mainMenuTransition_t transitionType ) {
+void idMenuScreen_Shell_VR_HUD_Position_Options::ShowScreen( const mainMenuTransition_t transitionType )
+{
 
 	systemData.LoadData();
 
@@ -191,20 +202,27 @@ void idMenuScreen_Shell_VR_HUD_Position_Options::ShowScreen( const mainMenuTrans
 idMenuScreen_Shell_VR_HUD_Position_Options::HideScreen
 ========================
 */
-void idMenuScreen_Shell_VR_HUD_Position_Options::HideScreen( const mainMenuTransition_t transitionType ) {
+void idMenuScreen_Shell_VR_HUD_Position_Options::HideScreen( const mainMenuTransition_t transitionType )
+{
 
-	if ( systemData.IsRestartRequired() ) {
-		class idSWFScriptFunction_Restart : public idSWFScriptFunction_RefCounted {
+	if( systemData.IsRestartRequired() )
+	{
+		class idSWFScriptFunction_Restart : public idSWFScriptFunction_RefCounted
+		{
 		public:
-			idSWFScriptFunction_Restart( gameDialogMessages_t _msg, bool _restart ) {
+			idSWFScriptFunction_Restart( gameDialogMessages_t _msg, bool _restart )
+			{
 				msg = _msg;
 				restart = _restart;
 			}
-			idSWFScriptVar Call( idSWFScriptObject * thisObject, const idSWFParmList & parms ) {
+			idSWFScriptVar Call( idSWFScriptObject* thisObject, const idSWFParmList& parms )
+			{
 				common->Dialog().ClearDialog( msg );
-				if ( restart ) {
+				if( restart )
+				{
 					idStr cmdLine = Sys_GetCmdLine();
-					if ( cmdLine.Find( "com_skipIntroVideos" ) < 0 ) {
+					if( cmdLine.Find( "com_skipIntroVideos" ) < 0 )
+					{
 						cmdLine.Append( " +set com_skipIntroVideos 1" );
 					}
 					Sys_ReLaunch(); // Sys_ReLaunch no longer needs params
@@ -215,7 +233,7 @@ void idMenuScreen_Shell_VR_HUD_Position_Options::HideScreen( const mainMenuTrans
 			gameDialogMessages_t msg;
 			bool restart;
 		};
-		idStaticList<idSWFScriptFunction *, 4> callbacks;
+		idStaticList<idSWFScriptFunction*, 4> callbacks;
 		idStaticList<idStrId, 4> optionText;
 		callbacks.Append( new idSWFScriptFunction_Restart( GDM_GAME_RESTART_REQUIRED, false ) );
 		callbacks.Append( new idSWFScriptFunction_Restart( GDM_GAME_RESTART_REQUIRED, true ) );
@@ -224,7 +242,8 @@ void idMenuScreen_Shell_VR_HUD_Position_Options::HideScreen( const mainMenuTrans
 		common->Dialog().AddDynamicDialog( GDM_GAME_RESTART_REQUIRED, callbacks, optionText, true, idStr() );
 	}
 
-	if ( systemData.IsDataChanged() ) {
+	if( systemData.IsDataChanged() )
+	{
 		systemData.CommitData();
 	}
 
@@ -236,69 +255,85 @@ void idMenuScreen_Shell_VR_HUD_Position_Options::HideScreen( const mainMenuTrans
 idMenuScreen_Shell_VR_HUD_Position_Options::HandleAction h
 ========================
 */
-bool idMenuScreen_Shell_VR_HUD_Position_Options::HandleAction( idWidgetAction & action, const idWidgetEvent & event, idMenuWidget * widget, bool forceHandled ) {
+bool idMenuScreen_Shell_VR_HUD_Position_Options::HandleAction( idWidgetAction& action, const idWidgetEvent& event, idMenuWidget* widget, bool forceHandled )
+{
 
-	if ( menuData == NULL ) {
+	if( menuData == NULL )
+	{
 		return true;
 	}
 
-	if ( menuData->ActiveScreen() != SHELL_AREA_VR_HUD_POSITION_OPTIONS ) {
+	if( menuData->ActiveScreen() != SHELL_AREA_VR_HUD_POSITION_OPTIONS )
+	{
 		return false;
 	}
 
 	widgetAction_t actionType = action.GetType();
-	const idSWFParmList & parms = action.GetParms();
-	switch ( actionType ) {
-	case WIDGET_ACTION_GO_BACK: {
-		if ( menuData != NULL ) {
-			menuData->SetNextScreen( SHELL_AREA_VR_HUD_OPTIONS, MENU_TRANSITION_SIMPLE );
-		}
-		return true;
-	}
-
-
-	case WIDGET_ACTION_COMMAND: {
-
-		if ( options == NULL ) {
+	const idSWFParmList& parms = action.GetParms();
+	switch( actionType )
+	{
+		case WIDGET_ACTION_GO_BACK:
+		{
+			if( menuData != NULL )
+			{
+				menuData->SetNextScreen( SHELL_AREA_VR_HUD_OPTIONS, MENU_TRANSITION_SIMPLE );
+			}
 			return true;
 		}
 
-		int selectionIndex = options->GetFocusIndex();
-		if ( parms.Num() > 0 ) {
-			selectionIndex = parms[0].ToInteger();
-		}
 
-		if ( options && selectionIndex != options->GetFocusIndex() ) {
-			options->SetViewIndex( options->GetViewOffset() + selectionIndex );
-			options->SetFocusIndex( selectionIndex );
-		}
+		case WIDGET_ACTION_COMMAND:
+		{
 
-		switch ( parms[0].ToInteger() ) {
-		case 1:
+			if( options == NULL )
+			{
+				return true;
+			}
 
-		default: {
-			systemData.AdjustField( parms[0].ToInteger(), 1 );
-			options->Update();
-		}
-		}
+			int selectionIndex = options->GetFocusIndex();
+			if( parms.Num() > 0 )
+			{
+				selectionIndex = parms[0].ToInteger();
+			}
 
-		return true;
-	}
-	case WIDGET_ACTION_START_REPEATER: {
-
-		if ( options == NULL ) {
-			return true;
-		}
-
-		if ( parms.Num() == 4 ) {
-			int selectionIndex = parms[3].ToInteger();
-			if ( selectionIndex != options->GetFocusIndex() ) {
+			if( options && selectionIndex != options->GetFocusIndex() )
+			{
 				options->SetViewIndex( options->GetViewOffset() + selectionIndex );
 				options->SetFocusIndex( selectionIndex );
 			}
+
+			switch( parms[0].ToInteger() )
+			{
+				case 1:
+
+				default:
+				{
+					systemData.AdjustField( parms[0].ToInteger(), 1 );
+					options->Update();
+				}
+			}
+
+			return true;
 		}
-		break;
-	}
+		case WIDGET_ACTION_START_REPEATER:
+		{
+
+			if( options == NULL )
+			{
+				return true;
+			}
+
+			if( parms.Num() == 4 )
+			{
+				int selectionIndex = parms[3].ToInteger();
+				if( selectionIndex != options->GetFocusIndex() )
+				{
+					options->SetViewIndex( options->GetViewOffset() + selectionIndex );
+					options->SetFocusIndex( selectionIndex );
+				}
+			}
+			break;
+		}
 	}
 
 	return idMenuWidget::HandleAction( action, event, widget, forceHandled );
@@ -313,7 +348,8 @@ bool idMenuScreen_Shell_VR_HUD_Position_Options::HandleAction( idWidgetAction & 
 idMenuScreen_Shell_VR_HUD_Position_Options::idMenuDataSource_Shell_VR_HUD_Position_Options::idMenuDataSource_Shell_VR_HUD_Position_Options
 ========================
 */
-idMenuScreen_Shell_VR_HUD_Position_Options::idMenuDataSource_Shell_VR_HUD_Position_Options::idMenuDataSource_Shell_VR_HUD_Position_Options() {
+idMenuScreen_Shell_VR_HUD_Position_Options::idMenuDataSource_Shell_VR_HUD_Position_Options::idMenuDataSource_Shell_VR_HUD_Position_Options()
+{
 }
 
 /*
@@ -321,7 +357,8 @@ idMenuScreen_Shell_VR_HUD_Position_Options::idMenuDataSource_Shell_VR_HUD_Positi
 idMenuScreen_Shell_VR_HUD_Position_Options::idMenuDataSource_Shell_VR_HUD_Position_Options::LoadData
 ========================
 */
-void idMenuScreen_Shell_VR_HUD_Position_Options::idMenuDataSource_Shell_VR_HUD_Position_Options::LoadData() {
+void idMenuScreen_Shell_VR_HUD_Position_Options::idMenuDataSource_Shell_VR_HUD_Position_Options::LoadData()
+{
 
 	originalHudDistance = vr_hudPosDis.GetFloat();
 	originalHudVertical = vr_hudPosVer.GetFloat();
@@ -337,7 +374,8 @@ void idMenuScreen_Shell_VR_HUD_Position_Options::idMenuDataSource_Shell_VR_HUD_P
 idMenuScreen_Shell_VR_HUD_Position_Options::idMenuDataSource_Shell_VR_HUD_Position_Options::IsRestartRequired
 ========================
 */
-bool idMenuScreen_Shell_VR_HUD_Position_Options::idMenuDataSource_Shell_VR_HUD_Position_Options::IsRestartRequired() const {
+bool idMenuScreen_Shell_VR_HUD_Position_Options::idMenuDataSource_Shell_VR_HUD_Position_Options::IsRestartRequired() const
+{
 	return false;
 }
 
@@ -346,7 +384,8 @@ bool idMenuScreen_Shell_VR_HUD_Position_Options::idMenuDataSource_Shell_VR_HUD_P
 idMenuScreen_Shell_VR_HUD_Position_Options::idMenuDataSource_Shell_VR_HUD_Position_Options::CommitData
 ========================
 */
-void idMenuScreen_Shell_VR_HUD_Position_Options::idMenuDataSource_Shell_VR_HUD_Position_Options::CommitData() {
+void idMenuScreen_Shell_VR_HUD_Position_Options::idMenuDataSource_Shell_VR_HUD_Position_Options::CommitData()
+{
 	cvarSystem->SetModifiedFlags( CVAR_ARCHIVE );
 }
 
@@ -356,16 +395,23 @@ void idMenuScreen_Shell_VR_HUD_Position_Options::idMenuDataSource_Shell_VR_HUD_P
 idMenuScreen_Shell_VR_HUD_Position_Options::idMenuDataSource_Shell_VR_HUD_Position_Options::AdjustField
 ========================
 */
-void idMenuScreen_Shell_VR_HUD_Position_Options::idMenuDataSource_Shell_VR_HUD_Position_Options::AdjustField( const int fieldIndex, const int adjustAmount ) {
-	switch ( fieldIndex )
+void idMenuScreen_Shell_VR_HUD_Position_Options::idMenuDataSource_Shell_VR_HUD_Position_Options::AdjustField( const int fieldIndex, const int adjustAmount )
+{
+	switch( fieldIndex )
 	{
-	
+
 		case HUD_POSITION_OPTIONS_FIELD_TALK_CURSOR:
 		{
 			float p = vr_tweakTalkCursor.GetFloat();
 			p += adjustAmount;
-			if ( p < 0.0f ) p = 0.0f;
-			if ( p > 100.0f ) p = 100.0f;
+			if( p < 0.0f )
+			{
+				p = 0.0f;
+			}
+			if( p > 100.0f )
+			{
+				p = 100.0f;
+			}
 			vr_tweakTalkCursor.SetFloat( p );
 			break;
 		}
@@ -374,8 +420,14 @@ void idMenuScreen_Shell_VR_HUD_Position_Options::idMenuDataSource_Shell_VR_HUD_P
 		{
 			float p = vr_hudScale.GetFloat();
 			p += adjustAmount * 0.1f;
-			if ( p < 0.5f ) p = 0.5f;
-			if ( p > 5.0f ) p = 5.0f;
+			if( p < 0.5f )
+			{
+				p = 0.5f;
+			}
+			if( p > 5.0f )
+			{
+				p = 5.0f;
+			}
 			vr_hudScale.SetFloat( p );
 			break;
 		}
@@ -384,8 +436,14 @@ void idMenuScreen_Shell_VR_HUD_Position_Options::idMenuDataSource_Shell_VR_HUD_P
 		{
 			float p = vr_hudPosAngle.GetFloat();
 			p += adjustAmount * 0.5f;
-			if ( p < -100.0f ) p = -100.0f;
-			if ( p > 100 ) p = 100;
+			if( p < -100.0f )
+			{
+				p = -100.0f;
+			}
+			if( p > 100 )
+			{
+				p = 100;
+			}
 			vr_hudPosAngle.SetFloat( p );
 			break;
 		}
@@ -394,8 +452,14 @@ void idMenuScreen_Shell_VR_HUD_Position_Options::idMenuDataSource_Shell_VR_HUD_P
 		{
 			float p = vr_hudPosDis.GetFloat();
 			p += adjustAmount * 0.5f;
-			if ( p < 0.0f ) p = 0.0f;
-			if ( p > 100.0f ) p = 100.0f;
+			if( p < 0.0f )
+			{
+				p = 0.0f;
+			}
+			if( p > 100.0f )
+			{
+				p = 100.0f;
+			}
 			vr_hudPosDis.SetFloat( p );
 			break;
 		}
@@ -404,8 +468,14 @@ void idMenuScreen_Shell_VR_HUD_Position_Options::idMenuDataSource_Shell_VR_HUD_P
 		{
 			float p = vr_hudPosHor.GetFloat();
 			p += adjustAmount * 0.5f;
-			if ( p < -50.0f ) p = -50.0f;
-			if ( p > 50.0f ) p = 50.0f;
+			if( p < -50.0f )
+			{
+				p = -50.0f;
+			}
+			if( p > 50.0f )
+			{
+				p = 50.0f;
+			}
 			vr_hudPosHor.SetFloat( p );
 			break;
 		}
@@ -414,8 +484,14 @@ void idMenuScreen_Shell_VR_HUD_Position_Options::idMenuDataSource_Shell_VR_HUD_P
 		{
 			float p = vr_hudPosVer.GetFloat();
 			p += adjustAmount * 0.5f;
-			if ( p < -70.0f ) p = -70.0f;
-			if ( p > 70.0f ) p = 70.0f;
+			if( p < -70.0f )
+			{
+				p = -70.0f;
+			}
+			if( p > 70.0f )
+			{
+				p = 70.0f;
+			}
 			vr_hudPosVer.SetFloat( p );
 			break;
 		}
@@ -429,27 +505,28 @@ void idMenuScreen_Shell_VR_HUD_Position_Options::idMenuDataSource_Shell_VR_HUD_P
 idMenuScreen_Shell_VR_HUD_Position_Options::idMenuDataSource_Shell_VR_HUD_Position_Options::GetField
 ========================
 */
-idSWFScriptVar idMenuScreen_Shell_VR_HUD_Position_Options::idMenuDataSource_Shell_VR_HUD_Position_Options::GetField( const int fieldIndex ) const {
-	switch ( fieldIndex )
+idSWFScriptVar idMenuScreen_Shell_VR_HUD_Position_Options::idMenuDataSource_Shell_VR_HUD_Position_Options::GetField( const int fieldIndex ) const
+{
+	switch( fieldIndex )
 	{
-	
-	case HUD_POSITION_OPTIONS_FIELD_TALK_CURSOR:
-		return va( "%.0f", vr_tweakTalkCursor.GetFloat() );
-		
-	case HUD_POSITION_OPTIONS_FIELD_SCALE:
-		return va( "%.1f", vr_hudScale.GetFloat() );
 
-	case HUD_POSITION_OPTIONS_FIELD_PITCH:
-		return va( "%.1f", vr_hudPosAngle.GetFloat() );
+		case HUD_POSITION_OPTIONS_FIELD_TALK_CURSOR:
+			return va( "%.0f", vr_tweakTalkCursor.GetFloat() );
 
-	case HUD_POSITION_OPTIONS_FIELD_DISTANCE:
-		return va( "%.1f", vr_hudPosDis.GetFloat() );
+		case HUD_POSITION_OPTIONS_FIELD_SCALE:
+			return va( "%.1f", vr_hudScale.GetFloat() );
 
-	case HUD_POSITION_OPTIONS_FIELD_HORIZONTAL:
-		return va( "%.1f", vr_hudPosHor.GetFloat() );
+		case HUD_POSITION_OPTIONS_FIELD_PITCH:
+			return va( "%.1f", vr_hudPosAngle.GetFloat() );
 
-	case HUD_POSITION_OPTIONS_FIELD_VERTICAL:
-		return va( "%.1f", vr_hudPosVer.GetFloat() );
+		case HUD_POSITION_OPTIONS_FIELD_DISTANCE:
+			return va( "%.1f", vr_hudPosDis.GetFloat() );
+
+		case HUD_POSITION_OPTIONS_FIELD_HORIZONTAL:
+			return va( "%.1f", vr_hudPosHor.GetFloat() );
+
+		case HUD_POSITION_OPTIONS_FIELD_VERTICAL:
+			return va( "%.1f", vr_hudPosVer.GetFloat() );
 	}
 	return false;
 }
@@ -459,35 +536,36 @@ idSWFScriptVar idMenuScreen_Shell_VR_HUD_Position_Options::idMenuDataSource_Shel
 idMenuScreen_Shell_VR_HUD_Position_Options::idMenuDataSource_Shell_VR_HUD_Position_Options::IsDataChanged
 ========================
 */
-bool idMenuScreen_Shell_VR_HUD_Position_Options::idMenuDataSource_Shell_VR_HUD_Position_Options::IsDataChanged() const {
+bool idMenuScreen_Shell_VR_HUD_Position_Options::idMenuDataSource_Shell_VR_HUD_Position_Options::IsDataChanged() const
+{
 
 
-	if ( originalHudDistance != vr_hudPosDis.GetFloat() )
+	if( originalHudDistance != vr_hudPosDis.GetFloat() )
 	{
 		return true;
 	}
 
-	if ( originalHudVertical != vr_hudPosVer.GetFloat() )
+	if( originalHudVertical != vr_hudPosVer.GetFloat() )
 	{
 		return true;
 	}
 
-	if ( originalHudHorizontal != vr_hudPosHor.GetFloat() )
+	if( originalHudHorizontal != vr_hudPosHor.GetFloat() )
 	{
 		return true;
 	}
 
-	if ( originalHudPitch != vr_hudPosAngle.GetFloat() )
+	if( originalHudPitch != vr_hudPosAngle.GetFloat() )
 	{
 		return true;
 	}
 
-	if ( originalHudScale != vr_hudScale.GetFloat() )
+	if( originalHudScale != vr_hudScale.GetFloat() )
 	{
 		return true;
 	}
 
-	if ( originalTalkCursor != vr_tweakTalkCursor.GetFloat() )
+	if( originalTalkCursor != vr_tweakTalkCursor.GetFloat() )
 	{
 		return true;
 	}

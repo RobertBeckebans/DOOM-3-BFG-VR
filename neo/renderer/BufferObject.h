@@ -58,18 +58,18 @@ class idVertexBuffer
 public:
 	idVertexBuffer();
 	~idVertexBuffer();
-	
+
 	// Allocate or free the buffer.
 	bool				AllocBufferObject( const void* data, int allocSize );
 	void				FreeBufferObject();
-	
+
 	// Make this buffer a reference to another buffer.
 	void				Reference( const idVertexBuffer& other );
 	void				Reference( const idVertexBuffer& other, int refOffset, int refSize );
-	
+
 	// Copies data to the buffer. 'size' may be less than the originally allocated size.
 	void				Update( const void* data, int updateSize ) const;
-	
+
 	void* 				MapBuffer( bufferMapType_t mapType ) const;
 	idDrawVert* 		MapVertexBuffer( bufferMapType_t mapType ) const
 	{
@@ -80,7 +80,7 @@ public:
 	{
 		return ( size & MAPPED_FLAG ) != 0;
 	}
-	
+
 	int					GetSize() const
 	{
 		return ( size & ~MAPPED_FLAG );
@@ -97,16 +97,16 @@ public:
 	{
 		return ( offsetInOtherBuffer & ~OWNS_BUFFER_FLAG );
 	}
-	
+
 private:
 	int					size;					// size in bytes
 	int					offsetInOtherBuffer;	// offset in bytes
 	void* 				apiObject;
-	
+
 	// sizeof() confuses typeinfo...
 	static const int	MAPPED_FLAG			= 1 << ( 4 /* sizeof( int ) */ * 8 - 1 );
 	static const int	OWNS_BUFFER_FLAG	= 1 << ( 4 /* sizeof( int ) */ * 8 - 1 );
-	
+
 private:
 	void				ClearWithoutFreeing();
 	void				SetMapped() const
@@ -121,7 +121,7 @@ private:
 	{
 		return ( ( offsetInOtherBuffer & OWNS_BUFFER_FLAG ) != 0 );
 	}
-	
+
 	DISALLOW_COPY_AND_ASSIGN( idVertexBuffer );
 };
 
@@ -135,18 +135,18 @@ class idIndexBuffer
 public:
 	idIndexBuffer();
 	~idIndexBuffer();
-	
+
 	// Allocate or free the buffer.
 	bool				AllocBufferObject( const void* data, int allocSize );
 	void				FreeBufferObject();
-	
+
 	// Make this buffer a reference to another buffer.
 	void				Reference( const idIndexBuffer& other );
 	void				Reference( const idIndexBuffer& other, int refOffset, int refSize );
-	
+
 	// Copies data to the buffer. 'size' may be less than the originally allocated size.
 	void				Update( const void* data, int updateSize ) const;
-	
+
 	void* 				MapBuffer( bufferMapType_t mapType ) const;
 	triIndex_t* 		MapIndexBuffer( bufferMapType_t mapType ) const
 	{
@@ -157,7 +157,7 @@ public:
 	{
 		return ( size & MAPPED_FLAG ) != 0;
 	}
-	
+
 	int					GetSize() const
 	{
 		return ( size & ~MAPPED_FLAG );
@@ -174,16 +174,16 @@ public:
 	{
 		return ( offsetInOtherBuffer & ~OWNS_BUFFER_FLAG );
 	}
-	
+
 private:
 	int					size;					// size in bytes
 	int					offsetInOtherBuffer;	// offset in bytes
 	void* 				apiObject;
-	
+
 	// sizeof() confuses typeinfo...
 	static const int	MAPPED_FLAG			= 1 << ( 4 /* sizeof( int ) */ * 8 - 1 );
 	static const int	OWNS_BUFFER_FLAG	= 1 << ( 4 /* sizeof( int ) */ * 8 - 1 );
-	
+
 private:
 	void				ClearWithoutFreeing();
 	void				SetMapped() const
@@ -198,7 +198,7 @@ private:
 	{
 		return ( ( offsetInOtherBuffer & OWNS_BUFFER_FLAG ) != 0 );
 	}
-	
+
 	DISALLOW_COPY_AND_ASSIGN( idIndexBuffer );
 };
 
@@ -216,25 +216,25 @@ class idJointBuffer
 public:
 	idJointBuffer();
 	~idJointBuffer();
-	
+
 	// Allocate or free the buffer.
 	bool				AllocBufferObject( const float* joints, int numAllocJoints );
 	void				FreeBufferObject();
-	
+
 	// Make this buffer a reference to another buffer.
 	void				Reference( const idJointBuffer& other );
 	void				Reference( const idJointBuffer& other, int jointRefOffset, int numRefJoints );
-	
+
 	// Copies data to the buffer. 'numJoints' may be less than the originally allocated size.
 	void				Update( const float* joints, int numUpdateJoints ) const;
-	
+
 	float* 				MapBuffer( bufferMapType_t mapType ) const;
 	void				UnmapBuffer() const;
 	bool				IsMapped() const
 	{
 		return ( numJoints & MAPPED_FLAG ) != 0;
 	}
-	
+
 	int					GetNumJoints() const
 	{
 		return ( numJoints & ~MAPPED_FLAG );
@@ -251,18 +251,18 @@ public:
 	{
 		return ( offsetInOtherBuffer & ~OWNS_BUFFER_FLAG );
 	}
-	
+
 	void				Swap( idJointBuffer& other );
-	
+
 private:
 	int					numJoints;
 	int					offsetInOtherBuffer;	// offset in bytes
 	void* 				apiObject;
-	
+
 	// sizeof() confuses typeinfo...
 	static const int	MAPPED_FLAG			= 1 << ( 4 /* sizeof( int ) */ * 8 - 1 );
 	static const int	OWNS_BUFFER_FLAG	= 1 << ( 4 /* sizeof( int ) */ * 8 - 1 );
-	
+
 private:
 	void				ClearWithoutFreeing();
 	void				SetMapped() const
@@ -277,7 +277,7 @@ private:
 	{
 		return ( ( offsetInOtherBuffer & OWNS_BUFFER_FLAG ) != 0 );
 	}
-	
+
 	DISALLOW_COPY_AND_ASSIGN( idJointBuffer );
 };
 

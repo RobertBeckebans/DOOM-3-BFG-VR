@@ -56,9 +56,9 @@ class idMapPrimitive
 {
 public:
 	enum { TYPE_INVALID = -1, TYPE_BRUSH, TYPE_PATCH };
-	
+
 	idDict					epairs;
-	
+
 	idMapPrimitive()
 	{
 		type = TYPE_INVALID;
@@ -68,7 +68,7 @@ public:
 	{
 		return type;
 	}
-	
+
 protected:
 	int						type;
 };
@@ -77,7 +77,7 @@ protected:
 class idMapBrushSide
 {
 	friend class idMapBrush;
-	
+
 public:
 	idMapBrushSide();
 	~idMapBrushSide() { }
@@ -108,7 +108,7 @@ public:
 		mat2 = texMat[1];
 	}
 	void					GetTextureVectors( idVec4 v[2] ) const;
-	
+
 protected:
 	idStr					material;
 	idPlane					plane;
@@ -153,7 +153,7 @@ public:
 		return sides[i];
 	}
 	unsigned int			GetGeometryCRC() const;
-	
+
 protected:
 	int						numSides;
 	idList<idMapBrushSide*, TAG_IDLIB_LIST_MAP> sides;
@@ -201,7 +201,7 @@ public:
 		explicitSubdivisions = b;
 	}
 	unsigned int			GetGeometryCRC() const;
-	
+
 protected:
 	idStr					material;
 	int						horzSubdivisions;
@@ -235,10 +235,10 @@ ID_INLINE idMapPatch::idMapPatch( int maxPatchWidth, int maxPatchHeight )
 class idMapEntity
 {
 	friend class			idMapFile;
-	
+
 public:
 	idDict					epairs;
-	
+
 public:
 	idMapEntity()
 	{
@@ -264,7 +264,7 @@ public:
 	}
 	unsigned int			GetGeometryCRC() const;
 	void					RemovePrimitiveData();
-	
+
 protected:
 	idList<idMapPrimitive*, TAG_IDLIB_LIST_MAP>	primitives;
 };
@@ -278,7 +278,7 @@ public:
 	{
 		entities.DeleteContents( true );
 	}
-	
+
 	// filename does not require an extension
 	// normally this will use a .reg file instead of a .map file if it exists,
 	// which is what the game and dmap want, but the editor will want to always
@@ -313,7 +313,7 @@ public:
 	}
 	// returns true if the file on disk changed
 	bool					NeedsReload();
-	
+
 	int						AddEntity( idMapEntity* mapentity );
 	idMapEntity* 			FindEntity( const char* name );
 	void					RemoveEntity( idMapEntity* mapEnt );
@@ -324,7 +324,7 @@ public:
 	{
 		return hasPrimitiveData;
 	}
-	
+
 protected:
 	float					version;
 	ID_TIME_T					fileTime;
@@ -332,7 +332,7 @@ protected:
 	idList<idMapEntity*, TAG_IDLIB_LIST_MAP>	entities;
 	idStr					name;
 	bool					hasPrimitiveData;
-	
+
 private:
 	void					SetGeometryCRC();
 };

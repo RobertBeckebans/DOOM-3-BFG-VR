@@ -221,9 +221,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"#define BRANCH\n"
 		"#define IFANY\n"
 		"\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/skinning.inc",
 		"/*\n"
@@ -303,9 +303,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"result.position.y = dot4( modelPosition, rpMVPmatrixY );\n"
 		"result.position.z = dot4( modelPosition, rpMVPmatrixZ );\n"
 		"result.position.w = dot4( modelPosition, rpMVPmatrixW );\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/bink.pixel",
 		"/*\n"
@@ -368,9 +368,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"	result.color.w = 1.0;\n"
 		"	result.color *= rpColor;\n"
 		"}\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/bink.vertex",
 		"/*\n"
@@ -424,9 +424,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"\n"
 		"	result.texcoord0 = vertex.texcoord;\n"
 		"}\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/bink_gui.pixel",
 		"/*\n"
@@ -495,9 +495,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"	result.color.xyz = color.xyz * color.w;\n"
 		"	result.color.w = color.w;\n"
 		"}\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/bink_gui.vertex",
 		"/*\n"
@@ -558,9 +558,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"	result.color =  swizzleColor( vertex.color );\n"
 		"}\n"
 		"\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/blendLight.pixel",
 		"/*\n"
@@ -610,9 +610,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"	result.color = idtex2Dproj( samp0, fragment.texcoord0 ) * tex2D( samp1, fragment.texcoord1 ) * rpColor;\n"
 		"}\n"
 		"\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/blendLight.vertex",
 		"/*\n"
@@ -675,9 +675,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"	result.texcoord1.y = 0.5;\n"
 		"}\n"
 		"\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/bloodorb1_capture.pixel",
 		"/*\n"
@@ -732,9 +732,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"\n"
 		"	result.color = lerp( accumSample, currentRenderSample, maskSample.a );\n"
 		"}\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/bloodorb1_capture.vertex",
 		"/*\n"
@@ -796,9 +796,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"	// pass through texcoords	\n"
 		"	result.texcoord1 = vertex.texcoord;\n"
 		"}\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/bloodorb2_capture.pixel",
 		"/*\n"
@@ -859,9 +859,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"\n"
 		"	result.color = lerp( accumSample, currentRenderSample, maskSample.a );\n"
 		"}\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/bloodorb2_capture.vertex",
 		"/*\n"
@@ -933,9 +933,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"	// pass through for currentrender\n"
 		"	result.texcoord2 = vertex.texcoord;\n"
 		"}\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/bloodorb3_capture.pixel",
 		"/*\n"
@@ -1008,9 +1008,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"	accumColor = lerp( accumColor, currentRenderSample, maskSample.a );\n"
 		"	result.color = accumColor;\n"
 		"}\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/bloodorb3_capture.vertex",
 		"/*\n"
@@ -1089,9 +1089,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"	const float4 colorFactor = rpUser2;\n"
 		"	result.texcoord4 = colorFactor.xx;\n"
 		"}\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/bloodorb_draw.pixel",
 		"/*\n"
@@ -1145,9 +1145,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"\n"
 		"	result.color = lerp( accumSample, currentRenderSample, maskSample.a );\n"
 		"}\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/bloodorb_draw.vertex",
 		"/*\n"
@@ -1202,9 +1202,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"	// pass through texcoords\n"
 		"	result.texcoord0 = vertex.texcoord;\n"
 		"}\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/bumpyenvironment.pixel",
 		"/*\n"
@@ -1283,9 +1283,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"	result.color = float4( envMap.xyz, 1.0f ) * fragment.color;\n"
 		"}\n"
 		"\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/bumpyenvironment.vertex",
 		"/*\n"
@@ -1368,9 +1368,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"\n"
 		"	result.color = rpColor;\n"
 		"}\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/bumpyenvironment_skinned.pixel",
 		"/*\n"
@@ -1450,9 +1450,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"	result.color = float4( envMap.xyz, 1.0f ) * fragment.color;\n"
 		"}\n"
 		"\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/bumpyenvironment_skinned.vertex",
 		"/*\n"
@@ -1593,9 +1593,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"\n"
 		"	result.color = rpColor;\n"
 		"}\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/color.pixel",
 		"/*\n"
@@ -1637,9 +1637,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"void main( out PS_OUT result ) {\n"
 		"	result.color = rpColor;\n"
 		"}\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/color.vertex",
 		"/*\n"
@@ -1741,9 +1741,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"	result.position.w = dot4( vertex.position, rpMVPmatrixW );\n"
 		"#endif\n"
 		"}\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/colorProcess.pixel",
 		"/*\n"
@@ -1794,9 +1794,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"	result.color = lerp( src, target, fragment.texcoord0.z );\n"
 		"}\n"
 		"\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/colorProcess.vertex",
 		"/*\n"
@@ -1861,9 +1861,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"}\n"
 		"\n"
 		"\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/debug_shadowmap.pixel",
 		"/*\n"
@@ -1918,9 +1918,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"\n"
 		"	result.color = texture( samp0, tc );// * rpColor;\n"
 		"}\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/debug_shadowmap.vertex",
 		"/*\n"
@@ -1981,9 +1981,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"		result.texcoord0.y = dot4( vertex.texcoord.xy, rpTextureMatrixT );\n"
 		"	}\n"
 		"}\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/depth.pixel",
 		"/*\n"
@@ -2024,9 +2024,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"void main( out PS_OUT result ) {\n"
 		"	result.color = float4( 0.0, 0.0, 0.0, 1.0 );\n"
 		"}\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/depth.vertex",
 		"/*\n"
@@ -2073,9 +2073,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"	result.position.z = dot4( vertex.position, rpMVPmatrixZ );\n"
 		"	result.position.w = dot4( vertex.position, rpMVPmatrixW );\n"
 		"}\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/depth_skinned.pixel",
 		"/*\n"
@@ -2116,9 +2116,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"void main( out PS_OUT result ) {\n"
 		"	result.color = float4( 0.0, 0.0, 0.0, 1.0 );\n"
 		"}\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/depth_skinned.vertex",
 		"/*\n"
@@ -2207,9 +2207,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"	result.position.z = dot4( modelPosition, rpMVPmatrixZ );\n"
 		"	result.position.w = dot4( modelPosition, rpMVPmatrixW );\n"
 		"}\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/environment.pixel",
 		"/*\n"
@@ -2269,9 +2269,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"	result.color = float4( envMap.xyz, 1.0f ) * fragment.color;\n"
 		"}\n"
 		"\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/environment.vertex",
 		"/*\n"
@@ -2334,9 +2334,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"	result.color = rpColor;\n"
 		"}\n"
 		"\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/environment_skinned.pixel",
 		"/*\n"
@@ -2396,9 +2396,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"	result.color = float4( envMap.xyz, 1.0f ) * fragment.color;\n"
 		"}\n"
 		"\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/environment_skinned.vertex",
 		"/*\n"
@@ -2508,9 +2508,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"	result.color = rpColor;\n"
 		"}\n"
 		"\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/enviroSuit.pixel",
 		"/*\n"
@@ -2570,9 +2570,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"	result.color = tex2D( samp0, screenTexCoord );\n"
 		"\n"
 		"}\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/enviroSuit.vertex",
 		"/*\n"
@@ -2637,9 +2637,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"	const float4 deformMagnitude = rpUser1;\n"
 		"	result.color = deformMagnitude;\n"
 		"}\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/fog.pixel",
 		"/*\n"
@@ -2690,9 +2690,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"}\n"
 		"\n"
 		"\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/fog.vertex",
 		"/*\n"
@@ -2752,9 +2752,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"	result.texcoord1.y = dot4( vertex.position, rpTexGen1T );\n"
 		"}\n"
 		"\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/fog_skinned.pixel",
 		"/*\n"
@@ -2805,9 +2805,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"}\n"
 		"\n"
 		"\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/fog_skinned.vertex",
 		"/*\n"
@@ -2908,9 +2908,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"	result.texcoord1.y = dot4( modelPosition, rpTexGen1T );\n"
 		"}\n"
 		"\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/fxaa.pixel",
 		"/*\n"
@@ -3023,9 +3023,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"											\n"
 		"	result.color = colorSample;\n"
 		"}\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/fxaa.vertex",
 		"/*\n"
@@ -3075,9 +3075,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"	result.position = vertex.position;\n"
 		"	result.texcoord0 =  vertex.texcoord;\n"
 		"}\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/global.inc",
 		"/*\n"
@@ -3289,9 +3289,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"#define BRANCH\n"
 		"#define IFANY\n"
 		"\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/gui.pixel",
 		"/*\n"
@@ -3342,9 +3342,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"	result.color.xyz = color.xyz * color.w;\n"
 		"	result.color.w = color.w;\n"
 		"}\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/gui.vertex",
 		"/*\n"
@@ -3405,9 +3405,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"	result.color =  swizzleColor( vertex.color );\n"
 		"}\n"
 		"\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/heathaze.pixel",
 		"/*\n"
@@ -3469,9 +3469,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"	// load the screen render\n"
 		"	result.color = tex2D( samp0, screenTexCoord.xy );\n"
 		"}\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/heathaze.vertex",
 		"/*\n"
@@ -3565,9 +3565,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"	\n"
 		"	result.texcoord1 = x * deformMagnitude;\n"
 		"}\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/heatHazeWithMask.pixel",
 		"/*\n"
@@ -3637,9 +3637,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"\n"
 		"	result.color = tex2D( samp0, screenTexCoord );\n"
 		"}\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/heatHazeWithMask.vertex",
 		"/*\n"
@@ -3733,9 +3733,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"	deformMagnitude *= rpStereoCorrection.x;\n"
 		"	result.texcoord2 = x * deformMagnitude;\n"
 		"}\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/heatHazeWithMaskAndVertex.pixel",
 		"/*\n"
@@ -3807,9 +3807,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"\n"
 		"	result.color = tex2D( samp0, screenTexCoord );\n"
 		"}\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/heatHazeWithMaskAndVertex.vertex",
 		"/*\n"
@@ -3906,9 +3906,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"	deformMagnitude *= rpStereoCorrection.x;\n"
 		"	result.color = swizzleColor( vertex.color );\n"
 		"}\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/interaction.pixel",
 		"/*\n"
@@ -4015,9 +4015,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"	result.color.w = 1.0;\n"
 		"}\n"
 		"\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/interaction.vertex",
 		"/*\n"
@@ -4218,9 +4218,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"	result.color = ( swizzleColor( vertex.color ) * rpVertexColorModulate ) + rpVertexColorAdd;\n"
 		"#endif\n"
 		"}\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/interactionSM.pixel",
 		"/*\n"
@@ -4507,9 +4507,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"	result.color.w = 1.0;\n"
 		"}\n"
 		"\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/interactionSM.vertex",
 		"/*\n"
@@ -4733,9 +4733,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"	result.color = ( swizzleColor( vertex.color ) * rpVertexColorModulate ) + rpVertexColorAdd;\n"
 		"#endif\n"
 		"}\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/interactionAmbient.pixel",
 		"/*\n"
@@ -4824,9 +4824,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"	result.color.w = 1.0;\n"
 		"}\n"
 		"\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/interactionAmbient.vertex",
 		"/*\n"
@@ -4942,9 +4942,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"	//# for 1.0-color : env[16] = -1, env[17] = 1	\n"
 		"	result.color = ( swizzleColor( vertex.color ) * rpVertexColorModulate ) + rpVertexColorAdd;\n"
 		"}\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/interactionAmbient_skinned.pixel",
 		"/*\n"
@@ -5033,9 +5033,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"	result.color.w = 1.0;\n"
 		"}\n"
 		"\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/interactionAmbient_skinned.vertex",
 		"/*\n"
@@ -5210,9 +5210,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"	//# for 1.0-color : env[16] = -1, env[17] = 1	\n"
 		"	result.color = ( swizzleColor( vertex.color ) * rpVertexColorModulate ) + rpVertexColorAdd;\n"
 		"}\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/motionBlur.pixel",
 		"/*\n"
@@ -5309,9 +5309,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"	result.color = float4( sum * invScale, 1.0 );\n"
 		"}\n"
 		"\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/motionBlur.vertex",
 		"/*\n"
@@ -5358,9 +5358,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"	result.position = vertex.position;\n"
 		"	result.texcoord0 = vertex.texcoord;\n"
 		"}\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/oculusWarp.pixel",
 		"/*\n"
@@ -5427,9 +5427,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"	result.color = outColor;\n"
 		"\n"
 		"}\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/oculusWarp.vertex",
 		"/*\n"
@@ -5491,9 +5491,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"	result.texcoord0.y = 1.0 - result.texcoord0.y;\n"
 		"	result.color = vertex.dcolor;\n"
 		"}\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/oculusWarpChrAb.pixel",
 		"/*\n"
@@ -5567,9 +5567,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"\n"
 		"}\n"
 		"\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/oculusWarpChrAb.vertex",
 		"/*\n"
@@ -5642,9 +5642,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"\n"
 		"	result.color = vertex.dcolor;\n"
 		"}\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/postprocess.pixel",
 		"/*\n"
@@ -5693,9 +5693,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"	result.color = tex2D( samp0, tCoords );\n"
 		"}\n"
 		"\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/postprocess.vertex",
 		"/*\n"
@@ -5750,9 +5750,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"	//result.position.w = dot4( vertex.position, rpMVPmatrixW );\n"
 		"	result.texcoord0 =  vertex.texcoord;\n"
 		"}\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/shadow.pixel",
 		"/*\n"
@@ -5793,9 +5793,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"void main( out PS_OUT result ) {\n"
 		"	result.color = rpColor;\n"
 		"}\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/shadow.vertex",
 		"/*\n"
@@ -5845,9 +5845,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"	result.position.z = dot4( vPos, rpMVPmatrixZ );\n"
 		"	result.position.w = dot4( vPos, rpMVPmatrixW );\n"
 		"}\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/shadowDebug.pixel",
 		"/*\n"
@@ -5888,9 +5888,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"void main( out PS_OUT result ) {\n"
 		"	result.color = rpColor;\n"
 		"}\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/shadowDebug.vertex",
 		"/*\n"
@@ -5940,9 +5940,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"	result.position.z = dot4( vPos, rpMVPmatrixZ );\n"
 		"	result.position.w = dot4( vPos, rpMVPmatrixW );\n"
 		"}\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/shadowDebug_skinned.pixel",
 		"/*\n"
@@ -5983,9 +5983,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"void main( out PS_OUT result ) {\n"
 		"	result.color = rpColor;\n"
 		"}\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/shadowDebug_skinned.vertex",
 		"/*\n"
@@ -6080,9 +6080,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"	result.position.z = dot4( vPos, rpMVPmatrixZ );\n"
 		"	result.position.w = dot4( vPos, rpMVPmatrixW );\n"
 		"}\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/shadow_skinned.pixel",
 		"/*\n"
@@ -6123,9 +6123,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"void main( out PS_OUT result ) {\n"
 		"	result.color = rpColor;\n"
 		"}\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/shadow_skinned.vertex",
 		"/*\n"
@@ -6220,9 +6220,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"	result.position.z = dot4( vPos, rpMVPmatrixZ );\n"
 		"	result.position.w = dot4( vPos, rpMVPmatrixW );\n"
 		"}\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/simpleshade.pixel",
 		"/*\n"
@@ -6287,9 +6287,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"	result.color.xyz = _float3( dot3( normal, L ) * 0.75 );\n"
 		"	result.color.w = 1.0;\n"
 		"}\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/simpleshade.vertex",
 		"/*\n"
@@ -6345,9 +6345,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"	result.position = position;\n"
 		"	result.texcoord0 = position;\n"
 		"}\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/skinning.inc",
 		"/*\n"
@@ -6427,9 +6427,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"result.position.y = dot4( modelPosition, rpMVPmatrixY );\n"
 		"result.position.z = dot4( modelPosition, rpMVPmatrixZ );\n"
 		"result.position.w = dot4( modelPosition, rpMVPmatrixW );\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/skybox.pixel",
 		"/*\n"
@@ -6478,9 +6478,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"	result.color = texCUBE( samp0, fragment.texcoord0 ) * fragment.color;\n"
 		"}\n"
 		"\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/skybox.vertex",
 		"/*\n"
@@ -6538,9 +6538,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"	result.color = ( swizzleColor( vertex.color ) * rpVertexColorModulate ) + rpVertexColorAdd;\n"
 		"}\n"
 		"\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/stereoDeGhost.pixel",
 		"/*\n"
@@ -6582,9 +6582,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"void main( out PS_OUT result ) {\n"
 		"	result.color = rpColor;\n"
 		"}\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/stereoDeGhost.vertex",
 		"/*\n"
@@ -6635,9 +6635,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"	result.position.z = dot4( vertex.position, rpMVPmatrixZ );\n"
 		"	result.position.w = dot4( vertex.position, rpMVPmatrixW );\n"
 		"}\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/stereoInterlace.pixel",
 		"/*\n"
@@ -6689,9 +6689,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"        result.color = tex2D( samp1, vec2( fragment.texcoord0 ) );\n"
 		"    }\n"
 		"}\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/stereoInterlace.vertex",
 		"/*\n"
@@ -6742,9 +6742,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"\n"
 		"	result.texcoord0 = vertex.texcoord;\n"
 		"}\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/stereoWarp.pixel",
 		"/*\n"
@@ -6822,9 +6822,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"	result.color = tex2D( samp0, warped );\n"
 		"}\n"
 		"\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/stereoWarp.vertex",
 		"/*\n"
@@ -6874,9 +6874,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"	result.position.w = dot4( vertex.position, rpMVPmatrixW );\n"
 		"	result.texcoord0 = vertex.texcoord;\n"
 		"}\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/texture.pixel",
 		"/*\n"
@@ -6923,9 +6923,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"void main( PS_IN fragment, out PS_OUT result ) {\n"
 		"	result.color = tex2D( samp0, fragment.texcoord0 ) * rpColor;\n"
 		"}\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/texture.vertex",
 		"/*\n"
@@ -6986,9 +6986,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"		result.texcoord0.y = dot4( vertex.texcoord.xy, rpTextureMatrixT );\n"
 		"	}\n"
 		"}\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/texture_color.pixel",
 		"/*\n"
@@ -7038,9 +7038,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"	clip( color.a - rpAlphaTest.x );\n"
 		"	result.color = color;\n"
 		"}\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/texture_color.vertex",
 		"/*\n"
@@ -7105,9 +7105,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"	float4 vertexColor = ( swizzleColor( vertex.color ) * rpVertexColorModulate ) + rpVertexColorAdd;\n"
 		"	result.color =  vertexColor * rpColor;\n"
 		"}\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/texture_color_skinned.pixel",
 		"/*\n"
@@ -7157,9 +7157,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"	clip( color.a - rpAlphaTest.x );\n"
 		"	result.color = color;\n"
 		"}\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/texture_color_skinned.vertex",
 		"/*\n"
@@ -7263,9 +7263,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"	float4 vertexColor = ( swizzleColor( vertex.color ) * rpVertexColorModulate ) + rpVertexColorAdd;\n"
 		"	result.color =  vertexColor * rpColor;\n"
 		"}\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/texture_color_texgen.pixel",
 		"/*\n"
@@ -7320,9 +7320,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"\n"
 		"	result.color = texSample * fragment.color;\n"
 		"}\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/texture_color_texgen.vertex",
 		"/*\n"
@@ -7391,9 +7391,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"	float4 vertexColor = ( swizzleColor( vertex.color ) * rpVertexColorModulate ) + rpVertexColorAdd;\n"
 		"	result.color =  vertexColor * rpColor;\n"
 		"}\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/vertex_color.pixel",
 		"/*\n"
@@ -7443,9 +7443,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"{\n"
 		"	result.color = fragment.color;\n"
 		"}\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/vertex_color.vertex",
 		"/*\n"
@@ -7503,9 +7503,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"	\n"
 		"	result.color =  swizzleColor( vertex.color );\n"
 		"}\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/wobblesky.pixel",
 		"/*\n"
@@ -7554,9 +7554,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"	result.color = texCUBE( samp0, fragment.texcoord0 ) * fragment.color;\n"
 		"}\n"
 		"\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/wobblesky.vertex",
 		"/*\n"
@@ -7617,9 +7617,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"	result.color = ( swizzleColor( vertex.color ) * rpVertexColorModulate ) + rpVertexColorAdd;\n"
 		"}\n"
 		"\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/zcullReconstruct.pixel",
 		"/*\n"
@@ -7661,9 +7661,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"	result.depth = 1;\n"
 		"	result.color = float4( 0.0, 0.0, 0.0, 0.0 );\n"
 		"}\n"
-		
+
 	},
-	
+
 	{
 		"renderprogs/zcullReconstruct.vertex",
 		"/*\n"
@@ -7708,9 +7708,9 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"	result.position = vertex.position;\n"
 		"	result.position.z = -1.0;\n"
 		"}\n"
-		
+
 	},
-	
+
 	{0, 0},
-	
+
 };

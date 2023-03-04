@@ -53,26 +53,26 @@ idCVar vr_openVrStuckPadAxisFix( "vr_openVrStuckPadAxisFix", "1", CVAR_BOOL | CV
 idCVar vr_openVrStuckPadAxisFixThresh( "vr_openVrStuckPadAxisFixThresh", "12", CVAR_INTEGER | CVAR_ARCHIVE, "# of identical non zero input polls before axis flagged as stuck." );
 
 #if !SDL_VERSION_ATLEAST(2, 0, 0)
-#define SDL_Keycode SDLKey
-#define SDLK_APPLICATION SDLK_COMPOSE
-#define SDLK_SCROLLLOCK SDLK_SCROLLOCK
-#define SDLK_LGUI SDLK_LSUPER
-#define SDLK_RGUI SDLK_RSUPER
-#define SDLK_KP_0 SDLK_KP0
-#define SDLK_KP_1 SDLK_KP1
-#define SDLK_KP_2 SDLK_KP2
-#define SDLK_KP_3 SDLK_KP3
-#define SDLK_KP_4 SDLK_KP4
-#define SDLK_KP_5 SDLK_KP5
-#define SDLK_KP_6 SDLK_KP6
-#define SDLK_KP_7 SDLK_KP7
-#define SDLK_KP_8 SDLK_KP8
-#define SDLK_KP_9 SDLK_KP9
-#define SDLK_NUMLOCKCLEAR SDLK_NUMLOCK
-#define SDLK_PRINTSCREEN SDLK_PRINT
-// DG: SDL1 doesn't seem to have defines for scancodes.. add the (only) one we need
-#define SDL_SCANCODE_GRAVE 49 // in SDL2 this is 53.. but according to two different systems and keyboards this works for SDL1
-// DG end
+	#define SDL_Keycode SDLKey
+	#define SDLK_APPLICATION SDLK_COMPOSE
+	#define SDLK_SCROLLLOCK SDLK_SCROLLOCK
+	#define SDLK_LGUI SDLK_LSUPER
+	#define SDLK_RGUI SDLK_RSUPER
+	#define SDLK_KP_0 SDLK_KP0
+	#define SDLK_KP_1 SDLK_KP1
+	#define SDLK_KP_2 SDLK_KP2
+	#define SDLK_KP_3 SDLK_KP3
+	#define SDLK_KP_4 SDLK_KP4
+	#define SDLK_KP_5 SDLK_KP5
+	#define SDLK_KP_6 SDLK_KP6
+	#define SDLK_KP_7 SDLK_KP7
+	#define SDLK_KP_8 SDLK_KP8
+	#define SDLK_KP_9 SDLK_KP9
+	#define SDLK_NUMLOCKCLEAR SDLK_NUMLOCK
+	#define SDLK_PRINTSCREEN SDLK_PRINT
+	// DG: SDL1 doesn't seem to have defines for scancodes.. add the (only) one we need
+	#define SDL_SCANCODE_GRAVE 49 // in SDL2 this is 53.. but according to two different systems and keyboards this works for SDL1
+	// DG end
 #endif
 
 // DG: those are needed for moving/resizing windows
@@ -93,11 +93,11 @@ struct kbd_poll_t
 {
 	int key;
 	bool state;
-	
+
 	kbd_poll_t()
 	{
 	}
-	
+
 	kbd_poll_t( int k, bool s )
 	{
 		key = k;
@@ -109,11 +109,11 @@ struct mouse_poll_t
 {
 	int action;
 	int value;
-	
+
 	mouse_poll_t()
 	{
 	}
-	
+
 	mouse_poll_t( int a, int v )
 	{
 		action = a;
@@ -128,11 +128,11 @@ struct joystick_poll_t
 {
 	int action;
 	int value;
-	
+
 	joystick_poll_t()
 	{
 	}
-	
+
 	joystick_poll_t( int a, int v )
 	{
 		action = a;
@@ -153,7 +153,7 @@ static int SDLScanCodeToKeyNum( SDL_Scancode sc )
 {
 	int idx = int( sc );
 	assert( idx >= 0 && idx < SDL_NUM_SCANCODES );
-	
+
 	return scanCodeToKeyNum[idx];
 }
 
@@ -176,7 +176,7 @@ static SDL_Scancode KeyNumToSDLScanCode( int keyNum )
 static void ConvertUTF8toUTF32( const char* utf8str, int32* utf32buf )
 {
 	static SDL_iconv_t cd = SDL_iconv_t( -1 );
-	
+
 	if( cd == SDL_iconv_t( -1 ) )
 	{
 		const char* toFormat = "UTF-32LE"; // TODO: what does d3bfg expect on big endian machines?
@@ -187,46 +187,46 @@ static void ConvertUTF8toUTF32( const char* utf8str, int32* utf32buf )
 			return;
 		}
 	}
-	
+
 	size_t len = strlen( utf8str );
-	
+
 	size_t inbytesleft = len;
 	size_t outbytesleft = 4 * SDL_TEXTINPUTEVENT_TEXT_SIZE; // *4 because utf-32 needs 4x as much space as utf-8
 	char* outbuf = ( char* )utf32buf;
 	size_t n = SDL_iconv( cd, &utf8str, &inbytesleft, &outbuf, &outbytesleft );
-	
+
 	if( n == size_t( -1 ) ) // some error occured during iconv
 	{
 		common->Warning( "Converting UTF-8 string \"%s\" from SDL_TEXTINPUT to UTF-32 failed!", utf8str );
-		
+
 		// clear utf32-buffer, just to be sure there's no garbage..
 		memset( utf32buf, 0, SDL_TEXTINPUTEVENT_TEXT_SIZE * sizeof( int32 ) );
 	}
-	
+
 	// reset cd so it can be used again
 	SDL_iconv( cd, NULL, &inbytesleft, NULL, &outbytesleft );
-	
+
 }
 
 #else // SDL1.2
 static int SDL_KeyToDoom3Key( SDL_Keycode key, bool& isChar )
 {
 	isChar = false;
-	
+
 	if( key >= SDLK_SPACE && key < SDLK_DELETE )
 	{
 		isChar = true;
 		//return key;// & 0xff;
 	}
-	
+
 	switch( key )
 	{
 		case SDLK_ESCAPE:
 			return K_ESCAPE;
-			
+
 		case SDLK_SPACE:
 			return K_SPACE;
-			
+
 		//case SDLK_EXCLAIM:
 		/*
 		SDLK_QUOTEDBL:
@@ -245,60 +245,60 @@ static int SDL_KeyToDoom3Key( SDL_Keycode key, bool& isChar )
 		*/
 		case SDLK_0:
 			return K_0;
-			
+
 		case SDLK_1:
 			return K_1;
-			
+
 		case SDLK_2:
 			return K_2;
-			
+
 		case SDLK_3:
 			return K_3;
-			
+
 		case SDLK_4:
 			return K_4;
-			
+
 		case SDLK_5:
 			return K_5;
-			
+
 		case SDLK_6:
 			return K_6;
-			
+
 		case SDLK_7:
 			return K_7;
-			
+
 		case SDLK_8:
 			return K_8;
-			
+
 		case SDLK_9:
 			return K_9;
-			
+
 		// DG: add some missing keys..
 		case SDLK_UNDERSCORE:
 			return K_UNDERLINE;
-			
+
 		case SDLK_MINUS:
 			return K_MINUS;
-			
+
 		case SDLK_COMMA:
 			return K_COMMA;
-			
+
 		case SDLK_COLON:
 			return K_COLON;
-			
+
 		case SDLK_SEMICOLON:
 			return K_SEMICOLON;
-			
+
 		case SDLK_PERIOD:
 			return K_PERIOD;
-			
+
 		case SDLK_AT:
 			return K_AT;
-			
+
 		case SDLK_EQUALS:
 			return K_EQUALS;
 		// DG end
-		
+
 		/*
 		SDLK_COLON		= 58,
 		SDLK_SEMICOLON		= 59,
@@ -319,268 +319,268 @@ static int SDL_KeyToDoom3Key( SDL_Keycode key, bool& isChar )
 		SDLK_UNDERSCORE		= 95,
 		SDLK_BACKQUOTE		= 96,
 		*/
-		
+
 		case SDLK_a:
 			return K_A;
-			
+
 		case SDLK_b:
 			return K_B;
-			
+
 		case SDLK_c:
 			return K_C;
-			
+
 		case SDLK_d:
 			return K_D;
-			
+
 		case SDLK_e:
 			return K_E;
-			
+
 		case SDLK_f:
 			return K_F;
-			
+
 		case SDLK_g:
 			return K_G;
-			
+
 		case SDLK_h:
 			return K_H;
-			
+
 		case SDLK_i:
 			return K_I;
-			
+
 		case SDLK_j:
 			return K_J;
-			
+
 		case SDLK_k:
 			return K_K;
-			
+
 		case SDLK_l:
 			return K_L;
-			
+
 		case SDLK_m:
 			return K_M;
-			
+
 		case SDLK_n:
 			return K_N;
-			
+
 		case SDLK_o:
 			return K_O;
-			
+
 		case SDLK_p:
 			return K_P;
-			
+
 		case SDLK_q:
 			return K_Q;
-			
+
 		case SDLK_r:
 			return K_R;
-			
+
 		case SDLK_s:
 			return K_S;
-			
+
 		case SDLK_t:
 			return K_T;
-			
+
 		case SDLK_u:
 			return K_U;
-			
+
 		case SDLK_v:
 			return K_V;
-			
+
 		case SDLK_w:
 			return K_W;
-			
+
 		case SDLK_x:
 			return K_X;
-			
+
 		case SDLK_y:
 			return K_Y;
-			
+
 		case SDLK_z:
 			return K_Z;
-			
+
 		case SDLK_RETURN:
 			return K_ENTER;
-			
+
 		case SDLK_BACKSPACE:
 			return K_BACKSPACE;
-			
+
 		case SDLK_PAUSE:
 			return K_PAUSE;
-			
+
 		// DG: add tab key support
 		case SDLK_TAB:
 			return K_TAB;
 		// DG end
-		
+
 		//case SDLK_APPLICATION:
 		//	return K_COMMAND;
 		case SDLK_CAPSLOCK:
 			return K_CAPSLOCK;
-			
+
 		case SDLK_SCROLLLOCK:
 			return K_SCROLL;
-			
+
 		case SDLK_POWER:
 			return K_POWER;
-			
+
 		case SDLK_UP:
 			return K_UPARROW;
-			
+
 		case SDLK_DOWN:
 			return K_DOWNARROW;
-			
+
 		case SDLK_LEFT:
 			return K_LEFTARROW;
-			
+
 		case SDLK_RIGHT:
 			return K_RIGHTARROW;
-			
+
 		case SDLK_LGUI:
 			return K_LWIN;
-			
+
 		case SDLK_RGUI:
 			return K_RWIN;
 		//case SDLK_MENU:
 		//	return K_MENU;
-		
+
 		case SDLK_LALT:
 			return K_LALT;
-			
+
 		case SDLK_RALT:
 			return K_RALT;
-			
+
 		case SDLK_RCTRL:
 			return K_RCTRL;
-			
+
 		case SDLK_LCTRL:
 			return K_LCTRL;
-			
+
 		case SDLK_RSHIFT:
 			return K_RSHIFT;
-			
+
 		case SDLK_LSHIFT:
 			return K_LSHIFT;
-			
+
 		case SDLK_INSERT:
 			return K_INS;
-			
+
 		case SDLK_DELETE:
 			return K_DEL;
-			
+
 		case SDLK_PAGEDOWN:
 			return K_PGDN;
-			
+
 		case SDLK_PAGEUP:
 			return K_PGUP;
-			
+
 		case SDLK_HOME:
 			return K_HOME;
-			
+
 		case SDLK_END:
 			return K_END;
-			
+
 		case SDLK_F1:
 			return K_F1;
-			
+
 		case SDLK_F2:
 			return K_F2;
-			
+
 		case SDLK_F3:
 			return K_F3;
-			
+
 		case SDLK_F4:
 			return K_F4;
-			
+
 		case SDLK_F5:
 			return K_F5;
-			
+
 		case SDLK_F6:
 			return K_F6;
-			
+
 		case SDLK_F7:
 			return K_F7;
-			
+
 		case SDLK_F8:
 			return K_F8;
-			
+
 		case SDLK_F9:
 			return K_F9;
-			
+
 		case SDLK_F10:
 			return K_F10;
-			
+
 		case SDLK_F11:
 			return K_F11;
-			
+
 		case SDLK_F12:
 			return K_F12;
 		// K_INVERTED_EXCLAMATION;
-		
+
 		case SDLK_F13:
 			return K_F13;
-			
+
 		case SDLK_F14:
 			return K_F14;
-			
+
 		case SDLK_F15:
 			return K_F15;
-			
+
 		case SDLK_KP_7:
 			return K_KP_7;
-			
+
 		case SDLK_KP_8:
 			return K_KP_8;
-			
+
 		case SDLK_KP_9:
 			return K_KP_9;
-			
+
 		case SDLK_KP_4:
 			return K_KP_4;
-			
+
 		case SDLK_KP_5:
 			return K_KP_5;
-			
+
 		case SDLK_KP_6:
 			return K_KP_6;
-			
+
 		case SDLK_KP_1:
 			return K_KP_1;
-			
+
 		case SDLK_KP_2:
 			return K_KP_2;
-			
+
 		case SDLK_KP_3:
 			return K_KP_3;
-			
+
 		case SDLK_KP_ENTER:
 			return K_KP_ENTER;
-			
+
 		case SDLK_KP_0:
 			return K_KP_0;
-			
+
 		case SDLK_KP_PERIOD:
 			return K_KP_DOT;
-			
+
 		case SDLK_KP_DIVIDE:
 			return K_KP_SLASH;
 		// K_SUPERSCRIPT_TWO;
-		
+
 		case SDLK_KP_MINUS:
 			return K_KP_MINUS;
 		// K_ACUTE_ACCENT;
-		
+
 		case SDLK_KP_PLUS:
 			return K_KP_PLUS;
-			
+
 		case SDLK_NUMLOCKCLEAR:
 			return K_NUMLOCK;
-			
+
 		case SDLK_KP_MULTIPLY:
 			return K_KP_STAR;
-			
+
 		case SDLK_KP_EQUALS:
 			return K_KP_EQUALS;
-			
+
 		// K_MASCULINE_ORDINATOR;
 		// K_GRAVE_A;
 		// K_AUX1;
@@ -605,14 +605,14 @@ static int SDL_KeyToDoom3Key( SDL_Keycode key, bool& isChar )
 		// K_GRAVE_U;
 		// K_AUX15;
 		// K_AUX16;
-		
+
 		case SDLK_PRINTSCREEN:
 			return K_PRINTSCREEN;
-			
+
 		case SDLK_MODE:
 			return K_RALT;
 	}
-	
+
 	return 0;
 }
 #endif // SDL2
@@ -621,18 +621,18 @@ static void PushConsoleEvent( const char* s )
 {
 	char* b;
 	size_t len;
-	
+
 	len = strlen( s ) + 1;
 	b = ( char* )Mem_Alloc( len, TAG_EVENTS );
 	strcpy( b, s );
-	
+
 	SDL_Event event;
-	
+
 	event.type = SDL_USEREVENT;
 	event.user.code = SE_CONSOLE;
 	event.user.data1 = ( void* )len;
 	event.user.data2 = b;
-	
+
 	SDL_PushEvent( &event );
 }
 
@@ -646,41 +646,43 @@ Sys_InitInput
 void Sys_InitInput()
 {
 	int numJoysticks, i;
-	
+
 	kbd_polls.SetGranularity( 64 );
 	mouse_polls.SetGranularity( 64 );
-	
+
 	memset( buttonStates, 0, sizeof( buttonStates ) );
-	
+
 #if !SDL_VERSION_ATLEAST(2, 0, 0)
 	SDL_EnableUNICODE( 1 );
 	SDL_EnableKeyRepeat( SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL );
 #endif
 	in_keyboard.SetModified();
-	
+
 	// WM0110: Initialise SDL Joystick
 	common->Printf( "Sys_InitInput: Joystick subsystem init\n" );
 	if( SDL_Init( SDL_INIT_JOYSTICK ) )
 	{
 		common->Printf( "Sys_InitInput: Joystic Init ERROR!\n" );
 	}
-	
+
 	numJoysticks = SDL_NumJoysticks();
 	common->Printf( "Sys_InitInput: Joystic - Found %i joysticks\n", numJoysticks );
 #if !SDL_VERSION_ATLEAST(2, 0, 0)
 	for( i = 0; i < numJoysticks; i++ )
+	{
 		common->Printf( " Joystick %i name '%s'\n", i, SDL_JoystickName( i ) );
+	}
 #endif
-		
+
 	// Open first available joystick and use it
 	if( SDL_NumJoysticks() > 0 )
 	{
 		joy = SDL_JoystickOpen( 0 );
-		
+
 		if( joy )
 		{
 			int num_hats;
-			
+
 			num_hats = SDL_JoystickNumHats( joy );
 			common->Printf( "Opened Joystick number 0\n" );
 #if SDL_VERSION_ATLEAST(2, 0, 0)
@@ -692,7 +694,7 @@ void Sys_InitInput()
 			common->Printf( "Number of Buttons: %d\n", SDL_JoystickNumButtons( joy ) );
 			common->Printf( "Number of Hats: %d\n", num_hats );
 			common->Printf( "Number of Balls: %d\n", SDL_JoystickNumBalls( joy ) );
-			
+
 			SDL_joystick_has_hat = 0;
 			if( num_hats )
 			{
@@ -722,9 +724,9 @@ void Sys_ShutdownInput()
 	kbd_polls.Clear();
 	mouse_polls.Clear();
 	joystick_polls.Clear();
-	
+
 	memset( buttonStates, 0, sizeof( buttonStates ) );
-	
+
 	// Close any opened SDL Joystic
 	if( joy )
 	{
@@ -757,11 +759,11 @@ Sys_GetConsoleKey
 unsigned char Sys_GetConsoleKey( bool shifted )
 {
 	static unsigned char keys[2] = { '`', '~' };
-	
+
 	if( in_keyboard.IsModified() )
 	{
 		idStr lang = in_keyboard.GetString();
-		
+
 		if( lang.Length() )
 		{
 			if( !lang.Icmp( "french" ) )
@@ -795,10 +797,10 @@ unsigned char Sys_GetConsoleKey( bool shifted )
 				keys[1] = 167; // §
 			}
 		}
-		
+
 		in_keyboard.ClearModified();
 	}
-	
+
 	return shifted ? keys[1] : keys[0];
 }
 
@@ -820,7 +822,7 @@ Sys_GrabMouseCursor
 void Sys_GrabMouseCursor( bool grabIt )
 {
 	int flags;
-	
+
 	if( grabIt )
 	{
 		// DG: disabling the cursor is now done once in GLimp_Init() because it should always be disabled
@@ -831,7 +833,7 @@ void Sys_GrabMouseCursor( bool grabIt )
 	{
 		flags = GRAB_SETSTATE;
 	}
-	
+
 	GLimp_GrabInput( flags );
 }
 
@@ -844,43 +846,44 @@ Sys_GetEvent
 */
 sysEvent_t Sys_GetEvent()
 {
-    if (isvrevent) {
-        isvrevent = false;
-        printf("returning vrevent %d %d\n", vrevent.evValue, vrevent.evValue2);
-        return vrevent;
-    }
+	if( isvrevent )
+	{
+		isvrevent = false;
+		printf( "returning vrevent %d %d\n", vrevent.evValue, vrevent.evValue2 );
+		return vrevent;
+	}
 	sysEvent_t res = { };
-	
+
 	SDL_Event ev;
 	int key;
-	
+
 	// when this is returned, it's assumed that there are no more events!
 	static const sysEvent_t no_more_events = { SE_NONE, 0, 0, 0, NULL };
-	
+
 	// WM0110: previous state of joystick hat
 	static int previous_hat_state = SDL_HAT_CENTERED;
-	
+
 #if SDL_VERSION_ATLEAST(2, 0, 0)
 	// utf-32 version of the textinput event
 	static int32 uniStr[SDL_TEXTINPUTEVENT_TEXT_SIZE] = {0};
 	static size_t uniStrPos = 0;
-	
+
 	if( uniStr[0] != 0 )
 	{
 		res.evType = SE_CHAR;
 		res.evValue = uniStr[uniStrPos];
-		
+
 		++uniStrPos;
-		
+
 		if( !uniStr[uniStrPos] || uniStrPos == SDL_TEXTINPUTEVENT_TEXT_SIZE )
 		{
 			memset( uniStr, 0, sizeof( uniStr ) );
 			uniStrPos = 0;
 		}
-		
+
 		return res;
 	}
-	
+
 	// DG: fake a "mousewheel not pressed anymore" event for SDL2
 	// so scrolling in menus stops after one step
 	static int mwheelRel = 0;
@@ -894,19 +897,19 @@ sysEvent_t Sys_GetEvent()
 	}
 	// DG end
 #endif // SDL2
-	
+
 	static int32 uniChar = 0;
-	
+
 	if( uniChar )
 	{
 		res.evType = SE_CHAR;
 		res.evValue = uniChar;
-		
+
 		uniChar = 0;
-		
+
 		return res;
 	}
-	
+
 	// loop until there is an event we care about (will return then) or no more events
 	while( SDL_PollEvent( &ev ) )
 	{
@@ -923,28 +926,30 @@ sysEvent_t Sys_GetEvent()
 						SDL_Keymod currentmod = SDL_GetModState();
 						int newmod = KMOD_NONE;
 						if( currentmod & KMOD_CAPS ) // preserve capslock
+						{
 							newmod |= KMOD_CAPS;
-							
+						}
+
 						SDL_SetModState( ( SDL_Keymod )newmod );
-						
+
 						// DG: un-pause the game when focus is gained, that also re-grabs the input
 						//     disabling the cursor is now done once in GLimp_Init() because it should always be disabled
 						cvarSystem->SetCVarBool( "com_pause", false );
 						// DG end
 						break;
 					}
-					
+
 					case SDL_WINDOWEVENT_FOCUS_LOST:
 						// DG: pause the game when focus is lost, that also un-grabs the input
 						cvarSystem->SetCVarBool( "com_pause", true );
 						// DG end
 						break;
-						
+
 					case SDL_WINDOWEVENT_LEAVE:
 						// mouse has left the window
 						res.evType = SE_MOUSE_LEAVE;
 						return res;
-						
+
 					// DG: handle resizing and moving of window
 					case SDL_WINDOWEVENT_RESIZED:
 					{
@@ -952,12 +957,12 @@ sysEvent_t Sys_GetEvent()
 						int h = ev.window.data2;
 						r_windowWidth.SetInteger( w );
 						r_windowHeight.SetInteger( h );
-						
+
 						glConfig.nativeScreenWidth = w;
 						glConfig.nativeScreenHeight = h;
 						break;
 					}
-					
+
 					case SDL_WINDOWEVENT_MOVED:
 					{
 						int x = ev.window.data1;
@@ -967,45 +972,47 @@ sysEvent_t Sys_GetEvent()
 						break;
 					}
 				}
-				
+
 				continue; // handle next event
 #else // SDL 1.2
 			case SDL_ACTIVEEVENT:
 			{
 				// DG: (un-)pause the game when focus is gained, that also (un-)grabs the input
 				bool pause = true;
-			
+
 				if( ev.active.gain )
 				{
-			
+
 					pause = false;
-			
+
 					// unset modifier, in case alt-tab was used to leave window and ALT is still set
 					// as that can cause fullscreen-toggling when pressing enter...
 					SDLMod currentmod = SDL_GetModState();
 					int newmod = KMOD_NONE;
 					if( currentmod & KMOD_CAPS ) // preserve capslock
+					{
 						newmod |= KMOD_CAPS;
-			
+					}
+
 					SDL_SetModState( ( SDLMod )newmod );
 				}
-			
+
 				cvarSystem->SetCVarBool( "com_pause", pause );
-			
+
 				if( ev.active.state == SDL_APPMOUSEFOCUS && !ev.active.gain )
 				{
 					// the mouse has left the window.
 					res.evType = SE_MOUSE_LEAVE;
 					return res;
 				}
-			
+
 			}
-			
+
 			continue; // handle next event
-			
+
 			case SDL_VIDEOEXPOSE:
 				continue; // handle next event
-				
+
 			// DG: handle resizing and moving of window
 			case SDL_VIDEORESIZE:
 			{
@@ -1013,17 +1020,17 @@ sysEvent_t Sys_GetEvent()
 				int h = ev.resize.h;
 				r_windowWidth.SetInteger( w );
 				r_windowHeight.SetInteger( h );
-			
+
 				glConfig.nativeScreenWidth = w;
 				glConfig.nativeScreenHeight = h;
-			
+
 				// for some reason this needs a vid_restart in SDL1 but not SDL2 so GLimp_SetScreenParms() is called
 				PushConsoleEvent( "vid_restart" );
 				continue; // handle next event
 			}
 				// DG end
 #endif // SDL1.2
-			
+
 			case SDL_KEYDOWN:
 				if( ev.key.keysym.sym == SDLK_RETURN && ( ev.key.keysym.mod & KMOD_ALT ) > 0 )
 				{
@@ -1040,7 +1047,7 @@ sysEvent_t Sys_GetEvent()
 					PushConsoleEvent( "vid_restart" );
 					continue; // handle next event
 				}
-				
+
 				// DG: ctrl-g to un-grab mouse - yeah, left ctrl shoots, then just use right ctrl :)
 				if( ev.key.keysym.sym == SDLK_g && ( ev.key.keysym.mod & KMOD_CTRL ) > 0 )
 				{
@@ -1050,7 +1057,7 @@ sysEvent_t Sys_GetEvent()
 					continue; // handle next event
 				}
 				// DG end
-				
+
 #if ! SDL_VERSION_ATLEAST(2, 0, 0)
 				// DG: only do this for key-down, don't care about isChar from SDL_KeyToDoom3Key.
 				//     if unicode is not 0  it should work..
@@ -1060,12 +1067,12 @@ sysEvent_t Sys_GetEvent()
 				}
 				// DG end
 #endif // SDL 1.2
-				
+
 			// fall through
 			case SDL_KEYUP:
 			{
 				bool isChar;
-				
+
 				// DG: special case for SDL_SCANCODE_GRAVE - the console key under Esc
 				if( ev.key.keysym.scancode == SDL_SCANCODE_GRAVE )
 				{
@@ -1076,18 +1083,20 @@ sysEvent_t Sys_GetEvent()
 				{
 #if SDL_VERSION_ATLEAST(2, 0, 0)
 					key = SDLScanCodeToKeyNum( ev.key.keysym.scancode );
-					
+
 					if( key == 0 )
 					{
 						// SDL2 has no ev.key.keysym.unicode anymore.. but the scancode should work well enough for console
 						if( ev.type == SDL_KEYDOWN ) // FIXME: don't complain if this was an ASCII char and the console is open?
+						{
 							common->Warning( "unmapped SDL key %d scancode %d", ev.key.keysym.sym, ev.key.keysym.scancode );
-							
+						}
+
 						continue; // just handle next event
 					}
 #else // SDL1.2
 					key = SDL_KeyToDoom3Key( ev.key.keysym.sym, isChar );
-					
+
 					if( key == 0 )
 					{
 						unsigned char uc = ev.key.keysym.unicode & 0xff;
@@ -1103,46 +1112,50 @@ sysEvent_t Sys_GetEvent()
 							{
 								res.evType = SE_CHAR;
 								res.evValue = uniChar;
-					
+
 								uniChar = 0;
-					
+
 								return res;
 							}
-					
+
 							if( ev.type == SDL_KEYDOWN ) // FIXME: don't complain if this was an ASCII char and the console is open?
+							{
 								common->Warning( "unmapped SDL key %d (0x%x) scancode %d", ev.key.keysym.sym, ev.key.keysym.unicode, ev.key.keysym.scancode );
-					
+							}
+
 							continue; // just handle next event
 						}
 					}
 #endif // SDL 1.2
 				}
-				
+
 				res.evType = SE_KEY;
 				res.evValue = key;
 				res.evValue2 = ev.key.state == SDL_PRESSED ? 1 : 0;
-				
+
 				kbd_polls.Append( kbd_poll_t( key, ev.key.state == SDL_PRESSED ) );
-				
+
 				if( key == K_BACKSPACE && ev.key.state == SDL_PRESSED )
+				{
 					uniChar = key;
-					
+				}
+
 				return res;
 			}
-			
+
 #if SDL_VERSION_ATLEAST(2, 0, 0)
 			case SDL_TEXTINPUT:
 				if( ev.text.text[0] != '\0' )
 				{
 					// fill uniStr array for SE_CHAR events
 					ConvertUTF8toUTF32( ev.text.text, uniStr );
-					
+
 					// return an event with the first/only char
 					res.evType = SE_CHAR;
 					res.evValue = uniStr[0];
-					
+
 					uniStrPos = 1;
-					
+
 					if( uniStr[1] == 0 )
 					{
 						// it's just this one character, clear uniStr
@@ -1151,10 +1164,10 @@ sysEvent_t Sys_GetEvent()
 					}
 					return res;
 				}
-				
+
 				continue; // just handle next event
 #endif // SDL2
-				
+
 			case SDL_MOUSEMOTION:
 				// DG: return event with absolute mouse-coordinates when in menu
 				// to fix cursor problems in windowed mode
@@ -1171,36 +1184,36 @@ sysEvent_t Sys_GetEvent()
 					res.evValue2 = ev.motion.yrel;
 				}
 				// DG end
-				
+
 				mouse_polls.Append( mouse_poll_t( M_DELTAX, ev.motion.xrel ) );
 				mouse_polls.Append( mouse_poll_t( M_DELTAY, ev.motion.yrel ) );
-				
+
 				return res;
-				
+
 #if SDL_VERSION_ATLEAST(2, 0, 0)
 			case SDL_FINGERDOWN:
 			case SDL_FINGERUP:
 			case SDL_FINGERMOTION:
 				continue; // Avoid 'unknown event' spam when testing with touchpad by skipping this
-				
+
 			case SDL_MOUSEWHEEL:
 				res.evType = SE_KEY;
-				
+
 				res.evValue = ( ev.wheel.y > 0 ) ? K_MWHEELUP : K_MWHEELDOWN;
 				mouse_polls.Append( mouse_poll_t( M_DELTAZ, ev.wheel.y ) );
-				
+
 				res.evValue2 = 1; // for "pressed"
-				
+
 				// remember mousewheel direction to issue a "not pressed anymore" event
 				mwheelRel = res.evValue;
-				
+
 				return res;
 #endif // SDL2
-				
+
 			case SDL_MOUSEBUTTONDOWN:
 			case SDL_MOUSEBUTTONUP:
 				res.evType = SE_KEY;
-				
+
 				switch( ev.button.button )
 				{
 					case SDL_BUTTON_LEFT:
@@ -1215,20 +1228,24 @@ sysEvent_t Sys_GetEvent()
 						res.evValue = K_MOUSE2;
 						mouse_polls.Append( mouse_poll_t( M_ACTION2, ev.button.state == SDL_PRESSED ? 1 : 0 ) );
 						break;
-						
+
 #if !SDL_VERSION_ATLEAST(2, 0, 0)
 					case SDL_BUTTON_WHEELUP:
 						res.evValue = K_MWHEELUP;
 						if( ev.button.state == SDL_PRESSED )
+						{
 							mouse_polls.Append( mouse_poll_t( M_DELTAZ, 1 ) );
+						}
 						break;
 					case SDL_BUTTON_WHEELDOWN:
 						res.evValue = K_MWHEELDOWN;
 						if( ev.button.state == SDL_PRESSED )
+						{
 							mouse_polls.Append( mouse_poll_t( M_DELTAZ, -1 ) );
+						}
 						break;
 #endif // SDL1.2
-						
+
 					default:
 						// handle X1 button and above
 						if( ev.button.button <= 16 ) // d3bfg doesn't support more than 16 mouse buttons
@@ -1242,11 +1259,11 @@ sysEvent_t Sys_GetEvent()
 							continue; // just ignore
 						}
 				}
-				
+
 				res.evValue2 = ev.button.state == SDL_PRESSED ? 1 : 0;
-				
+
 				return res;
-				
+
 			// WM0110
 			// NOTE: it seems that the key bindings for the GUI and for the game are
 			// totally independant. I think the event returned by this function seems to work
@@ -1264,57 +1281,57 @@ sysEvent_t Sys_GetEvent()
 						res.evValue = K_JOY1;
 						joystick_polls.Append( joystick_poll_t( J_ACTION1, ev.jbutton.state == SDL_PRESSED ? 1 : 0 ) );
 						break;
-						
+
 					case 1:
 						res.evValue = K_JOY2;
 						joystick_polls.Append( joystick_poll_t( J_ACTION2, ev.jbutton.state == SDL_PRESSED ? 1 : 0 ) );
 						break;
-						
+
 					case 2:
 						res.evValue = K_JOY3;
 						joystick_polls.Append( joystick_poll_t( J_ACTION3, ev.jbutton.state == SDL_PRESSED ? 1 : 0 ) );
 						break;
-						
+
 					case 3:
 						res.evValue = K_JOY4;
 						joystick_polls.Append( joystick_poll_t( J_ACTION4, ev.jbutton.state == SDL_PRESSED ? 1 : 0 ) );
 						break;
-						
+
 					case 4:
 						res.evValue = K_JOY5;
 						joystick_polls.Append( joystick_poll_t( J_ACTION5, ev.jbutton.state == SDL_PRESSED ? 1 : 0 ) );
 						break;
-						
+
 					case 5:
 						res.evValue = K_JOY6;
 						joystick_polls.Append( joystick_poll_t( J_ACTION6, ev.jbutton.state == SDL_PRESSED ? 1 : 0 ) );
 						break;
-						
+
 					case 6:
 						res.evValue = K_JOY7;
 						joystick_polls.Append( joystick_poll_t( J_ACTION7, ev.jbutton.state == SDL_PRESSED ? 1 : 0 ) );
 						break;
-						
+
 					case 7:
 						res.evValue = K_JOY8;
 						joystick_polls.Append( joystick_poll_t( J_ACTION8, ev.jbutton.state == SDL_PRESSED ? 1 : 0 ) );
 						break;
-						
+
 					case 8:
 						res.evValue = K_JOY9;
 						joystick_polls.Append( joystick_poll_t( J_ACTION9, ev.jbutton.state == SDL_PRESSED ? 1 : 0 ) );
 						break;
-						
+
 					case 9:
 						res.evValue = K_JOY10;
 						joystick_polls.Append( joystick_poll_t( J_ACTION10, ev.jbutton.state == SDL_PRESSED ? 1 : 0 ) );
 						break;
-						
+
 					case 10:
 						res.evValue = K_JOY11;
 						joystick_polls.Append( joystick_poll_t( J_ACTION11, ev.jbutton.state == SDL_PRESSED ? 1 : 0 ) );
 						break;
-						
+
 					// D-PAD left (XBox 360 wireless)
 					case 11:
 						// If joystick has a hat, then use the hat as D-PAD. If not, D-PAD is mapped
@@ -1330,7 +1347,7 @@ sysEvent_t Sys_GetEvent()
 							joystick_polls.Append( joystick_poll_t( J_DPAD_LEFT, ev.jbutton.state == SDL_PRESSED ? 1 : 0 ) );
 						}
 						break;
-						
+
 					// D-PAD right
 					case 12:
 						if( SDL_joystick_has_hat )
@@ -1344,7 +1361,7 @@ sysEvent_t Sys_GetEvent()
 							joystick_polls.Append( joystick_poll_t( J_DPAD_RIGHT, ev.jbutton.state == SDL_PRESSED ? 1 : 0 ) );
 						}
 						break;
-						
+
 					// D-PAD up
 					case 13:
 						if( SDL_joystick_has_hat )
@@ -1358,7 +1375,7 @@ sysEvent_t Sys_GetEvent()
 							joystick_polls.Append( joystick_poll_t( J_DPAD_UP, ev.jbutton.state == SDL_PRESSED ? 1 : 0 ) );
 						}
 						break;
-						
+
 					// D-PAD down
 					case 14:
 						if( SDL_joystick_has_hat )
@@ -1372,20 +1389,22 @@ sysEvent_t Sys_GetEvent()
 							joystick_polls.Append( joystick_poll_t( J_DPAD_DOWN, ev.jbutton.state == SDL_PRESSED ? 1 : 0 ) );
 						}
 						break;
-						
+
 					default:
 						common->Warning( "Sys_GetEvent(): Unknown joystick button number %i\n", ev.jbutton.button );
 						continue; // just try next event
 				}
 				res.evValue2 = ev.jbutton.state == SDL_PRESSED ? 1 : 0;
-				
+
 				return res;
-				
+
 			case SDL_JOYHATMOTION:
 				// If this is not the first hat, ignore this event.
 				if( ev.jhat.which != 0 )
-					continue; // just try next event
-					
+				{
+					continue;    // just try next event
+				}
+
 				res.evType = SE_KEY;
 				if( ev.jhat.value & SDL_HAT_UP )
 				{
@@ -1453,7 +1472,7 @@ sysEvent_t Sys_GetEvent()
 						common->Warning( "Sys_GetEvent(): SDL_JOYHATMOTION: unknown previous hat state %i\n", previous_hat_state );
 						continue; // just try next event
 					}
-					
+
 					previous_hat_state = SDL_HAT_CENTERED;
 				}
 				else
@@ -1461,9 +1480,9 @@ sysEvent_t Sys_GetEvent()
 					common->Warning( "Sys_GetEvent(): Unknown SDL_JOYHATMOTION value %i\n", ev.jhat.value );
 					continue; // just try next event
 				}
-				
+
 				return res;
-				
+
 			case SDL_JOYAXISMOTION:
 				res.evType = SE_JOYSTICK;
 				// SDL joystick range is: -32768 to 32767, which is what is expected
@@ -1475,144 +1494,144 @@ sysEvent_t Sys_GetEvent()
 						bool triggered;
 						int percent;
 						int axis;
-						
+
 					// LEFT trigger
 					case 2:
 						// Convert TRIGGER value from space (-32768, 32767) to (0, 32767)
 						triggerValue = ( ev.jaxis.value + 32768 ) / 2;
 						// common->Printf("Sys_GetEvent: LEFT trigger value = %i / converted value = %i\n", ev.jaxis.value, trigger_value);
 						res.evValue = J_AXIS_LEFT_TRIG;
-						
+
 						joystick_polls.Append( joystick_poll_t( J_AXIS_LEFT_TRIG, triggerValue ) );
 						break;
-						
+
 					// Right trigger
 					case 5:
 						triggerValue = ( ev.jaxis.value + 32768 ) / 2;
 						// common->Printf("Sys_GetEvent: RIGHT trigger value = %i / converted value = %i\n", ev.jaxis.value, trigger_value);
 						res.evValue = J_AXIS_RIGHT_TRIG;
-						
+
 						joystick_polls.Append( joystick_poll_t( J_AXIS_RIGHT_TRIG, triggerValue ) );
 						break;
-						
+
 					// LEFT X
 					case 0:
 						res.evValue = J_AXIS_LEFT_X;
 						joystick_polls.Append( joystick_poll_t( J_AXIS_LEFT_X, ev.jaxis.value ) );
-						
+
 						triggered = ( ev.jaxis.value > 16384 );
 						if( buttonStates[K_JOY_STICK1_RIGHT] != triggered )
 						{
 							buttonStates[K_JOY_STICK1_RIGHT] = triggered;
-							
+
 							res.evType = SE_KEY;
 							res.evValue = K_JOY_STICK1_RIGHT;
 							res.evValue2 = triggered;
 						}
-						
+
 						triggered = ( ev.jaxis.value < -16384 );
 						if( buttonStates[K_JOY_STICK1_LEFT] != triggered )
 						{
 							buttonStates[K_JOY_STICK1_LEFT] = triggered;
-							
+
 							res.evType = SE_KEY;
 							res.evValue = K_JOY_STICK1_LEFT;
 							res.evValue2 = triggered;
 						}
 						break;
-						
+
 					// LEFT Y
 					case 1:
 						res.evValue = J_AXIS_LEFT_Y;
 						joystick_polls.Append( joystick_poll_t( J_AXIS_LEFT_Y, ev.jaxis.value ) );
-						
+
 						triggered = ( ev.jaxis.value > 16384 );
 						if( buttonStates[K_JOY_STICK1_DOWN] != triggered )
 						{
 							buttonStates[K_JOY_STICK1_DOWN] = triggered;
-							
+
 							res.evType = SE_KEY;
 							res.evValue = K_JOY_STICK1_DOWN;
 							res.evValue2 = triggered;
 						}
-						
+
 						triggered = ( ev.jaxis.value < -16384 );
 						if( buttonStates[K_JOY_STICK1_UP] != triggered )
 						{
 							buttonStates[K_JOY_STICK1_UP] = triggered;
-							
+
 							res.evType = SE_KEY;
 							res.evValue = K_JOY_STICK1_UP;
 							res.evValue2 = triggered;
 						}
-						
+
 						break;
-						
+
 					// RIGHT X
 					case 3:
 						res.evValue = J_AXIS_RIGHT_X;
 						joystick_polls.Append( joystick_poll_t( J_AXIS_RIGHT_X, ev.jaxis.value ) );
-						
+
 						triggered = ( ev.jaxis.value > 16384 );
 						if( buttonStates[K_JOY_STICK2_RIGHT] != triggered )
 						{
 							buttonStates[K_JOY_STICK2_RIGHT] = triggered;
-							
+
 							res.evType = SE_KEY;
 							res.evValue = K_JOY_STICK2_RIGHT;
 							res.evValue2 = triggered;
 						}
-						
+
 						triggered = ( ev.jaxis.value < -16384 );
 						if( buttonStates[K_JOY_STICK2_LEFT] != triggered )
 						{
 							buttonStates[K_JOY_STICK2_LEFT] = triggered;
-							
+
 							res.evType = SE_KEY;
 							res.evValue = K_JOY_STICK2_LEFT;
 							res.evValue2 = triggered;
 						}
 						break;
-						
+
 					// RIGHT Y
 					case 4:
 						res.evValue = J_AXIS_RIGHT_Y;
 						joystick_polls.Append( joystick_poll_t( J_AXIS_RIGHT_Y, ev.jaxis.value ) );
-						
+
 						triggered = ( ev.jaxis.value > 16384 );
 						if( buttonStates[K_JOY_STICK2_DOWN] != triggered )
 						{
 							buttonStates[K_JOY_STICK2_DOWN] = triggered;
-							
+
 							res.evType = SE_KEY;
 							res.evValue = K_JOY_STICK2_DOWN;
 							res.evValue2 = triggered;
 						}
-						
+
 						triggered = ( ev.jaxis.value < -16384 );
 						if( buttonStates[K_JOY_STICK2_UP] != triggered )
 						{
 							buttonStates[K_JOY_STICK2_UP] = triggered;
-							
+
 							res.evType = SE_KEY;
 							res.evValue = K_JOY_STICK2_UP;
 							res.evValue2 = triggered;
 						}
 						break;
-						
+
 					default:
 						common->Warning( "Sys_GetEvent(): Unknown joystick axis number %i\n", ev.jaxis.axis );
 						continue; // just try next event
 				}
-				
+
 				return res;
 			// WM0110
-			
+
 			case SDL_QUIT:
 				PushConsoleEvent( "quit" );
 				res = no_more_events; // don't handle next event, just quit.
 				return res;
-				
+
 			case SDL_USEREVENT:
 				switch( ev.user.code )
 				{
@@ -1630,7 +1649,7 @@ sysEvent_t Sys_GetEvent()
 				continue; // just handle next event
 		}
 	}
-	
+
 	res = no_more_events;
 	return res;
 }
@@ -1643,10 +1662,10 @@ Sys_ClearEvents
 void Sys_ClearEvents()
 {
 	SDL_Event ev;
-	
+
 	while( SDL_PollEvent( &ev ) )
 		;
-		
+
 	kbd_polls.SetNum( 0 );
 	mouse_polls.SetNum( 0 );
 }
@@ -1659,10 +1678,12 @@ Sys_GenerateEvents
 void Sys_GenerateEvents()
 {
 	char* s = Posix_ConsoleInput();
-	
+
 	if( s )
+	{
 		PushConsoleEvent( s );
-		
+	}
+
 	SDL_PumpEvents();
 }
 
@@ -1684,8 +1705,10 @@ Sys_ReturnKeyboardInputEvent
 int Sys_ReturnKeyboardInputEvent( const int n, int& key, bool& state )
 {
 	if( n >= kbd_polls.Num() )
+	{
 		return 0;
-		
+	}
+
 	key = kbd_polls[n].key;
 	state = kbd_polls[n].state;
 	return 1;
@@ -1709,22 +1732,22 @@ Sys_PollMouseInputEvents
 int Sys_PollMouseInputEvents( int mouseEvents[MAX_MOUSE_EVENTS][2] )
 {
 	int numEvents = mouse_polls.Num();
-	
+
 	if( numEvents > MAX_MOUSE_EVENTS )
 	{
 		numEvents = MAX_MOUSE_EVENTS;
 	}
-	
+
 	for( int i = 0; i < numEvents; i++ )
 	{
 		const mouse_poll_t& mp = mouse_polls[i];
-		
+
 		mouseEvents[i][0] = mp.action;
 		mouseEvents[i][1] = mp.value;
 	}
-	
+
 	mouse_polls.SetNum( 0 );
-	
+
 	return numEvents;
 }
 
@@ -1733,10 +1756,10 @@ const char* Sys_GetKeyName( keyNum_t keynum )
 	// unfortunately, in SDL1.2 there is no way to get the keycode for a scancode, so this doesn't work there.
 	// so this is SDL2-only.
 #if SDL_VERSION_ATLEAST(2, 0, 0)
-	
+
 	SDL_Scancode scancode = KeyNumToSDLScanCode( ( int )keynum );
 	SDL_Keycode keycode = SDL_GetKeyFromScancode( scancode );
-	
+
 	const char* ret = SDL_GetKeyName( keycode );
 	if( ret != NULL && ret[0] != '\0' )
 	{
@@ -1783,584 +1806,615 @@ void Sys_QueEvent( sysEventType_t type, int value, int value2, int ptrLength, vo
 
 void PushButton( int inputDeviceNum, int key, bool value )
 {
-    // So we don't keep sending the same SE_KEY message over and over again
-    if( buttonStates[key] != value )
-    {
-        common->Printf( "Button state %i set to %i\n", key, value );
-        buttonStates[key] = value;
+	// So we don't keep sending the same SE_KEY message over and over again
+	if( buttonStates[key] != value )
+	{
+		common->Printf( "Button state %i set to %i\n", key, value );
+		buttonStates[key] = value;
 
-        //Sys_QueEvent( SE_KEY, key, value, 0, NULL, inputDeviceNum );
+		//Sys_QueEvent( SE_KEY, key, value, 0, NULL, inputDeviceNum );
 
-        vrevent.evType = SE_KEY;
-        vrevent.evValue = key;
-        vrevent.evValue2 = value;
-        vrevent.evPtrLength = 0;
-        vrevent.evPtr = NULL;
-        vrevent.inputDevice = inputDeviceNum;
-        isvrevent = true;
-    }
+		vrevent.evType = SE_KEY;
+		vrevent.evValue = key;
+		vrevent.evValue2 = value;
+		vrevent.evPtrLength = 0;
+		vrevent.evPtr = NULL;
+		vrevent.inputDevice = inputDeviceNum;
+		isvrevent = true;
+	}
 }
 
 void PostInputEvent( int inputDeviceNum, int event, int value, int range )
 {
-    // These events are used for GUI button presses
-    if( ( event >= J_ACTION1 ) && ( event <= J_ACTION_MAX ) )
-    {
-        PushButton( inputDeviceNum, K_JOY1 + ( event - J_ACTION1 ), value != 0 );
-    }
-    else if( ( event >= J_TALK ) && ( event <= J_SAY_MAX ) )
-    {
-        PushButton( inputDeviceNum, K_TALK + ( event - J_TALK ), value != 0 );
-    }
-    else if( event == J_AXIS_LEFT_X )
-    {
-        PushButton( inputDeviceNum, K_JOY_STICK1_LEFT, ( value < -range ) );
-        PushButton( inputDeviceNum, K_JOY_STICK1_RIGHT, ( value > range ) );
-    }
-    else if( event == J_AXIS_LEFT_Y )
-    {
-        PushButton( inputDeviceNum, K_JOY_STICK1_UP, ( value < -range ) );
-        PushButton( inputDeviceNum, K_JOY_STICK1_DOWN, ( value > range ) );
-    }
-    else if( event == J_AXIS_RIGHT_X )
-    {
-        PushButton( inputDeviceNum, K_JOY_STICK2_LEFT, ( value < -range ) );
-        PushButton( inputDeviceNum, K_JOY_STICK2_RIGHT, ( value > range ) );
-    }
-    else if( event == J_AXIS_RIGHT_Y )
-    {
-        PushButton( inputDeviceNum, K_JOY_STICK2_UP, ( value < -range ) );
-        PushButton( inputDeviceNum, K_JOY_STICK2_DOWN, ( value > range ) );
-    }
-    else if( ( event >= J_DPAD_UP ) && ( event <= J_DPAD_RIGHT ) )
-    {
-        PushButton( inputDeviceNum, K_JOY_DPAD_UP + ( event - J_DPAD_UP ), value != 0 );
-    }
-    else if( event == J_AXIS_LEFT_TRIG )
-    {
-        PushButton( inputDeviceNum, K_JOY_TRIGGER1, ( value > range ) );
-    }
-    else if( event == J_AXIS_RIGHT_TRIG )
-    {
-        PushButton( inputDeviceNum, K_JOY_TRIGGER2, ( value > range ) );
-    }
+	// These events are used for GUI button presses
+	if( ( event >= J_ACTION1 ) && ( event <= J_ACTION_MAX ) )
+	{
+		PushButton( inputDeviceNum, K_JOY1 + ( event - J_ACTION1 ), value != 0 );
+	}
+	else if( ( event >= J_TALK ) && ( event <= J_SAY_MAX ) )
+	{
+		PushButton( inputDeviceNum, K_TALK + ( event - J_TALK ), value != 0 );
+	}
+	else if( event == J_AXIS_LEFT_X )
+	{
+		PushButton( inputDeviceNum, K_JOY_STICK1_LEFT, ( value < -range ) );
+		PushButton( inputDeviceNum, K_JOY_STICK1_RIGHT, ( value > range ) );
+	}
+	else if( event == J_AXIS_LEFT_Y )
+	{
+		PushButton( inputDeviceNum, K_JOY_STICK1_UP, ( value < -range ) );
+		PushButton( inputDeviceNum, K_JOY_STICK1_DOWN, ( value > range ) );
+	}
+	else if( event == J_AXIS_RIGHT_X )
+	{
+		PushButton( inputDeviceNum, K_JOY_STICK2_LEFT, ( value < -range ) );
+		PushButton( inputDeviceNum, K_JOY_STICK2_RIGHT, ( value > range ) );
+	}
+	else if( event == J_AXIS_RIGHT_Y )
+	{
+		PushButton( inputDeviceNum, K_JOY_STICK2_UP, ( value < -range ) );
+		PushButton( inputDeviceNum, K_JOY_STICK2_DOWN, ( value > range ) );
+	}
+	else if( ( event >= J_DPAD_UP ) && ( event <= J_DPAD_RIGHT ) )
+	{
+		PushButton( inputDeviceNum, K_JOY_DPAD_UP + ( event - J_DPAD_UP ), value != 0 );
+	}
+	else if( event == J_AXIS_LEFT_TRIG )
+	{
+		PushButton( inputDeviceNum, K_JOY_TRIGGER1, ( value > range ) );
+	}
+	else if( event == J_AXIS_RIGHT_TRIG )
+	{
+		PushButton( inputDeviceNum, K_JOY_TRIGGER2, ( value > range ) );
+	}
 
-    // Koz begin add touch
-    else if ( event == J_AXIS_LEFT_TOUCH_X )
-    {
-        PushButton( inputDeviceNum, K_TOUCH_LEFT_STICK_LEFT, (value < -range) );
-        PushButton( inputDeviceNum, K_TOUCH_LEFT_STICK_RIGHT, (value > range) );
-    }
-    else if ( event == J_AXIS_LEFT_TOUCH_Y )
-    {
-        PushButton( inputDeviceNum, K_TOUCH_LEFT_STICK_UP, (value < -range) );
-        PushButton( inputDeviceNum, K_TOUCH_LEFT_STICK_DOWN, (value > range) );
-    }
-    else if ( event == J_AXIS_RIGHT_TOUCH_X )
-    {
-        PushButton( inputDeviceNum, K_TOUCH_RIGHT_STICK_LEFT, (value < -range) );
-        PushButton( inputDeviceNum, K_TOUCH_RIGHT_STICK_RIGHT, (value > range) );
-    }
-    else if ( event == J_AXIS_RIGHT_TOUCH_Y )
-    {
-        PushButton( inputDeviceNum, K_TOUCH_RIGHT_STICK_UP, (value < -range) );
-        PushButton( inputDeviceNum, K_TOUCH_RIGHT_STICK_DOWN, (value > range) );
-    }
-    else if ( event == J_AXIS_LEFT_TOUCH_TRIG )
-    {
-        PushButton( inputDeviceNum, K_L_TOUCHTRIG, (value > range) );
-    }
-    else if ( event == J_AXIS_RIGHT_TOUCH_TRIG )
-    {
-        PushButton( inputDeviceNum, K_R_TOUCHTRIG, (value > range) );
-    }
+	// Koz begin add touch
+	else if( event == J_AXIS_LEFT_TOUCH_X )
+	{
+		PushButton( inputDeviceNum, K_TOUCH_LEFT_STICK_LEFT, ( value < -range ) );
+		PushButton( inputDeviceNum, K_TOUCH_LEFT_STICK_RIGHT, ( value > range ) );
+	}
+	else if( event == J_AXIS_LEFT_TOUCH_Y )
+	{
+		PushButton( inputDeviceNum, K_TOUCH_LEFT_STICK_UP, ( value < -range ) );
+		PushButton( inputDeviceNum, K_TOUCH_LEFT_STICK_DOWN, ( value > range ) );
+	}
+	else if( event == J_AXIS_RIGHT_TOUCH_X )
+	{
+		PushButton( inputDeviceNum, K_TOUCH_RIGHT_STICK_LEFT, ( value < -range ) );
+		PushButton( inputDeviceNum, K_TOUCH_RIGHT_STICK_RIGHT, ( value > range ) );
+	}
+	else if( event == J_AXIS_RIGHT_TOUCH_Y )
+	{
+		PushButton( inputDeviceNum, K_TOUCH_RIGHT_STICK_UP, ( value < -range ) );
+		PushButton( inputDeviceNum, K_TOUCH_RIGHT_STICK_DOWN, ( value > range ) );
+	}
+	else if( event == J_AXIS_LEFT_TOUCH_TRIG )
+	{
+		PushButton( inputDeviceNum, K_L_TOUCHTRIG, ( value > range ) );
+	}
+	else if( event == J_AXIS_RIGHT_TOUCH_TRIG )
+	{
+		PushButton( inputDeviceNum, K_R_TOUCHTRIG, ( value > range ) );
+	}
 
 
-    // add SteamVR controllers
-    else if ( event == J_AXIS_LEFT_STEAMVR_X )
-    {
-        //common->Printf( "Pushing button K_STEAMVR_LEFT_PAD x\n" );
-        PushButton( inputDeviceNum, K_STEAMVR_LEFT_PAD_LEFT, (value < -range) );
-        PushButton( inputDeviceNum, K_STEAMVR_LEFT_PAD_RIGHT, (value > range) );
-    }
-    else if ( event == J_AXIS_LEFT_STEAMVR_Y )
-    {
-        //common->Printf( "Pushing button K_STEAMVR_LEFT_PAD y\n" );
-        PushButton( inputDeviceNum, K_STEAMVR_LEFT_PAD_UP, (value < -range) );
-        PushButton( inputDeviceNum, K_STEAMVR_LEFT_PAD_DOWN, (value > range) );
-    }
-    else if ( event == J_AXIS_RIGHT_STEAMVR_X )
-    {
-        //common->Printf( "Pushing button K_STEAMVR_RIGHT_PAD x\n" );
-        PushButton( inputDeviceNum, K_STEAMVR_RIGHT_PAD_LEFT, (value < -range) );
-        PushButton( inputDeviceNum, K_STEAMVR_RIGHT_PAD_RIGHT, (value > range) );
-    }
-    else if ( event == J_AXIS_RIGHT_STEAMVR_Y )
-    {
-        //common->Printf( "Pushing button K_STEAMVR_RIGHT_PAD y\n" );
-        PushButton( inputDeviceNum, K_STEAMVR_RIGHT_PAD_UP, (value < -range) );
-        PushButton( inputDeviceNum, K_STEAMVR_RIGHT_PAD_DOWN, (value > range) );
-    }
-    else if ( event == J_AXIS_LEFT_STEAMVR_TRIG )
-    {
-        //common->Printf( "Pushing button K_L_STEAMVRTRIG\n" );
-        PushButton( inputDeviceNum, K_L_STEAMVRTRIG, (value > range) );
-    }
-    else if ( event == J_AXIS_RIGHT_STEAMVR_TRIG )
-    {
-        //common->Printf( "Pushing button K_R_STEAMVRTRIG y\n" );
-        PushButton( inputDeviceNum, K_R_STEAMVRTRIG, (value > range) );
-    }
-    // Koz end
+	// add SteamVR controllers
+	else if( event == J_AXIS_LEFT_STEAMVR_X )
+	{
+		//common->Printf( "Pushing button K_STEAMVR_LEFT_PAD x\n" );
+		PushButton( inputDeviceNum, K_STEAMVR_LEFT_PAD_LEFT, ( value < -range ) );
+		PushButton( inputDeviceNum, K_STEAMVR_LEFT_PAD_RIGHT, ( value > range ) );
+	}
+	else if( event == J_AXIS_LEFT_STEAMVR_Y )
+	{
+		//common->Printf( "Pushing button K_STEAMVR_LEFT_PAD y\n" );
+		PushButton( inputDeviceNum, K_STEAMVR_LEFT_PAD_UP, ( value < -range ) );
+		PushButton( inputDeviceNum, K_STEAMVR_LEFT_PAD_DOWN, ( value > range ) );
+	}
+	else if( event == J_AXIS_RIGHT_STEAMVR_X )
+	{
+		//common->Printf( "Pushing button K_STEAMVR_RIGHT_PAD x\n" );
+		PushButton( inputDeviceNum, K_STEAMVR_RIGHT_PAD_LEFT, ( value < -range ) );
+		PushButton( inputDeviceNum, K_STEAMVR_RIGHT_PAD_RIGHT, ( value > range ) );
+	}
+	else if( event == J_AXIS_RIGHT_STEAMVR_Y )
+	{
+		//common->Printf( "Pushing button K_STEAMVR_RIGHT_PAD y\n" );
+		PushButton( inputDeviceNum, K_STEAMVR_RIGHT_PAD_UP, ( value < -range ) );
+		PushButton( inputDeviceNum, K_STEAMVR_RIGHT_PAD_DOWN, ( value > range ) );
+	}
+	else if( event == J_AXIS_LEFT_STEAMVR_TRIG )
+	{
+		//common->Printf( "Pushing button K_L_STEAMVRTRIG\n" );
+		PushButton( inputDeviceNum, K_L_STEAMVRTRIG, ( value > range ) );
+	}
+	else if( event == J_AXIS_RIGHT_STEAMVR_TRIG )
+	{
+		//common->Printf( "Pushing button K_R_STEAMVRTRIG y\n" );
+		PushButton( inputDeviceNum, K_R_STEAMVRTRIG, ( value > range ) );
+	}
+	// Koz end
 
-    if( event >= J_AXIS_MIN && event <= J_AXIS_MAX )
-    {
-        int axis = event - J_AXIS_MIN;
-        int percent = ( value * 16 ) / range;
-        //if( joyAxis[inputDeviceNum][axis] != percent )
-        //{
-        //    joyAxis[inputDeviceNum][axis] = percent;
-        //    Sys_QueEvent( SE_JOYSTICK, axis, percent, 0, NULL, inputDeviceNum );
-        //}
-    }
+	if( event >= J_AXIS_MIN && event <= J_AXIS_MAX )
+	{
+		int axis = event - J_AXIS_MIN;
+		int percent = ( value * 16 ) / range;
+		//if( joyAxis[inputDeviceNum][axis] != percent )
+		//{
+		//    joyAxis[inputDeviceNum][axis] = percent;
+		//    Sys_QueEvent( SE_JOYSTICK, axis, percent, 0, NULL, inputDeviceNum );
+		//}
+	}
 
-    // These events are used for actual game input
-    //events[numEvents].event = event;
-    //events[numEvents].value = value;
-    //numEvents++;
+	// These events are used for actual game input
+	//events[numEvents].event = event;
+	//events[numEvents].value = value;
+	//numEvents++;
 }
 
-void PostInputEvent( int inputDeviceNum, int event, int value) {
-    PostInputEvent(inputDeviceNum, event, value, 16384);
+void PostInputEvent( int inputDeviceNum, int event, int value )
+{
+	PostInputEvent( inputDeviceNum, event, value, 16384 );
 }
 
 int Sys_PollJoystickInputEvents( int deviceNum )
 {
 	int numEvents = joystick_polls.Num();
 
-        if ( commonVr->hasHMD && !commonVr->hasOculusRift ) // was  commonVr->VR_USE_MOTION_CONTROLS && commonVr->motionControlType == MOTION_STEAMVR
-        {
-            int dupeThreshold = vr_openVrStuckPadAxisFixThresh.GetInteger();
-            bool defaultX = false;
-            bool defaultY = false;
-            static int lXcount = 0;
-            static int lYcount = 0;
-            static int rXcount = 0;
-            static int rYcount = 0;
-
-            static uint32 triggerAxis[2] = {};
-            static uint32 padAxis[2] = {};
-            static uint32 axisType;
-            static float triggerVal[2] = {};
-            static float padAxisX[2] = {};
-            static float padAxisY[2] = {};
-
-            static float padX = 0.0f;
-            static float padY = 0.0f;
-            static float trig = 0.0f;
-
-            static uint64_t	 oldButton[2] = {};
-            static uint32 lastPacketL = -1;
-            static uint32 lastPacketR = -1;
-            uint64_t button;
-
-            bool lGood = false;
-            bool rGood = false;
-
-            vr::VRControllerState_t& currentStateL = commonVr->pControllerStateL;
-            lGood = commonVr->m_pHMD->GetControllerState( commonVr->leftControllerDeviceNo, &currentStateL, sizeof( currentStateL ) );
-
-            vr::VRControllerState_t& currentStateR = commonVr->pControllerStateR;
-            rGood = commonVr->m_pHMD->GetControllerState( commonVr->rightControllerDeviceNo, &currentStateR, sizeof( currentStateR ) );
-
-
-            // left steam controller
-            if ( lGood )
-            {
-
-                for ( uint32 axis = 0; axis < vr::k_unControllerStateAxisCount; axis++ )
-                {
-                    uint32 axisNum = vr::Prop_Axis0Type_Int32 + axis;
-
-                    axisType = vr::VRSystem()->GetInt32TrackedDeviceProperty( commonVr->leftControllerDeviceNo, (vr::ETrackedDeviceProperty) (vr::Prop_Axis0Type_Int32 + axis) );
-                    if ( axisType == vr::k_eControllerAxis_Trigger )
-                    {
-                        triggerAxis[0] = axis;
-                    }
-                    if ( axisType == vr::k_eControllerAxis_TrackPad )
-                    {
-                        padAxis[0] = axis;
-                    }
-
-                }
-
-                trig = currentStateL.rAxis[triggerAxis[0]].x;
-                padX = currentStateL.rAxis[padAxis[0]].x;
-                padY = currentStateL.rAxis[padAxis[0]].y;
-
-                if ( fabs( padX ) < vr_padDeadzone.GetFloat() ) padX = 0.0f;
-                if ( fabs( padY ) < vr_padDeadzone.GetFloat() ) padY = 0.0f;
-
-                // using (testing) the trigger button instead of reading the analog axis, so comment this out for now
-                /*
-                 *	if ( trig != triggerVal[0] )
-                 *	{
-                 *		PostInputEvent( deviceNum, J_AXIS_LEFT_STEAMVR_TRIG, triggerVal[0] * 32767.0f );
-            }
-            triggerVal[0] = trig;
-            */
-
-                // the vive controllers ( at least mine, in multiple games, even after calibration) sometimes miss when a finger has been removed from the touchpad,
-                // and keep sending the exact same values until the pad is touched again.  This causes movement or rotation to get stuck on
-                // until the controller is touched again, which is really bad, especially if its rotation.
-                // it's pretty much physically impossible to keep you finger so still on the pad it reports the exact same values
-                // more than a few times in a row, so count non zero repeats, and default the value to 0 if it's been repeated too many times.
-
-
-                if ( vr_openVrStuckPadAxisFix.GetBool() )
-                {
-                    if ( padX != 0.0f && padAxisX[0] == padX )
-                    {
-                        if ( lXcount > dupeThreshold )
-                        {
-                            padX = 0.0f;
-                            defaultX = true;
-                        }
-                        else
-                        {
-                            lXcount++;
-                            if ( lXcount > dupeThreshold ) common->Printf( "Defaulting left x axis val %f time %d\n", padX, Sys_Milliseconds() );
-                        }
-                    }
-                    else
-                    {
-                        lXcount = 0;
-                    }
-
-                    if ( padY != 0.0f && padAxisY[0] == padY )
-                    {
-                        if ( lYcount > dupeThreshold )
-                        {
-                            padY = 0.0f;
-                            defaultY = true;
-                        }
-                        else
-                        {
-                            lYcount++;
-                            if ( lYcount > dupeThreshold ) common->Printf( "Defaulting left y axis val %f time %d \n", padY, Sys_Milliseconds() );
-                        }
-                    }
-                    else
-                    {
-                        lYcount = 0;
-                    }
-                }
-
-                //post the axes
-                if ( padX != padAxisX[0] || defaultX )
-                {
-                    //common->Printf( "Posting input event left steamvr pad x value %f time %d\n", padX, Sys_Milliseconds() );
-                    PostInputEvent( deviceNum, J_AXIS_LEFT_STEAMVR_X, padX * 32767.0f );
-                }
-
-                if ( padY != padAxisY[0] || defaultY )
-                {
-                    //common->Printf( "Posting input event left steamvr pad y value %f time %d\n", padY, Sys_Milliseconds() );
-                    PostInputEvent( deviceNum, J_AXIS_LEFT_STEAMVR_Y, -padY * 32767.0f );
-                }
-
-
-                if ( !defaultX ) padAxisX[0] = padX;
-                if ( !defaultY ) padAxisY[0] = padY;
-
-                // process buttons ( appmenu, grip, trigger, touchpad pressed )
-                button = currentStateL.ulButtonPressed;
-
-                if( !commonVr->VR_USE_MOTION_CONTROLS && vr_autoSwitchControllers.GetBool() && ( button > oldButton[0] || trig > 0.25f || (fabs(padX) + fabs(padY) > 0.5f) ) )
-                {
-                    commonVr->VR_USE_MOTION_CONTROLS = true;
-                    commonVr->motionControlType = MOTION_STEAMVR;
-                }
-
-                if ( button != oldButton[0] )
-                {
-                    if ( (button & ButtonMaskFromId( vr::k_EButton_ApplicationMenu )) != (oldButton[0] & ButtonMaskFromId( vr::k_EButton_ApplicationMenu )) )
-                    {
-                        //common->Printf( "deviceNum %d L AppMenu\n", deviceNum );
-                        PostInputEvent( deviceNum, J_LV_MENU, (button & ButtonMaskFromId( vr::k_EButton_ApplicationMenu )) > 0 );
-                    }
-
-                    if ( (button & ButtonMaskFromId( vr::k_EButton_Grip )) != (oldButton[0] & ButtonMaskFromId( vr::k_EButton_Grip )) )
-                    {
-                        //common->Printf( "deviceNum %d L Grip\n", deviceNum );
-                        PostInputEvent( deviceNum, J_LV_GRIP, (button & ButtonMaskFromId( vr::k_EButton_Grip )) > 0 );
-                    }
-
-                    if ( (button & ButtonMaskFromId( vr::k_EButton_SteamVR_Trigger )) != (oldButton[0] & ButtonMaskFromId( vr::k_EButton_SteamVR_Trigger )) )
-                    {
-                        //common->Printf( "deviceNum %d LTrig\n", deviceNum );
-                        PostInputEvent( deviceNum, J_LV_TRIGGER, (button & ButtonMaskFromId( vr::k_EButton_SteamVR_Trigger )) > 0 );
-                    }
-
-                    if ( (button & ButtonMaskFromId( vr::k_EButton_SteamVR_Touchpad )) != (oldButton[0] & ButtonMaskFromId( vr::k_EButton_SteamVR_Touchpad )) )
-                    {
-                        //common->Printf( "deviceNum %d LPad\n", deviceNum );
-                        PostInputEvent( deviceNum, J_LV_PAD, (button & ButtonMaskFromId( vr::k_EButton_SteamVR_Touchpad )) > 0 );
-                    }
-
-                    if ( (button & ButtonMaskFromId( vr::k_EButton_A )) != (oldButton[0] & ButtonMaskFromId( vr::k_EButton_A )) )
-                    {
-                        //common->Printf( "deviceNum %d L k_EButton_A\n", deviceNum );
-                        PostInputEvent( deviceNum, J_LSTEAMVR_A, (button & ButtonMaskFromId( vr::k_EButton_A )) > 0 );
-                    }
-
-                    if ( (button & (1ull << 8)) != (oldButton[0] & (1ull << 8)) )
-                    {
-                        //common->Printf( "deviceNum %d L Button 8\n", deviceNum );
-                        PostInputEvent( deviceNum, J_LSTEAMVR_8, (button & (1ull << 8)) > 0 );
-                    }
-
-                    if ( (button & (1ull << 9)) != (oldButton[0] & (1ull << 9)) )
-                    {
-                        //common->Printf( "deviceNum %d L Button 9\n", deviceNum );
-                        PostInputEvent( deviceNum, J_LSTEAMVR_9, (button & (1ull << 9)) > 0 );
-                    }
-
-                    if ( (button & (1ull << 10)) != (oldButton[0] & (1ull << 10)) )
-                    {
-                        //common->Printf( "deviceNum %d L Button 10\n", deviceNum );
-                        PostInputEvent( deviceNum, J_LSTEAMVR_10, (button & (1ull << 10)) > 0 );
-                    }
-
-                    if ( (button & (1ull << 11)) != (oldButton[0] & (1ull << 11)) )
-                    {
-                        //common->Printf( "deviceNum %d L Button 11\n", deviceNum );
-                        PostInputEvent( deviceNum, J_LSTEAMVR_11, (button & (1ull << 11)) > 0 );
-                    }
-
-                    if ( (button & (1ull << 12)) != (oldButton[0] & (1ull << 12)) )
-                    {
-                        //common->Printf( "deviceNum %d L Button 12\n", deviceNum );
-                        PostInputEvent( deviceNum, J_LSTEAMVR_12, (button & (1ull << 12)) > 0 );
-                    }
-
-                    if ( (button & (1ull << 13)) != (oldButton[0] & (1ull << 13)) )
-                    {
-                        //common->Printf( "deviceNum %d L Button 13\n", deviceNum );
-                        PostInputEvent( deviceNum, J_LSTEAMVR_13, (button & (1ull << 13)) > 0 );
-                    }
-
-                    if ( (button & (1ull << 14)) != (oldButton[0] & (1ull << 14)) )
-                    {
-                        //common->Printf( "deviceNum %d L Button 14\n", deviceNum );
-                        PostInputEvent( deviceNum, J_LSTEAMVR_14, (button & (1ull << 14)) > 0 );
-                    }
-
-                    if ( (button & (1ull << 15)) != (oldButton[0] & (1ull << 15)) )
-                    {
-                        //common->Printf( "deviceNum %d L Button 15\n", deviceNum );
-                        PostInputEvent( deviceNum, J_LSTEAMVR_15, (button & (1ull << 15)) > 0 );
-                    }
-
-
-                    oldButton[0] = button;
-                }
-            }
-
-            //====================================================================
-            //right steamvr controller
-
-
-            if ( rGood )
-            {
-                for ( int axis = 0; axis <= 4; axis++ )
-                {
-                    axisType = vr::VRSystem()->GetInt32TrackedDeviceProperty( commonVr->rightControllerDeviceNo, (vr::ETrackedDeviceProperty) ((int)vr::Prop_Axis0Type_Int32 + axis) );
-                    if ( axisType == vr::k_eControllerAxis_Trigger )
-                    {
-                        triggerAxis[1] = axis;
-                    }
-                    if ( axisType == vr::k_eControllerAxis_TrackPad )
-                    {
-                        padAxis[1] = axis;
-                    }
-                }
-
-                // using (testing) the trigger button instead of reading the analog axis, so comment this out for now
-                /*
-                 *	trig = currentStateR.rAxis[triggerAxis[1]].x;
-                 *	if ( trig != triggerVal[1] )
-                 *	{
-                 *	PostInputEvent( deviceNum, J_AXIS_RIGHT_STEAMVR_TRIG, triggerVal[1] * 32767.0f );
-            }
-            triggerVal[1] = trig;
-            */
-
-                padX = currentStateR.rAxis[padAxis[1]].x;
-                padY = currentStateR.rAxis[padAxis[1]].y;
-
-                //pad deadzone
-                if ( fabs( padX ) < vr_padDeadzone.GetFloat() ) padX = 0.0f;
-                if ( fabs( padY ) < vr_padDeadzone.GetFloat() ) padY = 0.0f;
-
-                // the vive controllers ( at least mine, in multiple games, even after calibration) sometimes miss when a finger has been removed from the touchpad,
-                // and keep sending the exact same values until the pad is touched again.  This causes movement or rotation to get stuck on
-                // until the controller is touched again, which is really bad, especially if its rotation.
-                // it's pretty much physically impossible to keep you finger so still on the pad it reports the exact same values
-                // more than a few times in a row, so count non zero repeats, and default the value to 0 if it's been repeated too many times.
-
-                defaultX = false;
-                defaultY = false;
-
-                if ( vr_openVrStuckPadAxisFix.GetBool() )
-                {
-                    if ( padX != 0.0f && padAxisX[1] == padX )
-                    {
-                        rXcount++;
-                        if ( rXcount > dupeThreshold )
-                        {
-                            padX = 0;
-                            defaultX = true;
-                            common->Printf( "Defaulting right X axis val %f time %d count %d\n", padX, Sys_Milliseconds(),rXcount );
-                        }
-                    }
-                    else
-                    {
-                        if ( rXcount > dupeThreshold ) common->Printf( "rXcount reset to 0 from %d\n", rXcount );
-                        rXcount = 0;
-                    }
-
-                    if ( padY != 0.0f && padAxisY[1] == padY )
-                    {
-                        rYcount++;
-                        if ( rYcount > dupeThreshold )
-                        {
-                            padY = 0;
-                            defaultY = true;
-                            common->Printf( "Defaulting right Y axis val %f time %d count %d\n", padY, Sys_Milliseconds(),rYcount );
-                        }
-                    }
-                    else
-                    {
-                        if ( rYcount > dupeThreshold ) common->Printf( "rYcount reset to 0 from %d\n", rYcount );
-                        rYcount = 0;
-                    }
-                }
-
-
-                //post the axes
-                if ( padX != padAxisX[1] || defaultX )
-                {
-                    //common->Printf( "Posting input event right steamvr pad x value %f time %d \n", padX, Sys_Milliseconds() );
-                    PostInputEvent( deviceNum, J_AXIS_RIGHT_STEAMVR_X, padX * 32767.0f );
-                }
-
-                if ( padY != padAxisY[1] || defaultY )
-                {
-                    //common->Printf( "Posting input event right steamvr pad y value %f time %d\n", padY, Sys_Milliseconds() );
-                    PostInputEvent( deviceNum, J_AXIS_RIGHT_STEAMVR_Y, -padY * 32767.0f );
-                }
-
-                padAxisX[1] = padX;
-                padAxisY[1] = padY;
-
-                // process buttons ( appmenu, grip, trigger, touchpad pressed )
-                button = currentStateR.ulButtonPressed;
-
-                if( !commonVr->VR_USE_MOTION_CONTROLS && vr_autoSwitchControllers.GetBool() && ( button > oldButton[0] || trig > 0.25f || (fabs(padX) + fabs(padY) > 0.5f) ) )
-                {
-                    commonVr->VR_USE_MOTION_CONTROLS = true;
-                    commonVr->motionControlType = MOTION_STEAMVR;
-                }
-
-                if ( button != oldButton[1] )
-                {
-
-                    if ( (button & ButtonMaskFromId( vr::k_EButton_ApplicationMenu )) != (oldButton[1] & ButtonMaskFromId( vr::k_EButton_ApplicationMenu )) )
-                    {
-                        //common->Printf( "deviceNum %d R AppMenu\n", deviceNum );
-                        PostInputEvent( deviceNum, J_RV_MENU, (button & ButtonMaskFromId( vr::k_EButton_ApplicationMenu )) > 0 );
-                    }
-
-                    if ( (button & ButtonMaskFromId( vr::k_EButton_Grip )) != (oldButton[1] & ButtonMaskFromId( vr::k_EButton_Grip )) )
-                    {
-                        //common->Printf( "deviceNum %d R Grip\n", deviceNum );
-                        PostInputEvent(deviceNum, J_RV_GRIP, (button & ButtonMaskFromId(vr::k_EButton_Grip)) > 0);
-                    }
-
-                    if ( (button & ButtonMaskFromId( vr::k_EButton_SteamVR_Trigger )) != (oldButton[1] & ButtonMaskFromId( vr::k_EButton_SteamVR_Trigger )) )
-                    {
-                        //common->Printf( "deviceNum %d R Trig\n", deviceNum );
-                        PostInputEvent( deviceNum, J_RV_TRIGGER, (button & ButtonMaskFromId( vr::k_EButton_SteamVR_Trigger )) > 0 );
-                    }
-
-                    if ( (button & ButtonMaskFromId( vr::k_EButton_SteamVR_Touchpad )) != (oldButton[1] & ButtonMaskFromId( vr::k_EButton_SteamVR_Touchpad )) )
-                    {
-                        //common->Printf( "deviceNum %d R Pad\n", deviceNum );
-                        PostInputEvent( deviceNum, J_RV_PAD, (button & ButtonMaskFromId( vr::k_EButton_SteamVR_Touchpad )) > 0 );
-                    }
-
-                    if ( (button & ButtonMaskFromId( vr::k_EButton_A )) != (oldButton[1] & ButtonMaskFromId( vr::k_EButton_A )) )
-                    {
-                        //common->Printf( "deviceNum %d R k_EButton_A\n", deviceNum );
-                        PostInputEvent( deviceNum, J_RSTEAMVR_A, (button & ButtonMaskFromId( vr::k_EButton_A )) > 0 );
-                    }
-
-
-
-
-                    if ( (button & (1ull << 8)) != (oldButton[1] & (1ull << 8)) )
-                    {
-                        //common->Printf( "deviceNum %d R Button 8\n", deviceNum );
-                        PostInputEvent( deviceNum, J_RSTEAMVR_8, (button & (1ull << 8)) > 0 );
-                    }
-
-                    if ( (button & (1ull << 9)) != (oldButton[1] & (1ull << 9)) )
-                    {
-                        //common->Printf( "deviceNum %d R Button 9\n", deviceNum );
-                        PostInputEvent( deviceNum, J_RSTEAMVR_9, (button & (1ull << 9)) > 0 );
-                    }
-
-                    if ( (button & (1ull << 10)) != (oldButton[1] & (1ull << 10)) )
-                    {
-                        //common->Printf( "deviceNum %d R Button 10\n", deviceNum );
-                        PostInputEvent( deviceNum, J_RSTEAMVR_10, (button & (1ull << 10)) > 0 );
-                    }
-
-                    if ( (button & (1ull << 11)) != (oldButton[1] & (1ull << 11)) )
-                    {
-                        //common->Printf( "deviceNum %d R Button 11\n", deviceNum );
-                        PostInputEvent( deviceNum, J_RSTEAMVR_11, (button & (1ull << 11)) > 0 );
-                    }
-
-                    if ( (button & (1ull << 12)) != (oldButton[1] & (1ull << 12)) )
-                    {
-                        //common->Printf( "deviceNum %d R Button 12\n", deviceNum );
-                        PostInputEvent( deviceNum, J_RSTEAMVR_12, (button & (1ull << 12)) > 0 );
-                    }
-
-                    if ( (button & (1ull << 13)) != (oldButton[1] & (1ull << 13)) )
-                    {
-                        //common->Printf( "deviceNum %d R Button 13\n", deviceNum );
-                        PostInputEvent( deviceNum, J_RSTEAMVR_13, (button & (1ull << 13)) > 0 );
-                    }
-
-                    if ( (button & (1ull << 14)) != (oldButton[1] & (1ull << 14)) )
-                    {
-                        //common->Printf( "deviceNum %d R Button 14\n", deviceNum );
-                        PostInputEvent( deviceNum, J_RSTEAMVR_14, (button & (1ull << 14)) > 0 );
-                    }
-
-                    if ( (button & (1ull << 15)) != (oldButton[1] & (1ull << 15)) )
-                    {
-                        //common->Printf( "deviceNum %d R Button 15\n", deviceNum );
-                        PostInputEvent( deviceNum, J_RSTEAMVR_15, (button & (1ull << 15)) > 0 );
-                    }
-
-                    oldButton[1] = button;
-                }
-            }
-        }
+	if( commonVr->hasHMD && !commonVr->hasOculusRift )  // was  commonVr->VR_USE_MOTION_CONTROLS && commonVr->motionControlType == MOTION_STEAMVR
+	{
+		int dupeThreshold = vr_openVrStuckPadAxisFixThresh.GetInteger();
+		bool defaultX = false;
+		bool defaultY = false;
+		static int lXcount = 0;
+		static int lYcount = 0;
+		static int rXcount = 0;
+		static int rYcount = 0;
+
+		static uint32 triggerAxis[2] = {};
+		static uint32 padAxis[2] = {};
+		static uint32 axisType;
+		static float triggerVal[2] = {};
+		static float padAxisX[2] = {};
+		static float padAxisY[2] = {};
+
+		static float padX = 0.0f;
+		static float padY = 0.0f;
+		static float trig = 0.0f;
+
+		static uint64_t	 oldButton[2] = {};
+		static uint32 lastPacketL = -1;
+		static uint32 lastPacketR = -1;
+		uint64_t button;
+
+		bool lGood = false;
+		bool rGood = false;
+
+		vr::VRControllerState_t& currentStateL = commonVr->pControllerStateL;
+		lGood = commonVr->m_pHMD->GetControllerState( commonVr->leftControllerDeviceNo, &currentStateL, sizeof( currentStateL ) );
+
+		vr::VRControllerState_t& currentStateR = commonVr->pControllerStateR;
+		rGood = commonVr->m_pHMD->GetControllerState( commonVr->rightControllerDeviceNo, &currentStateR, sizeof( currentStateR ) );
+
+
+		// left steam controller
+		if( lGood )
+		{
+
+			for( uint32 axis = 0; axis < vr::k_unControllerStateAxisCount; axis++ )
+			{
+				uint32 axisNum = vr::Prop_Axis0Type_Int32 + axis;
+
+				axisType = vr::VRSystem()->GetInt32TrackedDeviceProperty( commonVr->leftControllerDeviceNo, ( vr::ETrackedDeviceProperty )( vr::Prop_Axis0Type_Int32 + axis ) );
+				if( axisType == vr::k_eControllerAxis_Trigger )
+				{
+					triggerAxis[0] = axis;
+				}
+				if( axisType == vr::k_eControllerAxis_TrackPad )
+				{
+					padAxis[0] = axis;
+				}
+
+			}
+
+			trig = currentStateL.rAxis[triggerAxis[0]].x;
+			padX = currentStateL.rAxis[padAxis[0]].x;
+			padY = currentStateL.rAxis[padAxis[0]].y;
+
+			if( fabs( padX ) < vr_padDeadzone.GetFloat() )
+			{
+				padX = 0.0f;
+			}
+			if( fabs( padY ) < vr_padDeadzone.GetFloat() )
+			{
+				padY = 0.0f;
+			}
+
+			// using (testing) the trigger button instead of reading the analog axis, so comment this out for now
+			/*
+			 *	if ( trig != triggerVal[0] )
+			 *	{
+			 *		PostInputEvent( deviceNum, J_AXIS_LEFT_STEAMVR_TRIG, triggerVal[0] * 32767.0f );
+			}
+			triggerVal[0] = trig;
+			*/
+
+			// the vive controllers ( at least mine, in multiple games, even after calibration) sometimes miss when a finger has been removed from the touchpad,
+			// and keep sending the exact same values until the pad is touched again.  This causes movement or rotation to get stuck on
+			// until the controller is touched again, which is really bad, especially if its rotation.
+			// it's pretty much physically impossible to keep you finger so still on the pad it reports the exact same values
+			// more than a few times in a row, so count non zero repeats, and default the value to 0 if it's been repeated too many times.
+
+
+			if( vr_openVrStuckPadAxisFix.GetBool() )
+			{
+				if( padX != 0.0f && padAxisX[0] == padX )
+				{
+					if( lXcount > dupeThreshold )
+					{
+						padX = 0.0f;
+						defaultX = true;
+					}
+					else
+					{
+						lXcount++;
+						if( lXcount > dupeThreshold )
+						{
+							common->Printf( "Defaulting left x axis val %f time %d\n", padX, Sys_Milliseconds() );
+						}
+					}
+				}
+				else
+				{
+					lXcount = 0;
+				}
+
+				if( padY != 0.0f && padAxisY[0] == padY )
+				{
+					if( lYcount > dupeThreshold )
+					{
+						padY = 0.0f;
+						defaultY = true;
+					}
+					else
+					{
+						lYcount++;
+						if( lYcount > dupeThreshold )
+						{
+							common->Printf( "Defaulting left y axis val %f time %d \n", padY, Sys_Milliseconds() );
+						}
+					}
+				}
+				else
+				{
+					lYcount = 0;
+				}
+			}
+
+			//post the axes
+			if( padX != padAxisX[0] || defaultX )
+			{
+				//common->Printf( "Posting input event left steamvr pad x value %f time %d\n", padX, Sys_Milliseconds() );
+				PostInputEvent( deviceNum, J_AXIS_LEFT_STEAMVR_X, padX * 32767.0f );
+			}
+
+			if( padY != padAxisY[0] || defaultY )
+			{
+				//common->Printf( "Posting input event left steamvr pad y value %f time %d\n", padY, Sys_Milliseconds() );
+				PostInputEvent( deviceNum, J_AXIS_LEFT_STEAMVR_Y, -padY * 32767.0f );
+			}
+
+
+			if( !defaultX )
+			{
+				padAxisX[0] = padX;
+			}
+			if( !defaultY )
+			{
+				padAxisY[0] = padY;
+			}
+
+			// process buttons ( appmenu, grip, trigger, touchpad pressed )
+			button = currentStateL.ulButtonPressed;
+
+			if( !commonVr->VR_USE_MOTION_CONTROLS && vr_autoSwitchControllers.GetBool() && ( button > oldButton[0] || trig > 0.25f || ( fabs( padX ) + fabs( padY ) > 0.5f ) ) )
+			{
+				commonVr->VR_USE_MOTION_CONTROLS = true;
+				commonVr->motionControlType = MOTION_STEAMVR;
+			}
+
+			if( button != oldButton[0] )
+			{
+				if( ( button & ButtonMaskFromId( vr::k_EButton_ApplicationMenu ) ) != ( oldButton[0] & ButtonMaskFromId( vr::k_EButton_ApplicationMenu ) ) )
+				{
+					//common->Printf( "deviceNum %d L AppMenu\n", deviceNum );
+					PostInputEvent( deviceNum, J_LV_MENU, ( button & ButtonMaskFromId( vr::k_EButton_ApplicationMenu ) ) > 0 );
+				}
+
+				if( ( button & ButtonMaskFromId( vr::k_EButton_Grip ) ) != ( oldButton[0] & ButtonMaskFromId( vr::k_EButton_Grip ) ) )
+				{
+					//common->Printf( "deviceNum %d L Grip\n", deviceNum );
+					PostInputEvent( deviceNum, J_LV_GRIP, ( button & ButtonMaskFromId( vr::k_EButton_Grip ) ) > 0 );
+				}
+
+				if( ( button & ButtonMaskFromId( vr::k_EButton_SteamVR_Trigger ) ) != ( oldButton[0] & ButtonMaskFromId( vr::k_EButton_SteamVR_Trigger ) ) )
+				{
+					//common->Printf( "deviceNum %d LTrig\n", deviceNum );
+					PostInputEvent( deviceNum, J_LV_TRIGGER, ( button & ButtonMaskFromId( vr::k_EButton_SteamVR_Trigger ) ) > 0 );
+				}
+
+				if( ( button & ButtonMaskFromId( vr::k_EButton_SteamVR_Touchpad ) ) != ( oldButton[0] & ButtonMaskFromId( vr::k_EButton_SteamVR_Touchpad ) ) )
+				{
+					//common->Printf( "deviceNum %d LPad\n", deviceNum );
+					PostInputEvent( deviceNum, J_LV_PAD, ( button & ButtonMaskFromId( vr::k_EButton_SteamVR_Touchpad ) ) > 0 );
+				}
+
+				if( ( button & ButtonMaskFromId( vr::k_EButton_A ) ) != ( oldButton[0] & ButtonMaskFromId( vr::k_EButton_A ) ) )
+				{
+					//common->Printf( "deviceNum %d L k_EButton_A\n", deviceNum );
+					PostInputEvent( deviceNum, J_LSTEAMVR_A, ( button & ButtonMaskFromId( vr::k_EButton_A ) ) > 0 );
+				}
+
+				if( ( button & ( 1ull << 8 ) ) != ( oldButton[0] & ( 1ull << 8 ) ) )
+				{
+					//common->Printf( "deviceNum %d L Button 8\n", deviceNum );
+					PostInputEvent( deviceNum, J_LSTEAMVR_8, ( button & ( 1ull << 8 ) ) > 0 );
+				}
+
+				if( ( button & ( 1ull << 9 ) ) != ( oldButton[0] & ( 1ull << 9 ) ) )
+				{
+					//common->Printf( "deviceNum %d L Button 9\n", deviceNum );
+					PostInputEvent( deviceNum, J_LSTEAMVR_9, ( button & ( 1ull << 9 ) ) > 0 );
+				}
+
+				if( ( button & ( 1ull << 10 ) ) != ( oldButton[0] & ( 1ull << 10 ) ) )
+				{
+					//common->Printf( "deviceNum %d L Button 10\n", deviceNum );
+					PostInputEvent( deviceNum, J_LSTEAMVR_10, ( button & ( 1ull << 10 ) ) > 0 );
+				}
+
+				if( ( button & ( 1ull << 11 ) ) != ( oldButton[0] & ( 1ull << 11 ) ) )
+				{
+					//common->Printf( "deviceNum %d L Button 11\n", deviceNum );
+					PostInputEvent( deviceNum, J_LSTEAMVR_11, ( button & ( 1ull << 11 ) ) > 0 );
+				}
+
+				if( ( button & ( 1ull << 12 ) ) != ( oldButton[0] & ( 1ull << 12 ) ) )
+				{
+					//common->Printf( "deviceNum %d L Button 12\n", deviceNum );
+					PostInputEvent( deviceNum, J_LSTEAMVR_12, ( button & ( 1ull << 12 ) ) > 0 );
+				}
+
+				if( ( button & ( 1ull << 13 ) ) != ( oldButton[0] & ( 1ull << 13 ) ) )
+				{
+					//common->Printf( "deviceNum %d L Button 13\n", deviceNum );
+					PostInputEvent( deviceNum, J_LSTEAMVR_13, ( button & ( 1ull << 13 ) ) > 0 );
+				}
+
+				if( ( button & ( 1ull << 14 ) ) != ( oldButton[0] & ( 1ull << 14 ) ) )
+				{
+					//common->Printf( "deviceNum %d L Button 14\n", deviceNum );
+					PostInputEvent( deviceNum, J_LSTEAMVR_14, ( button & ( 1ull << 14 ) ) > 0 );
+				}
+
+				if( ( button & ( 1ull << 15 ) ) != ( oldButton[0] & ( 1ull << 15 ) ) )
+				{
+					//common->Printf( "deviceNum %d L Button 15\n", deviceNum );
+					PostInputEvent( deviceNum, J_LSTEAMVR_15, ( button & ( 1ull << 15 ) ) > 0 );
+				}
+
+
+				oldButton[0] = button;
+			}
+		}
+
+		//====================================================================
+		//right steamvr controller
+
+
+		if( rGood )
+		{
+			for( int axis = 0; axis <= 4; axis++ )
+			{
+				axisType = vr::VRSystem()->GetInt32TrackedDeviceProperty( commonVr->rightControllerDeviceNo, ( vr::ETrackedDeviceProperty )( ( int )vr::Prop_Axis0Type_Int32 + axis ) );
+				if( axisType == vr::k_eControllerAxis_Trigger )
+				{
+					triggerAxis[1] = axis;
+				}
+				if( axisType == vr::k_eControllerAxis_TrackPad )
+				{
+					padAxis[1] = axis;
+				}
+			}
+
+			// using (testing) the trigger button instead of reading the analog axis, so comment this out for now
+			/*
+			 *	trig = currentStateR.rAxis[triggerAxis[1]].x;
+			 *	if ( trig != triggerVal[1] )
+			 *	{
+			 *	PostInputEvent( deviceNum, J_AXIS_RIGHT_STEAMVR_TRIG, triggerVal[1] * 32767.0f );
+			}
+			triggerVal[1] = trig;
+			*/
+
+			padX = currentStateR.rAxis[padAxis[1]].x;
+			padY = currentStateR.rAxis[padAxis[1]].y;
+
+			//pad deadzone
+			if( fabs( padX ) < vr_padDeadzone.GetFloat() )
+			{
+				padX = 0.0f;
+			}
+			if( fabs( padY ) < vr_padDeadzone.GetFloat() )
+			{
+				padY = 0.0f;
+			}
+
+			// the vive controllers ( at least mine, in multiple games, even after calibration) sometimes miss when a finger has been removed from the touchpad,
+			// and keep sending the exact same values until the pad is touched again.  This causes movement or rotation to get stuck on
+			// until the controller is touched again, which is really bad, especially if its rotation.
+			// it's pretty much physically impossible to keep you finger so still on the pad it reports the exact same values
+			// more than a few times in a row, so count non zero repeats, and default the value to 0 if it's been repeated too many times.
+
+			defaultX = false;
+			defaultY = false;
+
+			if( vr_openVrStuckPadAxisFix.GetBool() )
+			{
+				if( padX != 0.0f && padAxisX[1] == padX )
+				{
+					rXcount++;
+					if( rXcount > dupeThreshold )
+					{
+						padX = 0;
+						defaultX = true;
+						common->Printf( "Defaulting right X axis val %f time %d count %d\n", padX, Sys_Milliseconds(), rXcount );
+					}
+				}
+				else
+				{
+					if( rXcount > dupeThreshold )
+					{
+						common->Printf( "rXcount reset to 0 from %d\n", rXcount );
+					}
+					rXcount = 0;
+				}
+
+				if( padY != 0.0f && padAxisY[1] == padY )
+				{
+					rYcount++;
+					if( rYcount > dupeThreshold )
+					{
+						padY = 0;
+						defaultY = true;
+						common->Printf( "Defaulting right Y axis val %f time %d count %d\n", padY, Sys_Milliseconds(), rYcount );
+					}
+				}
+				else
+				{
+					if( rYcount > dupeThreshold )
+					{
+						common->Printf( "rYcount reset to 0 from %d\n", rYcount );
+					}
+					rYcount = 0;
+				}
+			}
+
+
+			//post the axes
+			if( padX != padAxisX[1] || defaultX )
+			{
+				//common->Printf( "Posting input event right steamvr pad x value %f time %d \n", padX, Sys_Milliseconds() );
+				PostInputEvent( deviceNum, J_AXIS_RIGHT_STEAMVR_X, padX * 32767.0f );
+			}
+
+			if( padY != padAxisY[1] || defaultY )
+			{
+				//common->Printf( "Posting input event right steamvr pad y value %f time %d\n", padY, Sys_Milliseconds() );
+				PostInputEvent( deviceNum, J_AXIS_RIGHT_STEAMVR_Y, -padY * 32767.0f );
+			}
+
+			padAxisX[1] = padX;
+			padAxisY[1] = padY;
+
+			// process buttons ( appmenu, grip, trigger, touchpad pressed )
+			button = currentStateR.ulButtonPressed;
+
+			if( !commonVr->VR_USE_MOTION_CONTROLS && vr_autoSwitchControllers.GetBool() && ( button > oldButton[0] || trig > 0.25f || ( fabs( padX ) + fabs( padY ) > 0.5f ) ) )
+			{
+				commonVr->VR_USE_MOTION_CONTROLS = true;
+				commonVr->motionControlType = MOTION_STEAMVR;
+			}
+
+			if( button != oldButton[1] )
+			{
+
+				if( ( button & ButtonMaskFromId( vr::k_EButton_ApplicationMenu ) ) != ( oldButton[1] & ButtonMaskFromId( vr::k_EButton_ApplicationMenu ) ) )
+				{
+					//common->Printf( "deviceNum %d R AppMenu\n", deviceNum );
+					PostInputEvent( deviceNum, J_RV_MENU, ( button & ButtonMaskFromId( vr::k_EButton_ApplicationMenu ) ) > 0 );
+				}
+
+				if( ( button & ButtonMaskFromId( vr::k_EButton_Grip ) ) != ( oldButton[1] & ButtonMaskFromId( vr::k_EButton_Grip ) ) )
+				{
+					//common->Printf( "deviceNum %d R Grip\n", deviceNum );
+					PostInputEvent( deviceNum, J_RV_GRIP, ( button & ButtonMaskFromId( vr::k_EButton_Grip ) ) > 0 );
+				}
+
+				if( ( button & ButtonMaskFromId( vr::k_EButton_SteamVR_Trigger ) ) != ( oldButton[1] & ButtonMaskFromId( vr::k_EButton_SteamVR_Trigger ) ) )
+				{
+					//common->Printf( "deviceNum %d R Trig\n", deviceNum );
+					PostInputEvent( deviceNum, J_RV_TRIGGER, ( button & ButtonMaskFromId( vr::k_EButton_SteamVR_Trigger ) ) > 0 );
+				}
+
+				if( ( button & ButtonMaskFromId( vr::k_EButton_SteamVR_Touchpad ) ) != ( oldButton[1] & ButtonMaskFromId( vr::k_EButton_SteamVR_Touchpad ) ) )
+				{
+					//common->Printf( "deviceNum %d R Pad\n", deviceNum );
+					PostInputEvent( deviceNum, J_RV_PAD, ( button & ButtonMaskFromId( vr::k_EButton_SteamVR_Touchpad ) ) > 0 );
+				}
+
+				if( ( button & ButtonMaskFromId( vr::k_EButton_A ) ) != ( oldButton[1] & ButtonMaskFromId( vr::k_EButton_A ) ) )
+				{
+					//common->Printf( "deviceNum %d R k_EButton_A\n", deviceNum );
+					PostInputEvent( deviceNum, J_RSTEAMVR_A, ( button & ButtonMaskFromId( vr::k_EButton_A ) ) > 0 );
+				}
+
+
+
+
+				if( ( button & ( 1ull << 8 ) ) != ( oldButton[1] & ( 1ull << 8 ) ) )
+				{
+					//common->Printf( "deviceNum %d R Button 8\n", deviceNum );
+					PostInputEvent( deviceNum, J_RSTEAMVR_8, ( button & ( 1ull << 8 ) ) > 0 );
+				}
+
+				if( ( button & ( 1ull << 9 ) ) != ( oldButton[1] & ( 1ull << 9 ) ) )
+				{
+					//common->Printf( "deviceNum %d R Button 9\n", deviceNum );
+					PostInputEvent( deviceNum, J_RSTEAMVR_9, ( button & ( 1ull << 9 ) ) > 0 );
+				}
+
+				if( ( button & ( 1ull << 10 ) ) != ( oldButton[1] & ( 1ull << 10 ) ) )
+				{
+					//common->Printf( "deviceNum %d R Button 10\n", deviceNum );
+					PostInputEvent( deviceNum, J_RSTEAMVR_10, ( button & ( 1ull << 10 ) ) > 0 );
+				}
+
+				if( ( button & ( 1ull << 11 ) ) != ( oldButton[1] & ( 1ull << 11 ) ) )
+				{
+					//common->Printf( "deviceNum %d R Button 11\n", deviceNum );
+					PostInputEvent( deviceNum, J_RSTEAMVR_11, ( button & ( 1ull << 11 ) ) > 0 );
+				}
+
+				if( ( button & ( 1ull << 12 ) ) != ( oldButton[1] & ( 1ull << 12 ) ) )
+				{
+					//common->Printf( "deviceNum %d R Button 12\n", deviceNum );
+					PostInputEvent( deviceNum, J_RSTEAMVR_12, ( button & ( 1ull << 12 ) ) > 0 );
+				}
+
+				if( ( button & ( 1ull << 13 ) ) != ( oldButton[1] & ( 1ull << 13 ) ) )
+				{
+					//common->Printf( "deviceNum %d R Button 13\n", deviceNum );
+					PostInputEvent( deviceNum, J_RSTEAMVR_13, ( button & ( 1ull << 13 ) ) > 0 );
+				}
+
+				if( ( button & ( 1ull << 14 ) ) != ( oldButton[1] & ( 1ull << 14 ) ) )
+				{
+					//common->Printf( "deviceNum %d R Button 14\n", deviceNum );
+					PostInputEvent( deviceNum, J_RSTEAMVR_14, ( button & ( 1ull << 14 ) ) > 0 );
+				}
+
+				if( ( button & ( 1ull << 15 ) ) != ( oldButton[1] & ( 1ull << 15 ) ) )
+				{
+					//common->Printf( "deviceNum %d R Button 15\n", deviceNum );
+					PostInputEvent( deviceNum, J_RSTEAMVR_15, ( button & ( 1ull << 15 ) ) > 0 );
+				}
+
+				oldButton[1] = button;
+			}
+		}
+	}
 
 	return numEvents;
 }
@@ -2377,7 +2431,7 @@ int Sys_ReturnJoystickInputEvent( const int n, int& action, int& value )
 	const joystick_poll_t& mp = joystick_polls[n];
 	action = mp.action;
 	value = mp.value;
-	
+
 	return 1;
 }
 

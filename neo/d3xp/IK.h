@@ -44,21 +44,21 @@ class idIK
 public:
 	idIK();
 	virtual					~idIK();
-	
+
 	void					Save( idSaveGame* savefile ) const;
 	void					Restore( idRestoreGame* savefile );
-	
+
 	bool					IsInitialized() const;
-	
+
 	virtual bool			Init( idEntity* self, const char* anim, const idVec3& modelOffset );
 	virtual void			Evaluate();
 	virtual void			ClearJointMods();
-	
+
 	bool					SolveTwoBones( const idVec3& startPos, const idVec3& endPos, const idVec3& dir, float len0, float len1, idVec3& jointPos );
 	bool					SolveTwoArmBones( idVec3& startPos, idVec3& endPos, const idVec3& dir, float len0, float len1, idVec3& jointPos );
 	float					GetBoneAxis( const idVec3& startPos, const idVec3& endPos, const idVec3& dir, idMat3& axis, bool debug = false );
 	float					GetBoneAxis2( const idVec3& startPos, const idVec3& endPos, const idVec3& dir, idMat3& axis );
-	
+
 protected:
 	bool					initialized;
 	bool					ik_activate;
@@ -83,24 +83,24 @@ public:
 
 	idIK_Walk();
 	virtual					~idIK_Walk();
-	
+
 	void					Save( idSaveGame* savefile ) const;
 	void					Restore( idRestoreGame* savefile );
-	
+
 	virtual bool			Init( idEntity* self, const char* anim, const idVec3& modelOffset );
 	virtual void			Evaluate();
 	virtual void			ClearJointMods();
-	
+
 	void					EnableAll();
 	void					DisableAll();
 	void					EnableLeg( int num );
 	void					DisableLeg( int num );
-	
+
 private:
 	static const int		MAX_LEGS		= 8;
-	
+
 	idClipModel* 			footModel;
-	
+
 	int						numLegs;
 	int						enabledLegs;
 	jointHandle_t			footJoints[MAX_LEGS];
@@ -109,16 +109,16 @@ private:
 	jointHandle_t			hipJoints[MAX_LEGS];
 	jointHandle_t			dirJoints[MAX_LEGS];
 	jointHandle_t			waistJoint;
-	
+
 	idVec3					hipForward[MAX_LEGS];
 	idVec3					kneeForward[MAX_LEGS];
-	
+
 	float					upperLegLength[MAX_LEGS];
 	float					lowerLegLength[MAX_LEGS];
-	
+
 	idMat3					upperLegToHipJoint[MAX_LEGS];
 	idMat3					lowerLegToKneeJoint[MAX_LEGS];
-	
+
 	float					smoothing;
 	float					waistSmoothing;
 	float					footShift;
@@ -129,7 +129,7 @@ private:
 	float					footDownTrace;
 	bool					tiltWaist;
 	bool					usePivot;
-	
+
 	// state
 	int						pivotFoot;
 	float					pivotYaw;
@@ -155,10 +155,10 @@ public:
 
 	idIK_Reach();
 	virtual					~idIK_Reach();
-	
+
 	void					Save( idSaveGame* savefile ) const;
 	void					Restore( idRestoreGame* savefile );
-	
+
 	virtual bool			Init( idEntity* self, const char* anim, const idVec3& modelOffset );
 	virtual void			Evaluate();
 	virtual void			ClearJointMods();
@@ -173,18 +173,18 @@ public:
 	// Koz end
 
 private:
-		
+
 	int						numArms;
 	int						enabledArms;
-	
+
 	jointHandle_t			dirJoints[MAX_ARMS];
-	
+
 	idVec3					shoulderForward[MAX_ARMS];
 	idVec3					elbowForward[MAX_ARMS];
-	
+
 	float					upperArmLength[MAX_ARMS];
 	float					lowerArmLength[MAX_ARMS];
-	
+
 	idMat3					upperArmToShoulderJoint[MAX_ARMS];
 	idMat3					lowerArmToElbowJoint[MAX_ARMS];
 };

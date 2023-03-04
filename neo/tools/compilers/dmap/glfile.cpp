@@ -36,21 +36,29 @@ int		c_glfaces;
 int PortalVisibleSides( uPortal_t* p )
 {
 	int		fcon, bcon;
-	
+
 	if( !p->onnode )
-		return 0;		// outside
-		
+	{
+		return 0;    // outside
+	}
+
 	fcon = p->nodes[0]->opaque;
 	bcon = p->nodes[1]->opaque;
-	
+
 	// same contents never create a face
 	if( fcon == bcon )
+	{
 		return 0;
-		
+	}
+
 	if( !fcon )
+	{
 		return 1;
+	}
 	if( !bcon )
+	{
 		return 2;
+	}
 	return 0;
 }
 
@@ -59,7 +67,7 @@ void OutputWinding( idWinding* w, idFile* glview )
 	static	int	level = 128;
 	float		light;
 	int			i;
-	
+
 	glview->WriteFloatString( "%i\n", w->GetNumPoints() );
 	level += 28;
 	light = ( level & 255 ) / 255.0;
@@ -85,24 +93,24 @@ void OutputPortal( uPortal_t* p, idFile* glview )
 {
 	idWinding*	w;
 	int		sides;
-	
+
 	sides = PortalVisibleSides( p );
 	if( !sides )
 	{
 		return;
 	}
-	
+
 	c_glfaces++;
-	
+
 	w = p->winding;
-	
+
 	if( sides == 2 )  		// back side
 	{
 		w = w->Reverse();
 	}
-	
+
 	OutputWinding( w, glview );
-	
+
 	if( sides == 2 )
 	{
 		delete w;
@@ -117,14 +125,14 @@ WriteGLView_r
 void WriteGLView_r( node_t* node, idFile* glview )
 {
 	uPortal_t*	p, *nextp;
-	
+
 	if( node->planenum != PLANENUM_LEAF )
 	{
 		WriteGLView_r( node->children[0], glview );
 		WriteGLView_r( node->children[1], glview );
 		return;
 	}
-	
+
 	// write all the portals
 	for( p = node->portals; p; p = nextp )
 	{
@@ -148,10 +156,10 @@ WriteGLView
 void WriteGLView( tree_t* tree, char* source )
 {
 	idFile* glview;
-	
+
 	c_glfaces = 0;
 	common->Printf( "Writing %s\n", source );
-	
+
 	glview = fileSystem->OpenExplicitFileWrite( source );
 	if( !glview )
 	{
@@ -159,7 +167,7 @@ void WriteGLView( tree_t* tree, char* source )
 	}
 	WriteGLView_r( tree->headnode, glview );
 	fileSystem->CloseFile( glview );
-	
+
 	common->Printf( "%5i c_glfaces\n", c_glfaces );
 }
 

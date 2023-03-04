@@ -113,21 +113,21 @@ void idSound::Spawn()
 	spawnArgs.GetAngles( "rotate", "0 0 0", shakeRotate );
 	spawnArgs.GetFloat( "random", "0", random );
 	spawnArgs.GetFloat( "wait", "0", wait );
-	
+
 	if( ( wait > 0.0f ) && ( random >= wait ) )
 	{
 		random = wait - 0.001;
 		gameLocal.Warning( "speaker '%s' at (%s) has random >= wait", name.c_str(), GetPhysics()->GetOrigin().ToString( 0 ) );
 	}
-	
+
 	soundVol		= 0.0f;
 	lastSoundVol	= 0.0f;
-	
+
 	if( ( shakeRotate != ang_zero ) || ( shakeTranslate != vec3_zero ) )
 	{
 		BecomeActive( TH_THINK );
 	}
-	
+
 	if( !refSound.waitfortrigger && ( wait > 0.0f ) )
 	{
 		timerOn = true;
@@ -208,10 +208,10 @@ idSound::Think
 void idSound::Think()
 {
 	idAngles	ang;
-	
+
 	// run physics
 	RunPhysics();
-	
+
 	// clear out our update visuals think flag since we never call Present
 	BecomeInactive( TH_UPDATEVISUALS );
 }
@@ -225,7 +225,7 @@ void idSound::UpdateChangeableSpawnArgs( const idDict* source )
 {
 
 	idEntity::UpdateChangeableSpawnArgs( source );
-	
+
 	if( source )
 	{
 		FreeSoundEmitter( true );
@@ -233,10 +233,10 @@ void idSound::UpdateChangeableSpawnArgs( const idDict* source )
 		idSoundEmitter* saveRef = refSound.referenceSound;
 		gameEdit->ParseSpawnArgsToRefSound( &spawnArgs, &refSound );
 		refSound.referenceSound = saveRef;
-		
+
 		idVec3 origin;
 		idMat3 axis;
-		
+
 		if( GetPhysicsToSoundTransform( origin, axis ) )
 		{
 			refSound.origin = GetPhysics()->GetOrigin() + origin * axis;
@@ -245,16 +245,16 @@ void idSound::UpdateChangeableSpawnArgs( const idDict* source )
 		{
 			refSound.origin = GetPhysics()->GetOrigin();
 		}
-		
+
 		spawnArgs.GetFloat( "random", "0", random );
 		spawnArgs.GetFloat( "wait", "0", wait );
-		
+
 		if( ( wait > 0.0f ) && ( random >= wait ) )
 		{
 			random = wait - 0.001;
 			gameLocal.Warning( "speaker '%s' at (%s) has random >= wait", name.c_str(), GetPhysics()->GetOrigin().ToString( 0 ) );
 		}
-		
+
 		if( !refSound.waitfortrigger && ( wait > 0.0f ) )
 		{
 			timerOn = true;
@@ -301,16 +301,19 @@ void idSound::DoSound( bool play )
 {
 	if( play )
 	{
-		if (refSound.shader == NULL) {
+		if( refSound.shader == NULL )
+		{
 			//Npi : fix #231 : can't found where this refSound was created, it comes from an event but shader is null, in creator of refSound it's possible to create a refsound with shader null, so avoid a crash, skip it and warn only
-			common->Printf("WARNING: DoSound(true) with a refSound.shader == NULL. (%s)\n", name.c_str()); //Npi debug
-			idSphere tempSphere(refSound.origin, 75);
-			gameRenderWorld->DebugSphere(colorRed, tempSphere, 2000, true);
+			common->Printf( "WARNING: DoSound(true) with a refSound.shader == NULL. (%s)\n", name.c_str() ); //Npi debug
+			idSphere tempSphere( refSound.origin, 75 );
+			gameRenderWorld->DebugSphere( colorRed, tempSphere, 2000, true );
 			playingUntilTime = 0;
 			return;
-		}		
+		}
 		if( Flicksync_Speaker( name.c_str(), refSound.shader->base->GetName(), refSound.shader->GetLength() * 10000 ) )
+		{
 			StartSoundShader( refSound.shader, SND_CHANNEL_ANY, refSound.parms.soundShaderFlags, true, &playingUntilTime );
+		}
 		playingUntilTime += gameLocal.time;
 	}
 	else

@@ -58,6 +58,6 @@ bool idSWF::Inflate( const byte* input, int inputSize, byte* output, int outputS
 	inflateInit( &stream );
 	bool success = ( inflate( &stream, Z_FINISH ) == Z_STREAM_END );
 	inflateEnd( &stream );
-	
+
 	return success;
 }

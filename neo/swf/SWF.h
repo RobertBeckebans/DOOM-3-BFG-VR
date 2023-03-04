@@ -46,7 +46,7 @@ public:
 	idSWFDictionaryEntry();
 	~idSWFDictionaryEntry();
 	idSWFDictionaryEntry& operator=( idSWFDictionaryEntry& other );
-	
+
 	swfDictType_t		type;
 	const idMaterial* 	material;
 	idSWFShape* 		shape;
@@ -54,7 +54,7 @@ public:
 	idSWFFont* 			font;
 	idSWFText* 			text;
 	idSWFEditText* 		edittext;
-	
+
 	idVec2i				imageSize;
 	idVec2i				imageAtlasOffset;
 	// the compressed images are normalize to reduce compression artifacts,
@@ -83,7 +83,7 @@ class idSWF
 public:
 	idSWF( const char* filename, idSoundWorld* soundWorld = NULL );
 	~idSWF();
-	
+
 	bool	IsLoaded()
 	{
 		return ( frameRate > 0 );
@@ -93,12 +93,12 @@ public:
 		return isActive;
 	}
 	void	Activate( bool b );
-	
+
 	const char* GetName()
 	{
 		return filename;
 	}
-	
+
 	void Pause()
 	{
 		mainspriteInstance->Stop();
@@ -121,15 +121,15 @@ public:
 	{
 		return pausedRender;
 	}
-	
+
 	void Render( idRenderSystem* gui, int time = 0, bool isSplitscreen = false );
-	bool HandleEvent( const sysEvent_t* event ); 
+	bool HandleEvent( const sysEvent_t* event );
 	bool InhibitControl();
 	void ForceInhibitControl( bool val )
 	{
 		inhibitControl = val;
 	}
-	
+
 	void SetGlobal( const char* name, const idSWFScriptVar& value )
 	{
 		globals->Set( name, value );
@@ -147,14 +147,14 @@ public:
 		assert( mainspriteInstance->GetScriptObject() != NULL );
 		return *( mainspriteInstance->GetScriptObject() );
 	}
-	
+
 	void Invoke( const char*   functionName, const idSWFParmList& parms );
 	void Invoke( const char*   functionName, const idSWFParmList& parms, idSWFScriptVar& scriptVar );
 	void Invoke( const char*   functionName, const idSWFParmList& parms, bool& functionExists );
-	
+
 	int PlaySound( const char* sound, int channel = SCHANNEL_ANY, bool blocking = false );
 	void StopSound( int channel = SCHANNEL_ANY );
-	
+
 	float GetFrameWidth() const
 	{
 		return frameWidth;
@@ -163,7 +163,7 @@ public:
 	{
 		return frameHeight;
 	}
-	
+
 	int GetMouseX()
 	{
 		return mouseX;
@@ -172,33 +172,33 @@ public:
 	{
 		return mouseY;
 	}
-	
+
 	bool UseCircleForAccept();
-	
+
 	void SetSWFScale( float scale )
 	{
 		swfScale = scale;
 	}
-	
+
 	void SetForceNonPCGetPlatform()
 	{
 		forceNonPCPlatform = true;
 	}
-	
+
 	idRandom2& GetRandom()
 	{
 		return random;
 	}
-	
+
 	int	GetPlatform();
-	
+
 	//----------------------------------
 	// SWF_Dictionary.cpp
 	//----------------------------------
 	idSWFDictionaryEntry* 	AddDictionaryEntry( int characterID, swfDictType_t type );
 	idSWFDictionaryEntry* 	FindDictionaryEntry( int characterID, swfDictType_t type );
 	idSWFDictionaryEntry* 	FindDictionaryEntry( int characterID );
-	
+
 	idSWFDictionaryEntry* 	GetDictionaryEntry( int index )
 	{
 		return &dictionary[ index ];
@@ -207,69 +207,69 @@ public:
 	{
 		return dictionary.Num();
 	}
-	
+
 	idSWFScriptObject* HitTest( idSWFSpriteInstance* spriteInstance, const swfRenderState_t& renderState, int x, int y, idSWFScriptObject* parentObject );
-	
+
 private:
 	idStr			filename;
 	ID_TIME_T		timestamp;
-	
+
 	float			frameWidth;
 	float			frameHeight;
 	uint16			frameRate;
 	float			renderBorder;
 	float			swfScale;
-	
+
 	idVec2			scaleToVirtual;
-	
+
 	int				lastRenderTime;
-	
+
 	bool			isActive;
 	bool			inhibitControl;
 	bool			useInhibtControl;
-	
+
 	// certain screens need to be rendered when the pause menu is up so if this flag is
 	// set on the gui we will allow it to render at a paused state;
 	bool			pausedRender;
-	
+
 	bool			mouseEnabled;
 	bool			useMouse;
-	
+
 	bool			blackbars;
 	bool			crop;
 	bool			paused;
 	bool			hasHitObject;
-	
+
 	bool			forceNonPCPlatform;
-	
+
 	idRandom2		random;
-	
+
 	static int		mouseX;		// mouse x coord for all flash files
 	static int		mouseY;		// mouse y coord for all flash files
 	static bool		isMouseInClientArea;
-	
+
 	idSWFScriptObject* 	mouseObject;
 	idSWFScriptObject* hoverObject;
-	
+
 	idSWFSprite* 			mainsprite;
 	idSWFSpriteInstance* 	mainspriteInstance;
-	
+
 	idSWFScriptObject* 		globals;
 	idSWFScriptObject* 		shortcutKeys;
-	
+
 	idSoundWorld* 			soundWorld;
-	
+
 	const idMaterial* 		atlasMaterial;
-	
+
 	idBlockAlloc< idSWFSpriteInstance, 16 >	spriteInstanceAllocator;
 	idBlockAlloc< idSWFTextInstance, 16 >	textInstanceAllocator;
-	
+
 #define SWF_NATIVE_FUNCTION_SWF_DECLARE( x ) \
 	class idSWFScriptFunction_##x : public idSWFScriptFunction_Nested< idSWF > { \
 	public: \
 		idSWFScriptVar Call( idSWFScriptObject * thisObject, const idSWFParmList & parms ); \
 	} scriptFunction_##x;
-	
+
 	SWF_NATIVE_FUNCTION_SWF_DECLARE( shortcutKeys_clear );
 	SWF_NATIVE_FUNCTION_SWF_DECLARE( deactivate );
 	SWF_NATIVE_FUNCTION_SWF_DECLARE( inhibitControl );
@@ -284,7 +284,7 @@ private:
 	SWF_NATIVE_FUNCTION_SWF_DECLARE( getCVarInteger );
 	SWF_NATIVE_FUNCTION_SWF_DECLARE( setCVarInteger );
 	SWF_NATIVE_FUNCTION_SWF_DECLARE( strReplace );
-	
+
 	SWF_NATIVE_FUNCTION_SWF_DECLARE( acos );
 	SWF_NATIVE_FUNCTION_SWF_DECLARE( cos );
 	SWF_NATIVE_FUNCTION_SWF_DECLARE( sin );
@@ -295,13 +295,13 @@ private:
 	SWF_NATIVE_FUNCTION_SWF_DECLARE( rand );
 	SWF_NATIVE_FUNCTION_SWF_DECLARE( floor );
 	SWF_NATIVE_FUNCTION_SWF_DECLARE( ceil );
-	
+
 	SWF_NATIVE_FUNCTION_SWF_DECLARE( toUpper );
-	
+
 	SWF_NATIVE_VAR_DECLARE_NESTED_READONLY( platform, idSWFScriptFunction_getPlatform, Call( object, idSWFParmList() ) );
 	SWF_NATIVE_VAR_DECLARE_NESTED( blackbars, idSWF );
 	SWF_NATIVE_VAR_DECLARE_NESTED( crop, idSWF );
-	
+
 	class idSWFScriptFunction_Object : public idSWFScriptFunction
 	{
 	public:
@@ -321,12 +321,12 @@ private:
 		}
 		idSWFScriptObject object;
 	} scriptFunction_Object;
-	
+
 	idList< idSWFDictionaryEntry, TAG_SWF >	dictionary;
-	
+
 	struct keyButtonImages_t
 	{
-	
+
 		keyButtonImages_t()
 		{
 			key = "";
@@ -336,7 +336,7 @@ private:
 			height = 0;
 			baseline = 0;
 		}
-		
+
 		keyButtonImages_t( const char* _key, const char* _xbImage, const char* _psImage, int w, int h, int _baseline )
 		{
 			key = _key;
@@ -346,7 +346,7 @@ private:
 			height = h;
 			baseline = _baseline;
 		}
-		
+
 		const char* key;
 		const char* xbImage;
 		const char* psImage;
@@ -355,7 +355,7 @@ private:
 		int baseline;
 	};
 	idList< keyButtonImages_t, TAG_SWF > tooltipButtonImage;
-	
+
 	struct tooltipIcon_t
 	{
 		tooltipIcon_t()
@@ -367,7 +367,7 @@ private:
 			imageHeight = 0;
 			baseline = 0;
 		};
-		
+
 		int					startIndex;
 		int					endIndex;
 		const idMaterial* 	material;
@@ -376,23 +376,23 @@ private:
 		int					baseline;
 	};
 	idList< tooltipIcon_t, TAG_SWF > tooltipIconList;
-	
+
 	const idMaterial* guiSolid;
 	const idMaterial* guiCursor_arrow;
 	const idMaterial* guiCursor_hand;
 	const idMaterial* white;
-	
+
 private:
 	friend class idSWFSprite;
 	friend class idSWFSpriteInstance;
-	
+
 	bool			LoadSWF( const char* fullpath );
 	bool			LoadBinary( const char* bfilename, ID_TIME_T sourceTime );
 	void			WriteBinary( const char* bfilename );
 	void			FileAttributes( idSWFBitStream& bitstream );
 	void			Metadata( idSWFBitStream& bitstream );
 	void			SetBackgroundColor( idSWFBitStream& bitstream );
-	
+
 	//----------------------------------
 	// SWF_Shapes.cpp
 	//----------------------------------
@@ -401,17 +401,17 @@ private:
 	void			DefineShape3( idSWFBitStream& bitstream );
 	void			DefineShape4( idSWFBitStream& bitstream );
 	void			DefineMorphShape( idSWFBitStream& bitstream );
-	
+
 	//----------------------------------
 	// SWF_Sprites.cpp
 	//----------------------------------
 	void			DefineSprite( idSWFBitStream& bitstream );
-	
+
 	//----------------------------------
 	// SWF_Sounds.cpp
 	//----------------------------------
 	void			DefineSound( idSWFBitStream& bitstream );
-	
+
 	//----------------------------------
 	// SWF_Render.cpp
 	//----------------------------------
@@ -426,35 +426,35 @@ private:
 	void			RenderEditText( idRenderSystem* gui, idSWFTextInstance* textInstance, const swfRenderState_t& renderState, int time, bool isSplitscreen = false );
 	uint64			GLStateForRenderState( const swfRenderState_t& renderState );
 	void			FindTooltipIcons( idStr* text );
-	
+
 	//----------------------------------
 	// SWF_Image.cpp
 	//----------------------------------
-	
+
 	class idDecompressJPEG
 	{
 	public:
 		idDecompressJPEG();
 		~idDecompressJPEG();
-		
+
 		byte* Load( const byte* input, int inputSize, int& width, int& height );
-		
+
 	private:
 		void* vinfo;
 	};
-	
+
 	idDecompressJPEG	jpeg;
-	
+
 	void			LoadImage( int characterID, const byte* imageData, int width, int height );
-	
+
 	void			JPEGTables( idSWFBitStream& bitstream );
 	void			DefineBits( idSWFBitStream& bitstream );
 	void			DefineBitsJPEG2( idSWFBitStream& bitstream );
 	void			DefineBitsJPEG3( idSWFBitStream& bitstream );
 	void			DefineBitsLossless( idSWFBitStream& bitstream );
 	void			DefineBitsLossless2( idSWFBitStream& bitstream );
-	
-	
+
+
 	// per-swf image atlas
 	struct imageToPack_t
 	{
@@ -463,7 +463,7 @@ private:
 		byte* imageData;	// trueSize.x * trueSize.y * 4
 		idVec2i	allocSize;	// in DXT tiles, includes a border texel and rounding up to DXT blocks
 	};
-	
+
 	class idSortBlocks : public idSort_Quick< imageToPack_t, idSortBlocks >
 	{
 	public:
@@ -472,10 +472,10 @@ private:
 			return ( b.allocSize.x * b.allocSize.y ) - ( a.allocSize.x * a.allocSize.y );
 		}
 	};
-	
+
 	idList<imageToPack_t, TAG_SWF>	packImages;	// only used during creation
 	void			WriteSwfImageAtlas( const char* filename );
-	
+
 	//----------------------------------
 	// SWF_Text.cpp
 	//----------------------------------
@@ -485,19 +485,19 @@ private:
 	void			DefineText( idSWFBitStream& bitstream );
 	void			DefineText2( idSWFBitStream& bitstream );
 	void			DefineEditText( idSWFBitStream& bitstream );
-	
+
 	//----------------------------------
 	// SWF_Zlib.cpp
 	//----------------------------------
 	bool			Inflate( const byte* input, int inputSize, byte* output, int outputSize );
-	
+
 public:
 	//----------------------------------
 	// SWF_Names.cpp
 	//----------------------------------
 	static const char* GetTagName( swfTag_t tag );
 	static const char* GetActionName( swfAction_t action );
-	
+
 };
 
 #endif // !__SWF_H__

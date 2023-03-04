@@ -2,9 +2,9 @@
 ===========================================================================
 
 Doom 3 BFG Edition GPL Source Code
-Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company. 
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").  
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
 Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -32,7 +32,7 @@ If you have questions concerning this license or the applicable additional terms
 #include "tr_local.h"
 #include "vr/Vr.h"
 #ifdef _WIN32
-#include "sys\win32\win_local.h"
+	#include "sys\win32\win_local.h"
 #endif
 
 const int AUTO_RENDER_STACK_SIZE = 256 * 1024;
@@ -44,7 +44,8 @@ idAutoRender rAutoRender;
 idAutoRender::idAutoRender
 ============================
 */
-idAutoRender::idAutoRender() {
+idAutoRender::idAutoRender()
+{
 	nextRotateTime = 0.0f;
 	currentRotation = 0.0f;
 	autoRenderIcon = AUTORENDER_DEFAULTICON;
@@ -55,8 +56,10 @@ idAutoRender::idAutoRender() {
 idAutoRender::Run
 ============================
 */
-int idAutoRender::Run() {
-	while ( !IsTerminating() ) {
+int idAutoRender::Run()
+{
+	while( !IsTerminating() )
+	{
 		RenderFrame();
 	}
 
@@ -69,22 +72,24 @@ int idAutoRender::Run() {
 idAutoRender::StartBackgroundAutoSwaps
 ============================
 */
-void idAutoRender::StartBackgroundAutoSwaps(  ) {
+void idAutoRender::StartBackgroundAutoSwaps( )
+{
 
 
-	if ( IsRunning() ) {
+	if( IsRunning() )
+	{
 		EndBackgroundAutoSwaps();
 	}
 	commonVr->lastRead = Sys_Milliseconds();
-	
+
 	//autoRenderIcon = iconType;
 
-	idLib::Printf("Starting Background AutoSwaps\n");
+	idLib::Printf( "Starting Background AutoSwaps\n" );
 
 	//const bool captureToImage = true;
 	//common->UpdateScreen( captureToImage );
 
-	// unbind any shaders prior to entering the background autoswaps so we don't run 
+	// unbind any shaders prior to entering the background autoswaps so we don't run
 	// into any problems with cached vertex shader indices from the main thread
 	//renderProgManager.Unbind();
 
@@ -93,7 +98,7 @@ void idAutoRender::StartBackgroundAutoSwaps(  ) {
 	// it is getting purged before our our first frame has been rendered.
 	//globalImages->UnbindAll();
 
-	StartThread("BackgroundAutoSwaps", CORE_0B, THREAD_NORMAL, AUTO_RENDER_STACK_SIZE );
+	StartThread( "BackgroundAutoSwaps", CORE_0B, THREAD_NORMAL, AUTO_RENDER_STACK_SIZE );
 }
 
 /*
@@ -101,8 +106,9 @@ void idAutoRender::StartBackgroundAutoSwaps(  ) {
 idAutoRender::EndBackgroundAutoSwaps
 ============================
 */
-void idAutoRender::EndBackgroundAutoSwaps() {
-	idLib::Printf("End Background AutoSwaps\n");
+void idAutoRender::EndBackgroundAutoSwaps()
+{
+	idLib::Printf( "End Background AutoSwaps\n" );
 	StopThread();
 	commonVr->updateScreen = false;
 
@@ -113,10 +119,11 @@ void idAutoRender::EndBackgroundAutoSwaps() {
 idAutoRender::RenderFrame
 ============================
 */
-void idAutoRender::RenderFrame() {
+void idAutoRender::RenderFrame()
+{
 
 	commonVr->currentRead = Sys_Milliseconds();
-	if ( commonVr->currentRead - commonVr->lastRead >= 5  )
+	if( commonVr->currentRead - commonVr->lastRead >= 5 )
 	{
 		commonVr->updateScreen = true;
 		commonVr->lastRead = commonVr->currentRead;
@@ -131,11 +138,12 @@ void idAutoRender::RenderFrame() {
 idAutoRender::RenderBackground
 ============================
 */
-void idAutoRender::RenderBackground() {
-	
+void idAutoRender::RenderBackground()
+{
+
 	/*
 	GL_SelectTexture( 0 );
-	
+
 	globalImages->currentRenderImage->Bind();
 
 	GL_State( GLS_DEPTHFUNC_ALWAYS | GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO );
@@ -170,9 +178,10 @@ void idAutoRender::RenderBackground() {
 idAutoRender::RenderLoadingIcon
 ============================
 */
-void idAutoRender::RenderLoadingIcon( float fracX, float fracY, float size, float speed ) {
+void idAutoRender::RenderLoadingIcon( float fracX, float fracY, float size, float speed )
+{
 
-	/*float s = 0.0f; 
+	/*float s = 0.0f;
 	float c = 1.0f;
 
 	if ( autoRenderIcon != AUTORENDER_HELLICON ) {

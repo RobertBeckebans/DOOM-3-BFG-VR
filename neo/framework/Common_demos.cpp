@@ -39,7 +39,7 @@ FindUnusedFileName
 static idStr FindUnusedFileName( const char* format )
 {
 	idStr filename;
-	
+
 	for( int i = 0 ; i < 999 ; i++ )
 	{
 		filename.Format( format, i );
@@ -49,7 +49,7 @@ static idStr FindUnusedFileName( const char* format )
 			return filename;	// file doesn't exist
 		}
 	}
-	
+
 	return filename;
 }
 
@@ -66,15 +66,15 @@ void idCommonLocal::StartRecordingRenderDemo( const char* demoName )
 		StopRecordingRenderDemo();
 		return;
 	}
-	
+
 	if( !demoName[0] )
 	{
 		common->Printf( "idCommonLocal::StartRecordingRenderDemo: no name specified\n" );
 		return;
 	}
-	
+
 	console->Close();
-	
+
 	writeDemo = new( TAG_SYSTEM ) idDemoFile;
 	if( !writeDemo->OpenForWriting( demoName ) )
 	{
@@ -83,12 +83,12 @@ void idCommonLocal::StartRecordingRenderDemo( const char* demoName )
 		writeDemo = NULL;
 		return;
 	}
-	
+
 	common->Printf( "recording to %s\n", writeDemo->GetName() );
-	
+
 	writeDemo->WriteInt( DS_VERSION );
 	writeDemo->WriteInt( RENDERDEMO_VERSION );
-	
+
 	// if we are in a map already, dump the current state
 	soundWorld->StartWritingDemo( writeDemo );
 	renderWorld->StartWritingDemo( writeDemo );
@@ -108,7 +108,7 @@ void idCommonLocal::StopRecordingRenderDemo()
 	}
 	soundWorld->StopWritingDemo();
 	renderWorld->StopWritingDemo();
-	
+
 	writeDemo->Close();
 	common->Printf( "stopped recording %s.\n", writeDemo->GetName() );
 	delete writeDemo;
@@ -129,28 +129,28 @@ void idCommonLocal::StopPlayingRenderDemo()
 		timeDemo = TD_NO;
 		return;
 	}
-	
+
 	// Record the stop time before doing anything that could be time consuming
 	int timeDemoStopTime = Sys_Milliseconds();
-	
+
 	EndAVICapture();
-	
+
 	readDemo->Close();
-	
+
 	soundWorld->StopAllSounds();
 	soundSystem->SetPlayingSoundWorld( menuSoundWorld );
-	
+
 	common->Printf( "stopped playing %s.\n", readDemo->GetName() );
 	delete readDemo;
 	readDemo = NULL;
-	
+
 	if( timeDemo )
 	{
 		// report the stats
 		float	demoSeconds = ( timeDemoStopTime - timeDemoStartTime ) * 0.001f;
 		float	demoFPS = numDemoFrames / demoSeconds;
 		idStr	message = va( "%i frames rendered in %3.1f seconds = %3.1f fps\n", numDemoFrames, demoSeconds, demoFPS );
-		
+
 		common->Printf( message );
 		if( timeDemo == TD_YES_THEN_QUIT )
 		{
@@ -170,11 +170,11 @@ A demoShot is a single frame demo
 void idCommonLocal::DemoShot( const char* demoName )
 {
 	StartRecordingRenderDemo( demoName );
-	
+
 	// force draw one frame
 	const bool captureToImage = false;
 	UpdateScreen( captureToImage );
-	
+
 	StopRecordingRenderDemo();
 }
 
@@ -190,19 +190,19 @@ void idCommonLocal::StartPlayingRenderDemo( idStr demoName )
 		common->Printf( "idCommonLocal::StartPlayingRenderDemo: no name specified\n" );
 		return;
 	}
-	
+
 	// make sure localSound / GUI intro music shuts up
 	soundWorld->StopAllSounds();
 	soundWorld->PlayShaderDirectly( "", 0 );
 	menuSoundWorld->StopAllSounds();
 	menuSoundWorld->PlayShaderDirectly( "", 0 );
-	
+
 	// exit any current game
 	Stop();
-	
+
 	// automatically put the console away
 	console->Close();
-	
+
 	readDemo = new( TAG_SYSTEM ) idDemoFile;
 	demoName.DefaultFileExtension( ".demo" );
 	if( !readDemo->OpenForReading( demoName ) )
@@ -214,14 +214,14 @@ void idCommonLocal::StartPlayingRenderDemo( idStr demoName )
 		StartMenu();
 		return;
 	}
-	
+
 	const bool captureToImage = false;
 	UpdateScreen( captureToImage );
-	
+
 	AdvanceRenderDemo( true );
-	
+
 	numDemoFrames = 1;
-	
+
 	timeDemoStartTime = Sys_Milliseconds();
 }
 
@@ -233,9 +233,9 @@ idCommonLocal::TimeRenderDemo
 void idCommonLocal::TimeRenderDemo( const char* demoName, bool twice, bool quit )
 {
 	idStr demo = demoName;
-	
+
 	StartPlayingRenderDemo( demo );
-	
+
 	if( twice && readDemo )
 	{
 		while( readDemo )
@@ -244,16 +244,16 @@ void idCommonLocal::TimeRenderDemo( const char* demoName, bool twice, bool quit 
 			UpdateScreen( captureToImage );
 			AdvanceRenderDemo( true );
 		}
-		
+
 		StartPlayingRenderDemo( demo );
 	}
-	
-	
+
+
 	if( !readDemo )
 	{
 		return;
 	}
-	
+
 	if( quit )
 	{
 		// this allows hardware vendors to automate some testing
@@ -291,9 +291,9 @@ void idCommonLocal::EndAVICapture()
 	{
 		return;
 	}
-	
+
 	soundWorld->AVIClose();
-	
+
 	// write a .roqParam file so the demo can be converted to a roq file
 	idFile* f = fileSystem->OpenFileWrite( va( "demos/%s/%s.roqParam",
 										   aviDemoShortName.c_str(), aviDemoShortName.c_str() ) );
@@ -303,9 +303,9 @@ void idCommonLocal::EndAVICapture()
 	f->Printf( "%s_*.tga [00000-%05i]\n", aviDemoShortName.c_str(), ( int )( aviDemoFrameCount - 1 ) );
 	f->Printf( "END_INPUT\n" );
 	delete f;
-	
+
 	common->Printf( "captured %i frames for %s.\n", ( int )aviDemoFrameCount, aviDemoShortName.c_str() );
-	
+
 	aviCaptureMode = false;
 }
 
@@ -318,15 +318,15 @@ idCommonLocal::AVIRenderDemo
 void idCommonLocal::AVIRenderDemo( const char* _demoName )
 {
 	idStr	demoName = _demoName;	// copy off from va() buffer
-	
+
 	StartPlayingRenderDemo( demoName );
 	if( !readDemo )
 	{
 		return;
 	}
-	
+
 	BeginAVICapture( demoName.c_str() ) ;
-	
+
 	// I don't understand why I need to do this twice, something
 	// strange with the nvidia swapbuffers?
 	const bool captureToImage = false;
@@ -347,21 +347,21 @@ void idCommonLocal::AVIGame( const char* demoName )
 		EndAVICapture();
 		return;
 	}
-	
+
 	if( !mapSpawned )
 	{
 		common->Printf( "No map spawned.\n" );
 	}
-	
+
 	if( !demoName || !demoName[0] )
 	{
 		idStr filename = FindUnusedFileName( "demos/game%03i.game" );
 		demoName = filename.c_str();
-		
+
 		// write a one byte stub .game file just so the FindUnusedFileName works,
 		fileSystem->WriteFile( demoName, demoName, 1 );
 	}
-	
+
 	BeginAVICapture( demoName ) ;
 }
 
@@ -378,12 +378,12 @@ void idCommonLocal::CompressDemoFile( const char* scheme, const char* demoName )
 	idStr compressedName = fullDemoName;
 	compressedName.StripFileExtension();
 	compressedName.Append( "_compressed.demo" );
-	
+
 	int savedCompression = cvarSystem->GetCVarInteger( "com_compressDemos" );
 	bool savedPreload = cvarSystem->GetCVarBool( "com_preloadDemos" );
 	cvarSystem->SetCVarBool( "com_preloadDemos", false );
 	cvarSystem->SetCVarInteger( "com_compressDemos", atoi( scheme ) );
-	
+
 	idDemoFile demoread, demowrite;
 	if( !demoread.OpenForReading( fullDemoName ) )
 	{
@@ -400,7 +400,7 @@ void idCommonLocal::CompressDemoFile( const char* scheme, const char* demoName )
 	}
 	common->SetRefreshOnPrint( true );
 	common->Printf( "Compressing %s to %s...\n", fullDemoName.c_str(), compressedName.c_str() );
-	
+
 	static const int bufferSize = 65535;
 	char buffer[bufferSize];
 	int bytesRead;
@@ -409,16 +409,16 @@ void idCommonLocal::CompressDemoFile( const char* scheme, const char* demoName )
 		demowrite.Write( buffer, bytesRead );
 		common->Printf( "." );
 	}
-	
+
 	demoread.Close();
 	demowrite.Close();
-	
+
 	cvarSystem->SetCVarBool( "com_preloadDemos", savedPreload );
 	cvarSystem->SetCVarInteger( "com_compressDemos", savedCompression );
-	
+
 	common->Printf( "Done\n" );
 	common->SetRefreshOnPrint( false );
-	
+
 }
 
 /*
@@ -430,7 +430,7 @@ void idCommonLocal::AdvanceRenderDemo( bool singleFrameOnly )
 {
 	int	ds = DS_FINISHED;
 	readDemo->ReadInt( ds );
-	
+
 	switch( ds )
 	{
 		case DS_FINISHED:
