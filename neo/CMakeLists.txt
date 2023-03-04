@@ -1,7 +1,14 @@
 cmake_minimum_required(VERSION 2.8)
-set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
 project(Doom3BFGVR)
+set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+if(CMAKE_MAJOR_VERSION EQUAL 3 AND CMAKE_MINOR_VERSION GREATER_EQUAL 6)
+	# set MSVC startup project
+	set_property (DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT RBDoom3BFG)
+endif()
+
+
 
 option(USE_MFC_TOOLS
 		"Compile the built-in MFC based tools" OFF)
@@ -1516,6 +1523,11 @@ if(MSVC)
 		sapi.lib
 		)
 		
+	# set MSVC default debug directory on executable	
+	if(CMAKE_MAJOR_VERSION EQUAL 3 AND CMAKE_MINOR_VERSION GREATER_EQUAL 8)
+		set_target_properties(Doom3BFGVR PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/..")
+	endif()
+	
 	#CMAKE_BINARY_DIR
 	if(CMAKE_CL_64)
 		install(TARGETS Doom3BFGVR
