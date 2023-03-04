@@ -574,7 +574,7 @@ bool iVoice::InitVoiceDictionary( void )
 	voiceCommandStrings.Clear();
 	voiceCommandActions.Clear();
 
-	filename = "/dict/voice";
+	filename = "dict/voice";
 	filename.SetFileExtension( "dict" );
 	if ( !parser.LoadFile( filename ) )
 	{

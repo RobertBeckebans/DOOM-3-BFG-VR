@@ -3168,7 +3168,7 @@ void idFileSystemLocal::Init()
 	common->StartupVariable( "fs_copyfiles" );
 
 	// Koz permanently set the path for the mod
-	cvarSystem->SetCVarString( "fs_game", "Fully Possessed" );
+	cvarSystem->SetCVarString( "fs_game", "mod_fully_possessed" );
 	// Koz end
 
 	if( fs_basepath.GetString()[0] == '\0' )
