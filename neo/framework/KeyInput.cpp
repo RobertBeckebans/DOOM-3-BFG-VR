@@ -1005,7 +1005,18 @@ Called by the system for both key up and key down events
 */
 void idKeyInput::PreliminaryKeyEvent( int keynum, bool down )
 {
-	//printf("key %d %d\n", keynum, down);
+#if 0
+	// RB
+	if( keynum >= 0 && keynum < K_LAST_KEY )
+	{
+		common->Printf( "key %s %d\n", LocalizedKeyName( ( keyNum_t ) keynum ), down );
+
+		//if( keynum == K_JOY57 )
+		//{
+		//	common->Printf( "\n" );
+		//}
+	}
+#endif
 	keys[keynum].down = down;
 }
 

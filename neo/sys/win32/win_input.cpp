@@ -1535,7 +1535,13 @@ int idJoystickWin32::PollInputEvents( int inputDeviceNum )
 						if( ( button & ButtonMaskFromId( vr::k_EButton_SteamVR_Touchpad ) ) != ( oldButton[0] & ButtonMaskFromId( vr::k_EButton_SteamVR_Touchpad ) ) )
 						{
 							//common->Printf( "inputDeviceNum %d LPad\n", inputDeviceNum );
-							PostInputEvent( inputDeviceNum, J_LV_PAD, ( button & ButtonMaskFromId( vr::k_EButton_SteamVR_Touchpad ) ) > 0 );
+							//PostInputEvent( inputDeviceNum, J_LV_PAD, ( button & ButtonMaskFromId( vr::k_EButton_SteamVR_Touchpad ) ) > 0 );
+
+							// RB VR: HACK workaround for the HP Reverb G2 controler. Don't press touchpad if it comes from the A button
+							if( ( button & ButtonMaskFromId( vr::k_EButton_A ) ) == ( oldButton[0] & ButtonMaskFromId( vr::k_EButton_A ) ) )
+							{
+								PostInputEvent( inputDeviceNum, J_LV_PAD, ( button & ButtonMaskFromId( vr::k_EButton_SteamVR_Touchpad ) ) > 0 );
+							}
 						}
 
 						if( ( button & ButtonMaskFromId( vr::k_EButton_A ) ) != ( oldButton[0] & ButtonMaskFromId( vr::k_EButton_A ) ) )
@@ -1769,7 +1775,12 @@ int idJoystickWin32::PollInputEvents( int inputDeviceNum )
 						if( ( button & ButtonMaskFromId( vr::k_EButton_SteamVR_Touchpad ) ) != ( oldButton[1] & ButtonMaskFromId( vr::k_EButton_SteamVR_Touchpad ) ) )
 						{
 							//common->Printf( "inputDeviceNum %d R Pad\n", inputDeviceNum );
-							PostInputEvent( inputDeviceNum, J_RV_PAD, ( button & ButtonMaskFromId( vr::k_EButton_SteamVR_Touchpad ) ) > 0 );
+
+							// RB VR: HACK workaround for the HP Reverb G2 controler. Don't press touchpad if it comes from the A button
+							if( ( button & ButtonMaskFromId( vr::k_EButton_A ) ) == ( oldButton[1] & ButtonMaskFromId( vr::k_EButton_A ) ) )
+							{
+								PostInputEvent( inputDeviceNum, J_RV_PAD, ( button & ButtonMaskFromId( vr::k_EButton_SteamVR_Touchpad ) ) > 0 );
+							}
 						}
 
 						if( ( button & ButtonMaskFromId( vr::k_EButton_A ) ) != ( oldButton[1] & ButtonMaskFromId( vr::k_EButton_A ) ) )
