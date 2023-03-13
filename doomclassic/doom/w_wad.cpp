@@ -2,9 +2,9 @@
 ===========================================================================
 
 Doom 3 BFG Edition GPL Source Code
-Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company. 
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").  
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
 Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@ If you have questions concerning this license or the applicable additional terms
 #include "Precompiled.h"
 
 #ifdef __GNUG__
-#pragma implementation "w_wad.h"
+	#pragma implementation "w_wad.h"
 #endif
 #include "w_wad.h"
 
@@ -51,15 +51,15 @@ If you have questions concerning this license or the applicable additional terms
 #include "idlib/precompiled.h"
 
 
-//Uncensor red crosses on Medikits, Stimpacks, and Beserk 
+//Uncensor red crosses on Medikits, Stimpacks, and Beserk
 //in Doom 3 BFG Edition's Doom 1 and Doom 2
 #include "redcross.h"
 int lumpnum_media0 = -1, lumpnum_stima0 = -1, lumpnum_pstra0 = -1;
 
-//Uncensor Wolfenstein 3D walls 
+//Uncensor Wolfenstein 3D walls
 //in Doom 3 BFG Edition's Doom 1 and Doom 2
 #include "wolflump.h"
-int lumpnum_wolf2 = -1, lumpnum_wolf3 = -1, lumpnum_wolf4 = -1, 
+int lumpnum_wolf2 = -1, lumpnum_wolf3 = -1, lumpnum_wolf4 = -1,
 	lumpnum_wolf6 = -1, lumpnum_wolf7 = -1, lumpnum_wolf14 = -1, lumpnum_wolf17 = -1;
 
 //
@@ -72,8 +72,8 @@ void**		lumpcache;
 
 
 
-int filelength (FILE* handle) 
-{ 
+int filelength( FILE* handle )
+{
 	// DHM - not used :: development tool (loading single lump not in a WAD file)
 	return 0;
 }
@@ -87,26 +87,28 @@ ExtractFileBase
 	const char*	src;
 	int		length;
 
-	src = path + strlen(path) - 1;
+	src = path + strlen( path ) - 1;
 
 	// back up until a \ or the start
-	while (src != path
-		&& *(src-1) != '\\'
-		&& *(src-1) != '/')
+	while( src != path
+			&& *( src - 1 ) != '\\'
+			&& *( src - 1 ) != '/' )
 	{
 		src--;
 	}
-    
+
 	// copy up to eight characters
-	memset (dest,0,8);
+	memset( dest, 0, 8 );
 	length = 0;
 
-	while (*src && *src != '.')
+	while( *src && *src != '.' )
 	{
-		if (++length == 9)
-			I_Error ("Filename base of %s >8 chars",path);
+		if( ++length == 9 )
+		{
+			I_Error( "Filename base of %s >8 chars", path );
+		}
 
-		*dest++ = toupper((int)*src++);
+		*dest++ = toupper( ( int ) * src++ );
 	}
 }
 
@@ -134,80 +136,85 @@ ExtractFileBase
 const char*			reloadname;
 
 
-void W_AddFile ( const char *filename)
+void W_AddFile( const char* filename )
 {
-    wadinfo_t		header;
-    lumpinfo_t*		lump_p;
-    int		i;
-    idFile *		handle;
-    int			length;
-    int			startlump;
-    std::vector<filelump_t>	fileinfo( 1 );
-    
-    // open the file and add to directory
-    if ( (handle = fileSystem->OpenFileRead(filename)) == 0)
-    {
-		I_Printf (" couldn't open %s\n",filename);
-		return;
-    }
+	wadinfo_t		header;
+	lumpinfo_t*		lump_p;
+	int		i;
+	idFile* 		handle;
+	int			length;
+	int			startlump;
+	std::vector<filelump_t>	fileinfo( 1 );
 
-    I_Printf (" adding %s\n",filename);
-    startlump = numlumps;
-	
-    if ( idStr::Icmp( filename+strlen(filename)-3 , "wad" ) )
-    {
+	// open the file and add to directory
+	if( ( handle = fileSystem->OpenFileRead( filename ) ) == 0 )
+	{
+		I_Printf( " couldn't open %s\n", filename );
+		return;
+	}
+
+	I_Printf( " adding %s\n", filename );
+	startlump = numlumps;
+
+	if( idStr::Icmp( filename + strlen( filename ) - 3 , "wad" ) )
+	{
 		// single lump file
 		fileinfo[0].filepos = 0;
 		fileinfo[0].size = 0;
-		ExtractFileBase (filename, fileinfo[0].name);
+		ExtractFileBase( filename, fileinfo[0].name );
 		numlumps++;
-    }
-    else 
-    {
+	}
+	else
+	{
 		// WAD file
 		handle->Read( &header, sizeof( header ) );
-		if ( idStr::Cmpn( header.identification,"IWAD",4 ) )
+		if( idStr::Cmpn( header.identification, "IWAD", 4 ) )
 		{
 			// Homebrew levels?
-			if ( idStr::Cmpn( header.identification, "PWAD", 4 ) )
+			if( idStr::Cmpn( header.identification, "PWAD", 4 ) )
 			{
-				I_Error ("Wad file %s doesn't have IWAD "
-					"or PWAD id\n", filename);
+				I_Error( "Wad file %s doesn't have IWAD "
+						 "or PWAD id\n", filename );
 			}
-		    
-			// ???modifiedgame = true;		
+
+			// ???modifiedgame = true;
 		}
-		header.numlumps = LONG(header.numlumps);
-		header.infotableofs = LONG(header.infotableofs);
-		length = header.numlumps*sizeof(filelump_t);
-		fileinfo.resize(header.numlumps);
-		handle->Seek(  header.infotableofs, FS_SEEK_SET );
+		header.numlumps = LONG( header.numlumps );
+		header.infotableofs = LONG( header.infotableofs );
+		length = header.numlumps * sizeof( filelump_t );
+		fileinfo.resize( header.numlumps );
+		handle->Seek( header.infotableofs, FS_SEEK_SET );
 		handle->Read( &fileinfo[0], length );
 		numlumps += header.numlumps;
-    }
-
-    
-	// Fill in lumpinfo
-	if (lumpinfo == NULL) {
-		lumpinfo = (lumpinfo_t*)malloc( numlumps*sizeof(lumpinfo_t) );
-	} else {
-		lumpinfo = (lumpinfo_t*)realloc( lumpinfo, numlumps*sizeof(lumpinfo_t) );
 	}
 
-	if (!lumpinfo)
-		I_Error ("Couldn't realloc lumpinfo");
+
+	// Fill in lumpinfo
+	if( lumpinfo == NULL )
+	{
+		lumpinfo = ( lumpinfo_t* )malloc( numlumps * sizeof( lumpinfo_t ) );
+	}
+	else
+	{
+		lumpinfo = ( lumpinfo_t* )realloc( lumpinfo, numlumps * sizeof( lumpinfo_t ) );
+	}
+
+	if( !lumpinfo )
+	{
+		I_Error( "Couldn't realloc lumpinfo" );
+	}
 
 	lump_p = &lumpinfo[startlump];
 
 	::g->wadFileHandles[ ::g->numWadFiles++ ] = handle;
 
-	filelump_t * filelumpPointer = &fileinfo[0];
-	for (i=startlump ; i<numlumps ; i++,lump_p++, filelumpPointer++)
+	filelump_t* filelumpPointer = &fileinfo[0];
+	for( i = startlump ; i < numlumps ; i++, lump_p++, filelumpPointer++ )
 	{
 		lump_p->handle = handle;
-		lump_p->position = LONG(filelumpPointer->filepos);
-		lump_p->size = LONG(filelumpPointer->size);
-		strncpy (lump_p->name, filelumpPointer->name, 8);
+		lump_p->position = LONG( filelumpPointer->filepos );
+		lump_p->size = LONG( filelumpPointer->size );
+		strncpy( lump_p->name, filelumpPointer->name, 8 );
 	}
 }
 
@@ -219,7 +226,7 @@ void W_AddFile ( const char *filename)
 // Flushes any of the reloadable lumps in memory
 //  and reloads the directory.
 //
-void W_Reload (void)
+void W_Reload( void )
 {
 	// DHM - unused development tool
 }
@@ -228,10 +235,14 @@ void W_Reload (void)
 // W_FreeLumps
 // Frees all lump data
 //
-void W_FreeLumps() {
-	if ( lumpcache != NULL ) {
-		for ( int i = 0; i < numlumps; i++ ) {
-			if ( lumpcache[i] ) {
+void W_FreeLumps()
+{
+	if( lumpcache != NULL )
+	{
+		for( int i = 0; i < numlumps; i++ )
+		{
+			if( lumpcache[i] )
+			{
 				Z_Free( lumpcache[i] );
 			}
 		}
@@ -240,7 +251,8 @@ void W_FreeLumps() {
 		lumpcache = NULL;
 	}
 
-	if ( lumpinfo != NULL ) {
+	if( lumpinfo != NULL )
+	{
 		free( lumpinfo );
 		lumpinfo = NULL;
 		numlumps = 0;
@@ -251,10 +263,13 @@ void W_FreeLumps() {
 // W_FreeWadFiles
 // Free this list of wad files so that a new list can be created
 //
-void W_FreeWadFiles() {
-	for (int i = 0 ; i < MAXWADFILES ; i++) {
+void W_FreeWadFiles()
+{
+	for( int i = 0 ; i < MAXWADFILES ; i++ )
+	{
 		wadfiles[i] = NULL;
-		if ( ::g->wadFileHandles[i] ) {
+		if( ::g->wadFileHandles[i] )
+		{
 			delete ::g->wadFileHandles[i];
 		}
 		::g->wadFileHandles[i] = NULL;
@@ -278,78 +293,88 @@ void W_FreeWadFiles() {
 // The name searcher looks backwards, so a later file
 //  does override all earlier ones.
 //
-void W_InitMultipleFiles (const char** filenames)
+void W_InitMultipleFiles( const char** filenames )
 {
 	int		size;
 
-	if (lumpinfo == NULL)
+	if( lumpinfo == NULL )
 	{
 		// open all the files, load headers, and count lumps
 		numlumps = 0;
 
 		// will be realloced as lumps are added
 		lumpinfo = NULL;
-		
+
 		// Do the first file (the main WAD) seperately, so only it is affected.
-		if (*filenames) {
-			W_AddFile (*filenames);
+		if( *filenames )
+		{
+			W_AddFile( *filenames );
 			filenames++;
 			// Find its medikit, stimpack, and beserk lumps so they can be fixed.
-			lumpnum_media0 = W_CheckNumForName("MEDIA0");
-			lumpnum_stima0 = W_CheckNumForName("STIMA0");
-			lumpnum_pstra0 = W_CheckNumForName("PSTRA0");
+			lumpnum_media0 = W_CheckNumForName( "MEDIA0" );
+			lumpnum_stima0 = W_CheckNumForName( "STIMA0" );
+			lumpnum_pstra0 = W_CheckNumForName( "PSTRA0" );
 			// Find its censored wolfenstein wall lumps so they can be fixed.
-			lumpnum_wolf2  = W_CheckNumForName("WOLF2");
-			lumpnum_wolf3  = W_CheckNumForName("WOLF3");
-			lumpnum_wolf4  = W_CheckNumForName("WOLF4");
-			lumpnum_wolf6  = W_CheckNumForName("WOLF6");
-			lumpnum_wolf7  = W_CheckNumForName("WOLF7");
-			lumpnum_wolf14 = W_CheckNumForName("WOLF14");
-			lumpnum_wolf17 = W_CheckNumForName("WOLF17");
+			lumpnum_wolf2  = W_CheckNumForName( "WOLF2" );
+			lumpnum_wolf3  = W_CheckNumForName( "WOLF3" );
+			lumpnum_wolf4  = W_CheckNumForName( "WOLF4" );
+			lumpnum_wolf6  = W_CheckNumForName( "WOLF6" );
+			lumpnum_wolf7  = W_CheckNumForName( "WOLF7" );
+			lumpnum_wolf14 = W_CheckNumForName( "WOLF14" );
+			lumpnum_wolf17 = W_CheckNumForName( "WOLF17" );
 		}
 		// Other wads are handled like normal
-		for ( ; *filenames ; filenames++)
+		for( ; *filenames ; filenames++ )
 		{
-			W_AddFile (*filenames);
+			W_AddFile( *filenames );
 		}
-		
-		if (!numlumps)
-			I_Error ("W_InitMultipleFiles: no files found");
+
+		if( !numlumps )
+		{
+			I_Error( "W_InitMultipleFiles: no files found" );
+		}
 
 		// set up caching
-		size = numlumps * sizeof(*lumpcache);
-		lumpcache = (void**)DoomLib::Z_Malloc(size, PU_STATIC_SHARED, 0 );
+		size = numlumps * sizeof( *lumpcache );
+		lumpcache = ( void** )DoomLib::Z_Malloc( size, PU_STATIC_SHARED, 0 );
 
-		if (!lumpcache)
-			I_Error ("Couldn't allocate lumpcache");
+		if( !lumpcache )
+		{
+			I_Error( "Couldn't allocate lumpcache" );
+		}
 
-		memset (lumpcache,0, size);
-	} else {
+		memset( lumpcache, 0, size );
+	}
+	else
+	{
 		// set up caching
-		size = numlumps * sizeof(*lumpcache);
-		lumpcache = (void**)DoomLib::Z_Malloc(size, PU_STATIC_SHARED, 0 );
+		size = numlumps * sizeof( *lumpcache );
+		lumpcache = ( void** )DoomLib::Z_Malloc( size, PU_STATIC_SHARED, 0 );
 
-		if (!lumpcache)
-			I_Error ("Couldn't allocate lumpcache");
+		if( !lumpcache )
+		{
+			I_Error( "Couldn't allocate lumpcache" );
+		}
 
-		memset (lumpcache,0, size);
+		memset( lumpcache, 0, size );
 	}
 }
 
 
-void W_Shutdown() {
-/*
-	for (int i = 0 ; i < MAXWADFILES ; i++) {
-		if ( ::g->wadFileHandles[i] ) {
-			doomFiles->FClose( ::g->wadFileHandles[i] );
+void W_Shutdown()
+{
+	/*
+		for (int i = 0 ; i < MAXWADFILES ; i++) {
+			if ( ::g->wadFileHandles[i] ) {
+				doomFiles->FClose( ::g->wadFileHandles[i] );
+			}
 		}
-	}
 
-	if ( lumpinfo != NULL ) {
-		free( lumpinfo );
-		lumpinfo = NULL;
-	}
-*/
+		if ( lumpinfo != NULL ) {
+			free( lumpinfo );
+			lumpinfo = NULL;
+		}
+	*/
 	W_FreeLumps();
 	W_FreeWadFiles();
 }
@@ -357,9 +382,9 @@ void W_Shutdown() {
 //
 // W_NumLumps
 //
-int W_NumLumps (void)
+int W_NumLumps( void )
 {
-    return numlumps;
+	return numlumps;
 }
 
 
@@ -369,49 +394,51 @@ int W_NumLumps (void)
 // Returns -1 if name not found.
 //
 
-int W_CheckNumForName (const char* name)
+int W_CheckNumForName( const char* name )
 {
 	const int NameLength = 9;
 
-    union {
+	union
+	{
 		char	s[NameLength];
 		int	x[2];
-	
-    } name8;
-    
-    int		v1;
-    int		v2;
-    lumpinfo_t*	lump_p;
 
-    // make the name into two integers for easy compares
-    strncpy (name8.s,name, NameLength - 1);
+	} name8;
 
-    // in case the name was a fill 8 chars
-    name8.s[NameLength - 1] = 0;
+	int		v1;
+	int		v2;
+	lumpinfo_t*	lump_p;
 
-    // case insensitive
-	for ( int i = 0; i < NameLength; ++i ) {
-		name8.s[i] = toupper( name8.s[i] );		
+	// make the name into two integers for easy compares
+	strncpy( name8.s, name, NameLength - 1 );
+
+	// in case the name was a fill 8 chars
+	name8.s[NameLength - 1] = 0;
+
+	// case insensitive
+	for( int i = 0; i < NameLength; ++i )
+	{
+		name8.s[i] = toupper( name8.s[i] );
 	}
 
-    v1 = name8.x[0];
-    v2 = name8.x[1];
+	v1 = name8.x[0];
+	v2 = name8.x[1];
 
 
-    // scan backwards so patch lump files take precedence
-    lump_p = lumpinfo + numlumps;
+	// scan backwards so patch lump files take precedence
+	lump_p = lumpinfo + numlumps;
 
-    while (lump_p-- != lumpinfo)
-    {
-		if ( *(int *)lump_p->name == v1
-			&& *(int *)&lump_p->name[4] == v2)
+	while( lump_p-- != lumpinfo )
+	{
+		if( *( int* )lump_p->name == v1
+				&& *( int* )&lump_p->name[4] == v2 )
 		{
 			return lump_p - lumpinfo;
 		}
-    }
+	}
 
-    // TFB. Not found.
-    return -1;
+	// TFB. Not found.
+	return -1;
 }
 
 
@@ -421,16 +448,18 @@ int W_CheckNumForName (const char* name)
 // W_GetNumForName
 // Calls W_CheckNumForName, but bombs out if not found.
 //
-int W_GetNumForName ( const char* name)
+int W_GetNumForName( const char* name )
 {
-    int	i;
+	int	i;
 
-    i = W_CheckNumForName ( name);
-    
-    if (i == -1)
-      I_Error ("W_GetNumForName: %s not found!", name);
-      
-    return i;
+	i = W_CheckNumForName( name );
+
+	if( i == -1 )
+	{
+		I_Error( "W_GetNumForName: %s not found!", name );
+	}
+
+	return i;
 }
 
 
@@ -438,34 +467,55 @@ int W_GetNumForName ( const char* name)
 // W_LumpLength
 // Returns the buffer size needed to load the given lump.
 //
-int W_LumpLength (int lump)
+int W_LumpLength( int lump )
 {
-    if (lump >= numlumps)
-		I_Error ("W_LumpLength: %i >= numlumps",lump);
+	if( lump >= numlumps )
+	{
+		I_Error( "W_LumpLength: %i >= numlumps", lump );
+	}
 
 	// Hardcoded medikit, stimpack, and beserk lumps have hardcoded lengths.
-	if (lump==lumpnum_media0) { //MEDIA0 Medipack
-		return (int)lump_media0_len;
-	} else if (lump==lumpnum_stima0) { //STIMA0 stimpack
-		return (int)lump_stima0_len;
-	} else if (lump==lumpnum_pstra0) { //PSTRA0 beserk
-		return (int)lump_pstra0_len;
-	} else if (lump==lumpnum_wolf2) { //WOLF2 wall
-		return (int)lump_wolf2_len;
-	} else if (lump==lumpnum_wolf3) { //WOLF3 wall
-		return (int)lump_wolf3_len;
-	} else if (lump==lumpnum_wolf4) { //WOLF4 wall
-		return (int)lump_wolf4_len;
-	} else if (lump==lumpnum_wolf6) { //WOLF6 wall
-		return (int)lump_wolf6_len;
-	} else if (lump==lumpnum_wolf7) { //WOLF7 wall
-		return (int)lump_wolf7_len;
-	} else if (lump==lumpnum_wolf14) { //WOLF14 wall
-		return (int)lump_wolf14_len;
-	} else if (lump==lumpnum_wolf17) { //WOLF17 wall
-		return (int)lump_wolf17_len;
+	if( lump == lumpnum_media0 ) //MEDIA0 Medipack
+	{
+		return ( int )lump_media0_len;
 	}
-    return lumpinfo[lump].size;
+	else if( lump == lumpnum_stima0 )  //STIMA0 stimpack
+	{
+		return ( int )lump_stima0_len;
+	}
+	else if( lump == lumpnum_pstra0 )  //PSTRA0 beserk
+	{
+		return ( int )lump_pstra0_len;
+	}
+	else if( lump == lumpnum_wolf2 )  //WOLF2 wall
+	{
+		return ( int )lump_wolf2_len;
+	}
+	else if( lump == lumpnum_wolf3 )  //WOLF3 wall
+	{
+		return ( int )lump_wolf3_len;
+	}
+	else if( lump == lumpnum_wolf4 )  //WOLF4 wall
+	{
+		return ( int )lump_wolf4_len;
+	}
+	else if( lump == lumpnum_wolf6 )  //WOLF6 wall
+	{
+		return ( int )lump_wolf6_len;
+	}
+	else if( lump == lumpnum_wolf7 )  //WOLF7 wall
+	{
+		return ( int )lump_wolf7_len;
+	}
+	else if( lump == lumpnum_wolf14 )  //WOLF14 wall
+	{
+		return ( int )lump_wolf14_len;
+	}
+	else if( lump == lumpnum_wolf17 )  //WOLF17 wall
+	{
+		return ( int )lump_wolf17_len;
+	}
+	return lumpinfo[lump].size;
 }
 
 
@@ -480,56 +530,79 @@ W_ReadLump
 ( int		lump,
   void*		dest )
 {
-    int			c;
-    lumpinfo_t*	l;
-    idFile *		handle;
-	
-    if (lump >= numlumps)
-		I_Error ("W_ReadLump: %i >= numlumps",lump);
+	int			c;
+	lumpinfo_t*	l;
+	idFile* 		handle;
+
+	if( lump >= numlumps )
+	{
+		I_Error( "W_ReadLump: %i >= numlumps", lump );
+	}
 
 	// Use hardcoded replacements for medikit, stimpack, and beserk lumps
 	// to restore the red crosses. This only affects the main wad.
-	if (lump==lumpnum_media0) { //MEDIA0 Medikit
-		memcpy(dest, lump_media0, lump_media0_len);
+	if( lump == lumpnum_media0 ) //MEDIA0 Medikit
+	{
+		memcpy( dest, lump_media0, lump_media0_len );
 		return;
-	} else if (lump==lumpnum_stima0) { //STIMA0 stimpack
-		memcpy(dest, lump_stima0, lump_stima0_len);
+	}
+	else if( lump == lumpnum_stima0 )  //STIMA0 stimpack
+	{
+		memcpy( dest, lump_stima0, lump_stima0_len );
 		return;
-	} else if (lump==lumpnum_pstra0) { //PSTRA0 beserk
-		memcpy(dest, lump_pstra0, lump_pstra0_len);
+	}
+	else if( lump == lumpnum_pstra0 )  //PSTRA0 beserk
+	{
+		memcpy( dest, lump_pstra0, lump_pstra0_len );
 		return;
-	} else if (lump==lumpnum_wolf2) { //WOLF2 wall
-		memcpy(dest, lump_wolf2, lump_wolf2_len);
+	}
+	else if( lump == lumpnum_wolf2 )  //WOLF2 wall
+	{
+		memcpy( dest, lump_wolf2, lump_wolf2_len );
 		return;
-	} else if (lump==lumpnum_wolf3) { //WOLF3 wall
-		memcpy(dest, lump_wolf3, lump_wolf3_len);
+	}
+	else if( lump == lumpnum_wolf3 )  //WOLF3 wall
+	{
+		memcpy( dest, lump_wolf3, lump_wolf3_len );
 		return;
-	} else if (lump==lumpnum_wolf4) { //WOLF4 wall
-		memcpy(dest, lump_wolf4, lump_wolf4_len);
+	}
+	else if( lump == lumpnum_wolf4 )  //WOLF4 wall
+	{
+		memcpy( dest, lump_wolf4, lump_wolf4_len );
 		return;
-	} else if (lump==lumpnum_wolf6) { //WOLF6 wall
-		memcpy(dest, lump_wolf6, lump_wolf6_len);
+	}
+	else if( lump == lumpnum_wolf6 )  //WOLF6 wall
+	{
+		memcpy( dest, lump_wolf6, lump_wolf6_len );
 		return;
-	} else if (lump==lumpnum_wolf7) { //WOLF7 wall
-		memcpy(dest, lump_wolf7, lump_wolf7_len);
+	}
+	else if( lump == lumpnum_wolf7 )  //WOLF7 wall
+	{
+		memcpy( dest, lump_wolf7, lump_wolf7_len );
 		return;
-	} else if (lump==lumpnum_wolf14) { //WOLF14 wall
-		memcpy(dest, lump_wolf14, lump_wolf14_len);
+	}
+	else if( lump == lumpnum_wolf14 )  //WOLF14 wall
+	{
+		memcpy( dest, lump_wolf14, lump_wolf14_len );
 		return;
-	} else if (lump==lumpnum_wolf17) { //WOLF17 wall
-		memcpy(dest, lump_wolf17, lump_wolf17_len);
+	}
+	else if( lump == lumpnum_wolf17 )  //WOLF17 wall
+	{
+		memcpy( dest, lump_wolf17, lump_wolf17_len );
 		return;
 	}
 
-    l = lumpinfo+lump;
-	
+	l = lumpinfo + lump;
+
 	handle = l->handle;
-	
+
 	handle->Seek( l->position, FS_SEEK_SET );
 	c = handle->Read( dest, l->size );
 
-    if (c < l->size)
-		I_Error ("W_ReadLump: only read %i of %i on lump %i",  c,l->size,lump);	
+	if( c < l->size )
+	{
+		I_Error( "W_ReadLump: only read %i of %i on lump %i",  c, l->size, lump );
+	}
 }
 
 
@@ -544,17 +617,19 @@ W_CacheLumpNum
   int		tag )
 {
 #ifdef RANGECHECK
-	if (lump >= numlumps)
-	I_Error ("W_CacheLumpNum: %i >= numlumps",lump);
+	if( lump >= numlumps )
+	{
+		I_Error( "W_CacheLumpNum: %i >= numlumps", lump );
+	}
 #endif
 
-	if (!lumpcache[lump])
+	if( !lumpcache[lump] )
 	{
 		byte*	ptr;
 		// read the lump in
 		//I_Printf ("cache miss on lump %i\n",lump);
-		ptr = (byte*)DoomLib::Z_Malloc(W_LumpLength (lump), tag, &lumpcache[lump]);
-		W_ReadLump (lump, lumpcache[lump]);
+		ptr = ( byte* )DoomLib::Z_Malloc( W_LumpLength( lump ), tag, &lumpcache[lump] );
+		W_ReadLump( lump, lumpcache[lump] );
 	}
 
 	return lumpcache[lump];
@@ -570,11 +645,11 @@ W_CacheLumpName
 ( const char*		name,
   int		tag )
 {
-    return W_CacheLumpNum (W_GetNumForName(name), tag);
+	return W_CacheLumpNum( W_GetNumForName( name ), tag );
 }
 
 
-void W_Profile (void)
+void W_Profile( void )
 {
 }
 
