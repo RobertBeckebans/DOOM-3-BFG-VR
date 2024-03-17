@@ -3,6 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2020 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -25,8 +26,8 @@ If you have questions concerning this license or the applicable additional terms
 
 ===========================================================================
 */
-#pragma hdrstop
 #include "precompiled.h"
+#pragma hdrstop
 #include "ParallelJobList.h"
 
 /*
@@ -1265,7 +1266,7 @@ extern void Sys_CPUCount( int& logicalNum, int& coreNum, int& packageNum );
 // Hyperthreading is not dead yet.  Intel's Core i7 Processor is quad-core with HT for 8 logicals.
 
 // DOOM3: We don't have that many jobs, so just set this fairly low so we don't spin up a ton of idle threads
-#define MAX_JOB_THREADS		2
+#define MAX_JOB_THREADS		32
 #define NUM_JOB_THREADS		"2"
 #define JOB_THREAD_CORES	{	CORE_ANY, CORE_ANY, CORE_ANY, CORE_ANY,	\
 								CORE_ANY, CORE_ANY, CORE_ANY, CORE_ANY,	\
@@ -1339,7 +1340,7 @@ void idParallelJobManagerLocal::Init()
 	}
 	maxThreads = jobs_numThreads.GetInteger();
 
-	Sys_CPUCount( numPhysicalCpuCores, numLogicalCpuCores, numCpuPackages );
+	Sys_CPUCount( numLogicalCpuCores, numPhysicalCpuCores, numCpuPackages );
 }
 
 /*

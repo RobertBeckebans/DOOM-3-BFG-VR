@@ -84,10 +84,23 @@ const int MAX_EXPRESSION_OPS = 4096;
 const int MAX_EXPRESSION_REGISTERS = 4096;
 
 // renderer
+// everything that is needed by the backend needs
+// to be double buffered to allow it to run in
+// parallel on a dual cpu machine
+#if defined(__APPLE__) && defined(USE_VULKAN)
+	// SRS - macOS MoltenVK/Metal needs triple buffering for full screen to work properly
+	const uint32 NUM_FRAME_DATA	= 3;
+#else
+	const uint32 NUM_FRAME_DATA = 2;
+#endif
 
-// RB: replaced QGL with GLEW
-#include <GL/glew.h>
-// RB end
+#if defined(USE_VULKAN)
+	#include "../renderer/Vulkan/qvk.h"
+#else
+	// RB: replaced QGL with GLEW
+	#include <GL/glew.h>
+	// RB end
+#endif
 #include "../renderer/Cinematic.h"
 #include "../renderer/Material.h"
 #include "../renderer/BufferObject.h"
@@ -103,6 +116,9 @@ const int MAX_EXPRESSION_REGISTERS = 4096;
 // user interfaces
 #include "../ui/ListGUI.h"
 #include "../ui/UserInterface.h"
+
+// RB: required for SWF extensions
+//#include "rapidjson/document.h"
 
 #include "../swf/SWF.h"
 
@@ -140,6 +156,14 @@ const int MAX_EXPRESSION_REGISTERS = 4096;
 #include "../sys/sys_achievements.h"
 
 // tools
+
+// The editor entry points are always declared, but may just be
+// stubbed out on non-windows platforms.
+//#if defined(USE_MFC_TOOLS) || defined(USE_QT_TOOLS) || defined(USE_GTK_TOOLS)
+//#include "../imgui/ImGui_Hooks.h"
+//#include "../tools/edit_public.h"
+//#endif
+
 #include "../tools/compilers/compiler_public.h"
 
 //-----------------------------------------------------

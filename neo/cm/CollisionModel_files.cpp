@@ -34,9 +34,8 @@ If you have questions concerning this license or the applicable additional terms
 ===============================================================================
 */
 
-#pragma hdrstop
 #include "precompiled.h"
-
+#pragma hdrstop
 
 #include "CollisionModel_local.h"
 
@@ -44,7 +43,6 @@ If you have questions concerning this license or the applicable additional terms
 #define CM_BINARYFILE_EXT	"bcm"
 #define CM_FILEID			"CM"
 #define CM_FILEVERSION		"1.00"
-
 
 /*
 ===============================================================================
@@ -548,7 +546,6 @@ cm_model_t* idCollisionModelManagerLocal::ParseCollisionModel( idLexer* src )
 	src->ExpectTokenString( "{" );
 	while( !src->CheckTokenString( "}" ) )
 	{
-
 		src->ReadToken( &token );
 
 		if( token == "vertices" )
@@ -616,10 +613,10 @@ bool idCollisionModelManagerLocal::LoadCollisionModelFile( const char* name, uns
 	unsigned int crc;
 
 	// load it
-	idStr fileName = name;
+	idStrStatic< MAX_OSPATH > fileName = name;
 
 	// check for generated file
-	idStr generatedFileName = fileName;
+	idStrStatic< MAX_OSPATH > generatedFileName = fileName;
 	generatedFileName.Insert( "generated/", 0 );
 	generatedFileName.SetFileExtension( CM_BINARYFILE_EXT );
 
@@ -642,13 +639,21 @@ bool idCollisionModelManagerLocal::LoadCollisionModelFile( const char* name, uns
 		file->ReadString( fileVersion );
 		if( fileID == CM_FILEID && fileVersion == CM_FILEVERSION && crc == mapFileCRC && numEntries > 0 )
 		{
+			loaded = true; // DG: moved this up here to prevent segfaults, see below
 			for( int i = 0; i < numEntries; i++ )
 			{
 				cm_model_t* model = LoadBinaryModelFromFile( file, currentTimeStamp );
+				// DG: handle the case that loading the binary model fails gracefully
+				//     (otherwise we'll get a segfault when someone wants to use models[numModels])
+				if( model == NULL )
+				{
+					loaded = false;
+					break;
+				}
+				// DG end
 				models[ numModels ] = model;
 				numModels++;
 			}
-			loaded = true;
 		}
 	}
 

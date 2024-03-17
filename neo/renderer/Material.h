@@ -306,6 +306,7 @@ typedef enum
 	// contents used by utils
 	CONTENTS_AREAPORTAL			= BIT( 20 ),	// portal separating renderer areas
 	CONTENTS_NOCSG				= BIT( 21 ),	// don't cut this brush with CSG operations in the editor
+	CONTENTS_ORIGIN				= BIT( 22 ),
 
 	CONTENTS_REMOVE_UTIL		= ( int )( ~( CONTENTS_AREAPORTAL | CONTENTS_NOCSG ) )
 } contentsFlags_t;

@@ -122,7 +122,7 @@ class idDrawVert
 
 public:
 	idVec3				xyz;			// 12 bytes
-private:
+//private:
 	// RB: don't let the old tools code mess with these values
 	halfFloat_t			st[2];			// 4 bytes
 	byte				normal[4];		// 4 bytes
@@ -219,7 +219,7 @@ ID_INLINE void VertexFloatToByte( const float& x, const float& y, const float& z
 {
 	assert_4_byte_aligned( bval );	// for __stvebx
 
-#if defined(USE_INTRINSICS)
+#if defined(USE_INTRINSICS_SSE)
 
 	const __m128 vector_float_one			= { 1.0f, 1.0f, 1.0f, 1.0f };
 	const __m128 vector_float_half			= { 0.5f, 0.5f, 0.5f, 0.5f };
@@ -700,7 +700,7 @@ ID_INLINE void WriteDrawVerts16( idDrawVert* destVerts, const idDrawVert* localV
 	assert_16_byte_aligned( destVerts );
 	assert_16_byte_aligned( localVerts );
 
-#if defined(USE_INTRINSICS)
+#if defined(USE_INTRINSICS_SSE)
 
 	for( int i = 0; i < numVerts; i++ )
 	{
@@ -806,9 +806,7 @@ public:
 
 #define SHADOWVERT_XYZW_OFFSET		(0)
 
-#ifndef __INTELLISENSE__
-	assert_offsetof( idShadowVert, xyzw, SHADOWVERT_XYZW_OFFSET );
-#endif
+assert_offsetof( idShadowVert, xyzw, SHADOWVERT_XYZW_OFFSET );
 
 ID_INLINE void idShadowVert::Clear()
 {
@@ -836,11 +834,9 @@ public:
 #define SHADOWVERTSKINNED_COLOR_OFFSET		(16)
 #define SHADOWVERTSKINNED_COLOR2_OFFSET		(20)
 
-#ifndef __INTELLISENSE__
-	assert_offsetof( idShadowVertSkinned, xyzw, SHADOWVERTSKINNED_XYZW_OFFSET );
-	assert_offsetof( idShadowVertSkinned, color, SHADOWVERTSKINNED_COLOR_OFFSET );
-	assert_offsetof( idShadowVertSkinned, color2, SHADOWVERTSKINNED_COLOR2_OFFSET );
-#endif
+assert_offsetof( idShadowVertSkinned, xyzw, SHADOWVERTSKINNED_XYZW_OFFSET );
+assert_offsetof( idShadowVertSkinned, color, SHADOWVERTSKINNED_COLOR_OFFSET );
+assert_offsetof( idShadowVertSkinned, color2, SHADOWVERTSKINNED_COLOR2_OFFSET );
 
 ID_INLINE void idShadowVertSkinned::Clear()
 {

@@ -126,6 +126,9 @@ idVec4	colorBrown	= idVec4( 0.40f, 0.35f, 0.08f, 1.00f );
 idVec4	colorLtGrey	= idVec4( 0.75f, 0.75f, 0.75f, 1.00f );
 idVec4	colorMdGrey	= idVec4( 0.50f, 0.50f, 0.50f, 1.00f );
 idVec4	colorDkGrey	= idVec4( 0.25f, 0.25f, 0.25f, 1.00f );
+// jmarshall
+idVec4  colorGold	= idVec4( 0.68f, 0.63f, 0.36f, 1.00f );
+// jmarshall end
 
 /*
 ================
@@ -194,6 +197,11 @@ void idLib::FatalError( const char* fmt, ... )
 	va_end( argptr );
 
 	common->FatalError( "%s", text );
+
+#if !defined(_WIN32)
+	// SRS - Added exit to silence build warning since FatalError has attribute noreturn
+	exit( EXIT_FAILURE );
+#endif
 }
 
 /*
@@ -211,6 +219,11 @@ void idLib::Error( const char* fmt, ... )
 	va_end( argptr );
 
 	common->Error( "%s", text );
+
+#if !defined(_WIN32)
+	// SRS - Added exit to silence build warning since FatalError has attribute noreturn
+	exit( EXIT_FAILURE );
+#endif
 }
 
 /*

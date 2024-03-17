@@ -79,7 +79,7 @@ void UnbindBufferObjects()
 	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );
 }
 
-#if defined(USE_INTRINSICS)
+#if defined(USE_INTRINSICS_SSE)
 
 void CopyBuffer( byte* dst, const byte* src, int numBytes )
 {

@@ -128,6 +128,9 @@ extern	idVec4 colorBrown;
 extern	idVec4 colorLtGrey;
 extern	idVec4 colorMdGrey;
 extern	idVec4 colorDkGrey;
+// jmarshall
+extern idVec4  colorGold;
+// jmarshall end
 
 // packs color floats in the range [0,1] into an integer
 dword	PackColor( const idVec3& color );
@@ -272,6 +275,7 @@ public:
 #include "math/Curve.h"
 #include "math/Ode.h"
 #include "math/Lcp.h"
+#include "math/SphericalHarmonics.h"
 
 // bounding volumes
 #include "bv/Sphere.h"
