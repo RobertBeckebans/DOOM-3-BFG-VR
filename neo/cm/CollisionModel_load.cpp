@@ -3,6 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2013-2016 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -46,10 +47,9 @@ If you have questions concerning this license or the applicable additional terms
 */
 
 #include "precompiled.h"
-
+#pragma hdrstop
 
 #include "CollisionModel_local.h"
-#pragma hdrstop
 
 #define CMODEL_BINARYFILE_EXT	"bcmodel"
 
@@ -65,7 +65,6 @@ idHashIndex* 					cm_edgeHash;
 
 idBounds						cm_modelBounds;
 int								cm_vertexShift;
-
 
 idCVar preLoad_Collision( "preLoad_Collision", "1", CVAR_SYSTEM | CVAR_BOOL, "preload collision beginlevelload" );
 
@@ -3015,6 +3014,23 @@ static void CM_EstimateVertsAndEdges( const idMapEntity* mapEnt, int* numVerts, 
 			*numEdges += ( static_cast<const idMapBrush*>( mapPrim )->GetNumSides() - 2 ) * 3;
 			continue;
 		}
+		// RB begin
+		if( mapPrim->GetType() == idMapPrimitive::TYPE_MESH )
+		{
+			const MapPolygonMesh* mesh = static_cast<const MapPolygonMesh*>( mapPrim );
+
+			// assume cylinder with a polygon with (numSides - 2) edges ontop and on the bottom
+			*numVerts += mesh->GetNumVertices();
+
+			for( int i = 0; i < mesh->GetNumPolygons(); i++ )
+			{
+				const MapPolygon& poly = mesh->GetFace( i );
+
+				*numEdges += ( poly.GetIndexes().Num() - 2 ) * 3;
+			}
+			continue;
+		}
+		// RB end
 	}
 }
 
@@ -3058,7 +3074,7 @@ void idCollisionModelManagerLocal::ConvertPatch( cm_model_t* model, const idMapP
 idCollisionModelManagerLocal::ConvertBrushSides
 ================
 */
-void idCollisionModelManagerLocal::ConvertBrushSides( cm_model_t* model, const idMapBrush* mapBrush, int primitiveNum )
+void idCollisionModelManagerLocal::ConvertBrushSides( cm_model_t* model, const idMapBrush* mapBrush, int primitiveNum, const idVec3& originOffset )
 {
 	int i, j;
 	idMapBrushSide* mapSide;
@@ -3072,6 +3088,10 @@ void idCollisionModelManagerLocal::ConvertBrushSides( cm_model_t* model, const i
 	{
 		planes[i] = mapBrush->GetSide( i )->GetPlane();
 		planes[i].FixDegeneracies( DEGENERATE_DIST_EPSILON );
+
+		// Admer: also offset em
+		idVec3 reverseOriginOffset = originOffset * -1.0f;
+		planes[i].TranslateSelf( reverseOriginOffset );
 	}
 
 	// create a collision polygon for each brush side
@@ -3105,7 +3125,7 @@ void idCollisionModelManagerLocal::ConvertBrushSides( cm_model_t* model, const i
 idCollisionModelManagerLocal::ConvertBrush
 ================
 */
-void idCollisionModelManagerLocal::ConvertBrush( cm_model_t* model, const idMapBrush* mapBrush, int primitiveNum )
+void idCollisionModelManagerLocal::ConvertBrush( cm_model_t* model, const idMapBrush* mapBrush, int primitiveNum, const idVec3& originOffset )
 {
 	int i, j, contents;
 	idBounds bounds;
@@ -3124,6 +3144,10 @@ void idCollisionModelManagerLocal::ConvertBrush( cm_model_t* model, const idMapB
 	{
 		planes[i] = mapBrush->GetSide( i )->GetPlane();
 		planes[i].FixDegeneracies( DEGENERATE_DIST_EPSILON );
+
+		// Admer: also offset em
+		idVec3 reverseOriginOffset = originOffset * -1.0f;
+		planes[i].TranslateSelf( reverseOriginOffset );
 	}
 
 	// we are only getting the bounds for the brush so there's no need
@@ -3166,6 +3190,45 @@ void idCollisionModelManagerLocal::ConvertBrush( cm_model_t* model, const idMapB
 	}
 	AddBrushToNode( model, model->node, brush );
 }
+
+// RB begin
+void idCollisionModelManagerLocal::ConvertMesh( cm_model_t* model, const MapPolygonMesh* mesh, int primitiveNum )
+{
+	const idList<idDrawVert>& verts = mesh->GetDrawVerts();
+
+	int numVerts = 0;
+
+	idFixedWinding w;
+	for( int i = 0; i < mesh->GetNumPolygons(); i++ )
+	{
+		const MapPolygon& poly = mesh->GetFace( i );
+
+		const idMaterial* material = declManager->FindMaterial( poly.GetMaterial() );
+
+		const idList<int>& indexes = poly.GetIndexes();
+
+		w.SetNumPoints( indexes.Num() );
+
+		//for( int j = indexes.Num() -1; j >= 0; j-- )
+
+		for( int j = 0; j < indexes.Num(); j++ )
+		{
+			int index = indexes[j];
+
+			// reverse order
+			w[ indexes.Num() - 1 - j ] = verts[index].xyz;
+		}
+
+		if( w.GetNumPoints() )
+		{
+			idPlane plane;
+			w.GetPlane( plane );
+
+			PolygonFromWinding( model, &w, -plane, material, primitiveNum );
+		}
+	}
+}
+// RB end
 
 /*
 ================
@@ -3596,7 +3659,7 @@ cm_model_t* idCollisionModelManagerLocal::LoadBinaryModelFromFile( idFile* file,
 	assert( model->polygonRefBlocks == NULL || ( model->polygonRefBlocks->next == NULL && model->polygonRefBlocks->nextRef == NULL ) );
 
 	// RB: FIXME
-#if !defined(__x86_64__) && !defined(_WIN64)
+#if !defined(__x86_64__) && !defined(_WIN64) && !defined(__PPC64__) && !defined(__e2k__) && !defined(__aarch64__) && !(defined(__mips64) || defined(__mips64_))
 	assert( model->polygonBlock->bytesRemaining == 0 );
 	assert( model->brushBlock->bytesRemaining == 0 );
 #endif
@@ -3652,6 +3715,7 @@ void idCollisionModelManagerLocal::WriteBinaryModelToFile( cm_model_t* model, id
 	file->WriteBig( model->numSharpEdges );
 	file->WriteBig( model->numRemovedPolys );
 	file->WriteBig( model->numMergedPolys );
+
 	for( int i = 0; i < model->numVertices; i++ )
 	{
 		file->WriteBig( model->vertices[i].p );
@@ -3797,7 +3861,9 @@ cm_model_t* idCollisionModelManagerLocal::LoadRenderModel( const char* fileName 
 
 	// only load ASE and LWO models
 	idStr( fileName ).ExtractFileExtension( extension );
-	if( ( extension.Icmp( "ase" ) != 0 ) && ( extension.Icmp( "lwo" ) != 0 ) && ( extension.Icmp( "ma" ) != 0 ) )
+
+	// RB: DAE and OBJ support
+	if( ( extension.Icmp( "ase" ) != 0 ) && ( extension.Icmp( "lwo" ) != 0 ) && ( extension.Icmp( "ma" ) != 0 ) && ( extension.Icmp( "dae" ) != 0 ) && ( extension.Icmp( "obj" ) != 0 ) )
 	{
 		return NULL;
 	}
@@ -3808,7 +3874,7 @@ cm_model_t* idCollisionModelManagerLocal::LoadRenderModel( const char* fileName 
 		return NULL;
 	}
 
-	idStr generatedFileName = "generated/collision/";
+	idStrStatic< MAX_OSPATH > generatedFileName = "generated/collision/";
 	generatedFileName.AppendPath( fileName );
 	generatedFileName.SetFileExtension( CMODEL_BINARYFILE_EXT );
 
@@ -3923,6 +3989,7 @@ cm_model_t* idCollisionModelManagerLocal::CollisionModelForMapEntity( const idMa
 
 	cm_model_t* model;
 	idBounds bounds;
+	idVec3 originOffset = mapEnt->originOffset;
 	const char* name;
 	int i, brushCount;
 
@@ -3967,6 +4034,9 @@ cm_model_t* idCollisionModelManagerLocal::CollisionModelForMapEntity( const idMa
 	model->isConvex = false;
 
 	// convert brushes
+	bool hasMeshes = false;
+
+	bounds.Clear();
 	for( i = 0; i < mapEnt->GetNumPrimitives(); i++ )
 	{
 		idMapPrimitive*	mapPrim;
@@ -3974,13 +4044,27 @@ cm_model_t* idCollisionModelManagerLocal::CollisionModelForMapEntity( const idMa
 		mapPrim = mapEnt->GetPrimitive( i );
 		if( mapPrim->GetType() == idMapPrimitive::TYPE_BRUSH )
 		{
-			ConvertBrush( model, static_cast<idMapBrush*>( mapPrim ), i );
+			ConvertBrush( model, static_cast<idMapBrush*>( mapPrim ), i, originOffset );
+			continue;
+		}
+
+		// RB: support new map format
+		if( mapPrim->GetType() == idMapPrimitive::TYPE_MESH )
+		{
+			idBounds primBounds;
+
+			static_cast<MapPolygonMesh*>( mapPrim )->GetBounds( primBounds );
+
+			bounds.AddBounds( primBounds );
+
+			hasMeshes = true;
 			continue;
 		}
 	}
 
 	// create an axial bsp tree for the model if it has more than just a bunch brushes
 	brushCount = CM_CountNodeBrushes( model->node );
+
 	if( brushCount > 4 )
 	{
 		model->node = CreateAxialBSPTree( model, model->node );
@@ -3991,14 +4075,17 @@ cm_model_t* idCollisionModelManagerLocal::CollisionModelForMapEntity( const idMa
 	}
 
 	// get bounds for hash
-	if( brushCount )
+	if( !hasMeshes )
 	{
-		CM_GetNodeBounds( &bounds, model->node );
-	}
-	else
-	{
-		bounds[0].Set( -256, -256, -256 );
-		bounds[1].Set( 256, 256, 256 );
+		if( brushCount )
+		{
+			CM_GetNodeBounds( &bounds, model->node );
+		}
+		else
+		{
+			bounds[0].Set( -256, -256, -256 );
+			bounds[1].Set( 256, 256, 256 );
+		}
 	}
 
 	// different models do not share edges and vertices with each other, so clear the hash
@@ -4017,9 +4104,23 @@ cm_model_t* idCollisionModelManagerLocal::CollisionModelForMapEntity( const idMa
 		}
 		if( mapPrim->GetType() == idMapPrimitive::TYPE_BRUSH )
 		{
-			ConvertBrushSides( model, static_cast<idMapBrush*>( mapPrim ), i );
+			ConvertBrushSides( model, static_cast<idMapBrush*>( mapPrim ), i, originOffset );
 			continue;
 		}
+
+		// RB: support new map format
+		if( mapPrim->GetType() == idMapPrimitive::TYPE_MESH )
+		{
+			ConvertMesh( model, static_cast<MapPolygonMesh*>( mapPrim ), i );
+			hasMeshes = true;
+			continue;
+		}
+	}
+
+	// RB: always create axial BSP tree for mesh based entities
+	if( hasMeshes )
+	{
+		model->node = CreateAxialBSPTree( model, model->node );
 	}
 
 	FinishModel( model );
@@ -4223,7 +4324,7 @@ void idCollisionModelManagerLocal::Preload( const char* mapName )
 	{
 		return;
 	}
-	idStr manifestName = mapName;
+	idStrStatic< MAX_OSPATH > manifestName = mapName;
 	manifestName.Replace( "game/", "maps/" );
 	manifestName.Replace( "maps/maps/", "maps/" );
 	manifestName.SetFileExtension( ".preload" );
@@ -4459,7 +4560,7 @@ cmHandle_t idCollisionModelManagerLocal::LoadModel( const char* modelName )
 		return 0;
 	}
 
-	idStr generatedFileName = "generated/collision/";
+	idStrStatic< MAX_OSPATH > generatedFileName = "generated/collision/";
 	generatedFileName.AppendPath( modelName );
 	generatedFileName.SetFileExtension( CMODEL_BINARYFILE_EXT );
 

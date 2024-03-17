@@ -3,6 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2013-2015 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -491,8 +492,11 @@ private:			// CollisionMap_load.cpp
 	void			CalculateEdgeNormals( cm_model_t* model, cm_node_t* node );
 	void			CreatePatchPolygons( cm_model_t* model, idSurface_Patch& mesh, const idMaterial* material, int primitiveNum );
 	void			ConvertPatch( cm_model_t* model, const idMapPatch* patch, int primitiveNum );
-	void			ConvertBrushSides( cm_model_t* model, const idMapBrush* mapBrush, int primitiveNum );
-	void			ConvertBrush( cm_model_t* model, const idMapBrush* mapBrush, int primitiveNum );
+	void			ConvertBrushSides( cm_model_t* model, const idMapBrush* mapBrush, int primitiveNum, const idVec3& originOffset );
+	void			ConvertBrush( cm_model_t* model, const idMapBrush* mapBrush, int primitiveNum, const idVec3& originOffset );
+	// RB: support new .map format
+	void			ConvertMesh( cm_model_t* model, const MapPolygonMesh* mesh, int primitiveNum );
+	// RB end
 	void			PrintModelInfo( const cm_model_t* model );
 	void			AccumulateModelInfo( cm_model_t* model );
 	void			RemapEdges( cm_node_t* node, int* edgeRemap );
