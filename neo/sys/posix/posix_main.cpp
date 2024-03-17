@@ -50,7 +50,7 @@ If you have questions concerning this license or the applicable additional terms
 #endif
 
 #if defined(__APPLE__)
-	#include <SDL2/SDL.h>
+	#include <SDL.h>
 #endif
 
 #include <sys/statvfs.h>
@@ -253,16 +253,20 @@ double Sys_GetClockTicks()
 		"pop %%ebx\n"
 		: "=r"( lo ), "=r"( hi ) );
 	return ( double ) lo + ( double ) 0xFFFFFFFF * hi;
-#else
-//#error unsupported CPU
 // RB begin
+#elif defined( __x86_64__ )
+	uint32_t lo, hi;
+	__asm__ __volatile__( "rdtsc" : "=a"( lo ), "=d"( hi ) );
+	return ( ( ( uint64_t )hi ) << 32 ) | lo;
+#else
+	//#error unsupported CPU
 	struct timespec now;
 
 	clock_gettime( CLOCK_MONOTONIC, &now );
 
 	return now.tv_sec * 1000000000LL + now.tv_nsec;
-// RB end
 #endif
+// RB end
 }
 
 /*
@@ -398,6 +402,7 @@ Sys_DefaultBasePath
 
 Get the default base path
 - binary image path
+- MacOS app bundle resources directory path       // SRS - Added MacOS app bundle resources path
 - current directory
 - hardcoded
 Try to be intelligent: if there is no BASE_GAMEDIR, try the next path
@@ -422,6 +427,20 @@ const char* Sys_DefaultBasePath()
 		{
 			common->Printf( "no '%s' directory in exe path %s, skipping\n", BASE_GAMEDIR, basepath.c_str() );
 		}
+#if defined(__APPLE__)              // SRS - - Added check for MacOS app bundle resources path
+		basepath += "/../Resources";
+		testbase = basepath;
+		testbase += "/";
+		testbase += BASE_GAMEDIR;
+		if( stat( testbase.c_str(), &st ) != -1 && S_ISDIR( st.st_mode ) )
+		{
+			return basepath.c_str();
+		}
+		else
+		{
+			common->Printf( "no '%s' directory in MacOS app bundle resources path %s, skipping\n", BASE_GAMEDIR, basepath.c_str() );
+		}
+#endif
 	}
 	if( basepath != Posix_Cwd() )
 	{
@@ -845,18 +864,6 @@ void Sys_Sleep( int msec )
 #endif
 }
 
-char* Sys_GetClipboardData()
-{
-	Sys_Printf( "TODO: Sys_GetClipboardData\n" );
-	return NULL;
-}
-
-void Sys_SetClipboardData( const char* string )
-{
-	Sys_Printf( "TODO: Sys_SetClipboardData\n" );
-}
-
-
 // stub pretty much everywhere - heavy calling
 void Sys_FlushCacheMemory( void* base, int bytes )
 {
@@ -1170,7 +1177,7 @@ void tty_Show()
 
 			// RB begin
 #if defined(__ANDROID__)
-			//__android_log_print(ANDROID_LOG_DEBUG, "Doom3_DEBUG", "%s", buf);
+			//__android_log_print(ANDROID_LOG_DEBUG, "RBDoom3_DEBUG", "%s", buf);
 #endif
 			// RB end
 
@@ -1542,7 +1549,7 @@ void Sys_DebugPrintf( const char* fmt, ... )
 	va_end( argptr );
 	msg[sizeof( msg ) - 1] = '\0';
 
-	__android_log_print( ANDROID_LOG_DEBUG, "Doom3_Debug", msg );
+	__android_log_print( ANDROID_LOG_DEBUG, "RBDoom3_Debug", msg );
 #else
 	va_list argptr;
 
@@ -1557,7 +1564,7 @@ void Sys_DebugPrintf( const char* fmt, ... )
 void Sys_DebugVPrintf( const char* fmt, va_list arg )
 {
 #if defined(__ANDROID__)
-	__android_log_vprint( ANDROID_LOG_DEBUG, "Doom3_Debug", fmt, arg );
+	__android_log_vprint( ANDROID_LOG_DEBUG, "RBDoom3_Debug", fmt, arg );
 #else
 	tty_Hide();
 	vprintf( fmt, arg );
@@ -1576,7 +1583,7 @@ void Sys_Printf( const char* fmt, ... )
 	va_end( argptr );
 	msg[sizeof( msg ) - 1] = '\0';
 
-	__android_log_print( ANDROID_LOG_DEBUG, "Doom3", msg );
+	__android_log_print( ANDROID_LOG_DEBUG, "RBDoom3", msg );
 #else
 	va_list argptr;
 
@@ -1591,7 +1598,7 @@ void Sys_Printf( const char* fmt, ... )
 void Sys_VPrintf( const char* fmt, va_list arg )
 {
 #if defined(__ANDROID__)
-	__android_log_vprint( ANDROID_LOG_DEBUG, "Doom3", fmt, arg );
+	__android_log_vprint( ANDROID_LOG_DEBUG, "RBDoom3", fmt, arg );
 #else
 	tty_Hide();
 	vprintf( fmt, arg );

@@ -27,8 +27,8 @@ If you have questions concerning this license or the applicable additional terms
 ===========================================================================
 */
 
-#pragma hdrstop
 #include "precompiled.h"
+#pragma hdrstop
 #include "../sys_session_local.h"
 
 #include "win_local.h"
@@ -652,7 +652,6 @@ int Sys_ReturnKeyboardInputEvent( const int n, int& ch, bool& state )
 		// alt messages when the right-alt is pressed on non-US 102 keyboards.
 		Sys_QueEvent( SE_KEY, ch, state, 0, NULL, 0 );
 	}
-
 	return ch;
 }
 

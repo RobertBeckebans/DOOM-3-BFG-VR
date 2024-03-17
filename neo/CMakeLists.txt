@@ -25,9 +25,6 @@ option(OPENAL
 option(FFMPEG
 		"Use FMPEG to render Bink videos" ON)
 
-option(OVR
-		"Use Oculus VR's LibOVR SDK" ON)
-
 option(ONATIVE
 		"Optimize for the host CPU" OFF)
 		
@@ -48,7 +45,6 @@ option(USE_SYSTEM_LIBGLEW
 
 if(UNIX)
 	set(OPENAL TRUE)
-	set(OVR FALSE)
 endif()
 		
 if(MSVC)
@@ -1293,42 +1289,6 @@ if(MSVC)
 		include_directories(${DirectX_INCLUDE_DIR})
 	#endif()
 	
-	include_directories(${CMAKE_CURRENT_SOURCE_DIR}/libs/LibOVR/include)
-
-	if(OVR)
-		add_definitions(-DUSE_OVR)
-		
-		if(CMAKE_GENERATOR STREQUAL "Visual Studio 15 2017 Win64" OR CMAKE_GENERATOR STREQUAL "Visual Studio 15 2017"
-			OR CMAKE_GENERATOR STREQUAL "Visual Studio 14 2015 Win64" OR CMAKE_GENERATOR STREQUAL "Visual Studio 14 2015")
-			link_directories(
-					${CMAKE_CURRENT_SOURCE_DIR}/libs/LibOVR/Lib/Windows/x64/Release/VS2015
-					${CMAKE_CURRENT_SOURCE_DIR}/libs/LibOVR/Lib/Windows/x64/Debug/VS2015)
-							
-			set(LibOVR_LIBRARIES
-				libovr.lib
-				ws2_32.lib)
-						
-		elseif(CMAKE_CL_64)
-			link_directories(
-					${CMAKE_CURRENT_SOURCE_DIR}/libs/LibOVR/Lib/Windows/x64/Release/VS2013
-					${CMAKE_CURRENT_SOURCE_DIR}/libs/LibOVR/Lib/x64/VS2013)
-							
-			set(LibOVR_LIBRARIES
-				libovr.lib
-				ws2_32.lib)
-					
-		else()
-			link_directories(
-					${CMAKE_CURRENT_SOURCE_DIR}/libs/LibOVR/Lib/Windows/Win32/Release/VS2013
-					${CMAKE_CURRENT_SOURCE_DIR}/libs/LibOVR/Lib/Win32/VS2013)
-						
-				set(LibOVR_LIBRARIES
-				libovr.lib
-				ws2_32.lib)
-			
-		endif()
-	endif()
-		
 	if(OPENAL)
 		add_definitions(-DUSE_OPENAL)
 	
@@ -1519,7 +1479,6 @@ if(MSVC)
         ${JPEG_LIBRARY}
         ${GLEW_LIBRARY}
         ${OPENVR_LIBRARY}
-		${LibOVR_LIBRARIES}
 		sapi.lib
 		)
 		

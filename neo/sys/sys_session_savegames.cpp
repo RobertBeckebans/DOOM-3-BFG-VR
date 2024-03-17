@@ -25,8 +25,8 @@ If you have questions concerning this license or the applicable additional terms
 
 ===========================================================================
 */
-#pragma hdrstop
 #include "precompiled.h"
+#pragma hdrstop
 #include "sys_savegame.h"
 #include "sys_session_local.h"
 #include "sys_session_savegames.h"
@@ -357,6 +357,7 @@ saveGameHandle_t idSessionLocal::LoadGameSync( const char* name, saveFileEntryLi
 {
 	idSaveLoadParms& parms = processorLoadFiles->GetParmsNonConst();
 	saveGameHandle_t handle = 0;
+	bool checkDetailsFile = true;
 
 	{
 		// Put in a local block so everything will go in the global heap before the map change, but the heap is
@@ -387,7 +388,7 @@ saveGameHandle_t idSessionLocal::LoadGameSync( const char* name, saveFileEntryLi
 
 		// Read the details file when loading games
 		saveFileEntryList_t	filesWithDetails( files );
-		std::auto_ptr< idFile_SaveGame > gameDetailsFile( new( TAG_SAVEGAMES ) idFile_SaveGame( SAVEGAME_DETAILS_FILENAME, SAVEGAMEFILE_TEXT ) );
+		std::unique_ptr< idFile_SaveGame > gameDetailsFile( new( TAG_SAVEGAMES ) idFile_SaveGame( SAVEGAME_DETAILS_FILENAME, SAVEGAMEFILE_TEXT ) );
 		filesWithDetails.Append( gameDetailsFile.get() );
 
 		// Check the cached save details from the enumeration and make sure we don't load a save from a newer version of the game!
@@ -415,17 +416,28 @@ saveGameHandle_t idSessionLocal::LoadGameSync( const char* name, saveFileEntryLi
 			parms.errorCode = SAVEGAME_E_UNKNOWN;
 		}
 
-		if( parms.GetError() != SAVEGAME_E_NONE )
+		// SRS - check details file for compatibility before removing it from parms.files list
+		if( parms.GetError() == SAVEGAME_E_NONE )
 		{
-			return 0;
+			// Checks the details file to see if corrupted or if it's from a newer savegame
+			checkDetailsFile = LoadGameCheckDescriptionFile( parms );
 		}
 
-		// Checks the description file to see if corrupted or if it's from a newer savegame
-		if( !LoadGameCheckDescriptionFile( parms ) )
+		// tomgreen66 - remove details file we added via auto_ptr to parms.files in InitLoadFiles above
+		for( int i = 0; i < parms.files.Num(); ++i )
+		{
+			if( parms.files[i] == gameDetailsFile.get() )
+			{
+				// details file reference will be deleted by auto_ptr so remove it from list and update file count
+				parms.files.RemoveIndexFast( i );
+			}
+		}
+
+		// SRS - return if savegame error or description file corrupt or not compatible
+		if( parms.GetError() != SAVEGAME_E_NONE || !checkDetailsFile )
 		{
 			return 0;
 		}
-		parms.description.isRBDoom = isRBDoom;
 
 		// Checks to see if loaded map is from a DLC map and if that DLC is active
 		if( !IsDLCAvailable( parms.description.GetMapName() ) )
@@ -436,6 +448,7 @@ saveGameHandle_t idSessionLocal::LoadGameSync( const char* name, saveFileEntryLi
 	}
 
 	common->OnLoadFilesCompleted( parms );
+
 	return handle;
 }
 

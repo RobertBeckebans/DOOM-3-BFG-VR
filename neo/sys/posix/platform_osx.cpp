@@ -26,7 +26,7 @@ If you have questions concerning this license or the applicable additional terms
 
 ===========================================================================
 */
-//#include "../../idlib/precompiled.h"
+#include "../../idlib/precompiled.h"
 #include "../posix/posix_public.h"
 //#include "../sys_local.h"
 
@@ -97,7 +97,8 @@ double Sys_ClockTicksPerSecond()
 {
 	static bool		init = false;
 	static double	ret;
-	size_t len = sizeof( ret );
+	int64_t temp;
+	size_t len = sizeof( temp );
 	int status;
 
 	if( init )
@@ -105,7 +106,8 @@ double Sys_ClockTicksPerSecond()
 		return ret;
 	}
 
-	status = sysctlbyname( "hw.cpufrequency", &ret, &len, NULL, 0 );
+	status = sysctlbyname( "hw.cpufrequency", &temp, &len, NULL, 0 );
+	ret = double( temp );
 
 	if( status == -1 )
 	{
@@ -396,8 +398,8 @@ void Sys_ReLaunch()
 	// DG end
 }
 
-// OS X doesn't have clock_gettime()
-int clock_gettime( clk_id_t clock, struct timespec* tp )
+// OS X 10.11 or earlier doesn't have native clock_gettime()
+int clock_gettime( /*clk_id_t*/ clockid_t clock, struct timespec* tp )   // SRS - use APPLE clockid_t
 {
 	switch( clock )
 	{
