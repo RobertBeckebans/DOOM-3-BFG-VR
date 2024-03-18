@@ -29,7 +29,7 @@ If you have questions concerning this license or the applicable additional terms
 #pragma hdrstop
 #include "precompiled.h"
 
-#include "tr_local.h"
+#include "RenderCommon.h"
 
 idRenderSystemLocal	tr;
 idRenderSystem* renderSystem = &tr;
@@ -800,11 +800,11 @@ void idRenderSystemLocal::SwapCommandBuffers_FinishRendering(
 	}
 	if( backEndMicroSec != NULL )
 	{
-		*backEndMicroSec = backEnd.pc.totalMicroSec;
+		*backEndMicroSec = backEnd.pc.cpuTotalMicroSec;
 	}
 	if( shadowMicroSec != NULL )
 	{
-		*shadowMicroSec = backEnd.pc.shadowMicroSec;
+		*shadowMicroSec = backEnd.pc.cpuShadowMicroSec;
 	}
 
 	// print any other statistics and clear all of them

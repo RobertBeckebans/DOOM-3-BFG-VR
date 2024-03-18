@@ -76,7 +76,7 @@ public:
 	virtual void			BufferCommandText( cmdExecution_t exec, const char* text );
 	virtual void			ExecuteCommandBuffer();
 
-	virtual void			ArgCompletion_FolderExtension( const idCmdArgs& args, void( *callback )( const char* s ), const char* folder, bool stripFolder, ... );
+	virtual void			ArgCompletion_FolderExtension( const idCmdArgs& args, void( *callback )( const char* s ), const char* folder, int stripFolder, ... );
 	virtual void			ArgCompletion_DeclName( const idCmdArgs& args, void( *callback )( const char* s ), int type );
 
 	virtual void			BufferCommandArgs( cmdExecution_t exec, const idCmdArgs& args );
@@ -551,19 +551,6 @@ void idCmdSystemLocal::ExecuteTokenizedString( const idCmdArgs& args )
 		return;		// no tokens
 	}
 
-	// DEBUG: print commands executed by the console
-	/*
-		if(args.Argc() == 1) {
-			common->Printf("idCmdSystemLocal::ExecuteTokenizedString: '%s'\n", args.Argv( 0 ));
-		}
-		else if(args.Argc() == 2) {
-			common->Printf("idCmdSystemLocal::ExecuteTokenizedString: '%s' '%s'\n", args.Argv( 0 ), args.Argv( 1 ));
-		}
-		else if(args.Argc() == 3) {
-			common->Printf("idCmdSystemLocal::ExecuteTokenizedString: '%s' '%s' '%s'\n", args.Argv( 0 ), args.Argv( 1 ), args.Argv( 2 ));
-		}
-	*/
-
 	// check registered command functions
 	for( prev = &commands; *prev; prev = &cmd->next )
 	{
@@ -809,7 +796,8 @@ void idCmdSystemLocal::ExecuteCommandBuffer()
 idCmdSystemLocal::ArgCompletion_FolderExtension
 ============
 */
-void idCmdSystemLocal::ArgCompletion_FolderExtension( const idCmdArgs& args, void( *callback )( const char* s ), const char* folder, bool stripFolder, ... )
+// SRS - Changed stripFolder type from bool to int for compatibility with va_start()
+void idCmdSystemLocal::ArgCompletion_FolderExtension( const idCmdArgs& args, void( *callback )( const char* s ), const char* folder, int stripFolder, ... )
 {
 	int i;
 	idStr string;

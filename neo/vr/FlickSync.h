@@ -195,7 +195,7 @@ extern int Flicksync_Score;
 extern int Flicksync_CueCards;
 extern int Flicksync_CorrectInARow;
 extern int Flicksync_FailsInARow;
-extern idStr Flicksync_CueCardText;	// What our cue card would say if we used it
+extern idStr Flicksync_CueCardText;		// What our cue card would say if we used it
 extern bool Flicksync_CueCardActive;	// Are we currently using one of our Cue Card Power-Ups?
 extern idStr Flicksync_CueText;
 extern bool Flicksync_CueActive;

@@ -39,10 +39,14 @@ If you have questions concerning this license or the applicable additional terms
 
 // RB: changed home folder so we don't break the savegame of the original game
 // Koz: changed to indicate VR version of game.
-#define SAVE_PATH						"\\id Software\\DOOM 3 BFG"
+#define SAVE_PATH						"\\id Software\\DOOM 3 BFG VR"
 
 #define ENGINE_VERSION					"DOOM 3 BFG VR 1.0.3"	// printed in console
 // RB end
+
+// jmarshall
+#define ENGINE_BRANCH					"master"
+// jmarshall end
 
 #define	BASE_GAMEDIR					"base"
 
@@ -65,10 +69,15 @@ If you have questions concerning this license or the applicable additional terms
 // RB begin
 // Default base path (used only if none could be found)
 #ifdef __APPLE__
-#define DEFAULT_BASEPATH				"/Applications/DOOM-3-BFGVR.app/Contents/Resources"
+	#define DEFAULT_BASEPATH				"/Applications/DOOM-3-BFGVR.app/Contents/Resources"
 #else
-#define DEFAULT_BASEPATH				"/usr/share/games/doom3bfgvr"
+	#define DEFAULT_BASEPATH				"/usr/share/games/doom3bfgvr"
 #endif
 // RB end
 
+// raynorpat: Steam AppID and Steam App Name for figuring out Steam base path
+#define STEAMPATH_APPID					"208200"
+#define STEAMPATH_NAME					"DOOM 3 BFG Edition"
 
+// raynorpat: GOG.com Galaxy Launcher Game ID for figuring out Steam base path
+#define GOGPATH_ID						"1733124578"

@@ -588,6 +588,7 @@ void idKeyInput::SetBinding( int keynum, const char* binding )
 	{
 		return;
 	}
+
 	// Clear out all button states so we aren't stuck forever thinking this key is held down
 	usercmdGen->Clear();
 

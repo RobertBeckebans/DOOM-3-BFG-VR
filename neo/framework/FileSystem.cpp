@@ -136,7 +136,7 @@ public:
 	virtual void			Shutdown( bool reloading );
 	virtual bool			IsInitialized() const;
 	virtual idFileList* 	ListFiles( const char* relativePath, const char* extension, bool sort = false, bool fullRelativePath = false, const char* gamedir = NULL );
-	virtual idFileList* 	ListFilesTree( const char* relativePath, const char* extension, bool sort = false, const char* gamedir = NULL );
+	virtual idFileList* 	ListFilesTree( const char* relativePath, const char* extension, bool sort = false,  bool allowSubdirsForResourcePaks = false, const char* gamedir = NULL );
 	virtual void			FreeFileList( idFileList* fileList );
 	virtual const char* 	OSPathToRelativePath( const char* OSPath );
 	virtual const char* 	RelativePathToOSPath( const char* relativePath, const char* basePath );
@@ -173,7 +173,6 @@ public:
 	// RB begin
 	virtual bool			InProductionMode();
 	// RB end
-
 	virtual bool			UsingResourceFiles()
 	{
 		return resourceFiles.Num() > 0;
@@ -280,9 +279,10 @@ private:
 	void					CopyFile( idFile* src, const char* toOSPath );
 	int						AddUnique( const char* name, idStrList& list, idHashIndex& hashIndex ) const;
 	void					GetExtensionList( const char* extension, idStrList& extensionList ) const;
-	int						GetFileList( const char* relativePath, const idStrList& extensions, idStrList& list, idHashIndex& hashIndex, bool fullRelativePath, const char* gamedir = NULL );
 
-	int						GetFileListTree( const char* relativePath, const idStrList& extensions, idStrList& list, idHashIndex& hashIndex, const char* gamedir = NULL );
+	// RB: added bool allowSubdirsForResourcePaks
+	int						GetFileList( const char* relativePath, const idStrList& extensions, idStrList& list, idHashIndex& hashIndex, bool fullRelativePath, bool allowSubdirsForResourcePaks = false, const char* gamedir = NULL );
+	int						GetFileListTree( const char* relativePath, const idStrList& extensions, idStrList& list, idHashIndex& hashIndex, bool allowSubdirsForResourcePaks = false, const char* gamedir = NULL );
 	void					AddGameDirectory( const char* path, const char* dir );
 
 	int						AddResourceFile( const char* resourceFileName );
@@ -308,8 +308,6 @@ idCVar  idFileSystemLocal::fs_game_base( "fs_game_base", "", CVAR_SYSTEM | CVAR_
 
 idCVar	fs_basepath( "fs_basepath", "", CVAR_SYSTEM | CVAR_INIT, "" );
 idCVar	fs_savepath( "fs_savepath", "", CVAR_SYSTEM | CVAR_INIT, "" );
-
-// Koz changed fs_resourceLoadPriority default to 0 to load modified files if present.
 idCVar	fs_resourceLoadPriority( "fs_resourceLoadPriority", "0", CVAR_SYSTEM , "if 1, open requests will be honored from resource files first; if 0, the resource files are checked after normal search paths" );
 idCVar	fs_enableBackgroundCaching( "fs_enableBackgroundCaching", "1", CVAR_SYSTEM , "if 1 allow the 360 to precache game files in the background" );
 
@@ -651,7 +649,7 @@ void idFileSystemLocal::CreateOSPath( const char* OSPath )
 		return;
 	}
 
-	idStr path( OSPath );
+	idStrStatic< MAX_OSPATH > path( OSPath );
 
 	// RB begin
 #if defined(_WIN32)
@@ -784,7 +782,7 @@ void idFileSystemLocal::EndLevelLoad()
 			delete outFile;
 		}
 
-		idStr preloadName = manifestName;
+		idStrStatic< MAX_OSPATH > preloadName = manifestName;
 		preloadName.Insert( "maps/", 0 );
 		preloadName += ".preload";
 		idFile* fileOut = fileSystem->OpenFileWrite( preloadName, "fs_savepath" );
@@ -1545,11 +1543,6 @@ Copy a fully specified file from one place to another`
 */
 void idFileSystemLocal::CopyFile( const char* fromOSPath, const char* toOSPath )
 {
-	if( idStr::Icmp( fromOSPath, toOSPath ) == 0 )
-	{
-		// same file can happen during build games
-		return;
-	}
 
 	idFile* src = OpenExplicitFileRead( fromOSPath );
 	if( src == NULL )
@@ -1558,13 +1551,19 @@ void idFileSystemLocal::CopyFile( const char* fromOSPath, const char* toOSPath )
 		return;
 	}
 
+	if( idStr::Icmp( fromOSPath, toOSPath ) == 0 )
+	{
+		// same file can happen during build games
+		return;
+	}
+
 	CopyFile( src, toOSPath );
 	delete src;
 
 	if( strstr( fromOSPath, ".wav" ) != NULL )
 	{
-		idStr newFromPath = fromOSPath;
-		idStr newToPath = toOSPath;
+		idStrStatic< MAX_OSPATH > newFromPath = fromOSPath;
+		idStrStatic< MAX_OSPATH > newToPath = toOSPath;
 
 		idLib::Printf( "Copying console samples for %s\n", newFromPath.c_str() );
 		newFromPath.SetFileExtension( "xma" );
@@ -2259,7 +2258,7 @@ Does not clear the list first so this can be used to progressively build a file 
 When 'sort' is true only the new files added to the list are sorted.
 ===============
 */
-int idFileSystemLocal::GetFileList( const char* relativePath, const idStrList& extensions, idStrList& list, idHashIndex& hashIndex, bool fullRelativePath, const char* gamedir )
+int idFileSystemLocal::GetFileList( const char* relativePath, const idStrList& extensions, idStrList& list, idHashIndex& hashIndex, bool fullRelativePath, bool allowSubdirsForResourcePaks, const char* gamedir )
 {
 	if( !IsInitialized() )
 	{
@@ -2282,7 +2281,7 @@ int idFileSystemLocal::GetFileList( const char* relativePath, const idStrList& e
 		pathLength++;	// for the trailing '/'
 	}
 
-	idStr strippedName;
+	idStrStatic< MAX_OSPATH > strippedName;
 	if( resourceFiles.Num() > 0 )
 	{
 		int idx = resourceFiles.Num() - 1;
@@ -2305,23 +2304,29 @@ int idFileSystemLocal::GetFileList( const char* relativePath, const idStrList& e
 				}
 
 				// ensure we have a path, and not just a filename containing the path
-				if( rt.filename[ pathLength ] == '\0' || rt.filename[pathLength - 1] != '/' )
+				if( rt.filename[ pathLength ] == '\0' || ( pathLength && rt.filename[pathLength - 1] != '/' ) )
 				{
 					continue;
 				}
 
 				// make sure the file is not in a subdirectory
 				int j = pathLength;
-				for( ; rt.filename[j + 1] != '\0'; j++ )
+
+				// RB: expose this to an option for exportModelsToTrenchBroom
+				// so it doesn't break loading of sounds
+				if( !allowSubdirsForResourcePaks )
 				{
-					if( rt.filename[ j ] == '/' )
+					for( ; rt.filename[j + 1] != '\0'; j++ )
 					{
-						break;
+						if( rt.filename[ j ] == '/' )
+						{
+							break;
+						}
 					}
-				}
-				if( rt.filename[ j + 1 ] )
-				{
-					continue;
+					if( rt.filename[ j + 1 ] )
+					{
+						continue;
+					}
 				}
 
 				// check for extension match
@@ -2420,7 +2425,7 @@ idFileList* idFileSystemLocal::ListFiles( const char* relativePath, const char* 
 
 	GetExtensionList( extension, extensionList );
 
-	GetFileList( relativePath, extensionList, fileList->list, hashIndex, fullRelativePath, gamedir );
+	GetFileList( relativePath, extensionList, fileList->list, hashIndex, fullRelativePath, false, gamedir );
 
 	if( sort )
 	{
@@ -2435,7 +2440,7 @@ idFileList* idFileSystemLocal::ListFiles( const char* relativePath, const char* 
 idFileSystemLocal::GetFileListTree
 ===============
 */
-int idFileSystemLocal::GetFileListTree( const char* relativePath, const idStrList& extensions, idStrList& list, idHashIndex& hashIndex, const char* gamedir )
+int idFileSystemLocal::GetFileListTree( const char* relativePath, const idStrList& extensions, idStrList& list, idHashIndex& hashIndex, bool allowSubdirsForResourcePaks, const char* gamedir )
 {
 	int i;
 	idStrList slash, folders( 128 );
@@ -2443,7 +2448,7 @@ int idFileSystemLocal::GetFileListTree( const char* relativePath, const idStrLis
 
 	// recurse through the subdirectories
 	slash.Append( "/" );
-	GetFileList( relativePath, slash, folders, folderHashIndex, true, gamedir );
+	GetFileList( relativePath, slash, folders, folderHashIndex, true, allowSubdirsForResourcePaks, gamedir );
 	for( i = 0; i < folders.Num(); i++ )
 	{
 		if( folders[i][0] == '.' )
@@ -2454,11 +2459,11 @@ int idFileSystemLocal::GetFileListTree( const char* relativePath, const idStrLis
 		{
 			continue;
 		}
-		GetFileListTree( folders[i], extensions, list, hashIndex, gamedir );
+		GetFileListTree( folders[i], extensions, list, hashIndex, allowSubdirsForResourcePaks, gamedir );
 	}
 
 	// list files in the current directory
-	GetFileList( relativePath, extensions, list, hashIndex, true, gamedir );
+	GetFileList( relativePath, extensions, list, hashIndex, true, allowSubdirsForResourcePaks, gamedir );
 
 	return list.Num();
 }
@@ -2468,7 +2473,7 @@ int idFileSystemLocal::GetFileListTree( const char* relativePath, const idStrLis
 idFileSystemLocal::ListFilesTree
 ===============
 */
-idFileList* idFileSystemLocal::ListFilesTree( const char* relativePath, const char* extension, bool sort, const char* gamedir )
+idFileList* idFileSystemLocal::ListFilesTree( const char* relativePath, const char* extension, bool sort,  bool allowSubdirsForResourcePaks, const char* gamedir )
 {
 	idHashIndex hashIndex( 4096, 4096 );
 	idStrList extensionList;
@@ -2479,7 +2484,7 @@ idFileList* idFileSystemLocal::ListFilesTree( const char* relativePath, const ch
 
 	GetExtensionList( extension, extensionList );
 
-	GetFileListTree( relativePath, extensionList, fileList->list, hashIndex, gamedir );
+	GetFileListTree( relativePath, extensionList, fileList->list, hashIndex, allowSubdirsForResourcePaks, gamedir );
 
 	if( sort )
 	{
@@ -2788,13 +2793,13 @@ void idFileSystemLocal::GenerateResourceCRCs_f( const idCmdArgs& args )
 {
 	idLib::Printf( "Generating CRCs for resource files...\n" );
 
-	std::auto_ptr<idFileList> baseResourceFileList( fileSystem->ListFiles( ".", ".resources" ) );
+	std::unique_ptr<idFileList> baseResourceFileList( fileSystem->ListFiles( ".", ".resources" ) );
 	if( baseResourceFileList.get() != NULL )
 	{
 		CreateCRCsForResourceFileList( *baseResourceFileList );
 	}
 
-	std::auto_ptr<idFileList> mapResourceFileList( fileSystem->ListFilesTree( "maps", ".resources" ) );
+	std::unique_ptr<idFileList> mapResourceFileList( fileSystem->ListFilesTree( "maps", ".resources" ) );
 	if( mapResourceFileList.get() != NULL )
 	{
 		CreateCRCsForResourceFileList( *mapResourceFileList );
@@ -2814,7 +2819,7 @@ void idFileSystemLocal::CreateCRCsForResourceFileList( const idFileList& list )
 	{
 		idLib::Printf( " Processing %s.\n", list.GetFile( fileIndex ) );
 
-		std::auto_ptr<idFile_Memory> currentFile( static_cast<idFile_Memory*>( fileSystem->OpenFileReadMemory( list.GetFile( fileIndex ) ) ) );
+		std::unique_ptr<idFile_Memory> currentFile( static_cast<idFile_Memory*>( fileSystem->OpenFileReadMemory( list.GetFile( fileIndex ) ) ) );
 
 		if( currentFile.get() == NULL )
 		{
@@ -2866,7 +2871,7 @@ void idFileSystemLocal::CreateCRCsForResourceFileList( const idFileList& list )
 		// Write the .crc file corresponding to the .resources file.
 		idStr crcFilename = list.GetFile( fileIndex );
 		crcFilename.SetFileExtension( ".crc" );
-		std::auto_ptr<idFile> crcOutputFile( fileSystem->OpenFileWrite( crcFilename, "fs_basepath" ) );
+		std::unique_ptr<idFile> crcOutputFile( fileSystem->OpenFileWrite( crcFilename, "fs_basepath" ) );
 		if( crcOutputFile.get() == NULL )
 		{
 			// RB: fixed potential crash because of "cannot pass objects of non-trivially-copyable type 'class idStr' through '...'"
@@ -2900,7 +2905,7 @@ int idFileSystemLocal::AddResourceFile( const char* resourceFileName )
 	}
 	// RB end
 
-	idStr resourceFile = va( "maps/%s", resourceFileName );
+	idStrStatic< MAX_OSPATH > resourceFile = va( "maps/%s", resourceFileName );
 	idResourceContainer* rc = new idResourceContainer();
 	if( rc->Init( resourceFile, resourceFiles.Num() ) )
 	{
@@ -3004,12 +3009,10 @@ void idFileSystemLocal::AddGameDirectory( const char* path, const char* dir )
 	search.path = path;
 	search.gamedir = dir;
 
-
 	// RB: add all maps/*.resources
 	idStr pakfile;
 	for( int i = 0; i < 2; i++ )
 	{
-
 		if( i == 1 )
 		{
 			pakfile = BuildOSPath( path, dir, "maps" );
@@ -3019,7 +3022,7 @@ void idFileSystemLocal::AddGameDirectory( const char* path, const char* dir )
 			pakfile = BuildOSPath( path, dir, "" );
 			pakfile[ pakfile.Length() - 1 ] = 0;	// strip the trailing slash
 		}
-
+#ifndef TYPEINFOPROJECT
 		idStrList pakfiles;
 		ListOSFiles( pakfile, ".resources", pakfiles );
 		pakfiles.SortWithTemplate( idSort_PathStr() );
@@ -3044,6 +3047,7 @@ void idFileSystemLocal::AddGameDirectory( const char* path, const char* dir )
 				}
 			}
 		}
+#endif
 	}
 	// RB end
 }
@@ -3263,7 +3267,7 @@ Returns false if the entry isn't found
 */
 bool idFileSystemLocal::GetResourceCacheEntry( const char* fileName, idResourceCacheEntry& rc )
 {
-	idStr canonical;
+	idStrStatic< MAX_OSPATH > canonical;
 	if( strstr( fileName, ":" ) != NULL )
 	{
 		// os path, convert to relative? scripts can pass in an OS path
@@ -3378,8 +3382,6 @@ separate file or a ZIP file.
 */
 idFile* idFileSystemLocal::OpenFileReadFlags( const char* relativePath, int searchFlags, bool allowCopyFiles, const char* gamedir )
 {
-	//common->Printf( "Gamedir = %s\n", gamedir );// Koz deleteme
-	//common->Printf( "RelPath = %s\n\n", relativePath3 );
 
 	if( !IsInitialized() )
 	{
@@ -3474,13 +3476,13 @@ idFile* idFileSystemLocal::OpenFileReadFlags( const char* relativePath, int sear
 
 				if( fs_buildResources.GetBool() )
 				{
-					idStr relativePath = OSPathToRelativePath( copypath );
+					idStrStatic< MAX_OSPATH > relativePath = OSPathToRelativePath( copypath );
 					relativePath.BackSlashesToSlashes();
 					relativePath.ToLower();
 
 					if( IsSoundSample( relativePath ) )
 					{
-						idStr samplePath = relativePath;
+						idStrStatic< MAX_OSPATH > samplePath = relativePath;
 						samplePath.SetFileExtension( "idwav" );
 						if( samplePath.Find( "generated/" ) == -1 )
 						{
@@ -3520,7 +3522,7 @@ idFile* idFileSystemLocal::OpenFileReadFlags( const char* relativePath, int sear
 								fileManifest.Append( relativePath );
 								continue;
 							}
-							idStr guiPath = relativePath;
+							idStrStatic< MAX_OSPATH > guiPath = relativePath;
 							guiPath.Replace( "guis/", va( "guis/%s/", lang ) );
 							fileManifest.Append( guiPath );
 						}

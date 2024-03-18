@@ -26,6 +26,8 @@ If you have questions concerning this license or the applicable additional terms
 ===========================================================================
 */
 
+// RB NOTE: DON'T MERGE THIS
+
 #include "precompiled.h"
 #pragma hdrstop
 

@@ -1628,7 +1628,6 @@ ForceFullScreen is used by the editor
 */
 void idConsoleLocal::Draw( bool forceFullScreen )
 {
-
 	Resize();
 
 	if( forceFullScreen )
@@ -1665,6 +1664,7 @@ void idConsoleLocal::Draw( bool forceFullScreen )
 	float lefty = LOCALSAFE_TOP;
 	float righty = LOCALSAFE_TOP;
 	float centery = LOCALSAFE_TOP;
+
 	if( com_showFPS.GetBool() )
 	{
 		righty = DrawFPS( righty );

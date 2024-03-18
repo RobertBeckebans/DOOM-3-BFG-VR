@@ -104,6 +104,8 @@ int64 com_engineHz_numerator = 100LL * 1000LL;
 int64 com_engineHz_denominator = 100LL * 60LL;
 
 // RB begin
+int com_editors = 0;
+
 #if defined(_WIN32)
 	HWND com_hwndMsg = NULL;
 #endif
@@ -267,11 +269,11 @@ void idCommonLocal::ParseCommandLine( int argc, const char* const* argv )
 	for( i = 0; i < argc; i++ )
 	{
 		// Koz fixme enable VR support here.
-		if( idStr::Icmp( argv[i], "-vr" ) == 0 )
+		if( idStr::Icmp( argv[ i ], "-vr" ) == 0 )
 		{
 			vr_enable.SetBool( true );
 		}
-		else if( idStr::Icmp( argv[i], "+connect_lobby" ) == 0 )
+		else if( idStr::Icmp( argv[ i ], "+connect_lobby" ) == 0 )
 		{
 			// Handle Steam bootable invites.
 
@@ -354,6 +356,23 @@ void idCommonLocal::StartupVariable( const char* match )
 	}
 }
 
+// DG: add doom3 tools
+/*
+=================
+idCommonLocal::InitTool
+=================
+*/
+void idCommonLocal::InitTool( const toolFlag_t tool, const idDict* dict, idEntity* entity )
+{
+#if 0
+	if( tool & EDITOR_LIGHT )
+	{
+		ImGuiTools::LightEditorInit( dict, entity );
+	}
+#endif
+}
+// DG end
+
 /*
 ==================
 idCommonLocal::AddStartupCommands
@@ -377,7 +396,6 @@ void idCommonLocal::AddStartupCommands()
 		// directly as tokenized so nothing gets screwed
 		cmdSystem->BufferCommandArgs( CMD_EXEC_APPEND, com_consoleLines[i] );
 	}
-
 }
 
 /*
@@ -446,10 +464,11 @@ void idCommonLocal::WriteConfiguration()
 		}
 	}
 	else
-		// Koz end
 	{
 		WriteConfigToFile( CONFIG_FILE );
 	}
+	// Koz end
+
 	// restore the developer cvar
 	com_developer.SetBool( developer );
 #endif
@@ -540,6 +559,7 @@ CONSOLE_COMMAND( printMemInfo, "prints memory debugging data", NULL )
 
 	fileSystem->CloseFile( f );
 }
+
 
 /*
 ==================
@@ -886,9 +906,6 @@ void idCommonLocal::RenderSplash()
 	const float adjustment = sysAspect / splashAspect;
 	const float barHeight = ( adjustment >= 1.0f ) ? 0.0f : ( 1.0f - adjustment ) * ( float )renderSystem->GetVirtualHeight() * 0.25f;
 	const float barWidth = ( adjustment <= 1.0f ) ? 0.0f : ( adjustment - 1.0f ) * ( float )renderSystem->GetVirtualWidth() * 0.25f;
-
-	//	Framebuffer::BindDefault();
-
 	if( barHeight > 0.0f )
 	{
 		renderSystem->SetColor( colorBlack );
@@ -908,7 +925,6 @@ void idCommonLocal::RenderSplash()
 	renderSystem->RenderCommandBuffers( cmd );
 
 }
-
 
 /*
 =================
@@ -931,8 +947,8 @@ void idCommonLocal::RenderBink( const char* path )
 	material->Parse( materialText.c_str(), materialText.Length(), false );
 	material->ResetCinematicTime( Sys_Milliseconds() );
 
-	// RB: FFmpeg might return the wrong play length so I changed the intro video to play max 30 seconds until finished
-	int cinematicLength = 30000; //material->CinematicLength();
+	// SRS - Restored original calculation after implementing idCinematicLocal::GetStartTime() and fixing animationLength in idCinematicLocal::InitFromBinkDecFile()
+	int cinematicLength = material->CinematicLength();
 	int	mouseEvents[MAX_MOUSE_EVENTS][2];
 
 	bool escapeEvent = false;
@@ -1293,7 +1309,6 @@ void idCommonLocal::Init( int argc, const char* const* argv, const char* cmdline
 		}
 #endif
 
-
 		cmdSystem->BufferCommandText( CMD_EXEC_APPEND, "exec autoexec.cfg\n" );
 
 		// Koz begin
@@ -1334,7 +1349,6 @@ void idCommonLocal::Init( int argc, const char* const* argv, const char* cmdline
 		renderSystem->InitOpenGL();
 
 		// Support up to 2 digits after the decimal point
-
 		com_engineHz_denominator = 100LL * com_engineHz.GetFloat();
 		com_engineHz_latched = com_engineHz.GetFloat();
 
@@ -1444,8 +1458,8 @@ void idCommonLocal::Init( int argc, const char* const* argv, const char* cmdline
 		AddStartupCommands();
 
 		// Koz moved static binds here to ensure all previous commands in the command buffer
-		//have been fully executed. Some of the .cfg files perform unbindall, which
-		//was wiping out these binds due to the way the commands queue.
+		// have been fully executed. Some of the .cfg files perform unbindall, which
+		// was wiping out these binds due to the way the commands queue.
 
 		// Carl talking should always be bound to _talk
 		cmdSystem->AppendCommandText( "bind TALK _talk\n" );
@@ -1535,10 +1549,10 @@ void idCommonLocal::Init( int argc, const char* const* argv, const char* cmdline
 
 
 		int legalStartTime = Sys_Milliseconds();
-
+// SRS - changed ifndef to ifdef since legalMinTime should apply to retail builds, not dev builds
+#if 1 //def ID_RETAIL
 		while( Sys_Milliseconds() - legalStartTime < legalMinTime )
 		{
-
 			if( game->isVR )
 			{
 				if( commonVr->hasHMD )
@@ -1555,7 +1569,7 @@ void idCommonLocal::Init( int argc, const char* const* argv, const char* cmdline
 			RenderSplash();
 			Sys_GenerateEvents();
 		};
-
+#endif
 		commonVr->HMDResetTrackingOriginOffset();
 
 		splashScreen = declManager->FindMaterial( "guis/lookforward" );
@@ -1566,7 +1580,6 @@ void idCommonLocal::Init( int argc, const char* const* argv, const char* cmdline
 		{
 			while( centered == 0 )
 			{
-
 				if( commonVr->hasHMD )
 				{
 					idLib::frameNumber++;
@@ -1753,16 +1766,22 @@ void idCommonLocal::Shutdown()
 	delete loadGUI;
 	loadGUI = NULL;
 
+	printf( "ImGuiHook::Destroy();\n" );
+	//TODO ImGuiHook::Destroy();
+
 	printf( "delete renderWorld;\n" );
-	delete renderWorld;
+	// SRS - Call FreeRenderWorld() vs. delete, otherwise worlds list not updated on shutdown
+	renderSystem->FreeRenderWorld( renderWorld );
 	renderWorld = NULL;
 
 	printf( "delete soundWorld;\n" );
-	delete soundWorld;
+	// SRS - Call FreeSoundWorld() vs. delete, otherwise soundWorlds list not updated and can segfault in soundSystem->Shutdown()
+	soundSystem->FreeSoundWorld( soundWorld );
 	soundWorld = NULL;
 
 	printf( "delete menuSoundWorld;\n" );
-	delete menuSoundWorld;
+	// SRS - Call FreeSoundWorld() vs. delete, otherwise soundWorlds list not updated and can segfault in soundSystem->Shutdown()
+	soundSystem->FreeSoundWorld( menuSoundWorld );
 	menuSoundWorld = NULL;
 
 	// shut down the session
@@ -1782,10 +1801,6 @@ void idCommonLocal::Shutdown()
 	printf( "uiManager->Shutdown();\n" );
 	uiManager->Shutdown();
 
-	// shut down the sound system
-	printf( "soundSystem->Shutdown();\n" );
-	soundSystem->Shutdown();
-
 	// shut down the user command input code
 	printf( "usercmdGen->Shutdown();\n" );
 	usercmdGen->Shutdown();
@@ -1795,8 +1810,15 @@ void idCommonLocal::Shutdown()
 	eventLoop->Shutdown();
 
 	// shutdown the decl manager
+	// SRS - Note this also shuts down all cinematic resources, including cinematic audio voices
 	printf( "declManager->Shutdown();\n" );
 	declManager->Shutdown();
+
+	// shut down the sound system
+	// SRS - Shut down sound system after decl manager so cinematic audio voices are destroyed first
+	// Important for XAudio2 where the mastering voice cannot be destroyed if any other voices exist
+	printf( "soundSystem->Shutdown();\n" );
+	soundSystem->Shutdown();
 
 	// shut down the renderSystem
 	printf( "renderSystem->Shutdown();\n" );
@@ -2153,6 +2175,11 @@ bool idCommonLocal::ProcessEvent( const sysEvent_t* event )
 		return true;
 	}
 
+	//if( ImGuiHook::InjectSysEvent( event ) )
+	//{
+	//	return true;
+	//}
+
 	// if we aren't in a game, force the console to take it
 	if( !mapSpawned )
 	{
@@ -2245,7 +2272,6 @@ void idCommonLocal::PerformGameSwitch()
 	else if( idealCurrentGame == DOOM3_BFG )
 	{
 		DoomLib::Interface.Shutdown();
-
 		com_engineHz_denominator = 100LL * com_engineHz.GetFloat();
 		com_engineHz_latched = com_engineHz.GetFloat();
 

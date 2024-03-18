@@ -30,7 +30,7 @@ If you have questions concerning this license or the applicable additional terms
 #pragma hdrstop
 #include "precompiled.h"
 
-#include "tr_local.h"
+#include "RenderCommon.h"
 #include "simplex.h"	// line font definition
 
 idCVar r_showCenterOfProjection( "r_showCenterOfProjection", "0", CVAR_RENDERER | CVAR_BOOL, "Draw a cross to show the center of projection" );
@@ -918,6 +918,11 @@ static void RB_ShowTris( drawSurf_t** drawSurfs, int numDrawSurfs )
 	}
 }
 
+void idRenderSystemLocal::OnFrame()
+{
+	// TODO
+}
+
 /*
 =====================
 RB_ShowSurfaceInfo
@@ -964,6 +969,8 @@ static void RB_ShowSurfaceInfo( drawSurf_t** drawSurfs, int numDrawSurfs )
 	tr.primaryWorld->DrawText( mt.material->GetName(), mt.point,
 							   0.35f, colorBlue, tr.primaryView->renderView.viewaxis );
 }
+
+
 
 /*
 =====================

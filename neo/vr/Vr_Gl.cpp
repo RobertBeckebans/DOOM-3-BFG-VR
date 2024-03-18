@@ -4,7 +4,7 @@
 
 #include "d3xp/Game_local.h"
 #include "Vr.h"
-#include "renderer/tr_local.h"
+#include "renderer/RenderCommon.h"
 #ifdef _WIN32
 	#include "sys/win32/win_local.h"
 #else

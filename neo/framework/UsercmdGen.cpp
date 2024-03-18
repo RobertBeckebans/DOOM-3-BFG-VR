@@ -143,8 +143,8 @@ userCmdString_t	userCmdStrings[] =
 	{ "_zoom",			UB_ZOOM },
 	{ "_showScores",	UB_SHOWSCORES },
 	{ "_use",			UB_USE },
-	{ "_talk",		UB_TALK },
-	{ "_teleport", UB_TELEPORT },
+	{ "_talk",			UB_TALK },
+	{ "_teleport",		UB_TELEPORT },
 
 	{ "_impulse0",		UB_IMPULSE0 },
 	{ "_impulse1",		UB_IMPULSE1 },
@@ -180,21 +180,21 @@ userCmdString_t	userCmdStrings[] =
 	{ "_impulse31",		UB_IMPULSE31 },
 
 	// Koz begin
-	{ "_impulse32", UB_IMPULSE32 }, // new impulse for HMD/Body orientation reset
-	{ "_impulse33", UB_IMPULSE33 }, // new impulse for lasersight toggle
-	{ "_impulse34", UB_IMPULSE34 }, // new impulse for comfort turn right
-	{ "_impulse35", UB_IMPULSE35 }, // new impulse for comfort turn left
-	{ "_impulse36", UB_IMPULSE36 }, // new impulse for hud toggle;
-	{ "_impulse37", UB_IMPULSE37 }, // new impulse for headingbeam toggle;
-	{ "_impulse38", UB_IMPULSE38 }, // new impulse for walk in place
-	{ "_impulse39", UB_IMPULSE39 }, // new impulse for next flashlight mode;
-	{ "_impulse40", UB_IMPULSE40 }, // new impulse for system menu;
-	{ "_impulse41", UB_IMPULSE41 }, // new impulse for click to move;
+	{ "_impulse32",		UB_IMPULSE32 }, // new impulse for HMD/Body orientation reset
+	{ "_impulse33",		UB_IMPULSE33 }, // new impulse for lasersight toggle
+	{ "_impulse34",		UB_IMPULSE34 }, // new impulse for comfort turn right
+	{ "_impulse35",		UB_IMPULSE35 }, // new impulse for comfort turn left
+	{ "_impulse36",		UB_IMPULSE36 }, // new impulse for hud toggle;
+	{ "_impulse37",		UB_IMPULSE37 }, // new impulse for headingbeam toggle;
+	{ "_impulse38",		UB_IMPULSE38 }, // new impulse for walk in place
+	{ "_impulse39",		UB_IMPULSE39 }, // new impulse for next flashlight mode;
+	{ "_impulse40",		UB_IMPULSE40 }, // new impulse for system menu;
+	{ "_impulse41",		UB_IMPULSE41 }, // new impulse for click to move;
 	// Koz end
-	{ "_soulcube", UB_IMPULSE_SOULCUBE }, // new impulse for Soul Cube
-	{ "_artifact", UB_IMPULSE_ARTIFACT }, // new impulse for The Artifact
-	{ "_pause", UB_IMPULSE_PAUSE }, // new impulse for Computer, Freeze Program
-	{ "_resume", UB_IMPULSE_RESUME }, // new impulse for Computer, Resume Program
+	{ "_soulcube",		UB_IMPULSE_SOULCUBE }, // new impulse for Soul Cube
+	{ "_artifact",		UB_IMPULSE_ARTIFACT }, // new impulse for The Artifact
+	{ "_pause",			UB_IMPULSE_PAUSE }, // new impulse for Computer, Freeze Program
+	{ "_resume",		UB_IMPULSE_RESUME }, // new impulse for Computer, Resume Program
 
 	{ NULL,				UB_NONE },
 };
@@ -524,7 +524,6 @@ Sets the usercmd_t based on key states
 */
 void idUsercmdGenLocal::KeyMove()
 {
-
 	int forward = 0;
 	int side = 0;
 
@@ -536,7 +535,6 @@ void idUsercmdGenLocal::KeyMove()
 
 	cmd.forwardmove += idMath::ClampChar( forward );
 	cmd.rightmove += idMath::ClampChar( side );
-
 }
 
 /*
@@ -711,7 +709,6 @@ void idUsercmdGenLocal::HandleJoystickAxis( int keyNum, float unclampedValue, fl
 	}
 
 	int action = idKeyInput::GetUsercmdAction( keyNum );
-
 	if( action >= UB_ATTACK )
 	{
 		Key( keyNum, pressed );
@@ -878,9 +875,6 @@ idVec2 JoypadFunction(
 
 	}
 
-
-
-
 	if( range <= threshold )
 	{
 		return idVec2( 0.0f, 0.0f );
@@ -949,8 +943,8 @@ idVec2 JoypadFunction(
 	}
 	else  	// FUNC_LINEAR
 	{
-		float power = joy_powerScale.GetFloat();
 		//accelerated = rescaledLen; this was only line in the original code
+		float power = joy_powerScale.GetFloat();
 		accelerated = idMath::Pow( rescaledLen, power );
 	}
 
@@ -1947,7 +1941,6 @@ void idUsercmdGenLocal::EvaluateVRMoveMode()
 		//commonVr->bodyMoveAng = commonVr->poseHmdAngles.yaw; //Npi don't change bodyAng without cmd
 		commonVr->bodyYawOffset = commonVr->poseHmdAngles.yaw;
 	}
-
 }
 
 
@@ -2040,9 +2033,9 @@ void idUsercmdGenLocal::MakeCurrent()
 		}
 		else
 		{
-			//in case the player has jumped on something moving in third person,
-			//put a timeout here so the view will snap back if the controls haven't been touched
-			//in a bit.
+			// in case the player has jumped on something moving in third person,
+			// put a timeout here so the view will snap back if the controls haven't been touched
+			// in a bit.
 			if( commonVr->thirdPersonMovement == true && ( Sys_Milliseconds() - thirdPersonTime ) > 300 )
 			{
 				commonVr->thirdPersonMovement = false;
@@ -2194,7 +2187,8 @@ void idUsercmdGenLocal::Key( int keyNum, bool down )
 		buttonState[ action ]++;
 		if( !Inhibited() )
 		{
-			if( action >= UB_IMPULSE0 && action <= UB_MAX_BUTTONS )  // Koz was UB_IMPULSE31, let it scan through whole list.
+			// Koz was UB_IMPULSE31, let it scan through whole list.
+			if( action >= UB_IMPULSE0 && action <= UB_MAX_BUTTONS )
 			{
 				cmd.impulse = action - UB_IMPULSE0;
 				cmd.impulseSequence++;
@@ -2262,6 +2256,9 @@ void idUsercmdGenLocal::Mouse()
 				break;
 			case M_DELTAZ:	// mouse wheel, may have multiple clicks
 			{
+				// DG: this seems like a good place to inject mousewheel deltas into ImGui
+				//ImGuiHook::InjectMouseWheel( value );
+
 				int key = value < 0 ? K_MWHEELDOWN : K_MWHEELUP;
 				value = abs( value );
 				while( value-- > 0 )

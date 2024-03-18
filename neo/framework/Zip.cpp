@@ -287,7 +287,7 @@ bool idZipBuilder::CreateZipFile( bool appendFiles )
 	}
 
 	// enumerate the files to zip up in the source folder
-	idStr relPath;
+	idStrStatic< MAX_OSPATH > relPath;
 	relPath =
 		fileSystem->OSPathToRelativePath( sourceFolderName );
 	idFileList* files = fileSystem->ListFilesTree( relPath, "*.*" );
@@ -339,7 +339,7 @@ bool idZipBuilder::CreateZipFile( bool appendFiles )
 		filenameInZip.Strip( relPath );
 		filenameInZip.StripLeading( "/" );
 
-		idStr ospath;
+		idStrStatic< MAX_OSPATH > ospath;
 		ospath = fileSystem->RelativePathToOSPath( filename );
 		GetFileTime( ospath, &zi.dosDate );
 

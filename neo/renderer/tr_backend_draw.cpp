@@ -31,7 +31,7 @@ If you have questions concerning this license or the applicable additional terms
 #pragma hdrstop
 #include "precompiled.h"
 
-#include "tr_local.h"
+#include "RenderCommon.h"
 #include "Framebuffer.h"
 
 #include "vr/Vr.h" // Koz
@@ -1390,7 +1390,7 @@ static void RB_RenderInteractions( const drawSurf_t* surfList, const viewLight_t
 			}
 			uint64 end = Sys_Microseconds();
 
-			backEnd.pc.shadowMicroSec += end - start;
+			backEnd.pc.cpuShadowMicroSec += end - start;
 		}
 
 		const idMaterial* surfaceShader = walk->material;
@@ -1952,7 +1952,7 @@ static void RB_StencilShadowPass( const drawSurf_t* drawSurfs, const viewLight_t
 			}
 			uint64 end = Sys_Microseconds();
 
-			backEnd.pc.shadowMicroSec += end - start;
+			backEnd.pc.cpuShadowMicroSec += end - start;
 		}
 
 		if( drawSurf->numIndexes == 0 )
@@ -2776,7 +2776,7 @@ static void RB_ShadowMapPass( const drawSurf_t* drawSurfs, const viewLight_t* vL
 			}
 			uint64 end = Sys_Microseconds();
 
-			backEnd.pc.shadowMicroSec += end - start;
+			backEnd.pc.cpuShadowMicroSec += end - start;
 		}
 #endif
 

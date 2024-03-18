@@ -29,7 +29,7 @@ If you have questions concerning this license or the applicable additional terms
 #pragma hdrstop
 #include "precompiled.h"
 
-#include "../tr_local.h"
+#include "../RenderCommon.h"
 #include "../../framework/Common_local.h"
 #include "d3xp/Game_local.h"
 
@@ -528,7 +528,7 @@ void RB_StereoRenderExecuteBackEndCommands( const emptyCommand_t* const allCmds 
 
 	// stop rendering on this thread
 	uint64 backEndFinishTime = Sys_Microseconds();
-	backEnd.pc.totalMicroSec = backEndFinishTime - backEndStartTime;
+	backEnd.pc.cpuTotalMicroSec = backEndFinishTime - backEndStartTime;
 }
 
 /*
@@ -620,7 +620,7 @@ void RB_ExecuteBackEndCommands( const emptyCommand_t* cmds )
 
 	// stop rendering on this thread
 	uint64 backEndFinishTime = Sys_Microseconds();
-	backEnd.pc.totalMicroSec = backEndFinishTime - backEndStartTime;
+	backEnd.pc.cpuTotalMicroSec = backEndFinishTime - backEndStartTime;
 
 	if( r_debugRenderToTexture.GetInteger() == 1 )
 	{

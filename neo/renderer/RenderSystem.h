@@ -88,7 +88,8 @@ enum graphicsVendor_t
 {
 	VENDOR_NVIDIA,
 	VENDOR_AMD,
-	VENDOR_INTEL
+	VENDOR_INTEL,
+	VENDOR_APPLE                            // SRS - Added support for Apple GPUs
 };
 
 // RB: similar to Q3A - allow separate codepaths between OpenGL 3.x, OpenGL ES versions
@@ -100,13 +101,81 @@ enum graphicsDriverType_t
 	GLDRV_OPENGL_ES2,
 	GLDRV_OPENGL_ES3,
 	GLDRV_OPENGL_MESA,						// fear this, it is probably the best to disable GPU skinning and run shaders in GLSL ES 1.0
+	GLDRV_OPENGL_MESA_CORE_PROFILE,
+
+	GLDRV_VULKAN
 };
 // RB end
+
+
+/*
+** performanceCounters_t
+*/
+struct performanceCounters_t
+{
+	int		c_box_cull_in;
+	int		c_box_cull_out;
+	int		c_createInteractions;	// number of calls to idInteraction::CreateInteraction
+	int		c_createShadowVolumes;
+	int		c_generateMd5;
+	int		c_entityDefCallbacks;
+	int		c_alloc;			// counts for R_StaticAllc/R_StaticFree
+	int		c_free;
+	int		c_visibleViewEntities;
+	int		c_shadowViewEntities;
+	int		c_viewLights;
+	int		c_numViews;			// number of total views rendered
+	int		c_deformedSurfaces;	// idMD5Mesh::GenerateSurface
+	int		c_deformedVerts;	// idMD5Mesh::GenerateSurface
+	int		c_deformedIndexes;	// idMD5Mesh::GenerateSurface
+	int		c_tangentIndexes;	// R_DeriveTangents()
+	int		c_entityUpdates;
+	int		c_lightUpdates;
+	int		c_entityReferences;
+	int		c_lightReferences;
+	int		c_guiSurfs;
+	int		frontEndMicroSec;	// sum of time in all RE_RenderScene's in a frame
+};
+
+// CPU & GPU counters and timers
+struct backEndCounters_t
+{
+	int		c_surfaces;
+	int		c_shaders;
+
+	int		c_drawElements;
+	int		c_drawIndexes;
+
+	int		c_shadowElements;
+	int		c_shadowIndexes;
+
+	int		c_copyFrameBuffer;
+
+	float	c_overDraw;
+
+	uint64	cpuTotalMicroSec;		// total microseconds for backend run
+	uint64	cpuShadowMicroSec;
+
+#if 1
+	uint64	gpuDepthMicroSec;
+	uint64	gpuScreenSpaceAmbientOcclusionMicroSec;
+	uint64	gpuScreenSpaceReflectionsMicroSec;
+	uint64	gpuAmbientPassMicroSec;
+	uint64	gpuInteractionsMicroSec;
+	uint64	gpuShaderPassMicroSec;
+	uint64	gpuPostProcessingMicroSec;
+	uint64	gpuMicroSec;
+#endif
+};
+
 
 // Contains variables specific to the OpenGL configuration being run right now.
 // These are constant once the OpenGL subsystem is initialized.
 struct glconfig_t
 {
+	graphicsVendor_t	vendor;
+	graphicsDriverType_t driverType;
+
 	const char* 		renderer_string;
 	const char* 		vendor_string;
 	const char* 		version_string;
@@ -115,10 +184,6 @@ struct glconfig_t
 	const char* 		shading_language_string;
 
 	float				glVersion;				// atof( version_string )
-	graphicsVendor_t	vendor;
-	// RB begin
-	graphicsDriverType_t driverType;
-	// RB end
 
 	int					maxTextureSize;			// queried from GL
 	int					maxTextureCoords;
@@ -185,7 +250,7 @@ struct glconfig_t
 	float				pixelAspect;
 
 	// RB begin
-#if !defined(__ANDROID__)
+#if !defined(__ANDROID__) && !defined(USE_VULKAN)
 	GLuint				global_vao;
 #endif
 	// RB end
@@ -241,6 +306,7 @@ public:
 	// Koz begin
 	virtual int				GetNativeWidth() const = 0;
 	virtual int				GetNativeHeight() const = 0;
+	virtual void			SetStereoScopicEye( int eye ) = 0;
 	// Koz end
 
 	// return w/h of a single pixel. This will be 1.0 for normal cases.
@@ -367,6 +433,8 @@ public:
 
 	// consoles switch stereo 3D eye views each 60 hz frame
 	virtual int				GetFrameCount() const = 0;
+
+	virtual void			OnFrame() = 0;
 };
 
 extern idRenderSystem* 			renderSystem;

@@ -29,7 +29,7 @@ If you have questions concerning this license or the applicable additional terms
 #pragma hdrstop
 
 #include "renderer/AutoRender.h"
-#include "tr_local.h"
+#include "RenderCommon.h"
 #include "vr/Vr.h"
 #ifdef _WIN32
 	#include "sys\win32\win_local.h"

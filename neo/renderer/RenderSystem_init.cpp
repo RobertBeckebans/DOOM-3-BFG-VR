@@ -30,7 +30,7 @@ If you have questions concerning this license or the applicable additional terms
 #pragma hdrstop
 #include "precompiled.h"
 
-#include "tr_local.h"
+#include "RenderCommon.h"
 #include "DXT/DXTCodec.h" // Carl
 
 // RB begin
@@ -3249,6 +3249,11 @@ idRenderSystemLocal::GetNativeHeight
 int idRenderSystemLocal::GetNativeHeight() const
 {
 	return glConfig.nativeScreenHeight;
+}
+
+void idRenderSystemLocal::SetStereoScopicEye( int viewEyeBuffer )
+{
+	tr.guiModel->SetEye( viewEyeBuffer );
 }
 
 /*

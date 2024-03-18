@@ -31,8 +31,7 @@ If you have questions concerning this license or the applicable additional terms
 #pragma hdrstop
 
 #include "Common_local.h"
-//#include "../renderer/Image.h" // now I did it!
-//#include "../renderer/ImageOpts.h"
+#include "../renderer/Image.h"
 
 // RB begin
 #if defined(USE_DOOMCLASSIC)
@@ -43,8 +42,8 @@ If you have questions concerning this license or the applicable additional terms
 
 // Koz begin
 #include "vr/Vr.h"
-#include "renderer/tr_local.h"
-extern idRenderSystemLocal tr;
+//#include "renderer/RenderCommon.h"
+//extern idRenderSystemLocal tr;
 // Koz end
 
 /*
@@ -95,12 +94,8 @@ Run in a background thread for performance, but can also
 be called directly in the foreground thread for comparison.
 ===============
 */
-
-
 int idGameThread::Run()
 {
-	//if ( game->isVR ) commonVr->FrameStart();
-
 	commonLocal.frameTiming.startGameTime = Sys_Microseconds();
 
 	// debugging tool to test frame dropping behavior
@@ -190,9 +185,6 @@ idGameThread::RunGameAndDraw
 */
 gameReturn_t idGameThread::RunGameAndDraw( int numGameFrames_, idUserCmdMgr& userCmdMgr_, bool isClient_, int startGameFrame )
 {
-
-	//if ( game->isVR ) commonVr->FrameStart();
-
 	// this should always immediately return
 	this->WaitForThread();
 
@@ -267,7 +259,56 @@ void idCommonLocal::Draw()
 		Sys_Sleep( com_sleepDraw.GetInteger() );
 	}
 
-	if( loadGUI != NULL )
+	if( loadPacifierBinarizeActive )
+	{
+		// foresthale 2014-05-30: when binarizing an asset we show a special
+		// overlay indicating progress
+		renderSystem->SetColor( colorBlack );
+		renderSystem->DrawStretchPic( 0, 0, renderSystem->GetVirtualWidth(), renderSystem->GetVirtualHeight(), 0, 0, 1, 1, whiteMaterial );
+
+		// render the loading gui (idSWF actually) if it is loaded
+		// (we want to see progress of the loading gui binarize too)
+		if( loadGUI != NULL )
+		{
+			loadGUI->Render( renderSystem, Sys_Milliseconds() );
+		}
+
+		// update our progress estimates
+		int time = Sys_Milliseconds();
+		if( loadPacifierBinarizeProgress > 0.0f )
+		{
+			loadPacifierBinarizeTimeLeft = ( 1.0 - loadPacifierBinarizeProgress ) * ( time - loadPacifierBinarizeStartTime ) * 0.001f / loadPacifierBinarizeProgress;
+		}
+		else
+		{
+			loadPacifierBinarizeTimeLeft = -1.0f;
+		}
+
+		// prepare our strings
+		const char* text;
+		if( loadPacifierBinarizeTimeLeft >= 99.5f )
+		{
+			text = va( "Binarizing %3.0f%% ETA %2.0f minutes", loadPacifierBinarizeProgress * 100.0f, loadPacifierBinarizeTimeLeft / 60.0f );
+		}
+		else if( loadPacifierBinarizeTimeLeft )
+		{
+			text = va( "Binarizing %3.0f%% ETA %2.0f seconds", loadPacifierBinarizeProgress * 100.0f, loadPacifierBinarizeTimeLeft );
+		}
+		else
+		{
+			text = va( "Binarizing %3.0f%%", loadPacifierBinarizeProgress * 100.0f );
+		}
+
+		// draw our basic overlay
+		renderSystem->SetColor( idVec4( 0.0f, 0.0f, 0.5f, 1.0f ) );
+		renderSystem->DrawStretchPic( 0, renderSystem->GetVirtualHeight() - 48, renderSystem->GetVirtualWidth(), 48, 0, 0, 1, 1, whiteMaterial );
+		renderSystem->SetColor( idVec4( 0.0f, 0.5f, 0.8f, 1.0f ) );
+		renderSystem->DrawStretchPic( 0, renderSystem->GetVirtualHeight() - 48, loadPacifierBinarizeProgress * renderSystem->GetVirtualWidth(), 32, 0, 0, 1, 1, whiteMaterial );
+		renderSystem->DrawSmallStringExt( 0, renderSystem->GetVirtualHeight() - 48, loadPacifierBinarizeFilename.c_str(), idVec4( 1.0f, 1.0f, 1.0f, 1.0f ), true );
+		renderSystem->DrawSmallStringExt( 0, renderSystem->GetVirtualHeight() - 32, va( "%s %d/%d lvls", loadPacifierBinarizeInfo.c_str(), loadPacifierBinarizeMiplevel, loadPacifierBinarizeMiplevelTotal ), idVec4( 1.0f, 1.0f, 1.0f, 1.0f ), true );
+		renderSystem->DrawSmallStringExt( 0, renderSystem->GetVirtualHeight() - 16, text, idVec4( 1.0f, 1.0f, 1.0f, 1.0f ), true );
+	}
+	else if( loadGUI != NULL )
 	{
 		loadGUI->Render( renderSystem, Sys_Milliseconds() );
 	}
@@ -310,7 +351,7 @@ void idCommonLocal::Draw()
 		//commented out, need to test all this crap again.
 		if( commonVr->PDAforced || commonVr->PDAforcetoggle )  //&& !commonVr->playerDead) // Koz fixme do we only want to use the PDA model in VR?
 		{
-			tr.guiModel->SetEye( 0 );// Koz set eye to 0 to render guimodel to both eyes. ( -1 left, 1 right )
+			renderSystem->SetStereoScopicEye( 0 );// Koz set eye to 0 to render guimodel to both eyes. ( -1 left, 1 right )
 			game->Shell_Render(); // Koz render the menu
 			Dialog().Render( false );
 			console->Draw( false );
@@ -328,7 +369,8 @@ void idCommonLocal::Draw()
 		// Koz begin
 		if( ( !game->isVR || commonVr->playerDead ) || ( !commonVr->PDAforced && !commonVr->PDAforcetoggle ) )
 		{
-			game->Shell_Render(); // Koz render any menus outside of game ( main menu etc )
+			// Koz render any menus outside of game ( main menu etc )
+			game->Shell_Render();
 		}
 		// Koz end
 
@@ -426,18 +468,19 @@ void idCommonLocal::UpdateScreen( bool captureToImage, bool releaseMouse )
 	// build all the draw commands without running a new game tic
 	Draw();
 
+	// foresthale 2014-03-01: note: the only place that has captureToImage=true is idAutoRender::StartBackgroundAutoSwaps
 	if( captureToImage )
 	{
 		renderSystem->CaptureRenderToImage( "_currentRender", false );
 	}
 
-
-
 	// this should exit right after vsync, with the GPU idle and ready to draw
 	const emptyCommand_t* cmd = renderSystem->SwapCommandBuffers( &time_frontend, &time_backend, &time_shadows, &time_gpu );
 
 	// get the GPU busy with new commands
+	frameTiming.startRenderTime = Sys_Microseconds();   // SRS - Added frame timing for out-of-sequence updates (e.g. used in timedemo "twice" mode)
 	renderSystem->RenderCommandBuffers( cmd );
+	frameTiming.finishRenderTime = Sys_Microseconds();  // SRS - Added frame timing for out-of-sequence updates (e.g. used in timedemo "twice" mode)
 
 	if( game->isVR )
 	{
@@ -521,12 +564,9 @@ idCommonLocal::Frame
 */
 void idCommonLocal::Frame()
 {
-
-
 	try
 	{
 		SCOPED_PROFILE_EVENT( "Common::Frame" );
-
 
 		// This is the only place this is incremented
 		idLib::frameNumber++;
@@ -560,6 +600,11 @@ void idCommonLocal::Frame()
 
 		eventLoop->RunEventLoop();
 
+		renderSystem->OnFrame();
+
+		// DG: prepare new ImGui frame - I guess this is a good place, as all new events should be available?
+		//ImGuiHook::NewFrame();
+
 		// Activate the shell if it's been requested
 		if( showShellRequested && game )
 		{
@@ -574,10 +619,10 @@ void idCommonLocal::Frame()
 		// RB begin
 #if defined(USE_DOOMCLASSIC)
 		if( com_pause.GetInteger() || console->Active() || Dialog().IsDialogActive() || session->IsSystemUIShowing()
-				|| ( game && game->InhibitControls() && !IsPlayingDoomClassic() ) )
+				|| ( game && game->InhibitControls() && !IsPlayingDoomClassic() ) ) //|| ImGuiTools::ReleaseMouseForTools() )
 #else
 		if( com_pause.GetInteger() || console->Active() || Dialog().IsDialogActive() || session->IsSystemUIShowing()
-				|| ( game && game->InhibitControls() ) )
+				|| ( game && game->InhibitControls() ) ||  ImGuiTools::ReleaseMouseForTools() )
 #endif
 			// RB end, DG end
 		{
@@ -597,13 +642,11 @@ void idCommonLocal::Frame()
 
 		// RB begin
 #if defined(USE_DOOMCLASSIC)
-		bool pauseGame = ( !mapSpawned
-						   || ( !IsMultiplayer()
-								&& ( Dialog().IsDialogPausing() || session->IsSystemUIShowing()
-									 || ( game && game->Shell_IsActive() ) || com_pause.GetInteger() ) ) )
-						 && !IsPlayingDoomClassic();
-
-
+		const bool pauseGame = ( !mapSpawned
+								 || ( !IsMultiplayer()
+									  && ( Dialog().IsDialogPausing() || session->IsSystemUIShowing()
+										   || ( game && game->Shell_IsActive() ) || com_pause.GetInteger() ) ) )
+							   && !IsPlayingDoomClassic();
 #else
 		const bool pauseGame = ( !mapSpawned
 								 || ( !IsMultiplayer()
@@ -637,7 +680,9 @@ void idCommonLocal::Frame()
 		// This may block if the GPU isn't finished renderng the previous frame.
 		frameTiming.startSyncTime = Sys_Microseconds();
 		const emptyCommand_t* renderCommands = NULL;
-		if( com_smp.GetBool() )
+
+		// foresthale 2014-05-12: also check com_editors as many of them are not particularly thread-safe (editLights for example)
+		if( com_smp.GetBool() && com_editors == 0 )
 		{
 			renderCommands = renderSystem->SwapCommandBuffers( &time_frontend, &time_backend, &time_shadows, &time_gpu );
 		}
@@ -647,12 +692,7 @@ void idCommonLocal::Frame()
 			// input latency
 			renderSystem->SwapCommandBuffers_FinishRendering( &time_frontend, &time_backend, &time_shadows, &time_gpu );
 		}
-
-
-
 		frameTiming.finishSyncTime = Sys_Microseconds();
-
-
 
 		//--------------------------------------------
 		// Determine how many game tics we are going to run,
@@ -781,7 +821,6 @@ void idCommonLocal::Frame()
 				break;
 			}
 
-
 			// debug cvar to force multiple game tics
 			if( com_fixedTic.GetInteger() > 0 && timescale.GetFloat() == 1.0f ) // Carl: Don't fix tics if we're in slow motion mode
 			{
@@ -859,6 +898,12 @@ void idCommonLocal::Frame()
 			// we don't have vsync on, or the monitor is running at 120hz while
 			// com_engineHz is 60, so sleep a bit and check again
 			Sys_Sleep( 0 );
+		}
+
+		// jpcy: playDemo uses the game frame wait logic, but shouldn't run any game frames
+		if( readDemo && !timeDemo )
+		{
+			numGameFrames = 0;
 		}
 
 		//--------------------------------------------
@@ -969,7 +1014,8 @@ void idCommonLocal::Frame()
 		// RB begin
 #if defined(USE_DOOMCLASSIC)
 		// If we're in Doom or Doom 2, run tics and upload the new texture.
-		if( ( GetCurrentGame() == DOOM_CLASSIC || GetCurrentGame() == DOOM2_CLASSIC ) && !( Dialog().IsDialogPausing() || session->IsSystemUIShowing() ) )
+		// SRS - Add check for com_pause cvar to make sure window is in focus - if not classic game should be paused
+		if( ( GetCurrentGame() == DOOM_CLASSIC || GetCurrentGame() == DOOM2_CLASSIC ) && !( Dialog().IsDialogPausing() || session->IsSystemUIShowing() || com_pause.GetInteger() ) )
 		{
 			RunDoomClassicFrame();
 		}
@@ -979,7 +1025,10 @@ void idCommonLocal::Frame()
 		// start the game / draw command generation thread going in the background
 		gameReturn_t ret = gameThread.RunGameAndDraw( numGameFrames, userCmdMgr, IsClient(), gameFrame - numGameFrames );
 
-		if( !com_smp.GetBool() )
+		// foresthale 2014-05-12: also check com_editors as many of them are not particularly thread-safe (editLights for example)
+		// SRS - if com_editors is active make sure com_smp != -1, otherwise skip and call SwapCommandBuffers_FinishRendering later
+		frameTiming.startRenderTime = Sys_Microseconds();
+		if( !com_smp.GetBool() && com_editors != 0 )
 		{
 			// in non-smp mode, run the commands we just generated, instead of
 			// frame-delayed ones from a background thread
@@ -990,8 +1039,6 @@ void idCommonLocal::Frame()
 		// Run the render back end, getting the GPU busy with new commands
 		// ASAP to minimize the pipeline bubble.
 		//----------------------------------------
-		frameTiming.startRenderTime = Sys_Microseconds();
-
 		renderSystem->RenderCommandBuffers( renderCommands );
 		if( com_sleepRender.GetInteger() > 0 )
 		{
@@ -999,6 +1046,9 @@ void idCommonLocal::Frame()
 			Sys_Sleep( com_sleepRender.GetInteger() );
 		}
 		frameTiming.finishRenderTime = Sys_Microseconds();
+
+		// SRS - Use finishSyncTime_EndFrame to record timing after sync for com_smp = -1, and just before gameThread.WaitForThread() for com_smp = 1
+		frameTiming.finishSyncTime_EndFrame = Sys_Microseconds();
 
 		// make sure the game / draw thread has completed
 		// This may block if the game is taking longer than the render back end
@@ -1013,16 +1063,25 @@ void idCommonLocal::Frame()
 		SendSnapshots();
 
 		// Render the sound system using the latest commands from the game thread
-		if( pauseGame )
+		// SRS - Enable sound during normal playDemo playback but not during timeDemo
+		if( pauseGame && !( readDemo && !timeDemo ) )
 		{
 			soundWorld->Pause();
 			soundSystem->SetPlayingSoundWorld( menuSoundWorld );
+			soundSystem->SetMute( false );
 		}
 		else
 		{
 			soundWorld->UnPause();
 			soundSystem->SetPlayingSoundWorld( soundWorld );
+			soundSystem->SetMute( false );
 		}
+		// SRS - Mute all sound output when dialog waiting or window not in focus (mutes Doom3, Classic, Cinematic Audio)
+		if( Dialog().IsDialogPausing() || session->IsSystemUIShowing() || com_pause.GetInteger() )
+		{
+			soundSystem->SetMute( true );
+		}
+
 		soundSystem->Render();
 
 		// process the game return for map changes, etc
@@ -1064,11 +1123,7 @@ void idCommonLocal::Frame()
 		mainFrameTiming = frameTiming;
 
 		session->GetSaveGameManager().Pump();
-
 	}
-
-
-
 	catch( idException& )
 	{
 		// an ERP_DROP was thrown
