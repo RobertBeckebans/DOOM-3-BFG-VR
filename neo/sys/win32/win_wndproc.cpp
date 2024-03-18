@@ -286,7 +286,6 @@ LONG WINAPI MainWndProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
 			cmdSystem->BufferCommandText( CMD_EXEC_APPEND, "quit\n" );
 			break;
 
-
 		case WM_ACTIVATE:
 			// if we got here because of an alt-tab or maximize,
 			// we should activate immediately.  If we are here because

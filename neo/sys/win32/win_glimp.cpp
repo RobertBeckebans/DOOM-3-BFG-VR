@@ -41,15 +41,24 @@ If you have questions concerning this license or the applicable additional terms
 ** Note that the GLW_xxx functions are Windows specific GL-subsystem
 ** related functions that are relevant ONLY to win_glimp.c
 */
-#pragma hdrstop
 #include "precompiled.h"
+#pragma hdrstop
 
 #include "win_local.h"
 #include "rc/doom_resource.h"
 #include "../../renderer/tr_local.h"
 
-idCVar r_useOpenGL32( "r_useOpenGL32", "1", CVAR_INTEGER, "0 = OpenGL 2.0, 1 = OpenGL 3.2 compatibility profile, 2 = OpenGL 3.2 core profile", 0, 2 );
 
+
+#if defined(_WIN32)
+	idCVar r_useOpenGL45( "r_useOpenGL45", "1", CVAR_INTEGER, "0 = OpenGL 4.0, 1 = OpenGL 4.5 compatibility profile, 2 = OpenGL 4.5 core profile", 0, 2 );
+#else
+	idCVar r_useOpenGL45( "r_useOpenGL45", "2", CVAR_INTEGER, "0 = OpenGL 4.0, 1 = OpenGL 4.5 compatibility profile, 2 = OpenGL 4.5 core profile", 0, 2 );
+#endif
+
+
+
+#if !defined(USE_VULKAN)
 /*
 ========================
 GLimp_TestSwapBuffers
@@ -93,6 +102,7 @@ void GLimp_TestSwapBuffers( const idCmdArgs& args )
 		}
 	}
 }
+#endif
 
 /*
 ========================
@@ -181,6 +191,7 @@ FakeWndProc
 Only used to get wglExtensions
 ====================
 */
+#if !defined(USE_VULKAN)
 LONG WINAPI FakeWndProc(
 	HWND    hWnd,
 	UINT    uMsg,
@@ -236,7 +247,6 @@ LONG WINAPI FakeWndProc(
 	return DefWindowProc( hWnd, uMsg, wParam, lParam );
 }
 
-
 /*
 ==================
 GLW_GetWGLExtensionsWithFakeWindow
@@ -272,21 +282,17 @@ void GLW_CheckWGLExtensions( HDC hDC )
 	// WGL_EXT_swap_control_tear
 	glConfig.swapControlTearAvailable = WGLEW_EXT_swap_control_tear != 0;
 
-	// WGL_ARB_pixel_format
-	//wglGetPixelFormatAttribivARB = ( PFNWGLGETPIXELFORMATATTRIBIVARBPROC )GLimp_ExtensionPointer( "wglGetPixelFormatAttribivARB" );
-	//wglGetPixelFormatAttribfvARB = ( PFNWGLGETPIXELFORMATATTRIBFVARBPROC )GLimp_ExtensionPointer( "wglGetPixelFormatAttribfvARB" );
-	//wglChoosePixelFormatARB = ( PFNWGLCHOOSEPIXELFORMATARBPROC )GLimp_ExtensionPointer( "wglChoosePixelFormatARB" );
-
-	// wglCreateContextAttribsARB
-	//wglCreateContextAttribsARB = ( PFNWGLCREATECONTEXTATTRIBSARBPROC )wglGetProcAddress( "wglCreateContextAttribsARB" );
+	// FIXME
+	// WGLEW_ARB_pixel_format
 }
-// RB end
+#endif
 
 /*
 ==================
 GLW_GetWGLExtensionsWithFakeWindow
 ==================
 */
+#if !defined(USE_VULKAN)
 static void GLW_GetWGLExtensionsWithFakeWindow()
 {
 	HWND	hWnd;
@@ -319,8 +325,7 @@ static void GLW_GetWGLExtensionsWithFakeWindow()
 		DispatchMessage( &msg );
 	}
 }
-
-//=============================================================================
+#endif
 
 /*
 ====================
@@ -336,13 +341,14 @@ void GLW_WM_CREATE( HWND hWnd )
 CreateOpenGLContextOnDC
 ========================
 */
+#if !defined(USE_VULKAN)
 static HGLRC CreateOpenGLContextOnDC( const HDC hdc, const bool debugContext )
 {
-	int useOpenGL32 = r_useOpenGL32.GetInteger();
+	int useCoreProfile = r_useOpenGL45.GetInteger();
 	HGLRC m_hrc = NULL;
 
 	// RB: for GLintercept 1.2.0 or otherwise we can't diff the framebuffers using the XML log
-	if( !WGLEW_ARB_create_context || useOpenGL32 == 0 )
+	if( !WGLEW_ARB_create_context || useCoreProfile == 0 )
 	{
 		return wglCreateContext( hdc );
 	}
@@ -350,11 +356,11 @@ static HGLRC CreateOpenGLContextOnDC( const HDC hdc, const bool debugContext )
 
 	for( int i = 0; i < 2; i++ )
 	{
-		const int glMajorVersion = ( useOpenGL32 != 0 ) ? 3 : 2;
-		const int glMinorVersion = ( useOpenGL32 != 0 ) ? 2 : 0;
+		const int glMajorVersion = ( useCoreProfile != 0 ) ? 3 : 2;
+		const int glMinorVersion = ( useCoreProfile != 0 ) ? 2 : 0;
 		const int glDebugFlag = debugContext ? WGL_CONTEXT_DEBUG_BIT_ARB : 0;
-		const int glProfileMask = ( useOpenGL32 != 0 ) ? WGL_CONTEXT_PROFILE_MASK_ARB : 0;
-		const int glProfile = ( useOpenGL32 == 1 ) ? WGL_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB : ( ( useOpenGL32 == 2 ) ? WGL_CONTEXT_CORE_PROFILE_BIT_ARB : 0 );
+		const int glProfileMask = ( useCoreProfile != 0 ) ? WGL_CONTEXT_PROFILE_MASK_ARB : 0;
+		const int glProfile = ( useCoreProfile == 1 ) ? WGL_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB : ( ( useCoreProfile == 2 ) ? WGL_CONTEXT_CORE_PROFILE_BIT_ARB : 0 );
 		const int attribs[] =
 		{
 			WGL_CONTEXT_MAJOR_VERSION_ARB,	glMajorVersion,
@@ -369,11 +375,11 @@ static HGLRC CreateOpenGLContextOnDC( const HDC hdc, const bool debugContext )
 		{
 			idLib::Printf( "created OpenGL %d.%d context\n", glMajorVersion, glMinorVersion );
 
-			if( useOpenGL32 == 2 )
+			if( useCoreProfile == 2 )
 			{
 				glConfig.driverType = GLDRV_OPENGL32_CORE_PROFILE;
 			}
-			else if( useOpenGL32 == 1 )
+			else if( useCoreProfile == 1 )
 			{
 				glConfig.driverType = GLDRV_OPENGL32_COMPATIBILITY_PROFILE;
 			}
@@ -386,7 +392,7 @@ static HGLRC CreateOpenGLContextOnDC( const HDC hdc, const bool debugContext )
 		}
 
 		idLib::Printf( "failed to create OpenGL %d.%d context\n", glMajorVersion, glMinorVersion );
-		useOpenGL32 = 0;	// fall back to OpenGL 2.0
+		useCoreProfile = 0;	// fall back to OpenGL 4.3
 	}
 
 	if( m_hrc == NULL )
@@ -442,7 +448,6 @@ static int GLW_ChoosePixelFormat( const HDC hdc, const int multisamples, const b
 	}
 	return pixelFormat;
 }
-
 
 /*
 ====================
@@ -567,6 +572,7 @@ static bool GLW_InitDriver( glimpParms_t parms )
 
 	return true;
 }
+#endif
 
 /*
 ====================
@@ -587,15 +593,15 @@ static void GLW_CreateWindowClasses()
 
 	memset( &wc, 0, sizeof( wc ) );
 
-	wc.style = 0;
-	wc.lpfnWndProc = ( WNDPROC )MainWndProc;
-	wc.cbClsExtra = 0;
-	wc.cbWndExtra = 0;
-	wc.hInstance = win32.hInstance;
-	wc.hIcon = LoadIcon( win32.hInstance, MAKEINTRESOURCE( IDI_ICON1 ) );
-	wc.hCursor = NULL;
+	wc.style         = 0;
+	wc.lpfnWndProc   = ( WNDPROC ) MainWndProc;
+	wc.cbClsExtra    = 0;
+	wc.cbWndExtra    = 0;
+	wc.hInstance     = win32.hInstance;
+	wc.hIcon         = LoadIcon( win32.hInstance, MAKEINTRESOURCE( IDI_ICON1 ) );
+	wc.hCursor       = NULL;
 	wc.hbrBackground = ( struct HBRUSH__* )COLOR_GRAYTEXT;
-	wc.lpszMenuName = 0;
+	wc.lpszMenuName  = 0;
 	wc.lpszClassName = WIN32_WINDOW_CLASS_NAME;
 
 	if( !RegisterClass( &wc ) )
@@ -604,6 +610,7 @@ static void GLW_CreateWindowClasses()
 	}
 	common->Printf( "...registered window class\n" );
 
+#if !defined(USE_VULKAN)
 	// now register the fake window class that is only used
 	// to get wgl extensions
 	wc.style         = 0;
@@ -622,6 +629,7 @@ static void GLW_CreateWindowClasses()
 		common->FatalError( "GLW_CreateWindow: could not register window class" );
 	}
 	common->Printf( "...registered fake window class\n" );
+#endif
 
 	win32.windowClassRegistered = true;
 }
@@ -1312,7 +1320,6 @@ static bool GLW_GetWindowDimensions( const glimpParms_t parms, int& x, int& y, i
 	return true;
 }
 
-
 /*
 =======================
 GLW_CreateWindow
@@ -1373,6 +1380,7 @@ static bool GLW_CreateWindow( glimpParms_t parms )
 		return false;
 	}
 
+#if !defined(USE_VULKAN)
 	// Check to see if we can get a stereo pixel format, even if we aren't going to use it,
 	// so the menu option can be
 	if( GLW_ChoosePixelFormat( win32.hDC, parms.multiSamples, true ) != -1 )
@@ -1391,6 +1399,7 @@ static bool GLW_CreateWindow( glimpParms_t parms )
 		win32.hWnd = NULL;
 		return false;
 	}
+#endif
 
 	SetForegroundWindow( win32.hWnd );
 	SetFocus( win32.hWnd );
@@ -1511,7 +1520,6 @@ void GLimp_PreInit()
 	// DG: not needed on this platform, so just do nothing
 }
 
-
 /*
 ===================
 GLimp_Init
@@ -1531,10 +1539,12 @@ bool GLimp_Init( glimpParms_t parms )
 {
 	HDC		hDC;
 
+#if !defined(USE_VULKAN)
 	cmdSystem->AddCommand( "testSwapBuffers", GLimp_TestSwapBuffers, CMD_FL_SYSTEM, "Times swapbuffer options" );
 
 	common->Printf( "Initializing OpenGL subsystem with multisamples:%i stereo:%i fullscreen:%i\n",
 					parms.multiSamples, parms.stereo, parms.fullScreen );
+#endif
 
 	// check our desktop attributes
 	hDC = GetDC( GetDesktopWindow() );
@@ -1557,14 +1567,14 @@ bool GLimp_Init( glimpParms_t parms )
 	// create our window classes if we haven't already
 	GLW_CreateWindowClasses();
 
+#if !defined(USE_VULKAN)
 	// this will load the dll and set all our gl* function pointers,
 	// but doesn't create a window
 
 	// getting the wgl extensions involves creating a fake window to get a context,
 	// which is pretty disgusting, and seems to mess with the AGP VAR allocation
 	GLW_GetWGLExtensionsWithFakeWindow();
-
-
+#endif
 
 	// Optionally ChangeDisplaySettings to get a different fullscreen resolution.
 	if( !GLW_ChangeDislaySettingsIfNeeded( parms ) )
@@ -1609,6 +1619,7 @@ bool GLimp_Init( glimpParms_t parms )
 	}
 
 	// RB: we probably have a new OpenGL 3.2 core context so reinitialize GLEW
+#if !defined(USE_VULKAN)
 	GLenum glewResult = glewInit();
 	if( GLEW_OK != glewResult )
 	{
@@ -1619,10 +1630,7 @@ bool GLimp_Init( glimpParms_t parms )
 	{
 		common->Printf( "Using GLEW %s\n", glewGetString( GLEW_VERSION ) );
 	}
-	// RB end
-
-	// wglSwapinterval, etc
-	//GLW_CheckWGLExtensions( win32.hDC );
+#endif
 
 	return true;
 }
@@ -1689,6 +1697,9 @@ void GLimp_Shutdown()
 	const char* success[] = { "failed", "success" };
 	int retVal;
 
+#if defined(USE_VULKAN)
+	// TODO
+#else
 	common->Printf( "Shutting down OpenGL subsystem\n" );
 
 	// set current context to NULL
@@ -1705,6 +1716,7 @@ void GLimp_Shutdown()
 		common->Printf( "...deleting GL context: %s\n", success[retVal] );
 		win32.hGLRC = NULL;
 	}
+#endif
 
 	// release DC
 	if( win32.hDC )
@@ -1742,6 +1754,7 @@ GLimp_SwapBuffers
 =====================
 */
 // RB: use GLEW for V-Sync
+#if !defined(USE_VULKAN)
 void GLimp_SwapBuffers()
 {
 	if( r_swapInterval.IsModified() )
@@ -1766,7 +1779,8 @@ void GLimp_SwapBuffers()
 
 	SwapBuffers( win32.hDC );
 }
-// RB end
+#endif
+
 
 
 
