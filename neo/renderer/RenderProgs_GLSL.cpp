@@ -44,18 +44,9 @@ idCVar r_displayGLSLCompilerMessages( "r_displayGLSLCompilerMessages", "1", CVAR
 idCVar r_alwaysExportGLSL( "r_alwaysExportGLSL", "1", CVAR_BOOL, "" );
 // RB end
 
-#define VERTEX_UNIFORM_ARRAY_NAME				"_va_"
-#define FRAGMENT_UNIFORM_ARRAY_NAME				"_fa_"
 
-static const int AT_VS_IN  = BIT( 1 );
-static const int AT_VS_OUT = BIT( 2 );
-static const int AT_PS_IN  = BIT( 3 );
-static const int AT_PS_OUT = BIT( 4 );
-// RB begin
-static const int AT_VS_OUT_RESERVED = BIT( 5 );
-static const int AT_PS_IN_RESERVED	= BIT( 6 );
-static const int AT_PS_OUT_RESERVED = BIT( 7 );
-// RB end
+
+
 
 struct idCGBlock
 {
@@ -65,46 +56,9 @@ struct idCGBlock
 	bool used;		// whether or not this block is referenced anywhere
 };
 
-/*
-================================================
-attribInfo_t
-================================================
-*/
-struct attribInfo_t
-{
-	const char* 	type;
-	const char* 	name;
-	const char* 	semantic;
-	const char* 	glsl;
-	int				bind;
-	int				flags;
-	int				vertexMask;
-};
 
-/*
-================================================
-vertexMask_t
 
-NOTE: There is a PS3 dependency between the bit flag specified here and the vertex
-attribute index and attribute semantic specified in DeclRenderProg.cpp because the
-stored render prog vertexMask is initialized with cellCgbGetVertexConfiguration().
-The ATTRIB_INDEX_ defines are used to make sure the vertexMask_t and attrib assignment
-in DeclRenderProg.cpp are in sync.
 
-Even though VERTEX_MASK_XYZ_SHORT and VERTEX_MASK_ST_SHORT are not real attributes,
-they come before the VERTEX_MASK_MORPH to reduce the range of vertex program
-permutations defined by the vertexMask_t bits on the Xbox 360 (see MAX_VERTEX_DECLARATIONS).
-================================================
-*/
-enum vertexMask_t
-{
-	VERTEX_MASK_XYZ			= BIT( PC_ATTRIB_INDEX_VERTEX ),
-	VERTEX_MASK_ST			= BIT( PC_ATTRIB_INDEX_ST ),
-	VERTEX_MASK_NORMAL		= BIT( PC_ATTRIB_INDEX_NORMAL ),
-	VERTEX_MASK_COLOR		= BIT( PC_ATTRIB_INDEX_COLOR ),
-	VERTEX_MASK_TANGENT		= BIT( PC_ATTRIB_INDEX_TANGENT ),
-	VERTEX_MASK_COLOR2		= BIT( PC_ATTRIB_INDEX_COLOR2 ),
-};
 
 attribInfo_t attribsPC[] =
 {

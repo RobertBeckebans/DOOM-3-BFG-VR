@@ -88,65 +88,70 @@ void idRenderProgManager::Init()
 		const char*			nameOutSuffix;
 		uint32				shaderFeatures;
 		bool				requireGPUSkinningSupport;
+		rpStage_t			stages;
+		vertexLayoutType_t	layout;
 	} builtins[] =
 	{
-		{ BUILTIN_GUI, "gui.vfp", 0, false },
-		{ BUILTIN_COLOR, "color.vfp", 0, false },
+		{ BUILTIN_GUI, "builtin/gui", "", 0, false, SHADER_STAGE_DEFAULT, LAYOUT_DRAW_VERT },
+		{ BUILTIN_COLOR, "builtin/color", "", 0, false, SHADER_STAGE_DEFAULT, LAYOUT_DRAW_VERT },
 		// RB begin
-		{ BUILTIN_COLOR_SKINNED, "color", "_skinned", BIT( USE_GPU_SKINNING ), true },
-		{ BUILTIN_VERTEX_COLOR, "vertex_color.vfp", "", 0, false },
+		{ BUILTIN_COLOR_SKINNED, "builtin/color", "_skinned", BIT( USE_GPU_SKINNING ), true, SHADER_STAGE_DEFAULT, LAYOUT_DRAW_VERT },
+		{ BUILTIN_VERTEX_COLOR, "builtin/vertex_color", "", 0, false, SHADER_STAGE_DEFAULT, LAYOUT_DRAW_VERT },
 		// RB end
-//		{ BUILTIN_SIMPLESHADE, "simpleshade.vfp", 0, false },
-		{ BUILTIN_TEXTURED, "texture.vfp", 0, false },
-		{ BUILTIN_TEXTURE_VERTEXCOLOR, "texture_color.vfp", 0, false },
-		{ BUILTIN_TEXTURE_VERTEXCOLOR_SKINNED, "texture_color_skinned.vfp", 0, true },
-		{ BUILTIN_TEXTURE_TEXGEN_VERTEXCOLOR, "texture_color_texgen.vfp", 0, false },
+		{ BUILTIN_TEXTURED, "builtin/texture", "", 0, false, SHADER_STAGE_DEFAULT, LAYOUT_DRAW_VERT },
+		{ BUILTIN_TEXTURE_VERTEXCOLOR, "builtin/texture_color", "", 0, false, SHADER_STAGE_DEFAULT, LAYOUT_DRAW_VERT },
+		{ BUILTIN_TEXTURE_VERTEXCOLOR_SKINNED, "builtin/texture_color_skinned", "", 0, true, SHADER_STAGE_DEFAULT, LAYOUT_DRAW_VERT },
+		{ BUILTIN_TEXTURE_TEXGEN_VERTEXCOLOR, "builtin/texture_color_texgen", "", 0, false, SHADER_STAGE_DEFAULT, LAYOUT_DRAW_VERT },
+
 		// RB begin
-		{ BUILTIN_INTERACTION, "interaction.vfp", "", 0, false },
-		{ BUILTIN_INTERACTION_SKINNED, "interaction", "_skinned", BIT( USE_GPU_SKINNING ), true },
-		{ BUILTIN_INTERACTION_AMBIENT, "interactionAmbient.vfp", 0, false },
-		{ BUILTIN_INTERACTION_AMBIENT_SKINNED, "interactionAmbient_skinned.vfp", 0, true },
-		{ BUILTIN_INTERACTION_SHADOW_MAPPING_SPOT, "interactionSM", "_spot", 0, false },
-		{ BUILTIN_INTERACTION_SHADOW_MAPPING_SPOT_SKINNED, "interactionSM", "_spot_skinned", BIT( USE_GPU_SKINNING ), true },
-		{ BUILTIN_INTERACTION_SHADOW_MAPPING_POINT, "interactionSM", "_point", BIT( LIGHT_POINT ), false },
-		{ BUILTIN_INTERACTION_SHADOW_MAPPING_POINT_SKINNED, "interactionSM", "_point_skinned", BIT( USE_GPU_SKINNING ) | BIT( LIGHT_POINT ), true },
-		{ BUILTIN_INTERACTION_SHADOW_MAPPING_PARALLEL, "interactionSM", "_parallel", BIT( LIGHT_PARALLEL ), false },
-		{ BUILTIN_INTERACTION_SHADOW_MAPPING_PARALLEL_SKINNED, "interactionSM", "_parallel_skinned", BIT( USE_GPU_SKINNING ) | BIT( LIGHT_PARALLEL ), true },
+		{ BUILTIN_INTERACTION, "builtin/lighting/interaction", "", 0, false, SHADER_STAGE_DEFAULT, LAYOUT_DRAW_VERT },
+		{ BUILTIN_INTERACTION_SKINNED, "builtin/lighting/interaction", "_skinned", BIT( USE_GPU_SKINNING ), true, SHADER_STAGE_DEFAULT, LAYOUT_DRAW_VERT },
+
+		{ BUILTIN_INTERACTION_AMBIENT, "builtin/lighting/interactionAmbient", "", 0, false, SHADER_STAGE_DEFAULT, LAYOUT_DRAW_VERT },
+		{ BUILTIN_INTERACTION_AMBIENT_SKINNED, "builtin/lighting/interactionAmbient_skinned", "", 0, true, SHADER_STAGE_DEFAULT, LAYOUT_DRAW_VERT },
+
+		{ BUILTIN_INTERACTION_SHADOW_MAPPING_SPOT, "builtin/lighting/interactionSM", "_spot", 0, false, SHADER_STAGE_DEFAULT, LAYOUT_DRAW_VERT },
+		{ BUILTIN_INTERACTION_SHADOW_MAPPING_SPOT_SKINNED, "builtin/lighting/interactionSM", "_spot_skinned", BIT( USE_GPU_SKINNING ), true, SHADER_STAGE_DEFAULT, LAYOUT_DRAW_VERT },
+
+		{ BUILTIN_INTERACTION_SHADOW_MAPPING_POINT, "builtin/lighting/interactionSM", "_point", BIT( LIGHT_POINT ), false, SHADER_STAGE_DEFAULT, LAYOUT_DRAW_VERT },
+		{ BUILTIN_INTERACTION_SHADOW_MAPPING_POINT_SKINNED, "builtin/lighting/interactionSM", "_point_skinned", BIT( USE_GPU_SKINNING ) | BIT( LIGHT_POINT ), true, SHADER_STAGE_DEFAULT, LAYOUT_DRAW_VERT },
+
+		{ BUILTIN_INTERACTION_SHADOW_MAPPING_PARALLEL, "builtin/lighting/interactionSM", "_parallel", BIT( LIGHT_PARALLEL ), false, SHADER_STAGE_DEFAULT, LAYOUT_DRAW_VERT },
+		{ BUILTIN_INTERACTION_SHADOW_MAPPING_PARALLEL_SKINNED, "builtin/lighting/interactionSM", "_parallel_skinned", BIT( USE_GPU_SKINNING ) | BIT( LIGHT_PARALLEL ), true, SHADER_STAGE_DEFAULT, LAYOUT_DRAW_VERT },
 		// RB end
-		{ BUILTIN_ENVIRONMENT, "environment.vfp", 0, false },
-		{ BUILTIN_ENVIRONMENT_SKINNED, "environment_skinned.vfp", 0, true },
-		{ BUILTIN_BUMPY_ENVIRONMENT, "bumpyenvironment.vfp", 0, false },
-		{ BUILTIN_BUMPY_ENVIRONMENT_SKINNED, "bumpyenvironment_skinned.vfp", 0, true },
+		{ BUILTIN_ENVIRONMENT, "builtin/legacy/environment", "", 0, false, SHADER_STAGE_DEFAULT, LAYOUT_DRAW_VERT },
+		{ BUILTIN_ENVIRONMENT_SKINNED, "builtin/legacy/environment_skinned", "", 0, true, SHADER_STAGE_DEFAULT, LAYOUT_DRAW_VERT },
+		{ BUILTIN_BUMPY_ENVIRONMENT, "builtin/legacy/bumpyenvironment", "", 0, false, SHADER_STAGE_DEFAULT, LAYOUT_DRAW_VERT },
+		{ BUILTIN_BUMPY_ENVIRONMENT_SKINNED, "builtin/legacy/bumpyenvironment_skinned", "", 0, true, SHADER_STAGE_DEFAULT, LAYOUT_DRAW_VERT },
 
-		{ BUILTIN_DEPTH, "depth.vfp", 0, false },
-		{ BUILTIN_DEPTH_SKINNED, "depth_skinned.vfp", 0, true },
+		{ BUILTIN_DEPTH, "builtin/depth", "", 0, false, SHADER_STAGE_DEFAULT, LAYOUT_DRAW_VERT },
+		{ BUILTIN_DEPTH_SKINNED, "builtin/depth_skinned", "", 0, true, SHADER_STAGE_DEFAULT, LAYOUT_DRAW_VERT },
 
-		{ BUILTIN_SHADOW, "shadow.vfp", 0, false },
-		{ BUILTIN_SHADOW_SKINNED, "shadow_skinned.vfp", 0, true },
+		{ BUILTIN_SHADOW, "builtin/lighting/shadow", "", 0, false, SHADER_STAGE_DEFAULT, LAYOUT_DRAW_SHADOW_VERT },
+		{ BUILTIN_SHADOW_SKINNED, "builtin/lighting/shadow_skinned", "", 0, true, SHADER_STAGE_DEFAULT, LAYOUT_DRAW_SHADOW_VERT_SKINNED },
 
-		{ BUILTIN_SHADOW_DEBUG, "shadowDebug.vfp", 0, false },
-		{ BUILTIN_SHADOW_DEBUG_SKINNED, "shadowDebug_skinned.vfp", 0, true },
+		{ BUILTIN_SHADOW_DEBUG, "builtin/debug/shadowDebug", "", 0, false, SHADER_STAGE_DEFAULT, LAYOUT_DRAW_VERT },
+		{ BUILTIN_SHADOW_DEBUG_SKINNED, "builtin/debug/shadowDebug_skinned", "", 0, true, SHADER_STAGE_DEFAULT, LAYOUT_DRAW_VERT },
 
-		{ BUILTIN_BLENDLIGHT, "blendlight.vfp", 0, false },
-		{ BUILTIN_FOG, "fog.vfp", 0, false },
-		{ BUILTIN_FOG_SKINNED, "fog_skinned.vfp", 0, true },
-		{ BUILTIN_SKYBOX, "skybox.vfp", 0, false },
-		{ BUILTIN_WOBBLESKY, "wobblesky.vfp", 0, false },
-		{ BUILTIN_POSTPROCESS, "postprocess.vfp", 0, false },
-		{ BUILTIN_STEREO_DEGHOST, "stereoDeGhost.vfp", 0, false },
-		{ BUILTIN_STEREO_WARP, "stereoWarp.vfp", 0, false },
-//		{ BUILTIN_ZCULL_RECONSTRUCT, "zcullReconstruct.vfp", 0, false },
-		{ BUILTIN_BINK, "bink.vfp", 0, false },
-		{ BUILTIN_BINK_GUI, "bink_gui.vfp", 0, false },
-		{ BUILTIN_STEREO_INTERLACE, "stereoInterlace.vfp", 0, false },
-		{ BUILTIN_MOTION_BLUR, "motionBlur.vfp", 0, false },
+		{ BUILTIN_BLENDLIGHT, "builtin/fog/blendlight", "", 0, false, SHADER_STAGE_DEFAULT, LAYOUT_DRAW_VERT },
+		{ BUILTIN_FOG, "builtin/fog/fog", "", 0, false, SHADER_STAGE_DEFAULT, LAYOUT_DRAW_VERT },
+		{ BUILTIN_FOG_SKINNED, "builtin/fog/fog_skinned", "", 0, true, SHADER_STAGE_DEFAULT, LAYOUT_DRAW_VERT },
+		{ BUILTIN_SKYBOX, "builtin/legacy/skybox", "", 0, false, SHADER_STAGE_DEFAULT, LAYOUT_DRAW_VERT },
+		{ BUILTIN_WOBBLESKY, "builtin/legacy/wobblesky", "", 0, false, SHADER_STAGE_DEFAULT, LAYOUT_DRAW_VERT },
+		{ BUILTIN_POSTPROCESS, "builtin/post/postprocess", "", 0, false, SHADER_STAGE_DEFAULT, LAYOUT_DRAW_VERT },
+		{ BUILTIN_STEREO_DEGHOST, "builtin/VR/stereoDeGhost", "", 0, false, SHADER_STAGE_DEFAULT, LAYOUT_DRAW_VERT },
+		{ BUILTIN_STEREO_WARP, "builtin/VR/stereoWarp", "", 0, false, SHADER_STAGE_DEFAULT, LAYOUT_DRAW_VERT },
+		{ BUILTIN_BINK, "builtin/video/bink", "", 0, false, SHADER_STAGE_DEFAULT, LAYOUT_DRAW_VERT },
+		{ BUILTIN_BINK_GUI, "builtin/video/bink_gui", "", 0, false, SHADER_STAGE_DEFAULT, LAYOUT_DRAW_VERT },
+		{ BUILTIN_STEREO_INTERLACE, "builtin/VR/stereoInterlace", "", 0, false, SHADER_STAGE_DEFAULT, LAYOUT_DRAW_VERT },
+		{ BUILTIN_MOTION_BLUR, "builtin/post/motionBlur", "", 0, false, SHADER_STAGE_DEFAULT, LAYOUT_DRAW_VERT },
 
 		// RB begin
-		{ BUILTIN_DEBUG_SHADOWMAP, "debug_shadowmap.vfp", "", 0, false },
+		{ BUILTIN_DEBUG_SHADOWMAP, "builtin/debug/debug_shadowmap", "", 0, false, SHADER_STAGE_DEFAULT, LAYOUT_DRAW_VERT },
 		// RB end
 
 		// Koz begin
-		//{ BUILTIN_VRFXAA, "oculusVrFxaa.vfp", 0, false },
+		//{ BUILTIN_VRFXAA, "oculusVrFxaa.vfp", 0, false, SHADER_STAGE_DEFAULT, LAYOUT_DRAW_VERT },
 		// Koz end
 	};
 	int numBuiltins = sizeof( builtins ) / sizeof( builtins[0] );
@@ -178,43 +183,6 @@ void idRenderProgManager::Init()
 		LoadFragmentShader( i );
 		LoadGLSLProgram( i, i, i );
 	}
-
-	// special case handling for fastZ shaders
-	/*
-	switch( glConfig.driverType )
-	{
-		case GLDRV_OPENGL32_CORE_PROFILE:
-		case GLDRV_OPENGL_ES2:
-		case GLDRV_OPENGL_ES3:
-		case GLDRV_OPENGL_MESA:
-		{
-			builtinShaders[BUILTIN_SHADOW] = FindVertexShader( "shadow.vp" );
-			int shadowFragmentShaderIndex = FindFragmentShader( "shadow.fp" );
-			FindGLSLProgram( "shadow.vp", builtinShaders[BUILTIN_SHADOW], shadowFragmentShaderIndex );
-
-			if( glConfig.gpuSkinningAvailable )
-			{
-				builtinShaders[BUILTIN_SHADOW_SKINNED] = FindVertexShader( "shadow_skinned.vp" );
-				int shadowFragmentShaderIndex = FindFragmentShader( "shadow_skinned.fp" );
-				FindGLSLProgram( "shadow_skinned.vp", builtinShaders[BUILTIN_SHADOW_SKINNED], shadowFragmentShaderIndex );
-				break;
-			}
-		}
-
-		default:
-		{
-			// fast path on PC
-			builtinShaders[BUILTIN_SHADOW] = FindVertexShader( "shadow.vp" );
-			FindGLSLProgram( "shadow.vp", builtinShaders[BUILTIN_SHADOW], -1 );
-
-			if( glConfig.gpuSkinningAvailable )
-			{
-				builtinShaders[BUILTIN_SHADOW_SKINNED] = FindVertexShader( "shadow_skinned.vp" );
-				FindGLSLProgram( "shadow_skinned.vp", builtinShaders[BUILTIN_SHADOW_SKINNED], -1 );
-			}
-		}
-	}
-	*/
 
 	glslUniforms.SetNum( RENDERPARM_USER + MAX_GLSL_USER_PARMS, vec4_zero );
 
