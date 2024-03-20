@@ -27,8 +27,8 @@ If you have questions concerning this license or the applicable additional terms
 ===========================================================================
 */
 
-#pragma hdrstop
 #include "precompiled.h"
+#pragma hdrstop
 
 #include "RenderCommon.h"
 #include "RenderProgs_embedded.h"
@@ -1724,14 +1724,14 @@ GLuint idRenderProgManager::LoadGLSLShader( GLenum target, const char* name, con
 
 	if( target == GL_FRAGMENT_SHADER )
 	{
-		inFile += ".pixel";
+		inFile += ".ps.hlsl";
 		outFileHLSL += "_fragment.hlsl";
 		outFileGLSL += "_fragment.glsl";
 		outFileUniforms += "_fragment.uniforms";
 	}
 	else
 	{
-		inFile += ".vertex";
+		inFile += ".vs.hlsl";
 		outFileHLSL += "_vertex.hlsl";
 		outFileGLSL += "_vertex.glsl";
 		outFileUniforms += "_vertex.uniforms";
