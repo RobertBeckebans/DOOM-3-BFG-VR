@@ -225,6 +225,7 @@ public:
 
 	bool					CullEntityByPortals( const idRenderEntityLocal* entity, const portalStack_t* ps );
 	void					AddAreaViewEntities( int areaNum, const portalStack_t* ps );
+
 	bool					CullLightByPortals( const idRenderLightLocal* light, const portalStack_t* ps );
 	void					AddAreaViewLights( int areaNum, const portalStack_t* ps );
 	void					AddAreaToView( int areaNum, const portalStack_t* ps );
