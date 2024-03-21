@@ -183,7 +183,6 @@ void idImage::SetTexParameters()
 
 	// ALPHA, LUMINANCE, LUMINANCE_ALPHA, and INTENSITY have been removed
 	// in OpenGL 3.2. In order to mimic those modes, we use the swizzle operators
-#if defined( USE_CORE_PROFILE )
 	if( opts.colorFormat == CFM_GREEN_ALPHA )
 	{
 		glTexParameteri( target, GL_TEXTURE_SWIZZLE_R, GL_ONE );
@@ -226,22 +225,6 @@ void idImage::SetTexParameters()
 		glTexParameteri( target, GL_TEXTURE_SWIZZLE_B, GL_BLUE );
 		glTexParameteri( target, GL_TEXTURE_SWIZZLE_A, GL_ALPHA );
 	}
-#else
-	if( opts.colorFormat == CFM_GREEN_ALPHA )
-	{
-		glTexParameteri( target, GL_TEXTURE_SWIZZLE_R, GL_ONE );
-		glTexParameteri( target, GL_TEXTURE_SWIZZLE_G, GL_ONE );
-		glTexParameteri( target, GL_TEXTURE_SWIZZLE_B, GL_ONE );
-		glTexParameteri( target, GL_TEXTURE_SWIZZLE_A, GL_GREEN );
-	}
-	else if( opts.format == FMT_ALPHA )
-	{
-		glTexParameteri( target, GL_TEXTURE_SWIZZLE_R, GL_ONE );
-		glTexParameteri( target, GL_TEXTURE_SWIZZLE_G, GL_ONE );
-		glTexParameteri( target, GL_TEXTURE_SWIZZLE_B, GL_ONE );
-		glTexParameteri( target, GL_TEXTURE_SWIZZLE_A, GL_RED );
-	}
-#endif
 
 	switch( filter )
 	{
@@ -377,43 +360,23 @@ void idImage::AllocImage()
 			break;
 
 		case FMT_ALPHA:
-#if defined( USE_CORE_PROFILE )
 			internalFormat = GL_R8;
 			dataFormat = GL_RED;
-#else
-			internalFormat = GL_ALPHA8;
-			dataFormat = GL_ALPHA;
-#endif
 			dataType = GL_UNSIGNED_BYTE;
 			break;
 		case FMT_L8A8:
-#if defined( USE_CORE_PROFILE )
 			internalFormat = GL_RG8;
 			dataFormat = GL_RG;
-#else
-			internalFormat = GL_LUMINANCE8_ALPHA8;
-			dataFormat = GL_LUMINANCE_ALPHA;
-#endif
 			dataType = GL_UNSIGNED_BYTE;
 			break;
 		case FMT_LUM8:
-#if defined( USE_CORE_PROFILE )
 			internalFormat = GL_R8;
 			dataFormat = GL_RED;
-#else
-			internalFormat = GL_LUMINANCE8;
-			dataFormat = GL_LUMINANCE;
-#endif
 			dataType = GL_UNSIGNED_BYTE;
 			break;
 		case FMT_INT8:
-#if defined( USE_CORE_PROFILE )
 			internalFormat = GL_R8;
 			dataFormat = GL_RED;
-#else
-			internalFormat = GL_INTENSITY8;
-			dataFormat = GL_LUMINANCE;
-#endif
 			dataType = GL_UNSIGNED_BYTE;
 			break;
 		case FMT_DXT1:

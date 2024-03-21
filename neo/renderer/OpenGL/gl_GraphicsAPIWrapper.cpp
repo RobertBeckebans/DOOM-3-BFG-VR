@@ -274,64 +274,7 @@ void GL_Clear( bool color, bool depth, bool stencil, byte stencilValue, float r,
 	glClear( clearFlags );
 }
 
-/*
-========================
-GL_SetDefaultState
 
-This should initialize all GL state that any part of the entire program
-may touch, including the editor.
-========================
-*/
-void GL_SetDefaultState()
-{
-	RENDERLOG_PRINTF( "--- GL_SetDefaultState ---\n" );
-
-	glClearDepth( 1.0f );
-
-	// make sure our GL state vector is set correctly
-	memset( &backEnd.glState, 0, sizeof( backEnd.glState ) );
-	GL_State( 0, true );
-
-	// RB begin
-	Framebuffer::BindDefault();
-	// RB end
-
-	// These are changed by GL_Cull
-	glCullFace( GL_FRONT_AND_BACK );
-	glEnable( GL_CULL_FACE );
-
-	// These are changed by GL_State
-	glColorMask( GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE );
-	glBlendFunc( GL_ONE, GL_ZERO );
-	glDepthMask( GL_TRUE );
-	glDepthFunc( GL_LESS );
-	glDisable( GL_STENCIL_TEST );
-	glDisable( GL_POLYGON_OFFSET_FILL );
-	glDisable( GL_POLYGON_OFFSET_LINE );
-	glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
-
-	// These should never be changed
-	// DG: deprecated in opengl 3.2 and not needed because we don't do fixed function pipeline
-	// glShadeModel( GL_SMOOTH );
-	// DG end
-	glEnable( GL_DEPTH_TEST );
-	glEnable( GL_BLEND );
-	glEnable( GL_SCISSOR_TEST );
-	//glDrawBuffer( GL_BACK );
-	//glReadBuffer( GL_BACK );
-
-	glEnable( GL_MULTISAMPLE );
-
-	if( r_useScissor.GetBool() )
-	{
-		glScissor( 0, 0, renderSystem->GetWidth(), renderSystem->GetHeight() );
-	}
-
-//	if ( useFBO ) {
-//		globalFramebuffers.primaryFBO->Bind();
-//	}
-	//renderProgManager.Unbind();
-}
 
 /*
 ====================
@@ -518,41 +461,6 @@ void GL_State( uint64 stateBits, bool forceGlState )
 			glDisable( GL_POLYGON_OFFSET_LINE );
 		}
 	}
-
-#if !defined( USE_CORE_PROFILE )
-	//
-	// alpha test
-	//
-	if( diff & ( GLS_ALPHATEST_FUNC_BITS | GLS_ALPHATEST_FUNC_REF_BITS ) )
-	{
-		if( ( stateBits & GLS_ALPHATEST_FUNC_BITS ) != 0 )
-		{
-			glEnable( GL_ALPHA_TEST );
-
-			GLenum func = GL_ALWAYS;
-			switch( stateBits & GLS_ALPHATEST_FUNC_BITS )
-			{
-				case GLS_ALPHATEST_FUNC_LESS:
-					func = GL_LESS;
-					break;
-				case GLS_ALPHATEST_FUNC_EQUAL:
-					func = GL_EQUAL;
-					break;
-				case GLS_ALPHATEST_FUNC_GREATER:
-					func = GL_GEQUAL;
-					break;
-				default:
-					assert( false );
-			}
-			GLclampf ref = ( ( stateBits & GLS_ALPHATEST_FUNC_REF_BITS ) >> GLS_ALPHATEST_FUNC_REF_SHIFT ) / ( float )0xFF;
-			glAlphaFunc( func, ref );
-		}
-		else
-		{
-			glDisable( GL_ALPHA_TEST );
-		}
-	}
-#endif
 
 	//
 	// stencil

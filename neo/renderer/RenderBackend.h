@@ -26,8 +26,9 @@ If you have questions concerning this license or the applicable additional terms
 
 ===========================================================================
 */
-#ifndef __GRAPHICSAPIWRAPPER_H__
-#define __GRAPHICSAPIWRAPPER_H__
+
+#ifndef __RENDERER_BACKEND_H__
+#define __RENDERER_BACKEND_H__
 
 /*
 ================================================================================================
@@ -69,55 +70,6 @@ static const int OCCLUSION_QUERY_TOO_OLD				= -1;
 
 
 
-#define USE_CORE_PROFILE
-
-struct wrapperContext_t
-{
-};
-
-
-/*
-================================================
-wrapperConfig_t
-================================================
-*/
-struct wrapperConfig_t
-{
-	// rendering options and settings
-	bool			disableStateCaching;
-	bool			lazyBindPrograms;
-	bool			lazyBindParms;
-	bool			lazyBindTextures;
-	bool			stripFragmentBranches;
-	bool			skipDetailTris;
-	bool			singleTriangle;
-	// values for polygon offset
-	float			polyOfsFactor;
-	float			polyOfsUnits;
-	// global texture filter settings
-	int				textureMinFilter;
-	int				textureMaxFilter;
-	int				textureMipFilter;
-	float			textureAnisotropy;
-	float			textureLODBias;
-};
-
-/*
-================================================
-wrapperStats_t
-================================================
-*/
-struct wrapperStats_t
-{
-	int				c_queriesIssued;
-	int				c_queriesPassed;
-	int				c_queriesWaitTime;
-	int				c_queriesTooOld;
-	int				c_programsBound;
-	int				c_drawElements;
-	int				c_drawIndices;
-	int				c_drawVertices;
-};
 
 /*
 ================================================================================================
@@ -126,9 +78,6 @@ struct wrapperStats_t
 
 ================================================================================================
 */
-
-void			GL_SetWrapperContext( const wrapperContext_t& context );
-void			GL_SetWrapperConfig( const wrapperConfig_t& config );
 
 void			GL_SetTimeDelta( uint64 delta );	// delta from GPU to CPU microseconds
 void			GL_StartFrame( int frame );			// inserts a timing mark for the start of the GPU frame
@@ -189,8 +138,6 @@ bool			GL_CheckErrors_( const char* filename, int line );
 #endif
 // RB end
 
-wrapperStats_t	GL_GetCurrentStats();
-void			GL_ClearStats();
 
 
 #endif // !__GRAPHICSAPIWRAPPER_H__

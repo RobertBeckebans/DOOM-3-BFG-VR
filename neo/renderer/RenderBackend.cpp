@@ -943,13 +943,9 @@ static void RB_FillDepthBufferGeneric( const drawSurf_t* const* drawSurfs, int n
 
 				GL_Color( color );
 
-#ifdef USE_CORE_PROFILE
 				GL_State( stageGLState );
 				idVec4 alphaTestValue( regs[ pStage->alphaTestRegister ] );
 				SetFragmentParm( RENDERPARM_ALPHA_TEST, alphaTestValue.ToFloatPtr() );
-#else
-				GL_State( stageGLState | GLS_ALPHATEST_FUNC_GREATER | GLS_ALPHATEST_MAKE_REF( idMath::Ftob( 255.0f * regs[ pStage->alphaTestRegister ] ) ) );
-#endif
 
 				if( drawSurf->jointCache )
 				{
@@ -1023,9 +1019,7 @@ static void RB_FillDepthBufferGeneric( const drawSurf_t* const* drawSurfs, int n
 		renderLog.CloseBlock();
 	}
 
-#ifdef USE_CORE_PROFILE
 	SetFragmentParm( RENDERPARM_ALPHA_TEST, vec4_zero.ToFloatPtr() );
-#endif
 }
 
 /*
@@ -2886,13 +2880,9 @@ static void RB_ShadowMapPass( const drawSurf_t* drawSurfs, const viewLight_t* vL
 
 				GL_Color( color );
 
-#ifdef USE_CORE_PROFILE
 				GL_State( stageGLState );
 				idVec4 alphaTestValue( regs[ pStage->alphaTestRegister ] );
 				SetFragmentParm( RENDERPARM_ALPHA_TEST, alphaTestValue.ToFloatPtr() );
-#else
-				GL_State( stageGLState | GLS_ALPHATEST_FUNC_GREATER | GLS_ALPHATEST_MAKE_REF( idMath::Ftob( 255.0f * regs[ pStage->alphaTestRegister ] ) ) );
-#endif
 
 				if( drawSurf->jointCache )
 				{
@@ -2953,9 +2943,7 @@ static void RB_ShadowMapPass( const drawSurf_t* drawSurfs, const viewLight_t* vL
 	GL_State( GLS_DEFAULT );
 	GL_Cull( CT_FRONT_SIDED );
 
-#ifdef USE_CORE_PROFILE
 	SetFragmentParm( RENDERPARM_ALPHA_TEST, vec4_zero.ToFloatPtr() );
-#endif
 }
 
 /*
@@ -4016,10 +4004,8 @@ void RB_DrawViewInternal( const viewDef_t* viewDef, const int stereoEye )
 	// normal face culling
 	GL_Cull( CT_FRONT_SIDED );
 
-#if defined(USE_CORE_PROFILE) && !defined(USE_GLES2) && !defined(USE_GLES3)
 	// bind one global Vertex Array Object (VAO)
 	glBindVertexArray( glConfig.global_vao );
-#endif
 
 	//------------------------------------
 	// sets variables that can be used by all programs

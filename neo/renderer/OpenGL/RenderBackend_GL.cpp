@@ -26,8 +26,21 @@ If you have questions concerning this license or the applicable additional terms
 ===========================================================================
 */
 
-#pragma hdrstop
 #include "precompiled.h"
+#pragma hdrstop
+
+// SRS - Include SDL headers to enable vsync changes without restart for UNIX-like OSs
+#if defined(__linux__) || defined(__FreeBSD__) || defined(__APPLE__)
+	// SRS - Don't seem to need these #undefs (at least on macOS), are they needed for Linux, etc?
+	// DG: SDL.h somehow needs the following functions, so #undef those silly
+	//     "don't use" #defines from Str.h
+	//#undef strncmp
+	//#undef strcasecmp
+	//#undef vsnprintf
+	// DG end
+	#include <SDL.h>
+#endif
+// SRS end
 
 #include "../RenderCommon.h"
 #include "../../framework/Common_local.h"
@@ -216,6 +229,65 @@ const void GL_BlockingSwapBuffers()
 }
 
 /*
+========================
+GL_SetDefaultState
+
+This should initialize all GL state that any part of the entire program
+may touch, including the editor.
+========================
+*/
+void GL_SetDefaultState()
+{
+	RENDERLOG_PRINTF( "--- GL_SetDefaultState ---\n" );
+
+	glClearDepth( 1.0f );
+
+	// make sure our GL state vector is set correctly
+	memset( &backEnd.glState, 0, sizeof( backEnd.glState ) );
+	GL_State( 0, true );
+
+	// RB begin
+	Framebuffer::BindDefault();
+	// RB end
+
+	// These are changed by GL_Cull
+	glCullFace( GL_FRONT_AND_BACK );
+	glEnable( GL_CULL_FACE );
+
+	// These are changed by GL_State
+	glColorMask( GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE );
+	glBlendFunc( GL_ONE, GL_ZERO );
+	glDepthMask( GL_TRUE );
+	glDepthFunc( GL_LESS );
+	glDisable( GL_STENCIL_TEST );
+	glDisable( GL_POLYGON_OFFSET_FILL );
+	glDisable( GL_POLYGON_OFFSET_LINE );
+	glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+
+	// These should never be changed
+	// DG: deprecated in opengl 3.2 and not needed because we don't do fixed function pipeline
+	// glShadeModel( GL_SMOOTH );
+	// DG end
+	glEnable( GL_DEPTH_TEST );
+	glEnable( GL_BLEND );
+	glEnable( GL_SCISSOR_TEST );
+	//glDrawBuffer( GL_BACK );
+	//glReadBuffer( GL_BACK );
+
+	glEnable( GL_MULTISAMPLE );
+
+	if( r_useScissor.GetBool() )
+	{
+		glScissor( 0, 0, renderSystem->GetWidth(), renderSystem->GetHeight() );
+	}
+
+//	if ( useFBO ) {
+//		globalFramebuffers.primaryFBO->Bind();
+//	}
+	//renderProgManager.Unbind();
+}
+
+/*
 ====================
 R_MakeStereoRenderImage
 ====================
@@ -265,11 +337,12 @@ void RB_StereoRenderExecuteBackEndCommands( const emptyCommand_t* const allCmds 
 	static idImage* stereoRenderImages[2];
 	for( int i = 0; i < 2; i++ )
 	{
-
 		if( stereoRenderImages[i] == NULL )
 		{
 			stereoRenderImages[i] = globalImages->ImageFromFunction( va( "_stereoRender%i", i ), R_MakeStereoRenderImage );
 		}
+
+		// resize the stereo render image if the main window has changed size
 		if( stereoRenderImages[i]->GetUploadWidth() != renderSystem->GetWidth() ||
 				stereoRenderImages[i]->GetUploadHeight() != renderSystem->GetHeight() )
 		{
@@ -321,12 +394,15 @@ void RB_StereoRenderExecuteBackEndCommands( const emptyCommand_t* const allCmds 
 					}
 				}
 				break;
+
 				case RC_SET_BUFFER:
 					RB_SetBuffer( cmds );
 					break;
+
 				case RC_COPY_RENDER:
 					RB_CopyRender( cmds );
 					break;
+
 				case RC_POST_PROCESS:
 				{
 					postProcessCommand_t* cmd = ( postProcessCommand_t* )cmds;
@@ -337,6 +413,7 @@ void RB_StereoRenderExecuteBackEndCommands( const emptyCommand_t* const allCmds 
 					RB_PostProcess( cmds );
 				}
 				break;
+
 				default:
 					common->Error( "RB_ExecuteBackEndCommands: bad commandId" );
 					break;
@@ -344,7 +421,7 @@ void RB_StereoRenderExecuteBackEndCommands( const emptyCommand_t* const allCmds 
 		}
 
 		// copy to the target
-		stereoRenderImages[targetEye]->CopyFramebuffer( 0, 0, renderSystem->GetWidth(), renderSystem->GetHeight() );
+		stereoRenderImages[ targetEye ]->CopyFramebuffer( 0, 0, renderSystem->GetWidth(), renderSystem->GetHeight() );
 		commonVr->hmdCurrentRender[targetEye] = stereoRenderImages[targetEye];
 	}
 

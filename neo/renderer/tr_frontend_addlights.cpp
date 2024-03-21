@@ -27,8 +27,8 @@ If you have questions concerning this license or the applicable additional terms
 ===========================================================================
 */
 
-#pragma hdrstop
 #include "precompiled.h"
+#pragma hdrstop
 
 #include "RenderCommon.h"
 
@@ -386,6 +386,8 @@ static void R_AddSingleLight( viewLight_t* vLight )
 			vLight->entityInteractionState[ edef->index ] = viewLight_t::INTERACTION_NO;
 
 			// The table is updated at interaction::AllocAndLink() and interaction::UnlinkAndFree()
+
+			// TODO(Stephen): interactionTableRow is null if renderDef is used in a gui.sub
 			const idInteraction* inter = interactionTableRow[ edef->index ];
 
 			const renderEntity_t& eParms = edef->parms;
@@ -407,10 +409,10 @@ static void R_AddSingleLight( viewLight_t* vLight )
 			// A more general solution would be to have an allowLightOnEntityID field.
 			// HACK: the armor-mounted flashlight is a private spot light, which is probably
 			// wrong -- you would expect to see them in multiplayer.
-			if( light->parms.allowLightInViewID && light->parms.pointLight && !eParms.weaponDepthHack )
-			{
-				continue;
-			}
+			//	if( light->parms.allowLightInViewID && light->parms.pointLight && !eParms.weaponDepthHack )
+			//	{
+			//		continue;
+			//	}
 
 			// non-shadow casting entities don't need to be added if they aren't
 			// directly visible
