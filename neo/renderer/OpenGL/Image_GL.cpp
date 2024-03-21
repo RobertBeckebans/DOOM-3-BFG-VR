@@ -732,7 +732,7 @@ void idImage::AllocImage()
 	// have filled in the parms.  We must have the values set, or
 	// an image match from a shader before OpenGL starts would miss
 	// the generated texture
-	if( !R_IsInitialized() )
+	if( !tr.IsInitialized() )
 	{
 		return;
 	}

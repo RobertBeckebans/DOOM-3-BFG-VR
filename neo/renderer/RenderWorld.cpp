@@ -895,7 +895,7 @@ to handle mirrors,
 */
 void idRenderWorldLocal::RenderScene( const renderView_t* renderView )
 {
-	if( !R_IsInitialized() )
+	if( !tr.IsInitialized() )
 	{
 		return;
 	}
@@ -1819,7 +1819,7 @@ If this isn't called, they will all be dynamically generated
 */
 void idRenderWorldLocal::GenerateAllInteractions()
 {
-	if( !R_IsInitialized() )
+	if( !tr.IsInitialized() )
 	{
 		return;
 	}

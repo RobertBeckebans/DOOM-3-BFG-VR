@@ -3,7 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
-Copyright (C) 2013 Robert Beckebans
+Copyright (C) 2013-2020 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -26,8 +26,8 @@ If you have questions concerning this license or the applicable additional terms
 
 ===========================================================================
 */
-#pragma hdrstop
 #include "RenderCommon.h"
+#pragma hdrstop
 
 /*
 ================================================================================================
@@ -37,29 +37,29 @@ TODO:	Emit statistics to the logfile at the end of views and frames.
 ================================================================================================
 */
 
-idCVar r_logLevel( "r_logLevel", "2", CVAR_INTEGER, "1 = blocks only, 2 = everything", 1, 2 );
+idCVar r_logLevel( "r_logLevel", "0", CVAR_INTEGER, "1 = blocks only, 2 = everything", 1, 2 );
 
 static const int LOG_LEVEL_BLOCKS_ONLY	= 1;
 static const int LOG_LEVEL_EVERYTHING	= 2;
 
 const char* renderLogMainBlockLabels[] =
 {
-	ASSERT_ENUM_STRING( MRB_NONE,							0 ),
+	ASSERT_ENUM_STRING( MRB_GPU_TIME,						0 ),
 	ASSERT_ENUM_STRING( MRB_BEGIN_DRAWING_VIEW,				1 ),
 	ASSERT_ENUM_STRING( MRB_FILL_DEPTH_BUFFER,				2 ),
-	ASSERT_ENUM_STRING( MRB_DRAW_INTERACTIONS,				3 ),
-	ASSERT_ENUM_STRING( MRB_DRAW_SHADER_PASSES,				4 ),
-	ASSERT_ENUM_STRING( MRB_FOG_ALL_LIGHTS,					5 ),
-	ASSERT_ENUM_STRING( MRB_DRAW_SHADER_PASSES_POST,		6 ),
-	ASSERT_ENUM_STRING( MRB_DRAW_DEBUG_TOOLS,				7 ),
-	ASSERT_ENUM_STRING( MRB_CAPTURE_COLORBUFFER,			8 ),
-	ASSERT_ENUM_STRING( MRB_POSTPROCESS,					9 ),
-	ASSERT_ENUM_STRING( MRB_GPU_SYNC,						10 ),
-	ASSERT_ENUM_STRING( MRB_END_FRAME,						11 ),
-	ASSERT_ENUM_STRING( MRB_BINK_FRAME,						12 ),
-	ASSERT_ENUM_STRING( MRB_BINK_NEXT_FRAME,				13 ),
-	ASSERT_ENUM_STRING( MRB_TOTAL,							14 ),
-	ASSERT_ENUM_STRING( MRB_MAX,							15 )
+	ASSERT_ENUM_STRING( MRB_FILL_GEOMETRY_BUFFER,			3 ), // RB
+	ASSERT_ENUM_STRING( MRB_SSAO_PASS,						4 ), // RB
+	ASSERT_ENUM_STRING( MRB_AMBIENT_PASS,					5 ), // RB
+	ASSERT_ENUM_STRING( MRB_DRAW_INTERACTIONS,				6 ),
+	ASSERT_ENUM_STRING( MRB_DRAW_SHADER_PASSES,				7 ),
+	ASSERT_ENUM_STRING( MRB_FOG_ALL_LIGHTS,					8 ),
+	ASSERT_ENUM_STRING( MRB_BLOOM,							9 ),
+	ASSERT_ENUM_STRING( MRB_DRAW_SHADER_PASSES_POST,		10 ),
+	ASSERT_ENUM_STRING( MRB_DRAW_DEBUG_TOOLS,				11 ),
+	ASSERT_ENUM_STRING( MRB_CAPTURE_COLORBUFFER,			12 ),
+	ASSERT_ENUM_STRING( MRB_POSTPROCESS,					13 ),
+	ASSERT_ENUM_STRING( MRB_DRAW_GUI,                       14 ),
+	ASSERT_ENUM_STRING( MRB_TOTAL,							15 )
 };
 
 extern uint64 Sys_Microseconds();
@@ -86,12 +86,14 @@ struct pixEvent_t
 
 idCVar r_pix( "r_pix", "0", CVAR_INTEGER, "print GPU/CPU event timing" );
 
-static const int	MAX_PIX_EVENTS = 256;
-// defer allocation of this until needed, so we don't waste lots of memory
-pixEvent_t* 		pixEvents;	// [MAX_PIX_EVENTS]
-int					numPixEvents;
-int					numPixLevels;
-static GLuint		timeQueryIds[MAX_PIX_EVENTS];
+#if !defined( USE_VULKAN )
+	static const int	MAX_PIX_EVENTS = 256;
+	// defer allocation of this until needed, so we don't waste lots of memory
+	pixEvent_t* 		pixEvents;	// [MAX_PIX_EVENTS]
+	int					numPixEvents;
+	int					numPixLevels;
+	static GLuint		timeQueryIds[MAX_PIX_EVENTS];
+#endif
 
 /*
 ========================
@@ -100,8 +102,21 @@ PC_BeginNamedEvent
 FIXME: this is not thread safe on the PC
 ========================
 */
-void PC_BeginNamedEvent( const char* szName, ... )
+void PC_BeginNamedEvent( const char* szName, const idVec4& color )
 {
+	if( r_logLevel.GetInteger() <= 0 )
+	{
+		return;
+	}
+
+	// RB: colors are not supported in OpenGL
+
+	// only do this if RBDOOM-3-BFG was started by RenderDoc or some similar tool
+	if( glConfig.gremedyStringMarkerAvailable && glConfig.khronosDebugAvailable )
+	{
+		glPushDebugGroup( GL_DEBUG_SOURCE_APPLICATION_ARB, 0, GLsizei( strlen( szName ) ), szName );
+	}
+
 #if 0
 	if( !r_pix.GetBool() )
 	{
@@ -147,6 +162,29 @@ PC_EndNamedEvent
 */
 void PC_EndNamedEvent()
 {
+	if( r_logLevel.GetInteger() <= 0 )
+	{
+		return;
+	}
+
+#if defined( USE_VULKAN )
+	// SRS - Prefer VK_EXT_debug_utils over VK_EXT_debug_marker/VK_EXT_debug_report (deprecated by VK_EXT_debug_utils)
+	if( vkcontext.debugUtilsSupportAvailable )
+	{
+		qvkCmdEndDebugUtilsLabelEXT( vkcontext.commandBuffer[ vkcontext.frameParity ] );
+	}
+	else if( vkcontext.debugMarkerSupportAvailable )
+	{
+		qvkCmdDebugMarkerEndEXT( vkcontext.commandBuffer[ vkcontext.frameParity ] );
+	}
+#else
+	// only do this if RBDOOM-3-BFG was started by RenderDoc or some similar tool
+	if( glConfig.gremedyStringMarkerAvailable && glConfig.khronosDebugAvailable )
+	{
+		glPopDebugGroup();
+	}
+#endif
+
 #if 0
 	if( !r_pix.GetBool() )
 	{
@@ -223,8 +261,9 @@ idRenderLog
 
 idRenderLog	renderLog;
 
-#if !defined( STUB_RENDER_LOG )
 
+
+// RB begin
 /*
 ========================
 idRenderLog::idRenderLog
@@ -232,126 +271,9 @@ idRenderLog::idRenderLog
 */
 idRenderLog::idRenderLog()
 {
-	activeLevel = 0;
-	indentString[0] = '\0';
-	indentLevel = 0;
-//	logFile = NULL;
-
-	frameStartTime = 0;
-	closeBlockTime = 0;
-	logLevel = 0;
 }
 
-/*
-========================
-idRenderLog::StartFrame
-========================
-*/
-void idRenderLog::StartFrame()
-{
-	if( r_logFile.GetInteger() == 0 )
-	{
-		return;
-	}
-
-	// open a new logfile
-	indentLevel = 0;
-	indentString[0] = '\0';
-	activeLevel = r_logLevel.GetInteger();
-
-	/*
-	struct tm*		newtime;
-	time_t			aclock;
-
-	char ospath[ MAX_OSPATH ];
-
-	char qpath[128];
-	sprintf( qpath, "renderlogPC_%04i.txt", r_logFile.GetInteger() );
-	//idStr finalPath = fileSystem->RelativePathToOSPath( qpath );
-	sprintf( ospath, "%s", qpath );
-	*/
-	/*
-	for ( int i = 0; i < 9999 ; i++ ) {
-		char qpath[128];
-		sprintf( qpath, "renderlog_%04i.txt", r_logFile.GetInteger() );
-		idStr finalPath = fileSystem->RelativePathToOSPath( qpath );
-		fileSystem->RelativePathToOSPath( qpath, ospath, MAX_OSPATH ,FSPATH_BASE );
-		if ( !fileSystem->FileExists( finalPath.c_str() ) ) {
-			break; // use this name
-		}
-	}
-	*/
-
-	common->SetRefreshOnPrint( false );	// problems are caused if this print causes a refresh...
-
-	/*
-	if( logFile != NULL )
-	{
-		fileSystem->CloseFile( logFile );
-		logFile = NULL;
-	}
-
-	logFile = fileSystem->OpenFileWrite( ospath );
-	if( logFile == NULL )
-	{
-		idLib::Warning( "Failed to open logfile %s", ospath );
-		return;
-	}
-	idLib::Printf( "Opened logfile %s\n", ospath );
-
-	// write the time out to the top of the file
-	time( &aclock );
-	newtime = localtime( &aclock );
-	const char* str = asctime( newtime );
-	logFile->Printf( "// %s", str );
-	logFile->Printf( "// %s\n\n", com_version.GetString() );
-	*/
-
-	frameStartTime = Sys_Microseconds();
-	closeBlockTime = frameStartTime;
-	OpenBlock( "Frame" );
-}
-
-/*
-========================
-idRenderLog::EndFrame
-========================
-*/
-void idRenderLog::EndFrame()
-{
-	PC_EndFrame();
-
-	//if( logFile != NULL )
-	if( r_logFile.GetInteger() != 0 )
-	{
-		if( r_logFile.GetInteger() == 1 )
-		{
-			Close();
-		}
-		// log is open, so decrement r_logFile and stop if it is zero
-		//r_logFile.SetInteger( r_logFile.GetInteger() - 1 );
-		//idLib::Printf( "Frame logged.\n" );
-		return;
-	}
-}
-
-/*
-========================
-idRenderLog::Close
-========================
-*/
-void idRenderLog::Close()
-{
-	//if( logFile != NULL )
-	if( r_logFile.GetInteger() != 0 )
-	{
-		CloseBlock();
-		//idLib::Printf( "Closing logfile\n" );
-		//fileSystem->CloseFile( logFile );
-		//logFile = NULL;
-		activeLevel = 0;
-	}
-}
+#if 1
 
 /*
 ========================
@@ -360,6 +282,19 @@ idRenderLog::OpenMainBlock
 */
 void idRenderLog::OpenMainBlock( renderLogMainBlock_t block )
 {
+	// SRS - Use glConfig.timerQueryAvailable flag to control timestamp capture for all platforms
+	if( glConfig.timerQueryAvailable )
+	{
+		mainBlock = block;
+
+		if( backEnd.glState.renderLogMainBlockTimeQueryIds[ backEnd.glState.frameParity ][ mainBlock * 2 ] == 0 )
+		{
+			glCreateQueries( GL_TIMESTAMP, 2, &backEnd.glState.renderLogMainBlockTimeQueryIds[ backEnd.glState.frameParity ][ mainBlock * 2 ] );
+		}
+
+		glQueryCounter( backEnd.glState.renderLogMainBlockTimeQueryIds[ backEnd.glState.frameParity ][ mainBlock * 2 + 0 ], GL_TIMESTAMP );
+		backEnd.glState.renderLogMainBlockTimeQueryIssued[ backEnd.glState.frameParity ][ mainBlock * 2 + 0 ]++;
+	}
 }
 
 /*
@@ -369,171 +304,24 @@ idRenderLog::CloseMainBlock
 */
 void idRenderLog::CloseMainBlock()
 {
+	// SRS - Use glConfig.timerQueryAvailable flag to control timestamp capture for all platforms
+	if( glConfig.timerQueryAvailable )
+	{
+		glQueryCounter( backEnd.glState.renderLogMainBlockTimeQueryIds[ backEnd.glState.frameParity ][ mainBlock * 2 + 1 ], GL_TIMESTAMP );
+		backEnd.glState.renderLogMainBlockTimeQueryIssued[ backEnd.glState.frameParity ][ mainBlock * 2 + 1 ]++;
+	}
 }
+
+#endif
 
 /*
 ========================
 idRenderLog::OpenBlock
 ========================
 */
-void idRenderLog::OpenBlock( const char* label )
+void idRenderLog::OpenBlock( const char* label, const idVec4& color )
 {
-	// Allow the PIX functionality even when logFile is not running.
-	PC_BeginNamedEvent( label );
-
-	//if( logFile != NULL )
-	if( r_logFile.GetInteger() != 0 )
-	{
-		LogOpenBlock( RENDER_LOG_INDENT_MAIN_BLOCK, "%s", label );
-	}
-}
-
-/*
-========================
-idRenderLog::CloseBlock
-========================
-*/
-void idRenderLog::CloseBlock()
-{
-	PC_EndNamedEvent();
-
-	//if( logFile != NULL )
-	if( r_logFile.GetInteger() != 0 )
-	{
-		LogCloseBlock( RENDER_LOG_INDENT_MAIN_BLOCK );
-	}
-}
-
-/*
-========================
-idRenderLog::Printf
-========================
-*/
-void idRenderLog::Printf( const char* fmt, ... )
-{
-#if !defined(USE_GLES2) && !defined(USE_GLES3)
-	if( activeLevel <= LOG_LEVEL_BLOCKS_ONLY )
-	{
-		return;
-	}
-
-	//if( logFile == NULL )
-	if( r_logFile.GetInteger() == 0 || !glConfig.gremedyStringMarkerAvailable )
-	{
-		return;
-	}
-
-	va_list		marker;
-	char		msg[4096];
-
-	idStr		out = indentString;
-
-	va_start( marker, fmt );
-	idStr::vsnPrintf( msg, sizeof( msg ), fmt, marker );
-	va_end( marker );
-
-	msg[sizeof( msg ) - 1] = '\0';
-
-	out.Append( msg );
-
-	glStringMarkerGREMEDY( out.Length(), out.c_str() );
-
-	//logFile->Printf( "%s", indentString );
-	//va_start( marker, fmt );
-	//logFile->VPrintf( fmt, marker );
-	//va_end( marker );
-
-
-//	logFile->Flush();		this makes it take waaaay too long
-#endif
-}
-
-/*
-========================
-idRenderLog::LogOpenBlock
-========================
-*/
-void idRenderLog::LogOpenBlock( renderLogIndentLabel_t label, const char* fmt, ... )
-{
-	uint64 now = Sys_Microseconds();
-
-	//if( logFile != NULL )
-	if( r_logFile.GetInteger() != 0 )
-	{
-		//if( now - closeBlockTime >= 1000 )
-		//{
-		//logFile->Printf( "%s%1.1f msec gap from last closeblock\n", indentString, ( now - closeBlockTime ) * ( 1.0f / 1000.0f ) );
-		//}
-
-#if !defined(USE_GLES2) && !defined(USE_GLES3)
-		if( glConfig.gremedyStringMarkerAvailable )
-		{
-			//Printf( fmt, args );
-			//Printf( " {\n" );
-
-			//logFile->Printf( "%s", indentString );
-			//logFile->VPrintf( fmt, args );
-			//logFile->Printf( " {\n" );
-
-			va_list		marker;
-			char		msg[4096];
-
-			idStr		out = indentString;
-
-			va_start( marker, fmt );
-			idStr::vsnPrintf( msg, sizeof( msg ), fmt, marker );
-			va_end( marker );
-
-			msg[sizeof( msg ) - 1] = '\0';
-
-			out.Append( msg );
-			out += " {";
-
-			glStringMarkerGREMEDY( out.Length(), out.c_str() );
-		}
-#endif
-	}
-
-	Indent( label );
-
-	if( logLevel >= MAX_LOG_LEVELS )
-	{
-		idLib::Warning( "logLevel %d >= MAX_LOG_LEVELS", logLevel );
-	}
-
-
-	logLevel++;
-}
-
-/*
-========================
-idRenderLog::LogCloseBlock
-========================
-*/
-void idRenderLog::LogCloseBlock( renderLogIndentLabel_t label )
-{
-	closeBlockTime = Sys_Microseconds();
-
-	assert( logLevel > 0 );
-	logLevel--;
-
-	Outdent( label );
-
-	//if( logFile != NULL )
-	//{
-	//}
-}
-
-#else	// !STUB_RENDER_LOG
-
-/*
-========================
-idRenderLog::OpenBlock
-========================
-*/
-void idRenderLog::OpenBlock( const char* label )
-{
-	PC_BeginNamedEvent( label );
+	PC_BeginNamedEvent( label, color );
 }
 
 /*
@@ -545,5 +333,4 @@ void idRenderLog::CloseBlock()
 {
 	PC_EndNamedEvent();
 }
-
-#endif // !STUB_RENDER_LOG
+// RB end

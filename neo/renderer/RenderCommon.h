@@ -37,6 +37,7 @@ If you have questions concerning this license or the applicable additional terms
 #include "Image.h"
 #include "Font.h"
 #include "Framebuffer.h"
+#include "RenderLog.h"
 
 
 // maximum texture units
@@ -539,7 +540,7 @@ struct setBufferCommand_t
 {
 	renderCommand_t		commandId;
 	renderCommand_t* 	next;
-	GLenum	buffer;
+	int					buffer;
 };
 
 struct drawSurfsCommand_t
@@ -656,7 +657,7 @@ enum vertexLayoutType_t
 	NUM_VERTEX_LAYOUTS
 };
 
-struct glstate_t
+struct glState_t
 {
 	tmu_t				tmu[MAX_MULTITEXTURE_UNITS];
 
@@ -677,6 +678,13 @@ struct glstate_t
 	float				polyOfsBias;
 
 	uint64				glStateBits;
+
+	uint64				frameCounter;
+	uint32				frameParity;
+
+	// for GL_TIME_ELAPSED_EXT queries
+	GLuint				renderLogMainBlockTimeQueryIds[ NUM_FRAME_DATA ][ MRB_TOTAL_QUERIES ];
+	uint32				renderLogMainBlockTimeQueryIssued[ NUM_FRAME_DATA ][ MRB_TOTAL_QUERIES ];
 };
 
 
@@ -691,7 +699,7 @@ struct backEndState_t
 
 	const viewEntity_t* currentSpace;			// for detecting when a matrix must change
 	idScreenRect		currentScissor;			// for scissor clipping, local inside renderView viewport
-	glstate_t			glState;				// for OpenGL state deltas
+	glState_t			glState;				// for OpenGL state deltas
 
 	bool				currentRenderCopied;	// true if any material has already referenced _currentRender
 
@@ -728,6 +736,10 @@ public:
 	// external functions
 	virtual void			Init();
 	virtual void			Shutdown();
+	virtual bool			IsInitialized() const
+	{
+		return bInitialized;
+	}
 	virtual void			ResetGuiModels();
 	virtual void			InitOpenGL();
 	virtual void			ShutdownOpenGL();
@@ -789,7 +801,10 @@ public:
 	virtual void			UnCrop();
 	virtual bool			UploadImage( const char* imageName, const byte* data, int width, int height );
 
-
+	void					SetInitialized()
+	{
+		bInitialized = true;
+	}
 
 public:
 	// internal functions
@@ -924,6 +939,7 @@ extern idCVar r_useLightScissors;			// 1 = use custom scissor rectangle for each
 extern idCVar r_useEntityPortalCulling;		// 0 = none, 1 = box
 extern idCVar r_skipPrelightShadows;		// 1 = skip the dmap generated static shadow volumes
 extern idCVar r_useCachedDynamicModels;		// 1 = cache snapshots of dynamic models
+extern idCVar r_useSeamlessCubeMap;
 extern idCVar r_useScissor;					// 1 = scissor clip as portals and lights are processed
 extern idCVar r_usePortals;					// 1 = use portals to perform area culling, otherwise draw everything
 extern idCVar r_useStateCaching;			// avoid redundant state changes in GL_*() calls
@@ -1057,6 +1073,8 @@ INITIALIZATION
 
 void R_Init();
 void R_InitOpenGL();
+
+void R_SetNewMode( const bool fullInit );
 
 void R_SetColorMappings();
 

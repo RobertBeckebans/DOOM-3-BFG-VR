@@ -307,23 +307,6 @@ static void R_CheckCvars()
 		}
 	}
 
-	extern idCVar r_useSRGB;
-	if( r_useSRGB.IsModified() )
-	{
-		r_useSRGB.ClearModified();
-		if( glConfig.sRGBFramebufferAvailable )
-		{
-			if( r_useSRGB.GetBool() )
-			{
-				glEnable( GL_FRAMEBUFFER_SRGB );
-			}
-			else
-			{
-				glDisable( GL_FRAMEBUFFER_SRGB );
-			}
-		}
-	}
-
 	if( r_multiSamples.IsModified() )
 	{
 		if( r_multiSamples.GetInteger() > 0 )
@@ -360,6 +343,7 @@ idRenderSystemLocal::idRenderSystemLocal() :
 	unitSquareTriangles( NULL ),
 	zeroOneCubeTriangles( NULL ),
 	testImageTriangles( NULL ),
+	bInitialized( false ),
 	hudTriangles( NULL ) // Koz hud mesh
 {
 	Clear();
@@ -433,7 +417,7 @@ idRenderSystemLocal::DrawStretchPic
 static triIndex_t quadPicIndexes[6] = { 3, 0, 2, 2, 0, 1 };
 void idRenderSystemLocal::DrawStretchPic( const idVec4& topLeft, const idVec4& topRight, const idVec4& bottomRight, const idVec4& bottomLeft, const idMaterial* material )
 {
-	if( !R_IsInitialized() )
+	if( !IsInitialized() )
 	{
 		return;
 	}
@@ -488,7 +472,7 @@ idRenderSystemLocal::DrawStretchTri
 */
 void idRenderSystemLocal::DrawStretchTri( const idVec2& p1, const idVec2& p2, const idVec2& p3, const idVec2& t1, const idVec2& t2, const idVec2& t3, const idMaterial* material )
 {
-	if( !R_IsInitialized() )
+	if( !IsInitialized() )
 	{
 		return;
 	}
@@ -759,7 +743,7 @@ void idRenderSystemLocal::SwapCommandBuffers_FinishRendering(
 		*gpuMicroSec = 0;		// until shown otherwise
 	}
 
-	if( !R_IsInitialized() )
+	if( !IsInitialized() )
 	{
 		return;
 	}
@@ -826,7 +810,7 @@ idRenderSystemLocal::SwapCommandBuffers_FinishCommandBuffers
 */
 const emptyCommand_t* idRenderSystemLocal::SwapCommandBuffers_FinishCommandBuffers()
 {
-	if( !R_IsInitialized() )
+	if( !IsInitialized() )
 	{
 		return NULL;
 	}
@@ -973,7 +957,7 @@ idRenderSystemLocal::CropRenderSize
 */
 void idRenderSystemLocal::CropRenderSize( int width, int height )
 {
-	if( !R_IsInitialized() )
+	if( !IsInitialized() )
 	{
 		return;
 	}
@@ -1021,7 +1005,7 @@ idRenderSystemLocal::UnCrop
 */
 void idRenderSystemLocal::UnCrop()
 {
-	if( !R_IsInitialized() )
+	if( !IsInitialized() )
 	{
 		return;
 	}
@@ -1056,7 +1040,7 @@ idRenderSystemLocal::CaptureRenderToImage
 */
 void idRenderSystemLocal::CaptureRenderToImage( const char* imageName, bool clearColorAfterCopy )
 {
-	if( !R_IsInitialized() )
+	if( !IsInitialized() )
 	{
 		return;
 	}
@@ -1108,7 +1092,7 @@ idRenderSystemLocal::CaptureRenderToFile
 */
 void idRenderSystemLocal::CaptureRenderToFile( const char* fileName, bool fixAlpha )
 {
-	if( !R_IsInitialized() )
+	if( !IsInitialized() )
 	{
 		return;
 	}

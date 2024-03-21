@@ -99,7 +99,7 @@ static void WIN_EnableAltTab()
 
 void WIN_Sizing( WORD side, RECT* rect )
 {
-	if( !R_IsInitialized() || renderSystem->GetWidth() <= 0 || renderSystem->GetHeight() <= 0 )
+	if( !tr.IsInitialized() || renderSystem->GetWidth() <= 0 || renderSystem->GetHeight() <= 0 )
 	{
 		return;
 	}
@@ -181,12 +181,11 @@ LONG WINAPI MainWndProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
 			commonVoice->Event( wParam, lParam );
 			break;
 		case WM_WINDOWPOSCHANGED:
-			if( R_IsInitialized() )
+			if( tr.IsInitialized() )
 			{
 				RECT rect;
 				if( ::GetClientRect( win32.hWnd, &rect ) )
 				{
-
 					if( rect.right > rect.left && rect.bottom > rect.top )
 					{
 						glConfig.nativeScreenWidth = rect.right - rect.left;

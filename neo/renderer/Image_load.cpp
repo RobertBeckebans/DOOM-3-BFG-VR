@@ -26,8 +26,8 @@ If you have questions concerning this license or the applicable additional terms
 ===========================================================================
 */
 
-#pragma hdrstop
 #include "precompiled.h"
+#pragma hdrstop
 
 #include "DXT/DXTCodec.h"
 #include "RenderCommon.h"
@@ -82,7 +82,6 @@ idImage::DeriveOpts
 */
 ID_INLINE void idImage::DeriveOpts()
 {
-
 	if( opts.format == FMT_NONE )
 	{
 		opts.colorFormat = CFM_DEFAULT;
@@ -93,6 +92,7 @@ ID_INLINE void idImage::DeriveOpts()
 				opts.format = FMT_DXT1;
 				opts.colorFormat = CFM_GREEN_ALPHA;
 				break;
+
 			case TD_DEPTH:
 				opts.format = FMT_DEPTH;
 				break;
@@ -212,7 +212,7 @@ void idImage::GenerateImage( const byte* pic, int width, int height, textureFilt
 	// have filled in the parms.  We must have the values set, or
 	// an image match from a shader before the render starts would miss
 	// the generated texture
-	if( !R_IsInitialized() )
+	if( !tr.IsInitialized() )
 	{
 		return;
 	}
@@ -256,7 +256,7 @@ void idImage::GenerateCubeImage( const byte* pic[6], int size, textureFilter_t f
 	// have filled in the parms.  We must have the values set, or
 	// an image match from a shader before the render starts would miss
 	// the generated texture
-	if( !R_IsInitialized() )
+	if( !tr.IsInitialized() )
 	{
 		return;
 	}
@@ -294,7 +294,7 @@ void idImage::GenerateShadowArray( int width, int height, textureFilter_t filter
 	// have filled in the parms.  We must have the values set, or
 	// an image match from a shader before the render starts would miss
 	// the generated texture
-	if( !R_IsInitialized() )
+	if( !tr.IsInitialized() )
 	{
 		return;
 	}
@@ -336,7 +336,6 @@ void idImage::GetGeneratedName( idStr& _name, const textureUsage_t& _usage, cons
 	}
 }
 
-
 /*
 ===============
 ActuallyLoadImage
@@ -347,9 +346,8 @@ On exit, the idImage will have a valid OpenGL texture number that can be bound
 */
 void idImage::ActuallyLoadImage( bool fromBackEnd )
 {
-
 	// if we don't have a rendering context yet, just return
-	if( !R_IsInitialized() )
+	if( !tr.IsInitialized() )
 	{
 		return;
 	}
@@ -377,8 +375,7 @@ void idImage::ActuallyLoadImage( bool fromBackEnd )
 		{
 			opts.textureType = TT_2D_ARRAY;
 		}
-		// RB end
-		else if( cubeFiles != CF_2D )
+		else if( cubeFiles == CF_NATIVE || cubeFiles == CF_CAMERA || cubeFiles == CF_SINGLE )
 		{
 			opts.textureType = TT_CUBIC;
 			repeat = TR_CLAMP;
@@ -394,9 +391,10 @@ void idImage::ActuallyLoadImage( bool fromBackEnd )
 	// Figure out opts.colorFormat and opts.format so we can make sure the binary image is up to date
 	DeriveOpts();
 
-	idStr generatedName = GetName();
+	idStrStatic< MAX_OSPATH > generatedName = GetName();
 	GetGeneratedName( generatedName, usage, cubeFiles );
 
+	// RB: try to load the .bimage and skip if sourceFileTime is newer
 	idBinaryImage im( generatedName );
 	binaryFileTime = im.LoadFromGeneratedFile( sourceFileTime );
 
@@ -443,7 +441,6 @@ void idImage::ActuallyLoadImage( bool fromBackEnd )
 			}
 		}
 	}
-
 	const bimageFile_t& header = im.GetFileHeader();
 
 	if( ( fileSystem->InProductionMode() && binaryFileTime != FILE_NOT_FOUND_TIMESTAMP ) || ( ( binaryFileTime != FILE_NOT_FOUND_TIMESTAMP )
@@ -458,6 +455,7 @@ void idImage::ActuallyLoadImage( bool fromBackEnd )
 		opts.colorFormat = ( textureColor_t )header.colorFormat;
 		opts.format = ( textureFormat_t )header.format;
 		opts.textureType = ( textureType_t )header.textureType;
+
 		if( cvarSystem->GetCVarBool( "fs_buildresources" ) )
 		{
 			// for resource gathering write this image to the preload file for this map
@@ -552,9 +550,8 @@ ActuallySaveImage
 */
 void idImage::ActuallySaveImage()
 {
-
 	// if we don't have a rendering context yet, just return
-	if( !R_IsInitialized() )
+	if( !tr.IsInitialized() )
 	{
 		return;
 	}
