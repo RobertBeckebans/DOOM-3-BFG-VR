@@ -875,22 +875,4 @@ drawSurf_t* idRenderModelDecal::CreateDecalDrawSurf( const viewEntity_t* space, 
 	return drawSurf;
 }
 
-/*
-====================
-idRenderModelDecal::ReadFromDemoFile
-====================
-*/
-void idRenderModelDecal::ReadFromDemoFile( idDemoFile* f )
-{
-	// FIXME: implement
-}
 
-/*
-====================
-idRenderModelDecal::WriteToDemoFile
-====================
-*/
-void idRenderModelDecal::WriteToDemoFile( idDemoFile* f ) const
-{
-	// FIXME: implement
-}

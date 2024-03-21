@@ -235,8 +235,6 @@ Exits with mapSpawned = false
 */
 void idCommonLocal::UnloadMap()
 {
-	StopPlayingRenderDemo();
-
 	commonVr->PDAforcetoggle = false;
 	commonVr->PDAforced = false;
 	commonVr->vrIsBackgroundSaving = false;
@@ -246,11 +244,6 @@ void idCommonLocal::UnloadMap()
 	if( game )
 	{
 		game->MapShutdown();
-	}
-
-	if( writeDemo )
-	{
-		StopRecordingRenderDemo();
 	}
 
 	mapSpawned = false;

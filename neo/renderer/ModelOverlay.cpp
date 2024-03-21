@@ -790,22 +790,4 @@ drawSurf_t* idRenderModelOverlay::CreateOverlayDrawSurf( const viewEntity_t* spa
 	return drawSurf;
 }
 
-/*
-====================
-idRenderModelOverlay::ReadFromDemoFile
-====================
-*/
-void idRenderModelOverlay::ReadFromDemoFile( idDemoFile* f )
-{
-	// FIXME: implement
-}
 
-/*
-====================
-idRenderModelOverlay::WriteToDemoFile
-====================
-*/
-void idRenderModelOverlay::WriteToDemoFile( idDemoFile* f ) const
-{
-	// FIXME: implement
-}

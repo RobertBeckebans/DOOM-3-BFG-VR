@@ -299,13 +299,6 @@ public:
 	// to is in Db, over is in seconds
 	virtual void			FadeSoundClasses( const int soundClass, const float to, const float over );
 
-	// dumps the current state and begins archiving commands
-	virtual void			StartWritingDemo( idDemoFile* demo );
-	virtual void			StopWritingDemo();
-
-	// read a sound command from a demo file
-	virtual void			ProcessDemoCommand( idDemoFile* readDemo );
-
 	// menu sounds
 	virtual int				PlayShaderDirectly( const char* name, int channel = -1 );
 
@@ -319,10 +312,6 @@ public:
 	}
 
 	virtual int				GetSoundTime();
-
-	// avidump
-	virtual void			AVIOpen( const char* path, const char* name );
-	virtual void			AVIClose();
 
 	// SaveGame Support
 	virtual void			WriteToSaveGame( idFile* savefile );
@@ -350,7 +339,6 @@ public:
 	idSoundFade			soundClassFade[SOUND_MAX_CLASSES];
 
 	idRenderWorld* 		renderWorld;	// for debug visualization and light amplitude sampling
-	idDemoFile* 		writeDemo;		// if not NULL, archive commands here
 
 	float				currentCushionDB;	// channels at or below this level will be faded to 0
 	float				shakeAmp;			// last calculated shake amplitude

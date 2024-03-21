@@ -251,23 +251,6 @@ public:
 	}
 	void					ShowPortals();
 
-	//--------------------------
-	// RenderWorld_demo.cpp
-
-	void					StartWritingDemo( idDemoFile* demo );
-	void					StopWritingDemo();
-	bool					ProcessDemoCommand( idDemoFile* readDemo, renderView_t* demoRenderView, int* demoTimeOffset );
-
-	void					WriteLoadMap();
-	void					WriteRenderView( const renderView_t* renderView );
-	void					WriteVisibleDefs( const viewDef_t* viewDef );
-	void					WriteFreeLight( qhandle_t handle );
-	void					WriteFreeEntity( qhandle_t handle );
-	void					WriteRenderLight( qhandle_t handle, const renderLight_t* light );
-	void					WriteRenderEntity( qhandle_t handle, const renderEntity_t* ent );
-	void					ReadRenderEntity();
-	void					ReadRenderLight();
-
 
 	//--------------------------
 	// RenderWorld.cpp

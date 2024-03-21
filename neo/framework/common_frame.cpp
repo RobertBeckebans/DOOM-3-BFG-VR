@@ -375,11 +375,6 @@ void idCommonLocal::Draw()
 		// Koz end
 
 	}
-	else if( readDemo )
-	{
-		renderWorld->RenderScene( &currentDemoRenderView );
-		renderSystem->DrawDemoPics();
-	}
 	else if( mapSpawned )
 	{
 		bool gameDraw = false;
@@ -399,12 +394,6 @@ void idCommonLocal::Draw()
 		{
 			renderSystem->SetColor( colorBlack );
 			renderSystem->DrawStretchPic( 0, 0, renderSystem->GetVirtualWidth(), renderSystem->GetVirtualHeight(), 0, 0, 1, 1, whiteMaterial );
-		}
-
-		// save off the 2D drawing from the game
-		if( writeDemo )
-		{
-			renderSystem->WriteDemoPics();
 		}
 	}
 	else
@@ -655,20 +644,6 @@ void idCommonLocal::Frame()
 #endif
 		// RB end
 
-		// save the screenshot and audio from the last draw if needed
-		if( aviCaptureMode )
-		{
-			idStr name;
-			name.Format( "demos/%s/%s_%05i", aviDemoShortName.c_str(), aviDemoShortName.c_str(), aviDemoFrameCount++ );
-			renderSystem->TakeScreenshot( com_aviDemoWidth.GetInteger(), com_aviDemoHeight.GetInteger(), name, com_aviDemoSamples.GetInteger(), NULL, TGA );
-
-			// remove any printed lines at the top before taking the screenshot
-			console->ClearNotifyLines();
-
-			// this will call Draw, possibly multiple times if com_aviDemoSamples is > 1
-			renderSystem->TakeScreenshot( com_aviDemoWidth.GetInteger(), com_aviDemoHeight.GetInteger(), name, com_aviDemoSamples.GetInteger(), NULL, TGA );
-		}
-
 		//--------------------------------------------
 		// wait for the GPU to finish drawing
 		//
@@ -900,12 +875,6 @@ void idCommonLocal::Frame()
 			Sys_Sleep( 0 );
 		}
 
-		// jpcy: playDemo uses the game frame wait logic, but shouldn't run any game frames
-		if( readDemo && !timeDemo )
-		{
-			numGameFrames = 0;
-		}
-
 		//--------------------------------------------
 		// It would be better to push as much of this as possible
 		// either before or after the renderSystem->SwapCommandBuffers(),
@@ -1063,8 +1032,7 @@ void idCommonLocal::Frame()
 		SendSnapshots();
 
 		// Render the sound system using the latest commands from the game thread
-		// SRS - Enable sound during normal playDemo playback but not during timeDemo
-		if( pauseGame && !( readDemo && !timeDemo ) )
+		if( pauseGame )
 		{
 			soundWorld->Pause();
 			soundSystem->SetPlayingSoundWorld( menuSoundWorld );

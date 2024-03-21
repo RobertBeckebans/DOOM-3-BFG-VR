@@ -185,7 +185,6 @@ const int MAX_EXPRESSION_REGISTERS = 4096;
 		#include "../framework/EditField.h"
 		#include "../framework/DebugGraph.h"
 		#include "../framework/Console.h"
-		#include "../framework/DemoFile.h"
 		#include "../framework/Common_dialog.h"
 
 	#endif /* !GAME_DLL */

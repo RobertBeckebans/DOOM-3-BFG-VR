@@ -207,15 +207,6 @@ public:
 	virtual int					ButtonState( int key );
 	virtual int					KeyState( int key );
 
-	virtual idDemoFile* 		ReadDemo()
-	{
-		return readDemo;
-	}
-	virtual idDemoFile* 		WriteDemo()
-	{
-		return writeDemo;
-	}
-
 	virtual idGame* 			Game()
 	{
 		return game;
@@ -411,16 +402,6 @@ public:	// These are public because they are called directly by static functions
 	void	StartNewGame( const char* mapName, bool devmap, int gameMode );
 	void	LeaveGame();
 
-	void	DemoShot( const char* name );
-	void	StartRecordingRenderDemo( const char* name );
-	void	StopRecordingRenderDemo();
-	void	StartPlayingRenderDemo( idStr name );
-	void	StopPlayingRenderDemo();
-	void	CompressDemoFile( const char* scheme, const char* name );
-	void	TimeRenderDemo( const char* name, bool twice = false, bool quit = false );
-	void	AVIRenderDemo( const char* name );
-	void	AVIGame( const char* name );
-
 	// localization
 	void	InitLanguageDict();
 	void	LocalizeGui( const char* fileName, idLangDict& langDict );
@@ -462,11 +443,6 @@ private:
 	// The main render world and sound world
 	idRenderWorld* 		renderWorld;
 	idSoundWorld* 		soundWorld;
-
-	// The renderer and sound system will write changes to writeDemo.
-	// Demos can be recorded and played at the same time when splicing.
-	idDemoFile* 		readDemo;
-	idDemoFile* 		writeDemo;
 
 	bool				menuActive;
 	idSoundWorld* 		menuSoundWorld;			// so the game soundWorld can be muted
@@ -547,22 +523,6 @@ private:
 	int					gameFrame;			// Frame number of the local game
 	double				gameTimeResidual;	// left over msec from the last game frame
 	bool				syncNextGameFrame;
-
-	bool				aviCaptureMode;		// if true, screenshots will be taken and sound captured
-	idStr				aviDemoShortName;	//
-	int					aviDemoFrameCount;
-
-	enum timeDemo_t
-	{
-		TD_NO,
-		TD_YES,
-		TD_YES_THEN_QUIT
-	};
-	timeDemo_t			timeDemo;
-	int					timeDemoStartTime;
-	int					numDemoFrames;		// for timeDemo and demoShot
-	int					demoTimeOffset;
-	renderView_t		currentDemoRenderView;
 
 	idStrList			mpGameModes;
 	idStrList			mpDisplayGameModes;

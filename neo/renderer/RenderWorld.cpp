@@ -352,11 +352,6 @@ void idRenderWorldLocal::UpdateEntityDef( qhandle_t entityHandle, const renderEn
 	def->parms = *re;
 
 	def->lastModifiedFrameNum = tr.frameCount;
-	if( common->WriteDemo() && def->archived )
-	{
-		WriteFreeEntity( entityHandle );
-		def->archived = false;
-	}
 
 	// optionally immediately issue any callbacks
 	if( !r_useEntityCallbacks.GetBool() && def->parms.callback != NULL )
@@ -402,11 +397,6 @@ void idRenderWorldLocal::FreeEntityDef( qhandle_t entityHandle )
 	}
 
 	R_FreeEntityDefDerivedData( def, false, false );
-
-	if( common->WriteDemo() && def->archived )
-	{
-		WriteFreeEntity( entityHandle );
-	}
 
 	// if we are playing a demo, these will have been freed
 	// in R_FreeEntityDefDerivedData(), otherwise the gui
@@ -532,11 +522,6 @@ void idRenderWorldLocal::UpdateLightDef( qhandle_t lightHandle, const renderLigh
 
 	light->parms = *rlight;
 	light->lastModifiedFrameNum = tr.frameCount;
-	if( common->WriteDemo() && light->archived )
-	{
-		WriteFreeLight( lightHandle );
-		light->archived = false;
-	}
 
 	// new for BFG edition: force noShadows on spectrum lights so teleport spawns
 	// don't cause such a slowdown.  Hell writing shouldn't be shadowed anyway...
@@ -582,11 +567,6 @@ void idRenderWorldLocal::FreeLightDef( qhandle_t lightHandle )
 	}
 
 	R_FreeLightDefDerivedData( light );
-
-	if( common->WriteDemo() && light->archived )
-	{
-		WriteFreeLight( lightHandle );
-	}
 
 	delete light;
 	lightDefs[lightHandle] = NULL;
@@ -982,13 +962,6 @@ void idRenderWorldLocal::RenderScene( const renderView_t* renderView )
 
 	// render any post processing after the view and all its subviews has been draw
 	R_RenderPostProcess( parms );
-
-	// now write delete commands for any modified-but-not-visible entities, and
-	// add the renderView command to the demo
-	if( common->WriteDemo() )
-	{
-		WriteRenderView( renderView );
-	}
 
 #if 0
 	for( int i = 0; i < entityDefs.Num(); i++ )
