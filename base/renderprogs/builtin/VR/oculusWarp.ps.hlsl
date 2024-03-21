@@ -28,18 +28,22 @@ If you have questions concerning this license or the applicable additional terms
 
 #include "renderprogs/global.inc"
 
+// *INDENT-OFF*
 uniform sampler2D samp0 : register(s0); 
 uniform sampler2D samp1 : register(s1); 
 
-struct PS_IN {
+struct PS_IN 
+{
 //	float4 position : POSITION;
 	float4 color : COLOR0;
 	float4 texcoord0 : TEXCOORD0;
 };
 
-struct PS_OUT {	
+struct PS_OUT 
+{	
 	float4 color : COLOR;
 };
+// *INDENT-ON*
 
 void main( PS_IN fragment, out PS_OUT result ) {
 	float4 outColor = tex2Dlod( samp0, fragment.texcoord0 ) * fragment.color;

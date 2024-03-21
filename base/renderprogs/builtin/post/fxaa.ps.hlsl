@@ -2,9 +2,9 @@
 ===========================================================================
 
 Doom 3 BFG Edition GPL Source Code
-Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company. 
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").  
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
 Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -26,11 +26,13 @@ If you have questions concerning this license or the applicable additional terms
 ===========================================================================
 */
 
-#include "global.inc"
+#include "renderprogs/global.inc.hlsl"
+
 #define FXAA_GREEN_AS_LUMA 1
 #define FXAA_EARLY_EXIT 0
 #include "Fxaa3_11.h"
 
+// *INDENT-OFF*
 uniform sampler2D samp0 : register(s0);
 uniform sampler2D samp1 : register(s1); // exponent bias -1
 uniform sampler2D samp2 : register(s2); // exponent bias -2
@@ -51,8 +53,10 @@ struct PS_IN {
 struct PS_OUT {	
 	float4 color : COLOR;
 };
+// *INDENT-ON*
 
-void main( PS_IN fragment, out PS_OUT result ) {
+void main( PS_IN fragment, out PS_OUT result )
+{
 
 	const float4 FXAAQualityRCPFrame = rpUser0;
 	const float4 FXAAConsoleRcpFrameOpt = rpUser1;
@@ -105,6 +109,6 @@ void main( PS_IN fragment, out PS_OUT result ) {
 											fxaaConsoleEdgeThreshold,
 											fxaaConsoleEdgeThresholdMin,
 											fxaaConsole360ConstDir );
-											
+
 	result.color = colorSample;
 }

@@ -28,7 +28,9 @@ If you have questions concerning this license or the applicable additional terms
 
 #include "renderprogs/global.inc"
 
-struct VS_IN {
+// *INDENT-OFF*
+struct VS_IN 
+{
 	float2 pos : POS;
 	float2 texr : TEXR;
 	float2 texg : TEXG;
@@ -36,11 +38,13 @@ struct VS_IN {
 	float4 dcolor : DCOLOR;
 };
 
-struct VS_OUT {
+struct VS_OUT 
+{
 	float4 position : POSITION;
 	float4 color : COLOR;
 	float4 texcoord0 : TEXCOORD0;
 };
+// *INDENT-ON*
 
 void main( VS_IN vertex, out VS_OUT result ) {
 

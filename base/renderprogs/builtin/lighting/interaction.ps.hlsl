@@ -27,31 +27,36 @@ If you have questions concerning this license or the applicable additional terms
 ===========================================================================
 */
 
-#include "renderprogs/global.inc"
+#include "renderprogs/global.inc.hlsl"
 
+// *INDENT-OFF*
 uniform sampler2D	samp0 : register(s0); // texture 1 is the per-surface bump map
 uniform sampler2D	samp1 : register(s1); // texture 2 is the light falloff texture
 uniform sampler2D	samp2 : register(s2); // texture 3 is the light projection texture
 uniform sampler2D	samp3 : register(s3); // texture 4 is the per-surface diffuse map
 uniform sampler2D	samp4 : register(s4); // texture 5 is the per-surface specular map
 
-struct PS_IN {
-	half4 position	: VPOS;
-	half4 texcoord0	: TEXCOORD0_centroid;
-	half4 texcoord1	: TEXCOORD1_centroid;
-	half4 texcoord2	: TEXCOORD2_centroid;
-	half4 texcoord3	: TEXCOORD3_centroid;
-	half4 texcoord4	: TEXCOORD4_centroid;
-	half4 texcoord5	: TEXCOORD5_centroid;
-	half4 texcoord6	: TEXCOORD6_centroid;
-	half4 color		: COLOR0;
+struct PS_IN
+{
+	half4 position		: VPOS;
+	half4 texcoord0		: TEXCOORD0_centroid;
+	half4 texcoord1		: TEXCOORD1_centroid;
+	half4 texcoord2		: TEXCOORD2_centroid;
+	half4 texcoord3		: TEXCOORD3_centroid;
+	half4 texcoord4		: TEXCOORD4_centroid;
+	half4 texcoord5		: TEXCOORD5_centroid;
+	half4 texcoord6		: TEXCOORD6_centroid;
+	half4 color			: COLOR0;
 };
 
-struct PS_OUT {
+struct PS_OUT
+{
 	half4 color : COLOR;
 };
+// *INDENT-ON*
 
-void main( PS_IN fragment, out PS_OUT result ) {
+void main( PS_IN fragment, out PS_OUT result )
+{
 	half4 bumpMap =			tex2D( samp0, fragment.texcoord1.xy );
 	half4 lightFalloff =	idtex2Dproj( samp1, fragment.texcoord2 );
 	half4 lightProj	=		idtex2Dproj( samp2, fragment.texcoord3 );
@@ -71,7 +76,7 @@ void main( PS_IN fragment, out PS_OUT result ) {
 	// RB end
 	localNormal.z = sqrt( abs( dot( localNormal.xy, localNormal.xy ) - 0.25 ) );
 	localNormal = normalize( localNormal );
-	
+
 	// traditional very dark Lambert light model used in Doom 3
 	half ldotN = dot3( localNormal, lightVector );
 

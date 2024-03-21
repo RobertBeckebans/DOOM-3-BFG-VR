@@ -5,7 +5,7 @@ Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company. 
 Copyright (C) 2013-2014 Robert Beckebans
 
-This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").  
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
 Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@ If you have questions concerning this license or the applicable additional terms
 ===========================================================================
 */
 
-#include "renderprogs/global.inc"
+#include "renderprogs/global.inc.hlsl"
 
 uniform sampler2D				samp0 : register(s0); // texture 1 is the per-surface bump map
 uniform sampler2D				samp1 : register(s1); // texture 2 is the light falloff texture
@@ -233,33 +233,33 @@ void main( PS_IN fragment, out PS_OUT result )
 #else
 	
 	const float2 poissonDisk[12] = float2[](
-	float2(0.6111618, 0.1050905),
-	float2(0.1088336, 0.1127091),
-	float2(0.3030421, -0.6292974),
-	float2(0.4090526, 0.6716492),
-	float2(-0.1608387, -0.3867823),
-	float2(0.7685862, -0.6118501),
-	float2(-0.1935026, -0.856501),
-	float2(-0.4028573, 0.07754025),
-	float2(-0.6411021, -0.4748057),
-	float2(-0.1314865, 0.8404058),
-	float2(-0.7005203, 0.4596822),
-	float2(-0.9713828, -0.06329931) );
-	
+									   float2( 0.6111618, 0.1050905 ),
+									   float2( 0.1088336, 0.1127091 ),
+									   float2( 0.3030421, -0.6292974 ),
+									   float2( 0.4090526, 0.6716492 ),
+									   float2( -0.1608387, -0.3867823 ),
+									   float2( 0.7685862, -0.6118501 ),
+									   float2( -0.1935026, -0.856501 ),
+									   float2( -0.4028573, 0.07754025 ),
+									   float2( -0.6411021, -0.4748057 ),
+									   float2( -0.1314865, 0.8404058 ),
+									   float2( -0.7005203, 0.4596822 ),
+									   float2( -0.9713828, -0.06329931 ) );
+
 	float shadow = 0.0;
-	
+
 	// RB: casting a float to int and using it as index can really kill the performance ...
 	float numSamples = 12.0; //int(rpScreenCorrectionFactor.w);
 	float stepSize = 1.0 / numSamples;
-	
+
 	float4 jitterTC = ( fragment.position * rpScreenCorrectionFactor ) + rpJitterTexOffset;
 	float4 random = tex2D( samp6, jitterTC.xy ) * PI;
 	//float4 random = fragment.position;
-	
+
 	float2 rot;
 	rot.x = cos( random.x );
 	rot.y = sin( random.x );
-	
+
 	float shadowTexelSize = rpScreenCorrectionFactor.z * rpJitterTexScale.x;
     for( int i = 0; i < 12; i++ )
     {
@@ -267,7 +267,7 @@ void main( PS_IN fragment, out PS_OUT result )
 		float2 jitterRotated;
 		jitterRotated.x = jitter.x * rot.x - jitter.y * rot.y;
 		jitterRotated.y = jitter.x * rot.y + jitter.y * rot.x;
-        
+
 		float4 shadowTexcoordJittered = float4( shadowTexcoord.xy + jitterRotated * shadowTexelSize, shadowTexcoord.z, shadowTexcoord.w );
        
         shadow += texture( samp5, shadowTexcoordJittered.xywz);
