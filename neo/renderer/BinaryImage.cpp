@@ -25,8 +25,8 @@ If you have questions concerning this license or the applicable additional terms
 
 ===========================================================================
 */
-#pragma hdrstop
 #include "precompiled.h"
+#pragma hdrstop
 
 /*
 ================================================================================================
@@ -302,6 +302,7 @@ void idBinaryImage::LoadCubeFromMemory( int width, const byte* pics[6], int numL
 		const byte* orig = pics[side];
 		const byte* pic = orig;
 		int	scaledWidth = fileData.width;
+
 		for( int level = 0; level < fileData.numLevels; level++ )
 		{
 			// compress data or convert floats as necessary

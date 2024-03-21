@@ -34,15 +34,10 @@ If you have questions concerning this license or the applicable additional terms
 
 #include "GLState.h"
 #include "ScreenRect.h"
-#include "ImageOpts.h"
 #include "Image.h"
 #include "Font.h"
 #include "Framebuffer.h"
 
-// everything that is needed by the backend needs
-// to be double buffered to allow it to run in
-// parallel on a dual cpu machine
-const int SMP_FRAMES				= 1;
 
 // maximum texture units
 const int MAX_PROG_TEXTURE_PARMS	= 16;
@@ -54,6 +49,7 @@ const float	DEFAULT_FOG_DISTANCE	= 500.0f;
 // picky to get the bilerp correct at terminator
 const int FOG_ENTER_SIZE			= 64;
 const float FOG_ENTER				= ( FOG_ENTER_SIZE + 1.0f ) / ( FOG_ENTER_SIZE * 2 );
+
 
 enum demoCommand_t
 {
@@ -419,6 +415,15 @@ struct viewDef_t
 
 	float				projectionMatrix[16];
 	idRenderMatrix		projectionRenderMatrix;	// tech5 version of projectionMatrix
+
+	// RB begin
+	float				unprojectionToCameraMatrix[16];
+	idRenderMatrix		unprojectionToCameraRenderMatrix;
+
+	float				unprojectionToWorldMatrix[16];
+	idRenderMatrix		unprojectionToWorldRenderMatrix;
+	// RB end
+
 	viewEntity_t		worldSpace;
 
 	idRenderWorldLocal* renderWorld;
@@ -440,6 +445,7 @@ struct viewDef_t
 	bool				isEditor;
 	bool				is2Dgui;
 
+	bool                isObliqueProjection;    // true if this view has an oblique projection
 	int					numClipPlanes;			// mirrors will often use a single clip plane
 	idPlane				clipPlanes[MAX_CLIP_PLANES];		// in world space, the positive side
 	// of the plane is the visible side
@@ -460,7 +466,7 @@ struct viewDef_t
 	int					numDrawSurfs;			// it is allocated in frame temporary memory
 	int					maxDrawSurfs;			// may be resized
 
-	viewLight_t*			viewLights;			// chain of all viewLights effecting view
+	viewLight_t*		viewLights;				// chain of all viewLights effecting view
 	viewEntity_t* 		viewEntitys;			// chain of all viewEntities effecting view, including off screen ones casting shadows
 	// we use viewEntities as a check to see if a given view consists solely
 	// of 2D rendering, which we can optimize in certain ways.  A 2D view will
@@ -868,6 +874,8 @@ public:
 	idParallelJobList* 		frontEndJobList;
 
 	unsigned				timerQueryId;		// for GL_TIME_ELAPSED_EXT queries
+private:
+	bool					bInitialized;
 };
 
 extern backEndState_t		backEnd;

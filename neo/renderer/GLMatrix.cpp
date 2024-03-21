@@ -27,8 +27,8 @@ If you have questions concerning this license or the applicable additional terms
 ===========================================================================
 */
 
-#pragma hdrstop
 #include "precompiled.h"
+#pragma hdrstop
 
 #include "RenderCommon.h"
 
@@ -407,6 +407,8 @@ This uses the "infinite far z" trick
 idCVar r_centerX( "r_centerX", "0", CVAR_FLOAT, "projection matrix center adjust" );
 idCVar r_centerY( "r_centerY", "0", CVAR_FLOAT, "projection matrix center adjust" );
 
+
+
 void R_SetupProjectionMatrix( viewDef_t* viewDef )
 {
 
@@ -669,32 +671,49 @@ void R_SetupProjectionMatrix2( const viewDef_t* viewDef, const float zNear, cons
 	}
 }
 
+/*
+=================
+R_SetupUnprojection
+create a matrix with similar functionality like gluUnproject, project from window space to world space
+=================
+*/
+void R_SetupUnprojection( viewDef_t* viewDef )
+{
+	R_MatrixFullInverse( viewDef->projectionMatrix, viewDef->unprojectionToCameraMatrix );
+	idRenderMatrix::Transpose( *( idRenderMatrix* )viewDef->unprojectionToCameraMatrix, viewDef->unprojectionToCameraRenderMatrix );
+
+
+	R_MatrixMultiply( viewDef->worldSpace.modelViewMatrix, viewDef->projectionMatrix, viewDef->unprojectionToWorldMatrix );
+	R_MatrixFullInverse( viewDef->unprojectionToWorldMatrix, viewDef->unprojectionToWorldMatrix );
+
+	idRenderMatrix::Transpose( *( idRenderMatrix* )viewDef->unprojectionToWorldMatrix, viewDef->unprojectionToWorldRenderMatrix );
+}
 
 void R_MatrixFullInverse( const float a[16], float r[16] )
 {
 	idMat4	am;
 
-	for( int i = 0; i < 4; i++ )
+	for( int i = 0 ; i < 4 ; i++ )
 	{
-		for( int j = 0; j < 4; j++ )
+		for( int j = 0 ; j < 4 ; j++ )
 		{
 			am[i][j] = a[j * 4 + i];
 		}
 	}
 
-	//	idVec4 test( 100, 100, 100, 1 );
-	//	idVec4	transformed, inverted;
-	//	transformed = test * am;
+//	idVec4 test( 100, 100, 100, 1 );
+//	idVec4	transformed, inverted;
+//	transformed = test * am;
 
 	if( !am.InverseSelf() )
 	{
 		common->Error( "Invert failed" );
 	}
-	//	inverted = transformed * am;
+//	inverted = transformed * am;
 
-	for( int i = 0; i < 4; i++ )
+	for( int i = 0 ; i < 4 ; i++ )
 	{
-		for( int j = 0; j < 4; j++ )
+		for( int j = 0 ; j < 4 ; j++ )
 		{
 			r[j * 4 + i] = am[i][j];
 		}
