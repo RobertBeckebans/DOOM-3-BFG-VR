@@ -38,6 +38,256 @@ Contains the Image implementation for OpenGL.
 #include "../RenderCommon.h"
 
 /*
+====================
+idImage::idImage
+====================
+*/
+idImage::idImage( const char* name ) : imgName( name )
+{
+	texnum = TEXTURE_NOT_LOADED;
+	internalFormat = 0;
+	dataFormat = 0;
+	dataType = 0;
+	generatorFunction = NULL;
+	filter = TF_DEFAULT;
+	repeat = TR_REPEAT;
+	usage = TD_DEFAULT;
+	cubeFiles = CF_2D;
+	cubeMapSize = 0;
+
+	referencedOutsideLevelLoad = false;
+	levelLoadReferenced = false;
+	defaulted = false;
+	sourceFileTime = FILE_NOT_FOUND_TIMESTAMP;
+	binaryFileTime = FILE_NOT_FOUND_TIMESTAMP;
+	refCount = 0;
+}
+
+/*
+====================
+idImage::~idImage
+====================
+*/
+idImage::~idImage()
+{
+	PurgeImage();
+}
+
+/*
+====================
+idImage::IsLoaded
+====================
+*/
+bool idImage::IsLoaded() const
+{
+	return texnum != TEXTURE_NOT_LOADED;
+}
+
+/*
+==============
+Bind
+
+Automatically enables 2D mapping or cube mapping if needed
+==============
+*/
+void idImage::Bind()
+{
+	RENDERLOG_PRINTF( "idImage::Bind( %s )\n", GetName() );
+
+	// load the image if necessary (FIXME: not SMP safe!)
+	// RB: don't try again if last time failed
+	if( !IsLoaded() && !defaulted )
+	{
+		// load the image on demand here, which isn't our normal game operating mode
+		ActuallyLoadImage( true );
+	}
+
+	const int texUnit = backEnd.glState.currenttmu;
+
+	tmu_t* tmu = &backEnd.glState.tmu[texUnit];
+	// bind the texture
+	if( opts.textureType == TT_2D )
+	{
+		if( tmu->current2DMap != texnum )
+		{
+			tmu->current2DMap = texnum;
+
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
+			if( glConfig.directStateAccess )
+			{
+				glBindMultiTextureEXT( GL_TEXTURE0 + texUnit, GL_TEXTURE_2D, texnum );
+			}
+			else
+#endif
+			{
+				glActiveTexture( GL_TEXTURE0 + texUnit );
+				glBindTexture( GL_TEXTURE_2D, texnum );
+			}
+		}
+	}
+	else if( opts.textureType == TT_CUBIC )
+	{
+		if( tmu->currentCubeMap != texnum )
+		{
+			tmu->currentCubeMap = texnum;
+
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
+			if( glConfig.directStateAccess )
+			{
+				glBindMultiTextureEXT( GL_TEXTURE0 + texUnit, GL_TEXTURE_CUBE_MAP, texnum );
+			}
+			else
+#endif
+			{
+				glActiveTexture( GL_TEXTURE0 + texUnit );
+				glBindTexture( GL_TEXTURE_CUBE_MAP, texnum );
+			}
+		}
+	}
+	else if( opts.textureType == TT_2D_ARRAY )
+	{
+		if( tmu->current2DArray != texnum )
+		{
+			tmu->current2DArray = texnum;
+
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
+			if( glConfig.directStateAccess )
+			{
+				glBindMultiTextureEXT( GL_TEXTURE0 + texUnit, GL_TEXTURE_2D_ARRAY, texnum );
+			}
+			else
+#endif
+			{
+				glActiveTexture( GL_TEXTURE0 + texUnit );
+				glBindTexture( GL_TEXTURE_2D_ARRAY, texnum );
+			}
+		}
+	}
+	else if( opts.textureType == TT_2D_MULTISAMPLE )
+	{
+		if( tmu->current2DMap != texnum )
+		{
+			tmu->current2DMap = texnum;
+
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
+			if( glConfig.directStateAccess )
+			{
+				glBindMultiTextureEXT( GL_TEXTURE0 + texUnit, GL_TEXTURE_2D_MULTISAMPLE, texnum );
+			}
+			else
+#endif
+			{
+				glActiveTexture( GL_TEXTURE0 + texUnit );
+				glBindTexture( GL_TEXTURE_2D_MULTISAMPLE, texnum );
+			}
+		}
+	}
+	// RB end
+}
+
+/*
+====================
+CopyFramebuffer
+====================
+*/
+void idImage::CopyFramebuffer( int x, int y, int imageWidth, int imageHeight )
+{
+	glBindTexture( ( opts.textureType == TT_CUBIC ) ? GL_TEXTURE_CUBE_MAP : GL_TEXTURE_2D, texnum );
+
+	// Koz begin
+	if( commonVr->useFBO )
+	{
+		if( commonVr->VR_AAmode == VR_AA_MSAA )  // resolve the MSAA renderbuffer before copy.
+		{
+			glDisable( GL_SCISSOR_TEST ); // Koz hack - issue with nvidia msaa, if scissor test is enabled when blitting/resolving the framebuffer the post processing is corrupt.
+			ResolveMSAA();
+		}
+		else
+		{
+			globalFramebuffers.primaryFBO->Bind();
+		}
+	}
+	else
+	{
+		glReadBuffer( GL_BACK );
+	}
+	// Koz end
+
+	opts.width = imageWidth;
+	opts.height = imageHeight;
+
+	glCopyTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA8, x, y, imageWidth, imageHeight, 0 );
+
+	// Koz begin
+	if( opts.genMipsOnCopy == true )
+	{
+		glGenerateMipmap( GL_TEXTURE_2D );
+		glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
+		glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+	}
+	else
+		// Koz end
+	{
+		// these shouldn't be necessary if the image was initialized properly
+		glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+		glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+	}
+
+	glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
+	glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
+
+	backEnd.pc.c_copyFrameBuffer++;
+
+	if( commonVr->useFBO )
+	{
+		globalFramebuffers.primaryFBO->Bind();
+		if( commonVr->VR_AAmode == VR_AA_MSAA )
+		{
+			glEnable( GL_SCISSOR_TEST );    // Koz hack - re-enable scissor test
+		}
+	}
+}
+
+/*
+====================
+CopyDepthbuffer
+====================
+*/
+void idImage::CopyDepthbuffer( int x, int y, int imageWidth, int imageHeight )
+{
+	// Koz begin
+	if( commonVr->useFBO )
+	{
+		if( commonVr->VR_AAmode == VR_AA_MSAA )
+		{
+			ResolveMSAA();
+		}
+		else
+		{
+			globalFramebuffers.primaryFBO->Bind();
+		}
+	}
+	else
+	{
+		glReadBuffer( GL_BACK );
+	}
+	// Koz end
+
+	glBindTexture( ( opts.textureType == TT_CUBIC ) ? GL_TEXTURE_CUBE_MAP : GL_TEXTURE_2D, texnum );
+
+	opts.width = imageWidth;
+	opts.height = imageHeight;
+	glCopyTexImage2D( GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, x, y, imageWidth, imageHeight, 0 );
+
+	backEnd.pc.c_copyFrameBuffer++;
+
+	if( commonVr->useFBO )
+	{
+		globalFramebuffers.primaryFBO->Bind();
+	}
+}
+
+/*
 ========================
 idImage::SubImageUpload
 ========================
@@ -105,9 +355,12 @@ void idImage::SubImageUpload( int mipLevel, int x, int y, int z, int width, int 
 
 	if( opts.format == FMT_RGB565 )
 	{
+#if !defined(USE_GLES3)
 		glPixelStorei( GL_UNPACK_SWAP_BYTES, GL_TRUE );
+#endif
 	}
-#ifdef DEBUG
+
+#if defined(DEBUG) || defined(__ANDROID__)
 	GL_CheckErrors();
 #endif
 	if( IsCompressed() )
@@ -132,9 +385,11 @@ void idImage::SubImageUpload( int mipLevel, int x, int y, int z, int width, int 
 
 		glTexSubImage2D( uploadTarget, mipLevel, x, y, width, height, dataFormat, dataType, pic );
 	}
-#ifdef DEBUG
+
+#if defined(DEBUG) || defined(__ANDROID__)
 	GL_CheckErrors();
 #endif
+
 	if( opts.format == FMT_RGB565 )
 	{
 		glPixelStorei( GL_UNPACK_SWAP_BYTES, GL_FALSE );
@@ -147,12 +402,19 @@ void idImage::SubImageUpload( int mipLevel, int x, int y, int z, int width, int 
 
 /*
 ========================
-idImage::SetPixel
+idImage::SetSamplerState
 ========================
 */
-void idImage::SetPixel( int mipLevel, int x, int y, const void* data, int dataSize )
+void idImage::SetSamplerState( textureFilter_t tf, textureRepeat_t tr )
 {
-	SubImageUpload( mipLevel, x, y, 0, 1, 1, data );
+	if( tf == filter && tr == repeat )
+	{
+		return;
+	}
+	filter = tf;
+	repeat = tr;
+	glBindTexture( ( opts.textureType == TT_CUBIC ) ? GL_TEXTURE_CUBE_MAP : GL_TEXTURE_2D, texnum );
+	SetTexParameters();
 }
 
 /*
@@ -175,6 +437,12 @@ void idImage::SetTexParameters()
 		case TT_2D_ARRAY:
 			target = GL_TEXTURE_2D_ARRAY;
 			break;
+		case TT_2D_MULTISAMPLE:
+			//target = GL_TEXTURE_2D_MULTISAMPLE;
+			//break;
+			// no texture parameters for MSAA FBO textures
+			// RB: FIXME?
+			return;
 		// RB end
 		default:
 			idLib::FatalError( "%s: bad texture type %d", GetName(), opts.textureType );
@@ -197,7 +465,7 @@ void idImage::SetTexParameters()
 		glTexParameteri( target, GL_TEXTURE_SWIZZLE_B, GL_RED );
 		glTexParameteri( target, GL_TEXTURE_SWIZZLE_A, GL_ONE );
 	}
-	else if( opts.format == FMT_L8A8 )
+	else if( opts.format == FMT_L8A8 )//|| opts.format == FMT_RG16F )
 	{
 		glTexParameteri( target, GL_TEXTURE_SWIZZLE_R, GL_RED );
 		glTexParameteri( target, GL_TEXTURE_SWIZZLE_G, GL_RED );
@@ -244,6 +512,7 @@ void idImage::SetTexParameters()
 			glTexParameterf( target, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
 			break;
 		case TF_NEAREST:
+		case TF_NEAREST_MIPMAP:
 			glTexParameterf( target, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
 			glTexParameterf( target, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
 			break;
@@ -364,40 +633,76 @@ void idImage::AllocImage()
 			dataFormat = GL_RED;
 			dataType = GL_UNSIGNED_BYTE;
 			break;
+
 		case FMT_L8A8:
 			internalFormat = GL_RG8;
 			dataFormat = GL_RG;
 			dataType = GL_UNSIGNED_BYTE;
 			break;
+
 		case FMT_LUM8:
 			internalFormat = GL_R8;
 			dataFormat = GL_RED;
 			dataType = GL_UNSIGNED_BYTE;
 			break;
+
 		case FMT_INT8:
 			internalFormat = GL_R8;
 			dataFormat = GL_RED;
 			dataType = GL_UNSIGNED_BYTE;
 			break;
+
 		case FMT_DXT1:
 			internalFormat = GL_COMPRESSED_RGBA_S3TC_DXT1_EXT;
 			dataFormat = GL_RGBA;
 			dataType = GL_UNSIGNED_BYTE;
 			break;
+
 		case FMT_DXT5:
 			internalFormat = GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
 			dataFormat = GL_RGBA;
 			dataType = GL_UNSIGNED_BYTE;
 			break;
+
 		case FMT_DEPTH:
 			internalFormat = GL_DEPTH_COMPONENT;
 			dataFormat = GL_DEPTH_COMPONENT;
 			dataType = GL_UNSIGNED_BYTE;
 			break;
 
+		case FMT_DEPTH_STENCIL:
+			internalFormat = GL_DEPTH24_STENCIL8;
+			dataFormat = GL_DEPTH_STENCIL;
+			dataType = GL_UNSIGNED_INT_24_8;
+			break;
+
 		case FMT_SHADOW_ARRAY:
 			internalFormat = GL_DEPTH_COMPONENT;
 			dataFormat = GL_DEPTH_COMPONENT;
+			dataType = GL_UNSIGNED_BYTE;
+			break;
+
+		case FMT_RG16F:
+			internalFormat = GL_RG16F;
+			dataFormat = GL_RG;
+			dataType = GL_HALF_FLOAT;
+			break;
+
+		case FMT_RGBA16F:
+			internalFormat = GL_RGBA16F;
+			dataFormat = GL_RGBA;
+			dataType = GL_HALF_FLOAT;
+			break;
+
+		case FMT_RGBA32F:
+			internalFormat = GL_RGBA32F;
+			dataFormat = GL_RGBA;
+			dataType = GL_UNSIGNED_BYTE;
+			break;
+
+		case FMT_R32F:
+			internalFormat = GL_R32F;
+			dataFormat = GL_RED;
 			dataType = GL_UNSIGNED_BYTE;
 			break;
 
@@ -411,6 +716,14 @@ void idImage::AllocImage()
 			dataFormat = GL_LUMINANCE_ALPHA;
 			dataType = GL_UNSIGNED_SHORT;
 			break;
+
+		// see http://what-when-how.com/Tutorial/topic-615ll9ug/Praise-for-OpenGL-ES-30-Programming-Guide-291.html
+		case FMT_R11G11B10F:
+			internalFormat = GL_R11F_G11F_B10F;
+			dataFormat = GL_RGB;
+			dataType = GL_UNSIGNED_INT_10F_11F_11F_REV;
+			break;
+
 		default:
 			idLib::Error( "Unhandled image format %d in %s\n", opts.format, GetName() );
 	}
@@ -453,6 +766,12 @@ void idImage::AllocImage()
 		uploadTarget = GL_TEXTURE_2D_ARRAY;
 		numSides = 6;
 	}
+	else if( opts.textureType == TT_2D_MULTISAMPLE )
+	{
+		target = GL_TEXTURE_2D_MULTISAMPLE;
+		uploadTarget = GL_TEXTURE_2D_MULTISAMPLE;
+		numSides = 1;
+	}
 	// RB end
 	else
 	{
@@ -466,6 +785,10 @@ void idImage::AllocImage()
 	if( opts.textureType == TT_2D_ARRAY )
 	{
 		glTexImage3D( uploadTarget, 0, internalFormat, opts.width, opts.height, numSides, 0, dataFormat, GL_UNSIGNED_BYTE, NULL );
+	}
+	else if( opts.textureType == TT_2D_MULTISAMPLE )
+	{
+		glTexImage2DMultisample( uploadTarget, opts.samples, internalFormat, opts.width, opts.height, GL_FALSE );
 	}
 	else
 	{
@@ -549,13 +872,17 @@ void idImage::PurgeImage()
 		glDeleteTextures( 1, ( GLuint* )&texnum );	// this should be the ONLY place it is ever called!
 		texnum = TEXTURE_NOT_LOADED;
 	}
+
 	// clear all the current binding caches, so the next bind will do a real one
-	for( int i = 0 ; i < MAX_MULTITEXTURE_UNITS ; i++ )
+	for( int i = 0; i < MAX_MULTITEXTURE_UNITS; i++ )
 	{
 		backEnd.glState.tmu[i].current2DMap = TEXTURE_NOT_LOADED;
 		backEnd.glState.tmu[i].current2DArray = TEXTURE_NOT_LOADED;
 		backEnd.glState.tmu[i].currentCubeMap = TEXTURE_NOT_LOADED;
 	}
+
+	// reset for reloading images
+	defaulted = false;
 }
 
 /*

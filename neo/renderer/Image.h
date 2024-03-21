@@ -3,7 +3,9 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
-Copyright (C) 2013-2014 Robert Beckebans
+Copyright (C) 2013-2021 Robert Beckebans
+Copyright (C) 2016-2017 Dustin Land
+Copyright (C) 2022 Stephen Pridham
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -36,7 +38,8 @@ enum textureType_t
 	TT_2D,
 	TT_CUBIC,
 	// RB begin
-	TT_2D_ARRAY
+	TT_2D_ARRAY,
+	TT_2D_MULTISAMPLE,
 	// RB end
 };
 
@@ -97,10 +100,26 @@ enum textureFormat_t
 	// RB: don't change above for legacy .bimage compatibility
 	FMT_ETC1_RGB8_OES,	// 4 bpp
 	FMT_SHADOW_ARRAY,	// 32 bpp * 6
+	FMT_RG16F,			// 32 bpp
+	FMT_RGBA16F,		// 64 bpp
+	FMT_RGBA32F,		// 128 bpp
+	FMT_R32F,			// 32 bpp
+	FMT_R11G11B10F,		// 32 bpp
+	FMT_R8,
+	FMT_DEPTH_STENCIL,  // 32 bpp
 	// RB end
 };
 
 int BitsForFormat( textureFormat_t format );
+
+enum textureSamples_t
+{
+	SAMPLE_1	= BIT( 0 ),
+	SAMPLE_2	= BIT( 1 ),
+	SAMPLE_4	= BIT( 2 ),
+	SAMPLE_8	= BIT( 3 ),
+	SAMPLE_16	= BIT( 4 )
+};
 
 /*
 ================================================
@@ -138,15 +157,14 @@ public:
 	textureType_t		textureType;
 	textureFormat_t		format;
 	textureColor_t		colorFormat;
+	textureSamples_t	samples;
 	int					width;
 	int					height;			// not needed for cube maps
 	int					numLevels;		// if 0, will be 1 for NEAREST / LINEAR filters, otherwise based on size
 	bool				gammaMips;		// if true, mips will be generated with gamma correction
 	bool				readback;		// 360 specific - cpu reads back from this texture, so allocate with cached memory
-	// Koz begin
-	bool				genMipsOnCopy;	// if true, call glGenerateMipmap during CopyFrameBuffer
-	// Koz end
-
+	bool				isRenderTarget;
+	bool				genMipsOnCopy;	// Koz, if true, call glGenerateMipmap during CopyFrameBuffer
 };
 
 /*
@@ -158,12 +176,14 @@ ID_INLINE idImageOpts::idImageOpts()
 {
 	format			= FMT_NONE;
 	colorFormat		= CFM_DEFAULT;
+	samples			= SAMPLE_1;
 	width			= 0;
 	height			= 0;
 	numLevels		= 0;
 	textureType		= TT_2D;
 	gammaMips		= false;
 	readback		= false;
+	isRenderTarget	= false;
 	// Koz begin
 	genMipsOnCopy	= false;
 	// Koz end
@@ -178,6 +198,7 @@ ID_INLINE bool idImageOpts::operator==( const idImageOpts& opts )
 {
 	return ( memcmp( this, &opts, sizeof( *this ) ) == 0 );
 }
+
 /*
 ====================================================================
 
@@ -217,14 +238,18 @@ typedef enum
 	CF_2D,			// not a cube map
 	CF_NATIVE,		// _px, _nx, _py, etc, directly sent to GL
 	CF_CAMERA,		// _forward, _back, etc, rotated and flipped as needed before sending to GL
-	CF_2D_ARRAY		// not a cube map but not a single 2d texture either
+	CF_PANORAMA,	// TODO latlong encoded HDRI panorama typically used by Substance or Blender
+	CF_2D_ARRAY,	// not a cube map but not a single 2d texture either
+	CF_2D_PACKED_MIPCHAIN, // usually 2d but can be an octahedron, packed mipmaps into single 2d texture atlas and limited to dim^2
+	CF_SINGLE,      // SP: A single texture cubemap. All six sides in one image.
 } cubeFiles_t;
 
 enum imageFileType_t
 {
 	TGA,
 	PNG,
-	JPG
+	JPG,
+	EXR,
 };
 
 #include "BinaryImage.h"
@@ -237,28 +262,17 @@ class idImage
 
 public:
 	idImage( const char* name );
+	~idImage();
 
 	const char* 	GetName() const
 	{
 		return imgName;
 	}
 
-	// Makes this image active on the current GL texture unit.
+	// Makes this image active on the current texture unit.
 	// automatically enables or disables cube mapping
 	// May perform file loading if the image was not preloaded.
 	void		Bind();
-
-	// Should be called at least once
-	void		SetSamplerState( textureFilter_t tf, textureRepeat_t tr );
-
-	// used by callback functions to specify the actual data
-	// data goes from the bottom to the top line of the image, as OpenGL expects it
-	// These perform an implicit Bind() on the current texture unit
-	// FIXME: should we implement cinematics this way, instead of with explicit calls?
-	void		GenerateImage( const byte* pic, int width, int height,
-							   textureFilter_t filter, textureRepeat_t repeat, textureUsage_t usage );
-	void		GenerateCubeImage( const byte* pic[6], int size,
-								   textureFilter_t filter, textureUsage_t usage );
 
 	// RB begin
 	void		GenerateShadowArray( int width, int height, textureFilter_t filter, textureRepeat_t repeat, textureUsage_t usage );
@@ -333,12 +347,6 @@ public:
 								int width, int height, const void* data,
 								int pixelPitch = 0 ) const;
 
-	// SetPixel is assumed to be a fast memory write on consoles, degenerating to a
-	// SubImageUpload on PCs.  Used to update the page mapping images.
-	// We could remove this now, because the consoles don't use the intermediate page mapping
-	// textures now that they can pack everything into the virtual page table images.
-	void		SetPixel( int mipLevel, int x, int y, const void* data, int dataSize );
-
 	// some scratch images are dynamically resized based on the display window size.  This
 	// simply purges the image and recreates it if the sizes are different, so it should not be
 	// done under any normal circumstances, and probably not at all on consoles.
@@ -349,14 +357,34 @@ public:
 		return ( opts.format == FMT_DXT1 || opts.format == FMT_DXT5 );
 	}
 
-	void		SetTexParameters();	// update aniso and trilinear
-
-	bool		IsLoaded() const
+	textureUsage_t GetUsage() const
 	{
-		return texnum != TEXTURE_NOT_LOADED;
+		return usage;
+	}
+
+	bool				IsLoaded() const;
+
+	// RB
+	bool				IsDefaulted() const
+	{
+		return defaulted;
 	}
 
 	static void			GetGeneratedName( idStr& _name, const textureUsage_t& _usage, const cubeFiles_t& _cube );
+
+	// Should be called at least once
+	void		SetSamplerState( textureFilter_t tf, textureRepeat_t tr );
+
+	// used by callback functions to specify the actual data
+	// data goes from the bottom to the top line of the image, as OpenGL expects it
+	// These perform an implicit Bind() on the current texture unit
+	// FIXME: should we implement cinematics this way, instead of with explicit calls?
+	void		GenerateImage( const byte* pic, int width, int height,
+							   textureFilter_t filter, textureRepeat_t repeat, textureUsage_t usage );
+	void		GenerateCubeImage( const byte* pic[6], int size,
+								   textureFilter_t filter, textureUsage_t usage );
+
+	void		SetTexParameters();	// update aniso and trilinear
 
 	// Koz begin
 	GLuint		GetTexNum() const
@@ -374,6 +402,7 @@ private:
 	// parameters that define this image
 	idStr				imgName;				// game path, including extension (except for cube maps), may be an image program
 	cubeFiles_t			cubeFiles;				// If this is a cube map, and if so, what kind
+	int                 cubeMapSize;
 	void	( *generatorFunction )( idImage* image );	// NULL for files
 	textureUsage_t		usage;					// Used to determine the type of compression to use
 	idImageOpts			opts;					// Parameters that determine the storage method
@@ -390,7 +419,7 @@ private:
 
 	int					refCount;				// overall ref count
 
-	static const GLuint TEXTURE_NOT_LOADED = 0xFFFFFFFF;
+	static const uint32 TEXTURE_NOT_LOADED = 0xFFFFFFFF;
 
 	//GLuint				texnum;				// gl texture binding // Koz see above moved to public need to fix this.
 
@@ -402,25 +431,7 @@ private:
 
 };
 
-ID_INLINE idImage::idImage( const char* name ) : imgName( name )
-{
-	texnum = TEXTURE_NOT_LOADED;
-	internalFormat = 0;
-	dataFormat = 0;
-	dataType = 0;
-	generatorFunction = NULL;
-	filter = TF_DEFAULT;
-	repeat = TR_REPEAT;
-	usage = TD_DEFAULT;
-	cubeFiles = CF_2D;
 
-	referencedOutsideLevelLoad = false;
-	levelLoadReferenced = false;
-	defaulted = false;
-	sourceFileTime = FILE_NOT_FOUND_TIMESTAMP;
-	binaryFileTime = FILE_NOT_FOUND_TIMESTAMP;
-	refCount = 0;
-}
 
 
 // data is RGBA

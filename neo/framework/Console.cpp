@@ -518,11 +518,11 @@ idConsoleLocal::DrawVRBinding
 */
 void idConsoleLocal::DrawVRBinding()
 {
-
 	int y = LOCALSAFE_BOTTOM - ( BIGCHAR_HEIGHT + 6 ) * 2 ;
 	int left = LOCALSAFE_LEFT + BIGCHAR_WIDTH * 6;
 	int maxChar = ( LOCALSAFE_RIGHT - left ) / SMALLCHAR_WIDTH;
 	idStr temp;
+
 	if( commonVr->currentBindingDisplay.Icmp( "" ) != 0 )
 	{
 		renderSystem->DrawSmallStringExt( LOCALSAFE_LEFT + SMALLCHAR_WIDTH * 28 , y - 4 , "Current Bindings:", colorWhite, true );
@@ -536,8 +536,8 @@ void idConsoleLocal::DrawVRBinding()
 			renderSystem->DrawSmallStringExt( left, y, temp.c_str(), colorWhite, true );
 		}
 	}
-	return;
 
+	return;
 }
 
 /*

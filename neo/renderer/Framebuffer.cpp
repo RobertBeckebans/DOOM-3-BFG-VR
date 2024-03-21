@@ -94,7 +94,6 @@ void ResolveMSAA( void )
 {
 	if( commonVr->useFBO )
 	{
-
 		if( globalFramebuffers.primaryFBO->IsMSAA() )
 		{
 			// primary FBO is MSAA enabled, resolve to secondary FBO to perform antialiasing before copy
