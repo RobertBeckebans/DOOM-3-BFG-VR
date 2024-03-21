@@ -3,7 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
-Copyright (C) 2013-2014 Robert Beckebans
+Copyright (C) 2013-2016 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -26,8 +26,8 @@ If you have questions concerning this license or the applicable additional terms
 
 ===========================================================================
 */
-#pragma hdrstop
 #include "precompiled.h"
+#pragma hdrstop
 
 /*
 ================================================================================================
@@ -102,6 +102,7 @@ void idImage::SubImageUpload( int mipLevel, int x, int y, int z, int width, int 
 	{
 		glPixelStorei( GL_UNPACK_ROW_LENGTH, pixelPitch );
 	}
+
 	if( opts.format == FMT_RGB565 )
 	{
 		glPixelStorei( GL_UNPACK_SWAP_BYTES, GL_TRUE );
@@ -362,16 +363,19 @@ void idImage::AllocImage()
 			dataFormat = GL_RGBA;
 			dataType = GL_UNSIGNED_BYTE;
 			break;
+
 		case FMT_XRGB8:
 			internalFormat = GL_RGB;
 			dataFormat = GL_RGBA;
 			dataType = GL_UNSIGNED_BYTE;
 			break;
+
 		case FMT_RGB565:
 			internalFormat = GL_RGB;
 			dataFormat = GL_RGB;
 			dataType = GL_UNSIGNED_SHORT_5_6_5;
 			break;
+
 		case FMT_ALPHA:
 #if defined( USE_CORE_PROFILE )
 			internalFormat = GL_R8;

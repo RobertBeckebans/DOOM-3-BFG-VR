@@ -1454,7 +1454,7 @@ void RB_ShutdownDebugTools();
 #include "jobs/prelightshadowvolume/PreLightShadowVolume.h"
 #include "jobs/staticshadowvolume/StaticShadowVolume.h"
 #include "jobs/dynamicshadowvolume/DynamicShadowVolume.h"
-#include "GraphicsAPIWrapper.h"
+#include "RenderBackend.h"
 #include "GLMatrix.h"
 
 
