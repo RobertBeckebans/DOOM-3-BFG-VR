@@ -3,7 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
-Copyright (C) 2013 Robert Beckebans
+Copyright (C) 2013-2016 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -76,28 +76,14 @@ ID_INLINE_EXTERN float LinearToDB( float linear )
 	return ( linear > 0.0f ) ? ( idMath::Log( linear ) * ( 6.0f / 0.693147181f ) ) : -999.0f;
 }
 
-// demo sound commands
-typedef enum
-{
-	SCMD_STATE,				// followed by a load game state
-	SCMD_PLACE_LISTENER,
-	SCMD_ALLOC_EMITTER,
-
-	SCMD_FREE,
-	SCMD_UPDATE,
-	SCMD_START,
-	SCMD_MODIFY,
-	SCMD_STOP,
-	SCMD_FADE
-} soundDemoCommand_t;
-
 #include "SoundVoice.h"
 
 #if defined(USE_OPENAL)
 
 //#define AL_ALEXT_PROTOTYPES
 
-#ifdef __APPLE__
+// SRS - Added check on OSX for OpenAL Soft headers vs macOS SDK headers
+#if defined(__APPLE__) && !defined(USE_OPENAL_SOFT_INCLUDES)
 	#include <OpenAL/al.h>
 	#include <OpenAL/alc.h>
 #else

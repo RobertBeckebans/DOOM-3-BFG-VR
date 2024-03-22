@@ -29,8 +29,6 @@ If you have questions concerning this license or the applicable additional terms
 #ifndef __SYS_INTRIINSICS_H__
 #define __SYS_INTRIINSICS_H__
 
-#define USE_INTRINSICS_SSE
-
 #if defined(USE_INTRINSICS_SSE)
 	#include <emmintrin.h>
 #endif

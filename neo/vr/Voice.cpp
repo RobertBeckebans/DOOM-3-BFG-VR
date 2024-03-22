@@ -1,7 +1,7 @@
 #include"precompiled.h"
-#include "d3xp/Game_local.h"
-
 #pragma hdrstop
+
+#include "d3xp/Game_local.h"
 
 #undef strncmp
 #undef vsnprintf
@@ -14,6 +14,7 @@
 
 #ifdef _WIN32
 
+	// RB: FIXME this does not compile with VS 2022, maybe MFC missing?
 	#include <sapi.h>
 	#include <sphelper.h>
 	#include "sys\win32\win_local.h"

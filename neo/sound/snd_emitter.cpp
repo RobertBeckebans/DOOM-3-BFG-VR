@@ -3,6 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2012-2016 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -26,8 +27,8 @@ If you have questions concerning this license or the applicable additional terms
 ===========================================================================
 */
 
-#pragma hdrstop
 #include "precompiled.h"
+#pragma hdrstop
 
 #include "snd_local.h"
 
@@ -994,10 +995,12 @@ void idSoundEmitterLocal::ModifySound( const s_channelType channel, const soundS
 		{
 			continue;
 		}
+
 		if( s_showStartSound.GetBool() )
 		{
 			idLib::Printf( "%dms: ModifySound(%d:%d): %s\n", soundWorld->GetSoundTime(), index, channel, chan->soundShader->GetName() );
 		}
+
 		OverrideParms( &chan->parms, parms, &chan->parms );
 	}
 }

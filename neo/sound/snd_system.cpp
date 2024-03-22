@@ -26,8 +26,8 @@ If you have questions concerning this license or the applicable additional terms
 
 ===========================================================================
 */
-#pragma hdrstop
 #include "precompiled.h"
+#pragma hdrstop
 
 #include "snd_local.h"
 
@@ -452,7 +452,7 @@ idSoundSystemLocal::LoadSample
 */
 idSoundSample* idSoundSystemLocal::LoadSample( const char* name )
 {
-	idStr canonical = name;
+	idStrStatic< MAX_OSPATH > canonical = name;
 	canonical.ToLower();
 	canonical.BackSlashesToSlashes();
 	canonical.StripFileExtension();
@@ -532,6 +532,7 @@ cinData_t idSoundSystemLocal::ImageForTime( const int milliseconds, const bool w
 	cd.imageY = NULL;
 	cd.imageCr = NULL;
 	cd.imageCb = NULL;
+	cd.image = NULL;
 	cd.imageWidth = 0;
 	cd.imageHeight = 0;
 	cd.status = FMV_IDLE;
@@ -566,8 +567,7 @@ idSoundSystemLocal::Preload
 */
 void idSoundSystemLocal::Preload( idPreloadManifest& manifest )
 {
-
-	idStr filename;
+	idStrStatic< MAX_OSPATH > filename;
 
 	int	start = Sys_Milliseconds();
 	int numLoaded = 0;
@@ -654,7 +654,7 @@ void idSoundSystemLocal::EndLevelLoad()
 		}
 		if( samples[i]->GetLevelLoadReferenced() )
 		{
-			idStr filename  = "generated/";
+			idStrStatic< MAX_OSPATH > filename  = "generated/";
 			filename += samples[ i ]->GetName();
 			filename.SetFileExtension( "idwav" );
 			preloadSort_t ps = {};

@@ -1,23 +1,26 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.2)
 
 project(Doom3BFGVR)
+
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 if(CMAKE_MAJOR_VERSION EQUAL 3 AND CMAKE_MINOR_VERSION GREATER_EQUAL 6)
 	# set MSVC startup project
-	set_property (DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT RBDoom3BFG)
+	set_property (DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT Doom3BFGVR)
 endif()
+	
+option(STANDALONE
+		"Skip DOOM-3-BFG base/ folder and use content/ instead" OFF)
+
+option(DOOM_CLASSIC
+		"Build with Doom 1 & 2" ON)
+
+option(FORCE_COLOR_OUTPUT
+		"Always produce ANSI-colored output (GNU/Clang only)." OFF)
 
 
-
-option(USE_MFC_TOOLS
-		"Compile the built-in MFC based tools" OFF)
-		
-option(MONOLITH
-		"Embed game logic into main executable" ON)
-		
-option(SDL2
-		"Use SDL2 instead of SDL1.2" ON)
+option(USE_PRECOMPILED_HEADERS
+		"Use precompiled headers during build" ON)
 		
 option(OPENAL
 		"Use OpenAL soft instead of XAudio2" OFF)
@@ -28,25 +31,69 @@ option(FFMPEG
 option(ONATIVE
 		"Optimize for the host CPU" OFF)
 		
-option(WINRT
-		"Build for Windows RT" OFF)
+option(WINDOWS10
+		"Build for Windows 10+" OFF)
 		
 option(USE_SYSTEM_ZLIB
-                "Use the system zlib instead of the bundled one" OFF)
+         "Use the system zlib instead of the bundled one" OFF)
 
 option(USE_SYSTEM_LIBPNG
-                "Use the system libpng instead of the bundled one" OFF)
+         "Use the system libpng instead of the bundled one" OFF)
 
 option(USE_SYSTEM_LIBJPEG
-                "Use the system libjpeg instead of the bundled one" OFF)
+         "Use the system libjpeg instead of the bundled one" OFF)
 
 option(USE_SYSTEM_LIBGLEW
-                "Use the system libglew instead of the bundled one" OFF)
+         "Use the system libglew instead of the bundled one" OFF)
+
+option(USE_SYSTEM_RAPIDJSON
+         "Use the system rapidjson instead of the bundled one" OFF)
+
+set(CPU_TYPE "" CACHE STRING "When set, passes this string as CPU-ID which will be embedded into the binary.")
+
+# SRS - Turn on optimization when cross-compiling from Apple arm64 to x86_64
+if (CMAKE_SYSTEM_PROCESSOR MATCHES "(x86)|(X86)|(amd64)|(AMD64)" OR CMAKE_OSX_ARCHITECTURES MATCHES "x86_64")
+	set(CPU_OPTIMIZATION "-mmmx -msse -msse2" CACHE STRING "Which CPU specific optimitations should be used beside the compiler's default?")
+endif()
+
+# SRS - Turn off MMX/SSE intrinsics when cross-compiling from Apple x86_64 to arm64
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "(x86)|(X86)|(amd64)|(AMD64)|(e2k)|(E2K)" AND NOT CMAKE_OSX_ARCHITECTURES MATCHES "arm64")
+	option(USE_INTRINSICS_SSE "Compile using SSE intrinsics (e.g mmx, sse, msse2)" ON)
+else()
+	option(USE_INTRINSICS_SSE "Compile using SSE intrinsics (e.g mmx, sse, msse2)" OFF)
+endif()
 
 if(UNIX)
-	set(OPENAL TRUE)
-endif()
+	set(OPENAL ON)
+	
+    # SRS - Disable precompiled headers when cross-compiling on OSX, e.g. when creating universal binaries
+    if((CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "x86_64" AND CMAKE_OSX_ARCHITECTURES MATCHES "arm64" ) OR
+       (CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "arm64"  AND CMAKE_OSX_ARCHITECTURES MATCHES "x86_64"))
+        set(USE_PRECOMPILED_HEADERS OFF)
+    endif()
+
+	if(USE_VULKAN)
+		SET(SDL2 ON)
 		
+		# RB: disable precompiled headers on Linux with Vulkan because of error: POSIX thread support was disabled in PCH file but is currently enabled
+		if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
+            set(USE_PRECOMPILED_HEADERS OFF)
+        endif()
+	endif()
+endif()
+
+if(COMPILE_COMMANDS)
+	set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+endif()
+
+if (FORCE_COLOR_OUTPUT)
+	if (CMAKE_COMPILER_IS_GNUCC)
+		add_compile_options(-fdiagnostics-color=always)
+	elseif(CMAKE_C_COMPILER_ID MATCHES "Clang")
+		add_compile_options(-fcolor-diagnostics)
+	endif ()
+endif ()
+
 if(MSVC)
 	#message(STATUS CMAKE_ROOT: ${CMAKE_ROOT})
 	
@@ -63,12 +110,30 @@ else()
 	message(STATUS CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE})
 endif()
 
-if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
+if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_C_COMPILER_ID MATCHES "Clang")
+
 	add_definitions(-pipe)
 	#add_definitions(-Wall)
 	add_definitions(-Werror=format-security)
 	add_definitions(-Werror=format)
-	add_definitions(-mmmx -msse -msse2)
+
+	# Compiler check (needs -std=c++11 flag)
+	include(CheckCXXCompilerFlag)
+	CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
+	if(COMPILER_SUPPORTS_CXX11)
+		set(CMAKE_CXX_STANDARD 11)
+		set(CMAKE_CXX_STANDARD_REQUIRED ON)
+		set(CMAKE_CXX_EXTENSIONS OFF)
+	else()
+		message(FATAL_ERROR "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
+	endif()
+
+	if(CPU_TYPE)
+		add_definitions(-DCPUSTRING="${CPU_TYPE}")
+	endif()
+	if (CPU_OPTIMIZATION)
+		add_definitions(${CPU_OPTIMIZATION})
+	endif()
 	if(WIN32)
 		# require msvcr70.dll or newer for _aligned_malloc etc
 		# I think it is from Visual C++ .NET 2002, so it should be available on any remotely modern system.
@@ -185,31 +250,28 @@ elseif(MSVC)
 					-D_CRT_SECURE_NO_DEPRECATE
 					-D_CRT_NONSTDC_NO_DEPRECATE
 					-D_CRT_SECURE_NO_WARNINGS
-                                        -D_MBCS
-                                       #-DUSE_OPENAL
+					-D_MBCS
 					-DUSE_EXCEPTIONS)
-        ## Check for Version ##
-        if( WINRT ) # Windows RT
-                add_definitions(-DUSE_WINRT)
-        endif()
+
+	if( WINDOWS10 ) # Windows RT
+		add_definitions(-DUSE_WINRT)
+	endif()
 					
 	if(NOT CMAKE_CL_64)
 		add_definitions(-D_USE_32BIT_TIME_T)
 	endif()
-					
-	if(USE_MFC_TOOLS)
-		add_definitions(-D_AFXDLL)
-		
-		# 0: Use Standard Windows Libraries
-		# 1: Use MFC in a Static Library
-		# 2: Use MFC in a Shared DLL 
-		set(CMAKE_MFC_FLAG 2)
-	endif()
+
 endif()
 
-#if(STANDALONE)
-#	add_definitions(-DSTANDALONE)
-#endif()
+if (USE_INTRINSICS_SSE)
+	add_definitions(-DUSE_INTRINSICS_SSE)
+endif()
+
+if(STANDALONE)
+	add_definitions(-DSTANDALONE)
+
+	set(DOOM_CLASSIC OFF)
+endif()
 
 if (USE_SYSTEM_ZLIB)
   find_package(ZLIB REQUIRED)
@@ -248,18 +310,28 @@ else (JPEG_FOUND)
     set(JPEG_LIBRARY "" )
 endif (JPEG_FOUND)
 
-if (USE_SYSTEM_LIBGLEW)
-find_package(GLEW)
-endif(USE_SYSTEM_LIBGLEW)
+if(USE_SYSTEM_LIBGLEW)
+	find_package(GLEW)
+endif()
 
 if (GLEW_FOUND)
-    include_directories(${GLEW_INCLUDE_DIRS})
-    set(GLEW_LIBRARY ${GLEW_LIBRARIES})
-else (GLEW_FOUND)
-    include_directories("libs/glew/include")
-    set(GLEW_LIBRARY "" )
-    add_definitions(-DGLEW_STATIC)
-endif (GLEW_FOUND)
+	include_directories(${GLEW_INCLUDE_DIRS})
+	set(GLEW_LIBRARY ${GLEW_LIBRARIES})
+else()
+	include_directories("libs/glew/include")
+	set(GLEW_LIBRARY "" )
+	add_definitions(-DGLEW_STATIC)
+	
+	set(GLEW_INCLUDES libs/glew/include/GL/glew.h)
+	set(GLEW_SOURCES libs/glew/src/glew.c)
+
+	if(WIN32)
+		set(GLEW_INCLUDES ${GLEW_INCLUDES} libs/glew/include/GL/wglew.h)
+	else()
+		set(GLEW_INCLUDES ${GLEW_INCLUDES} libs/glew/include/GL/glxew.h)
+	endif()
+	
+endif()
 
 if(WIN32)
 	if(CMAKE_SIZEOF_VOID_P EQUAL 4)
@@ -284,6 +356,7 @@ endif(APPLE)
 set(OPENVR_LIBRARY "openvr_api")
 include_directories("libs/openvr/headers")
 
+	
 add_subdirectory(idlib)
 
 file(GLOB AAS_INCLUDES aas/*.h)
@@ -295,8 +368,8 @@ file(GLOB_RECURSE CM_SOURCES cm/*.cpp)
 file(GLOB FRAMEWORK_INCLUDES framework/*.h)
 file(GLOB FRAMEWORK_SOURCES framework/*.cpp)
 
-file(GLOB FRAMEWORK_ASYNC_INCLUDES framework/async/*.h)
-file(GLOB FRAMEWORK_ASYNC_SOURCES framework/async/*.cpp)
+file(GLOB FRAMEWORK_IMGUI_INCLUDES imgui/*.h)
+file(GLOB FRAMEWORK_IMGUI_SOURCES imgui/*.cpp)
 
 file(GLOB RENDERER_INCLUDES renderer/*.h)
 file(GLOB RENDERER_SOURCES renderer/*.cpp)
@@ -314,6 +387,18 @@ file(GLOB RENDERER_JOBS_STATICSHADOWVOLUME_INCLUDES renderer/jobs/staticshadowvo
 file(GLOB RENDERER_JOBS_STATICSHADOWVOLUME_SOURCES renderer/jobs/staticshadowvolume/*.cpp)
 file(GLOB RENDERER_OPENGL_INCLUDES renderer/OpenGL/*.h)
 file(GLOB RENDERER_OPENGL_SOURCES renderer/OpenGL/*.cpp)
+
+file(GLOB SHADERS ../base/renderprogs/*.hlsl ../base/renderprogs/*.inc )
+file(GLOB SHADERS_BUILTIN ../base/renderprogs/builtin/*.hlsl )
+file(GLOB SHADERS_BUILTIN_DEBUG ../base/renderprogs/builtin/debug/*.hlsl )
+file(GLOB SHADERS_BUILTIN_FOG ../base/renderprogs/builtin/fog/*.hlsl )
+file(GLOB SHADERS_BUILTIN_LEGACY ../base/renderprogs/builtin/legacy/*.hlsl )
+file(GLOB SHADERS_BUILTIN_LIGHTING ../base/renderprogs/builtin/lighting/*.hlsl )
+file(GLOB SHADERS_BUILTIN_POST ../base/renderprogs/builtin/post/*.hlsl )
+file(GLOB SHADERS_BUILTIN_SSAO ../base/renderprogs/builtin/SSAO/*.hlsl )
+file(GLOB SHADERS_BUILTIN_SSGI ../base/renderprogs/builtin/SSGI/*.hlsl )
+file(GLOB SHADERS_BUILTIN_VIDEO ../base/renderprogs/builtin/video/*.hlsl )
+file(GLOB SHADERS_BUILTIN_VR ../base/renderprogs/builtin/VR/*.hlsl )
 
 file(GLOB IRRXML_INCLUDES libs/irrxml/src/*.h)
 file(GLOB IRRXML_SOURCES libs/irrxml/src/*.cpp)
@@ -417,21 +502,7 @@ endif (NOT ZLIB_FOUND)
 
 file(GLOB MINIZIP_INCLUDES libs/zlib/minizip/*.h)
 file(GLOB MINIZIP_SOURCES libs/zlib/minizip/*.c libs/zlib/minizip/*.cpp)
-	
-if (NOT GLEW_FOUND)
-    set(GLEW_INCLUDES libs/glew/include/GL/glew.h)
-    set(GLEW_SOURCES libs/glew/src/glew.c)
 
-    if(WIN32)
-        set(GLEW_INCLUDES ${GLEW_INCLUDES} libs/glew/include/GL/wglew.h)
-    else(WIN32)
-        set(GLEW_INCLUDES ${GLEW_INCLUDES} libs/glew/include/GL/glxew.h)
-    endif(WIN32)
-else (NOT GLEW_FOUND)
-    set(GLEW_INCLUDES "")
-    set(GLEW_SOURCES "")
-endif (NOT GLEW_FOUND)
-	
 set(FREETYPE_SOURCES
 	libs/freetype/src/autofit/autofit.c
 	libs/freetype/src/bdf/bdf.c
@@ -761,6 +832,9 @@ file(GLOB EDITOR_SCRIPT_SOURCES tools/script/*.cpp)
 file(GLOB EDITOR_SOUND_INCLUDES tools/sound/*.h)
 file(GLOB EDITOR_SOUND_SOURCES tools/sound/*.cpp)
 
+file(GLOB IMGUI_EDITOR_INCLUDES tools/imgui/*.h)
+file(GLOB IMGUI_EDITOR_SOURCES tools/imgui/*.cpp)
+
 file(GLOB DOOMCLASSIC_INCLUDES ../doomclassic/doom/*.h)
 file(GLOB DOOMCLASSIC_SOURCES ../doomclassic/doom/*.cpp)
 
@@ -829,6 +903,7 @@ set(WIN32_RESOURCES
 	# sys/win32/rc/res/dbg_open.bmp
 	# sys/win32/rc/res/dbg_toolbar.bmp
 	sys/win32/rc/res/doom.ico
+	sys/win32/rc/doom.rc
 	# sys/win32/rc/res/fpoint.cur
 	# sys/win32/rc/res/fxed_link.ico
 	# sys/win32/rc/res/fxed_toolbar.bmp
@@ -855,14 +930,6 @@ set(WIN32_RESOURCES
 	# sys/win32/rc/res/shaderframe.ico
 	# sys/win32/rc/res/spliter.cur
 	)
-
-
-
-#if(USE_MFC_TOOLS)
-	list(APPEND WIN32_RESOURCES sys/win32/rc/doom.rc)
-#else()
-#	list(APPEND WIN32_RESOURCES sys/win32/rc/doom_nomfc.rc)
-#endif()
 
 
 file(GLOB POSIX_INCLUDES sys/posix/*.h)
@@ -910,8 +977,23 @@ source_group("renderer\\jobs\\staticshadowvolume" FILES ${RENDERER_JOBS_STATICSH
 source_group("renderer\\OpenGL" FILES ${RENDERER_OPENGL_INCLUDES})
 source_group("renderer\\OpenGL" FILES ${RENDERER_OPENGL_SOURCES})
 
+source_group("renderer\\Shaders" FILES ${SHADERS})
+source_group("renderer\\Shaders\\builtin" FILES ${SHADERS_BUILTIN})
+source_group("renderer\\Shaders\\builtin\\debug" FILES ${SHADERS_BUILTIN_DEBUG})
+source_group("renderer\\Shaders\\builtin\\fog" FILES ${SHADERS_BUILTIN_FOG})
+source_group("renderer\\Shaders\\builtin\\legacy" FILES ${SHADERS_BUILTIN_LEGACY})
+source_group("renderer\\Shaders\\builtin\\lighting" FILES ${SHADERS_BUILTIN_LIGHTING})
+source_group("renderer\\Shaders\\builtin\\post" FILES ${SHADERS_BUILTIN_POST})
+source_group("renderer\\Shaders\\builtin\\SSAO" FILES ${SHADERS_BUILTIN_SSAO})
+source_group("renderer\\Shaders\\builtin\\SSGI" FILES ${SHADERS_BUILTIN_SSGI})
+source_group("renderer\\Shaders\\builtin\\video" FILES ${SHADERS_BUILTIN_VIDEO})
+source_group("renderer\\Shaders\\builtin\\VR" FILES ${SHADERS_BUILTIN_VR})
+
 source_group("libs\\irrxml" FILES ${IRRXML_INCLUDES})
 source_group("libs\\irrxml" FILES ${IRRXML_SOURCES})
+
+source_group("libs\\imgui" FILES ${IMGUI_INCLUDES})
+source_group("libs\\imgui" FILES ${IMGUI_SOURCES})
 
 source_group("libs\\stb" FILES ${STB_INCLUDES})
 
@@ -1023,9 +1105,6 @@ source_group("tools\\compilers\\aas" FILES ${COMPILER_AAS_SOURCES})
 source_group("tools\\compilers\\dmap" FILES ${COMPILER_DMAP_INCLUDES})
 source_group("tools\\compilers\\dmap" FILES ${COMPILER_DMAP_SOURCES})
 
-source_group("tools\\compilers\\renderbump" FILES ${COMPILER_RENDERBUMP_INCLUDES})
-source_group("tools\\compilers\\renderbump" FILES ${COMPILER_RENDERBUMP_SOURCES})
-
 source_group("tools\\compilers\\roqvq" FILES ${COMPILER_ROQVQ_INCLUDES})
 source_group("tools\\compilers\\roqvq" FILES ${COMPILER_ROQVQ_SOURCES})
 
@@ -1071,7 +1150,7 @@ source_group("tools\\sound" FILES ${EDITOR_SOUND_INCLUDES})
 source_group("tools\\sound" FILES ${EDITOR_SOUND_SOURCES})
 
 
-set(DOOM3_INCLUDES
+set(RBDOOM3_INCLUDES
 			${AAS_INCLUDES}
 			${CM_INCLUDES}
 			${FRAMEWORK_INCLUDES}
@@ -1084,7 +1163,19 @@ set(DOOM3_INCLUDES
 			${RENDERER_JOBS_PRELIGHTSHADOWVOLUME_INCLUDES}
 			${RENDERER_JOBS_STATICSHADOWVOLUME_INCLUDES}
 			${RENDERER_OPENGL_INCLUDES}
-			#${IRRXML_INCLUDES}
+		
+			#${SHADERS}
+			#${SHADERS_BUILTIN}
+			#${SHADERS_BUILTIN_DEBUG}
+			#${SHADERS_BUILTIN_FOG}
+			#${SHADERS_BUILTIN_LEGACY}
+			#${SHADERS_BUILTIN_LIGHTING}
+			#${SHADERS_BUILTIN_POST}
+			#${SHADERS_BUILTIN_SSAO}
+			#${SHADERS_BUILTIN_SSGI}
+			#${SHADERS_BUILTIN_VIDEO}
+			#${SHADERS_BUILTIN_VR}
+			
 			${IMGUI_INCLUDES}
 			${STB_INCLUDES}
 			${MESA_INCLUDES}
@@ -1108,11 +1199,16 @@ set(DOOM3_INCLUDES
 			${COMPILER_INCLUDES}
 			${COMPILER_AAS_INCLUDES} ${COMPILER_AAS_SOURCES}
 			${COMPILER_DMAP_INCLUDES} ${COMPILER_DMAP_SOURCES}
-			#${COMPILER_RENDERBUMP_INCLUDES} ${COMPILER_RENDERBUMP_SOURCES}
-			#${COMPILER_ROQVQ_INCLUDES} ${COMPILER_ROQVQ_SOURCES}
+			${GAMED3XP_INCLUDES}
+			${GAMED3XP_AI_INCLUDES} 
+			${GAMED3XP_ANIM_INCLUDES} 
+			${GAMED3XP_GAMESYS_INCLUDES} 
+			${GAMED3XP_MENUS_INCLUDES}
+			${GAMED3XP_PHYSICS_INCLUDES}
+			${GAMED3XP_SCRIPT_INCLUDES}
 			)
 			
-set(DOOM3_SOURCES
+set(RBDOOM3_SOURCES
 			${AAS_SOURCES}
 			${CM_SOURCES}
 			${FRAMEWORK_SOURCES}
@@ -1124,8 +1220,8 @@ set(DOOM3_SOURCES
 			${RENDERER_JOBS_DYNAMICSHADOWVOLUME_SOURCES}
 			${RENDERER_JOBS_PRELIGHTSHADOWVOLUME_SOURCES}
 			${RENDERER_JOBS_STATICSHADOWVOLUME_SOURCES}
-			${RENDERER_OPENGL_SOURCES}
 			#${IRRXML_SOURCES}
+			${RENDERER_OPENGL_SOURCES}
 			${IMGUI_SOURCES}
 			${MIKKTSPACE_SOURCES}
 			${JPEG_SOURCES}
@@ -1140,41 +1236,33 @@ set(DOOM3_SOURCES
 			${VR_SOURCES}
 			${SWF_SOURCES}
 			${COMMON_SOURCES}
-			${DOOMCLASSIC_SOURCES}
-			${TIMIDITY_SOURCES}
 			
 			${COMPILER_AAS_SOURCES}
 			${COMPILER_DMAP_SOURCES}
+			${GAMED3XP_SOURCES}
+			${GAMED3XP_AI_SOURCES}
+			${GAMED3XP_ANIM_SOURCES}
+			${GAMED3XP_GAMESYS_SOURCES}
+			${GAMED3XP_MENUS_SOURCES}
+			${GAMED3XP_PHYSICS_SOURCES}
+			${GAMED3XP_SCRIPT_SOURCES}
 			)
 
-add_definitions(-DUSE_DOOMCLASSIC)
+if(DOOM_CLASSIC)
+	add_definitions(-DUSE_DOOMCLASSIC)
+
+	list(APPEND RBDOOM3_INCLUDES ${DOOMCLASSIC_INCLUDES})
+	list(APPEND RBDOOM3_INCLUDES ${TIMIDITY_INCLUDES})
+	
+	list(APPEND RBDOOM3_SOURCES ${DOOMCLASSIC_SOURCES})
+	list(APPEND RBDOOM3_SOURCES ${TIMIDITY_SOURCES})
+endif()
 
 add_definitions(-D__DOOM__
 				#-DBUILD_FREETYPE
 				#-DFT2_BUILD_LIBRARY
 				)
 				
-if(MONOLITH)
-	list(APPEND DOOM3_INCLUDES
-		${GAMED3XP_INCLUDES}
-		${GAMED3XP_AI_INCLUDES} 
-		${GAMED3XP_ANIM_INCLUDES} 
-		${GAMED3XP_GAMESYS_INCLUDES} 
-		${GAMED3XP_MENUS_INCLUDES}
-		${GAMED3XP_PHYSICS_INCLUDES}
-		${GAMED3XP_SCRIPT_INCLUDES})
-		
-	list(APPEND DOOM3_SOURCES
-		${GAMED3XP_SOURCES}
-		${GAMED3XP_AI_SOURCES}
-		${GAMED3XP_ANIM_SOURCES}
-		${GAMED3XP_GAMESYS_SOURCES}
-		${GAMED3XP_MENUS_SOURCES}
-		${GAMED3XP_PHYSICS_SOURCES}
-		${GAMED3XP_SCRIPT_SOURCES})
-else()
-	add_definitions(-D__DOOM_DLL__)
-endif()
 
 include_directories(
 			.
@@ -1213,10 +1301,11 @@ if(MSVC)
 			link_directories(${CMAKE_CURRENT_SOURCE_DIR}/libs/openal-soft/lib/win32)
 		endif()
 		
-		list(APPEND DOOM3_INCLUDES ${OPENAL_INCLUDES})
-		list(APPEND DOOM3_SOURCES
-			${OPENAL_SOURCES}
-			${DOOMCLASSIC_OPENAL_SOURCES})
+		list(APPEND RBDOOM3_INCLUDES ${OPENAL_INCLUDES})
+		list(APPEND RBDOOM3_SOURCES	${OPENAL_SOURCES})
+		if(DOOM_CLASSIC)
+			list(APPEND RBDOOM3_SOURCES	${DOOMCLASSIC_OPENAL_SOURCES})
+		endif()		
 		
 		set(OpenAL_LIBRARIES
 			OpenAL32)
@@ -1228,10 +1317,12 @@ if(MSVC)
 			install(FILES libs/openal-soft/lib/win32/OpenAL32.pdb DESTINATION .)
 		endif()
 	else()
-		list(APPEND DOOM3_INCLUDES ${XAUDIO2_INCLUDES})
-		list(APPEND DOOM3_SOURCES
-			${XAUDIO2_SOURCES}
-			${DOOMCLASSIC_XAUDIO2_SOURCES})
+		list(APPEND RBDOOM3_INCLUDES ${XAUDIO2_INCLUDES})
+		list(APPEND RBDOOM3_SOURCES	${XAUDIO2_SOURCES})
+
+		if(DOOM_CLASSIC)
+			list(APPEND RBDOOM3_SOURCES	${DOOMCLASSIC_XAUDIO2_SOURCES})
+		endif()
 	endif()
 	
 	if(FFMPEG)
@@ -1263,91 +1354,78 @@ if(MSVC)
 		
 	endif()
 	
-	list(APPEND DOOM3_INCLUDES
+	list(APPEND RBDOOM3_INCLUDES
 		${SYS_INCLUDES} 
 		${WIN32_INCLUDES})
 		
-	list(APPEND DOOM3_SOURCES
+	list(APPEND RBDOOM3_SOURCES
 		${SYS_SOURCES}
 		${WIN32_SOURCES})
 
-	list(REMOVE_DUPLICATES DOOM3_SOURCES)
+	list(REMOVE_DUPLICATES RBDOOM3_SOURCES)
 	
-	set(DOOM3_PRECOMPILED_SOURCES ${DOOM3_SOURCES})
-	list(REMOVE_ITEM DOOM3_PRECOMPILED_SOURCES ${TIMIDITY_SOURCES} ${JPEG_SOURCES} ${PNG_SOURCES} ${ZLIB_SOURCES} ${GLEW_SOURCES} ${MIKKTSPACE_SOURCES})
-	list(REMOVE_ITEM DOOM3_PRECOMPILED_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/libs/zlib/minizip/ioapi.c)
-	list(REMOVE_ITEM DOOM3_PRECOMPILED_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/renderer/DXT/DXTDecoder.cpp)
-	list(REMOVE_ITEM DOOM3_PRECOMPILED_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/renderer/DXT/DXTEncoder.cpp)
-	list(REMOVE_ITEM DOOM3_PRECOMPILED_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/renderer/DXT/DXTEncoder_SSE2.cpp)
-	list(REMOVE_ITEM DOOM3_PRECOMPILED_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/renderer/jobs/dynamicshadowvolume/DynamicShadowVolume.cpp)
-	list(REMOVE_ITEM DOOM3_PRECOMPILED_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/renderer/jobs/prelightshadowvolume/PreLightShadowVolume.cpp)
-	list(REMOVE_ITEM DOOM3_PRECOMPILED_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/renderer/jobs/staticshadowvolume/StaticShadowVolume.cpp)
-	list(REMOVE_ITEM DOOM3_PRECOMPILED_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/renderer/jobs/ShadowShared.cpp)
-	list(REMOVE_ITEM DOOM3_PRECOMPILED_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/renderer/RenderLog.cpp)
-        list(REMOVE_ITEM DOOM3_PRECOMPILED_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/framework/precompiled.cpp)
-
+	if(USE_PRECOMPILED_HEADERS) 
+		set(RBDOOM3_PRECOMPILED_SOURCES ${RBDOOM3_SOURCES})
+		list(REMOVE_ITEM RBDOOM3_PRECOMPILED_SOURCES ${TIMIDITY_SOURCES} ${JPEG_SOURCES} ${PNG_SOURCES} ${ZLIB_SOURCES} ${GLEW_SOURCES} ${MIKKTSPACE_SOURCES})
+		list(REMOVE_ITEM RBDOOM3_PRECOMPILED_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/libs/zlib/minizip/ioapi.c)
+		list(REMOVE_ITEM RBDOOM3_PRECOMPILED_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/renderer/DXT/DXTDecoder.cpp)
+		list(REMOVE_ITEM RBDOOM3_PRECOMPILED_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/renderer/DXT/DXTEncoder.cpp)
+		list(REMOVE_ITEM RBDOOM3_PRECOMPILED_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/renderer/DXT/DXTEncoder_SSE2.cpp)
+		list(REMOVE_ITEM RBDOOM3_PRECOMPILED_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/renderer/jobs/dynamicshadowvolume/DynamicShadowVolume.cpp)
+		list(REMOVE_ITEM RBDOOM3_PRECOMPILED_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/renderer/jobs/prelightshadowvolume/PreLightShadowVolume.cpp)
+		list(REMOVE_ITEM RBDOOM3_PRECOMPILED_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/renderer/jobs/staticshadowvolume/StaticShadowVolume.cpp)
+		list(REMOVE_ITEM RBDOOM3_PRECOMPILED_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/renderer/jobs/ShadowShared.cpp)
+		list(REMOVE_ITEM RBDOOM3_PRECOMPILED_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/renderer/RenderLog.cpp)
+		list(REMOVE_ITEM RBDOOM3_PRECOMPILED_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/framework/precompiled.cpp)
 	
-        set_source_files_properties(
-            ${DOOM3_PRECOMPILED_SOURCES}
-            PROPERTIES
-            COMPILE_FLAGS "/Yuprecompiled.h"
-            OBJECT_DEPENDS "precompiled.pch"
-
-            )
-	
-	set_source_files_properties(framework/precompiled.cpp
-        PROPERTIES
-        COMPILE_FLAGS "/Ycprecompiled.h"
-        OBJECT_OUTPUTS "precompiled.pch"
-        )
-	
-	list(APPEND DOOM3_SOURCES ${WIN32_RESOURCES})
-	
-	add_executable(Doom3BFGVR WIN32 ${DOOM3_INCLUDES} ${DOOM3_SOURCES})
+		set_source_files_properties(
+		${RBDOOM3_PRECOMPILED_SOURCES}
+		PROPERTIES
+		COMPILE_FLAGS "/Yuprecompiled.h"
+		OBJECT_DEPENDS "precompiled.pch"
+		)
 		
-	#add_custom_command(TARGET Doom3BFGVR
-    #               PRE_BUILD
-	#			   COMMAND nmake ARGS /f Makefile.vc6 CFG=release
-	#			   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/libs/curl/lib
-    #               COMMENT "Compiling libcURL")
-
+		set_source_files_properties(framework/precompiled.cpp
+		PROPERTIES
+		COMPILE_FLAGS "/Ycprecompiled.h"
+		OBJECT_OUTPUTS "precompiled.pch"
+		)
+	endif()
+	
+	set_source_files_properties( ${SHADERS} PROPERTIES VS_TOOL_OVERRIDE "None" )
+	set_source_files_properties( ${SHADERS_BUILTIN} PROPERTIES VS_TOOL_OVERRIDE "None" )
+	set_source_files_properties( ${SHADERS_BUILTIN_DEBUG} PROPERTIES VS_TOOL_OVERRIDE "None" )
+	set_source_files_properties( ${SHADERS_BUILTIN_FOG} PROPERTIES VS_TOOL_OVERRIDE "None" )
+	set_source_files_properties( ${SHADERS_BUILTIN_LEGACY} PROPERTIES VS_TOOL_OVERRIDE "None" )
+	set_source_files_properties( ${SHADERS_BUILTIN_LIGHTING} PROPERTIES VS_TOOL_OVERRIDE "None" )
+	set_source_files_properties( ${SHADERS_BUILTIN_POST} PROPERTIES VS_TOOL_OVERRIDE "None" )
+	set_source_files_properties( ${SHADERS_BUILTIN_SSAO} PROPERTIES VS_TOOL_OVERRIDE "None" )
+	set_source_files_properties( ${SHADERS_BUILTIN_SSGI} PROPERTIES VS_TOOL_OVERRIDE "None" )
+	set_source_files_properties( ${SHADERS_BUILTIN_VIDEO} PROPERTIES VS_TOOL_OVERRIDE "None" )
+	set_source_files_properties( ${SHADERS_BUILTIN_VR} PROPERTIES VS_TOOL_OVERRIDE "None" )
+	
+	list(APPEND RBDOOM3_SOURCES ${WIN32_RESOURCES})
+	
+	add_executable(Doom3BFGVR WIN32 ${RBDOOM3_INCLUDES} ${RBDOOM3_SOURCES})
+		
+	# copy OpenVR dlls
 	if(CMAKE_SIZEOF_VOID_P EQUAL 4)
-		# copy OpenVR dlls
 		add_custom_command(TARGET Doom3BFGVR
 				POST_BUILD
 				COMMAND ${CMAKE_COMMAND} -E copy
 				${CMAKE_CURRENT_SOURCE_DIR}/libs/openvr/bin/win32/openvr_api.dll ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR})
-		# add_custom_command(TARGET Doom3BFGVR
-		#		POST_BUILD
-		#		COMMAND ${CMAKE_COMMAND} -E copy
-		#		${CMAKE_CURRENT_SOURCE_DIR}/libs/openvr/bin/win32/openvr_api.pdb ${CMAKE_CURRENT_BINARY_DIR}/Debug)
-		# add_custom_command(TARGET Doom3BFGVR
-		#		POST_BUILD
-		#		COMMAND ${CMAKE_COMMAND} -E copy
-		#		${CMAKE_CURRENT_SOURCE_DIR}/libs/openvr/bin/win32/openvr_api.pdb ${CMAKE_CURRENT_BINARY_DIR}/RelWithDebInfo)
-
 	else()
-		# copy OpenVR dlls
+		
 		add_custom_command(TARGET Doom3BFGVR
 				POST_BUILD
 				COMMAND ${CMAKE_COMMAND} -E copy
 				${CMAKE_CURRENT_SOURCE_DIR}/libs/openvr/bin/win64/openvr_api.dll ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR})
-		# add_custom_command(TARGET Doom3BFGVR
-		#		POST_BUILD
-		#		COMMAND ${CMAKE_COMMAND} -E copy
-		#		${CMAKE_CURRENT_SOURCE_DIR}/libs/openvr/bin/win64/openvr_api.pdb ${CMAKE_CURRENT_BINARY_DIR}/Debug)
-		# add_custom_command(TARGET Doom3BFGVR
-		#		POST_BUILD
-		#		COMMAND ${CMAKE_COMMAND} -E copy
-		#		${CMAKE_CURRENT_SOURCE_DIR}/libs/openvr/bin/win64/openvr_api.pdb ${CMAKE_CURRENT_BINARY_DIR}/RelWithDebInfo)
-
 	endif()
 		
 	add_dependencies(Doom3BFGVR idlib)
 	target_link_libraries(Doom3BFGVR
 		idlib
 		${DirectX_LIBRARIES}
-		#libcurl 
 		#openal32 
 		opengl32
 		glu32
@@ -1382,7 +1460,7 @@ if(MSVC)
 	
 else()
 
-	list(APPEND DOOM3_SOURCES
+	list(APPEND RBDOOM3_SOURCES
 		${SYS_INCLUDES} ${SYS_SOURCES})
 	
 	find_package(OpenGL REQUIRED)
@@ -1397,15 +1475,9 @@ else()
 			link_directories(${FFMPEG_LIBRARIES_DIRS})
 		endif()
 
-		if(SDL2)
-			find_package(SDL2 REQUIRED)
-			include_directories(${SDL2_INCLUDE_DIR})
-			set(SDLx_LIBRARY ${SDL2_LIBRARY})
-		else()
-			find_package(SDL REQUIRED)
-			include_directories(${SDL_INCLUDE_DIR})
-			set(SDLx_LIBRARY ${SDL_LIBRARY})
-		endif()
+		find_package(SDL2 REQUIRED)
+		include_directories(${SDL2_INCLUDE_DIRS})
+		set(SDLx_LIBRARY ${SDL2_LIBRARIES})
 
 		if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 			list(REMOVE_ITEM POSIX_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/sys/posix/platform_linux.cpp)
@@ -1413,7 +1485,7 @@ else()
 			list(REMOVE_ITEM POSIX_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/sys/posix/platform_osx.cpp)
 		endif()
 
-		list(APPEND DOOM3_SOURCES
+		list(APPEND RBDOOM3_SOURCES
 			${POSIX_INCLUDES} ${POSIX_SOURCES}
 			${SDL_INCLUDES} ${SDL_SOURCES})
 			
@@ -1421,111 +1493,117 @@ else()
 			find_package(OpenAL REQUIRED)
 			add_definitions(-DUSE_OPENAL)
 
-			#include_directories(${CMAKE_CURRENT_SOURCE_DIR}/libs/openal-soft/include)
-			
-			#if(CMAKE_CL_64)
-			#	link_directories(${CMAKE_CURRENT_SOURCE_DIR}/libs/openal-soft/lib/win64)
-			#else()
-			#	link_directories(${CMAKE_CURRENT_SOURCE_DIR}/libs/openal-soft/lib/win32)
-			#endif()
-			
-			list(APPEND DOOM3_INCLUDES ${OPENAL_INCLUDES})
-			list(APPEND DOOM3_SOURCES
-				${OPENAL_SOURCES}
-				${DOOMCLASSIC_OPENAL_SOURCES})
+			# SRS - Added support for OpenAL Soft headers on OSX (vs default macOS SDK headers)
+			if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin" AND NOT OPENAL_INCLUDE_DIR MATCHES "SDKs/MacOSX.*\.sdk")
+				include_directories(${OPENAL_INCLUDE_DIR})
+				add_definitions(-DUSE_OPENAL_SOFT_INCLUDES)
+			endif()
+
+			list(APPEND RBDOOM3_INCLUDES ${OPENAL_INCLUDES})
+			list(APPEND RBDOOM3_SOURCES ${OPENAL_SOURCES})
+				
+			if(DOOM_CLASSIC)
+				list(APPEND RBDOOM3_SOURCES	${DOOMCLASSIC_OPENAL_SOURCES})
+			endif()
 		else()
-			list(APPEND DOOM3_INCLUDES ${STUBAUDIO_INCLUDES})
-			list(APPEND DOOM3_SOURCES
-				${STUBAUDIO_SOURCES}
-				${DOOMCLASSIC_STUBAUDIO_SOURCES})
+			list(APPEND RBDOOM3_INCLUDES ${STUBAUDIO_INCLUDES})
+			list(APPEND RBDOOM3_SOURCES ${STUBAUDIO_SOURCES})
+			
+			if(DOOM_CLASSIC)
+				list(APPEND RBDOOM3_SOURCES	${DOOMCLASSIC_STUBAUDIO_SOURCES})
+			endif()
 		endif()
 			
 	endif()
 
-	list(REMOVE_DUPLICATES DOOM3_SOURCES)
+	list(REMOVE_DUPLICATES RBDOOM3_SOURCES)
 	
-	set(DOOM3_PRECOMPILED_SOURCES ${DOOM3_SOURCES})
-	list(REMOVE_ITEM DOOM3_PRECOMPILED_SOURCES ${TIMIDITY_SOURCES} ${JPEG_SOURCES} ${PNG_SOURCES} ${ZLIB_SOURCES} ${GLEW_SOURCES})
-	list(REMOVE_ITEM DOOM3_PRECOMPILED_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/libs/zlib/minizip/ioapi.c)
-	list(REMOVE_ITEM DOOM3_PRECOMPILED_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/renderer/DXT/DXTDecoder.cpp)
-	list(REMOVE_ITEM DOOM3_PRECOMPILED_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/renderer/DXT/DXTEncoder.cpp)
-	list(REMOVE_ITEM DOOM3_PRECOMPILED_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/renderer/DXT/DXTEncoder_SSE2.cpp)
-	list(REMOVE_ITEM DOOM3_PRECOMPILED_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/renderer/jobs/dynamicshadowvolume/DynamicShadowVolume.cpp)
-	list(REMOVE_ITEM DOOM3_PRECOMPILED_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/renderer/jobs/prelightshadowvolume/PreLightShadowVolume.cpp)
-	list(REMOVE_ITEM DOOM3_PRECOMPILED_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/renderer/jobs/staticshadowvolume/StaticShadowVolume.cpp)
-	list(REMOVE_ITEM DOOM3_PRECOMPILED_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/renderer/jobs/ShadowShared.cpp)
-	list(REMOVE_ITEM DOOM3_PRECOMPILED_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/renderer/RenderLog.cpp)
+	if(USE_PRECOMPILED_HEADERS) 	
+		set(RBDOOM3_PRECOMPILED_SOURCES ${RBDOOM3_SOURCES})
+		list(REMOVE_ITEM RBDOOM3_PRECOMPILED_SOURCES ${TIMIDITY_SOURCES} ${JPEG_SOURCES} ${PNG_SOURCES} ${ZLIB_SOURCES} ${GLEW_SOURCES} ${BINKDEC_SOURCES} ${IMGUI_SOURCES} ${MIKKTSPACE_SOURCES})
+		list(REMOVE_ITEM RBDOOM3_PRECOMPILED_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/libs/zlib/minizip/ioapi.c)
+		list(REMOVE_ITEM RBDOOM3_PRECOMPILED_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/renderer/DXT/DXTDecoder.cpp)
+		list(REMOVE_ITEM RBDOOM3_PRECOMPILED_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/renderer/DXT/DXTEncoder.cpp)
+		list(REMOVE_ITEM RBDOOM3_PRECOMPILED_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/renderer/DXT/DXTEncoder_SSE2.cpp)
+		list(REMOVE_ITEM RBDOOM3_PRECOMPILED_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/renderer/jobs/dynamicshadowvolume/DynamicShadowVolume.cpp)
+		list(REMOVE_ITEM RBDOOM3_PRECOMPILED_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/renderer/jobs/prelightshadowvolume/PreLightShadowVolume.cpp)
+		list(REMOVE_ITEM RBDOOM3_PRECOMPILED_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/renderer/jobs/staticshadowvolume/StaticShadowVolume.cpp)
+		list(REMOVE_ITEM RBDOOM3_PRECOMPILED_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/renderer/jobs/ShadowShared.cpp)
+		list(REMOVE_ITEM RBDOOM3_PRECOMPILED_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/renderer/RenderLog.cpp)
 
-	foreach( src_file ${DOOM3_PRECOMPILED_SOURCES} )
-		#message(STATUS "-include precompiled.h for ${src_file}")
-		set_source_files_properties(
-			${src_file}
-			PROPERTIES
-			COMPILE_FLAGS "-include ${CMAKE_CURRENT_SOURCE_DIR}/idlib/precompiled.h"
-			)
-	endforeach()
+		foreach( src_file ${RBDOOM3_PRECOMPILED_SOURCES} )
+			#message(STATUS "-include precompiled.h for ${src_file}")
+			set_source_files_properties(
+				${src_file}
+				PROPERTIES
+				COMPILE_FLAGS "-include ${CMAKE_CURRENT_SOURCE_DIR}/idlib/precompiled.h"
+				)
+		endforeach()
 
-	# precompiled magic for GCC/clang, adapted from https://gist.github.com/573926
-	STRING(TOUPPER "CMAKE_CXX_FLAGS_${CMAKE_BUILD_TYPE}" _flags_var_name)
-	SET(_compiler_FLAGS ${${_flags_var_name}})
-	GET_DIRECTORY_PROPERTY(_directory_flags INCLUDE_DIRECTORIES)
-	FOREACH(item ${_directory_flags})
-		LIST(APPEND _compiler_FLAGS " -I${item}")
-	ENDFOREACH(item)
-
+		# precompiled magic for GCC/clang, adapted from https://gist.github.com/573926
+		STRING(TOUPPER "CMAKE_CXX_FLAGS_${CMAKE_BUILD_TYPE}" _flags_var_name)
+		SET(_compiler_FLAGS "${${_flags_var_name}} -std=c++${CMAKE_CXX_STANDARD}")
+		GET_DIRECTORY_PROPERTY(_directory_flags INCLUDE_DIRECTORIES)
+		FOREACH(item ${_directory_flags})
+			LIST(APPEND _compiler_FLAGS " -I${item}")
+		ENDFOREACH(item)
+	endif()
+		
 	GET_DIRECTORY_PROPERTY(_directory_flags DEFINITIONS)
 	LIST(APPEND _compiler_FLAGS ${_directory_flags})
 	SEPARATE_ARGUMENTS(_compiler_FLAGS)
 	
-	# we need to recreate the precompiled header for Doom3BFGVR 
-	# (i.e. can't use the one created for idlib before)
-	# because some definitions (e.g. -D__IDLIB__ -D__DOOM_DLL__) differ
-	add_custom_target(precomp_header_doom3bfgvr ALL
-	                  COMMAND ${CMAKE_CXX_COMPILER} ${_compiler_FLAGS} -x c++-header idlib/precompiled.h -o idlib/precompiled.h.gch
-	                  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-	                  COMMENT "Creating idlib/precompiled.h.gch for Doom3BFGVR"
-	                  )
+	if(USE_PRECOMPILED_HEADERS)
+		# we need to recreate the precompiled header for Doom3BFGVR 
+		# (i.e. can't use the one created for idlib before)
+		# because some definitions (e.g. -D__IDLIB__ -D__DOOM_DLL__) differ
+		add_custom_target(precomp_header_doom3bfgvr ALL
+		                  COMMAND ${CMAKE_CXX_COMPILER} ${_compiler_FLAGS} -x c++-header idlib/precompiled.h -o idlib/precompiled.h.gch
+		                  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+		                  COMMENT "Creating idlib/precompiled.h.gch for Doom3BFGVR"
+		                  )
+
+	endif()
 	
 	if(WIN32)
 		set(remove_command "del")
 	else()
 		set(remove_command "rm")
 	endif()
-	# it's ugly enough that the precompiled header binary needs to be in the 
-	# source directory (instead of the build directory), so let's at least
-	# delete it after build.
-	add_custom_target(rm_precomp_header ALL
-	                  COMMAND ${remove_command} "idlib/precompiled.h.gch"
-	                  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-	                  COMMENT "remove idlib/precompiled.h.gch"
-	                  )
 	
-	# make sure this is run after creating idlib
-	add_dependencies(precomp_header_doom3bfgvr idlib)
+	if (USE_PRECOMPILED_HEADERS)
+		# it's ugly enough that the precompiled header binary needs to be in the 
+		# source directory (instead of the build directory), so let's at least
+		# delete it after build.
+		add_custom_target(rm_precomp_header ALL
+				COMMAND ${remove_command} "idlib/precompiled.h.gch"
+				WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+				COMMENT "remove idlib/precompiled.h.gch"
+				)
+				
+		# make sure this is run after creating idlib
+		add_dependencies(precomp_header_doom3bfgvr idlib)
+	endif()
+
+	add_executable(Doom3BFGVR WIN32 ${RBDOOM3_SOURCES})
 	
-	add_executable(Doom3BFGVR WIN32 ${DOOM3_SOURCES})
+	if (USE_PRECOMPILED_HEADERS)
+		# make sure precompiled header is created before executable is compiled
+		add_dependencies(Doom3BFGVR precomp_header_doom3bfgvr)
 	
-	# make sure precompiled header is created before executable is compiled
-	add_dependencies(Doom3BFGVR precomp_header_doom3bfgvr)
-	
-	# make sure precompiled header is deleted after executable is compiled
-	add_dependencies(rm_precomp_header Doom3BFGVR)
-	
+		# make sure precompiled header is deleted after executable is compiled
+		add_dependencies(rm_precomp_header Doom3BFGVR)
+	endif()
 
 	if(NOT WIN32)
 		if(NOT "${CMAKE_SYSTEM}" MATCHES "Darwin")
 			set(RT_LIBRARY rt)
 		endif()
 
-		if(NOT "${CMAKE_SYSTEM}" MATCHES "FreeBSD")
-			set(DL_LIBRARY dl)
-		endif()
-
 		target_link_libraries(Doom3BFGVR
 			idlib
 			${OPENGL_LIBRARIES}
 			pthread
-			${DL_LIBRARY}
 			${RT_LIBRARY}
 			${SDLx_LIBRARY}
 			${OPENAL_LIBRARY}
@@ -1535,6 +1613,7 @@ else()
             ${JPEG_LIBRARY}
             ${GLEW_LIBRARY}
             ${OPENVR_LIBRARY}
+            ${CMAKE_DL_LIBS}
 			)
 	endif()
     

@@ -40,7 +40,11 @@ If you have questions concerning this license or the applicable additional terms
 // Win32
 #if defined(WIN32) || defined(_WIN32)
 
-	#define	CPUSTRING						"x86"
+	#if defined(_WIN64)
+		#define	CPUSTRING						"x64"
+	#else
+		#define	CPUSTRING						"x86"
+	#endif
 
 	#define	BUILD_STRING					"win-" CPUSTRING
 
@@ -102,12 +106,30 @@ If you have questions concerning this license or the applicable additional terms
 	#endif
 
 
-#elif defined(__linux__) || defined(__FreeBSD__) || defined(__APPLE__)
+#elif defined(__linux__) || defined(__FreeBSD__) || defined(__APPLE__) || defined(__GNUC__) || defined(__clang__)
 
-	#if defined(__i386__)
-		#define	CPUSTRING						"x86"
-	#elif defined(__x86_64__)
-		#define CPUSTRING						"x86_86"
+	#ifndef CPUSTRING
+		#if defined(__i386__)
+			#define	CPUSTRING						"x86"
+		#elif defined(__x86_64__)
+			#define CPUSTRING						"x86_64"
+		#elif defined(__e2k__)
+			#define CPUSTRING						"e2k"
+		#elif defined(__aarch64__) || defined(__ARM64__) || defined(_M_ARM64)
+			#define CPUSTRING 						"aarch64"
+		#elif defined(__powerpc64__) || defined(__PPC64__)
+			#define CPUSTRING						"ppc64"
+		#elif defined(__mips64) || defined(__mips64_)
+			#define CPUSTRING						"mips64"
+		#elif defined(__riscv__) || defined(__riscv)
+			#define CPUSTRING						"riscv"
+		#elif defined(__sparc__) || defined(__sparc)
+			#define CPUSTRING						"sparc"
+		#elif defined(__loongarch64)
+			#define CPUSTRING						"loongarch64"
+		#else
+			#error unknown CPU
+		#endif
 	#endif
 
 	#if defined(__FreeBSD__)
@@ -116,6 +138,8 @@ If you have questions concerning this license or the applicable additional terms
 		#define	BUILD_STRING					"linux-" CPUSTRING
 	#elif defined(__APPLE__)
 		#define BUILD_STRING					"osx-" CPUSTRING
+	#else
+		#define BUILD_STRING					"other-" CPUSTRING
 	#endif
 
 	#define _alloca							alloca
@@ -146,6 +170,8 @@ If you have questions concerning this license or the applicable additional terms
 	#define CALLBACK
 	#define __cdecl
 
+#else
+	#error unknown build enviorment
 #endif
 // RB end
 
@@ -207,17 +233,15 @@ bulk of the codebase, so it is the best place for analyze pragmas.
 	// win32 needs this, but 360 doesn't
 	#pragma warning( disable: 6540 )	// warning C6540: The use of attribute annotations on this function will invalidate all of its existing __declspec annotations [D:\tech5\engine\engine-10.vcxproj]
 
+	#pragma warning( disable: 4467 )	// .. Include\CodeAnalysis\SourceAnnotations.h(68): warning C4467: usage of ATL attributes is deprecated
 
-	// checking format strings catches a LOT of errors
-	#ifdef __cplusplus
+	#if !defined(VERIFY_FORMAT_STRING)
+		// checking format strings catches a LOT of errors
 		#include <CodeAnalysis\SourceAnnotations.h>
 		#define	VERIFY_FORMAT_STRING	[SA_FormatString(Style="printf")]
-	#else
-		#define VERIFY_FORMAT_STRING
+		// DG: alternative for GCC with attribute (NOOP for MSVC)
+		#define ID_STATIC_ATTRIBUTE_PRINTF(STRIDX, FIRSTARGIDX)
 	#endif
-
-	// DG: alternative for GCC with attribute (NOOP for MSVC)
-	#define ID_STATIC_ATTRIBUTE_PRINTF(STRIDX, FIRSTARGIDX)
 
 #else
 	#define	VERIFY_FORMAT_STRING

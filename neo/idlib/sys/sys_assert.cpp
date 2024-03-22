@@ -25,8 +25,8 @@ If you have questions concerning this license or the applicable additional terms
 
 ===========================================================================
 */
-#pragma hdrstop
 #include "precompiled.h"
+#pragma hdrstop
 
 #ifndef _WIN32
 	#include <signal.h> // for raise()
@@ -96,7 +96,6 @@ bool AssertFailed( const char* file, int line, const char* expression )
 	{
 #ifdef _WIN32
 #ifdef _MSC_VER
-
 		__debugbreak();
 #else
 		// DG: mingw support
