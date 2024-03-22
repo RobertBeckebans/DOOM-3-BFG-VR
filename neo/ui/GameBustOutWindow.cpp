@@ -25,8 +25,8 @@ If you have questions concerning this license or the applicable additional terms
 
 ===========================================================================
 */
-#pragma hdrstop
 #include "precompiled.h"
+#pragma hdrstop
 
 #include "../renderer/Image.h"
 
@@ -1006,7 +1006,7 @@ void idGameBustOutWindow::LoadBoardFiles()
 		name += ( i + 1 );
 		name += ".tga";
 
-		R_LoadImage( name, &pic, &w, &h, &time, false );
+		R_LoadImage( name, &pic, &w, &h, &time, false, NULL );
 
 		if( pic != NULL )
 		{

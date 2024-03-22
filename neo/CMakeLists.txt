@@ -318,6 +318,18 @@ file(GLOB RENDERER_OPENGL_SOURCES renderer/OpenGL/*.cpp)
 file(GLOB IRRXML_INCLUDES libs/irrxml/src/*.h)
 file(GLOB IRRXML_SOURCES libs/irrxml/src/*.cpp)
 
+file(GLOB IMGUI_INCLUDES libs/imgui/*.h)
+file(GLOB IMGUI_SOURCES libs/imgui/*.cpp)
+
+file(GLOB STB_INCLUDES libs/stb/*.h)
+
+file(GLOB MESA_INCLUDES libs/mesa/*.h)
+
+file(GLOB TINYEXR_INCLUDES libs/tinyexr/*.h)
+
+file(GLOB MIKKTSPACE_INCLUDES libs/mikktspace/*.h)
+file(GLOB MIKKTSPACE_SOURCES libs/mikktspace/*.c)
+
 if (NOT JPEG_FOUND)
     set(JPEG_INCLUDES
         libs/jpeg-6/jchuff.h
@@ -471,8 +483,7 @@ set(SOUND_SOURCES
 	sound/snd_system.cpp
 	sound/snd_world.cpp
 	sound/SoundVoice.cpp
-	sound/WaveFile.cpp
-	)
+	sound/WaveFile.cpp)
 	
 set(XAUDIO2_INCLUDES
 	sound/XAudio2/XA2_SoundHardware.h
@@ -643,7 +654,6 @@ file(GLOB GAMED3XP_PHYSICS_SOURCES d3xp/physics/*.cpp)
 file(GLOB GAMED3XP_SCRIPT_INCLUDES d3xp/script/*.h)
 file(GLOB GAMED3XP_SCRIPT_SOURCES d3xp/script/*.cpp)
 
-
 file(GLOB COMPILER_INCLUDES tools/compilers/*.h)
 
 file(GLOB COMPILER_AAS_INCLUDES tools/compilers/aas/*.h)
@@ -651,9 +661,6 @@ file(GLOB COMPILER_AAS_SOURCES tools/compilers/aas/*.cpp)
 
 file(GLOB COMPILER_DMAP_INCLUDES tools/compilers/dmap/*.h)
 file(GLOB COMPILER_DMAP_SOURCES tools/compilers/dmap/*.cpp)
-
-file(GLOB COMPILER_RENDERBUMP_INCLUDES tools/compilers/renderbump/*.h)
-file(GLOB COMPILER_RENDERBUMP_SOURCES tools/compilers/renderbump/*.cpp)
 
 file(GLOB COMPILER_ROQVQ_INCLUDES tools/compilers/roqvq/*.h)
 file(GLOB COMPILER_ROQVQ_SOURCES tools/compilers/roqvq/*.cpp)
@@ -876,8 +883,8 @@ source_group("cm" FILES ${CM_SOURCES})
 source_group("framework" FILES ${FRAMEWORK_INCLUDES})
 source_group("framework" FILES ${FRAMEWORK_SOURCES})
 
-source_group("framework\\async" FILES ${FRAMEWORK_ASYNC_INCLUDES})
-source_group("framework\\async" FILES ${FRAMEWORK_ASYNC_SOURCES})
+source_group("imgui" FILES ${FRAMEWORK_IMGUI_INCLUDES})
+source_group("imgui" FILES ${FRAMEWORK_IMGUI_SOURCES})
 
 source_group("renderer" FILES ${RENDERER_INCLUDES})
 source_group("renderer" FILES ${RENDERER_SOURCES})
@@ -905,6 +912,15 @@ source_group("renderer\\OpenGL" FILES ${RENDERER_OPENGL_SOURCES})
 
 source_group("libs\\irrxml" FILES ${IRRXML_INCLUDES})
 source_group("libs\\irrxml" FILES ${IRRXML_SOURCES})
+
+source_group("libs\\stb" FILES ${STB_INCLUDES})
+
+source_group("libs\\mesa" FILES ${MESA_INCLUDES})
+
+source_group("libs\\tinyexr" FILES ${TINYEXR_INCLUDES})
+
+source_group("libs\\mikktspace" FILES ${MIKKTSPACE_INCLUDES})
+source_group("libs\\mikktspace" FILES ${MIKKTSPACE_SOURCES})
 
 source_group("libs\\jpeg-6" FILES ${JPEG_INCLUDES})
 source_group("libs\\jpeg-6" FILES ${JPEG_SOURCES})
@@ -1069,6 +1085,11 @@ set(DOOM3_INCLUDES
 			${RENDERER_JOBS_STATICSHADOWVOLUME_INCLUDES}
 			${RENDERER_OPENGL_INCLUDES}
 			#${IRRXML_INCLUDES}
+			${IMGUI_INCLUDES}
+			${STB_INCLUDES}
+			${MESA_INCLUDES}
+			${TINYEXR_INCLUDES}
+			${MIKKTSPACE_INCLUDES}
 			${JPEG_INCLUDES}
 			${PNG_INCLUDES}
 			${ZLIB_INCLUDES}
@@ -1105,6 +1126,8 @@ set(DOOM3_SOURCES
 			${RENDERER_JOBS_STATICSHADOWVOLUME_SOURCES}
 			${RENDERER_OPENGL_SOURCES}
 			#${IRRXML_SOURCES}
+			${IMGUI_SOURCES}
+			${MIKKTSPACE_SOURCES}
 			${JPEG_SOURCES}
 			${PNG_SOURCES}
 			${ZLIB_SOURCES}
@@ -1122,8 +1145,6 @@ set(DOOM3_SOURCES
 			
 			${COMPILER_AAS_SOURCES}
 			${COMPILER_DMAP_SOURCES}
-			#${COMPILER_RENDERBUMP_SOURCES}
-			#${COMPILER_ROQVQ_SOURCES}
 			)
 
 add_definitions(-DUSE_DOOMCLASSIC)
@@ -1158,14 +1179,7 @@ endif()
 include_directories(
 			.
 			idlib
-			#libs/curl/include
-			#libs/openal-soft/include
-			#libs/freetype/include
             )
-			
-#link_directories(
-#			${CMAKE_CURRENT_SOURCE_DIR}/libs/curl/lib
-#			${CMAKE_CURRENT_SOURCE_DIR}/libs/openal-soft/lib)
 
 if(MSVC)
 
@@ -1249,35 +1263,6 @@ if(MSVC)
 		
 	endif()
 	
-	if(USE_MFC_TOOLS)
-		
-		include_directories(libs/atlmfc/include)
-		if(CMAKE_CL_64)
-			link_directories(${CMAKE_CURRENT_SOURCE_DIR}/libs/atlmfc/lib/amd64)
-		else()
-			link_directories(${CMAKE_CURRENT_SOURCE_DIR}/libs/atlmfc/lib)
-		endif()
-		
-		add_definitions(-DUSE_MFC_TOOLS)
-		
-		list(APPEND DOOM3_SOURCES
-			${TOOLS_INCLUDES}
-			${TOOLS_COMAFX_INCLUDES} ${TOOLS_COMAFX_SOURCES}
-			${TOOLS_COMMON_INCLUDES} ${TOOLS_COMMON_SOURCES}
-			${TOOLS_COMMON_PROPTREE_INCLUDES} ${TOOLS_COMMON_PROPTREE_SOURCES}
-			
-			${EDITOR_AF_INCLUDES} ${EDITOR_AF_SOURCES}
-			${EDITOR_DEBUGGER_INCLUDES} ${EDITOR_DEBUGGER_SOURCES}
-			${EDITOR_DECL_INCLUDES} ${EDITOR_DECL_SOURCES}
-			${EDITOR_GUIED_INCLUDES} ${EDITOR_GUIED_SOURCES}
-			${EDITOR_MATERIALEDITOR_INCLUDES} ${EDITOR_MATERIALEDITOR_SOURCES}
-			${EDITOR_PARTICLE_INCLUDES} ${EDITOR_PARTICLE_SOURCES}
-			${EDITOR_PDA_INCLUDES} ${EDITOR_PDA_SOURCES}
-			${EDITOR_RADIANT_INCLUDES} ${EDITOR_RADIANT_SOURCES}
-			${EDITOR_SCRIPT_INCLUDES} ${EDITOR_SCRIPT_SOURCES}
-			${EDITOR_SOUND_INCLUDES} ${EDITOR_SOUND_SOURCES})
-	endif()
-	
 	list(APPEND DOOM3_INCLUDES
 		${SYS_INCLUDES} 
 		${WIN32_INCLUDES})
@@ -1289,7 +1274,7 @@ if(MSVC)
 	list(REMOVE_DUPLICATES DOOM3_SOURCES)
 	
 	set(DOOM3_PRECOMPILED_SOURCES ${DOOM3_SOURCES})
-	list(REMOVE_ITEM DOOM3_PRECOMPILED_SOURCES ${TIMIDITY_SOURCES} ${JPEG_SOURCES} ${PNG_SOURCES} ${ZLIB_SOURCES} ${GLEW_SOURCES})
+	list(REMOVE_ITEM DOOM3_PRECOMPILED_SOURCES ${TIMIDITY_SOURCES} ${JPEG_SOURCES} ${PNG_SOURCES} ${ZLIB_SOURCES} ${GLEW_SOURCES} ${MIKKTSPACE_SOURCES})
 	list(REMOVE_ITEM DOOM3_PRECOMPILED_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/libs/zlib/minizip/ioapi.c)
 	list(REMOVE_ITEM DOOM3_PRECOMPILED_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/renderer/DXT/DXTDecoder.cpp)
 	list(REMOVE_ITEM DOOM3_PRECOMPILED_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/renderer/DXT/DXTEncoder.cpp)

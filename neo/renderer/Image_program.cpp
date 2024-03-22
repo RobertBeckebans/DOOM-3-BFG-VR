@@ -3,6 +3,8 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2021 Robert Beckebans
+Copyright (C) 2021 Stephen Pridham
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -50,8 +52,8 @@ Manager
 
 */
 
-#pragma hdrstop
 #include "precompiled.h"
+#pragma hdrstop
 
 
 // tr_imageprogram.c
@@ -182,6 +184,24 @@ static void R_InvertAlpha( byte* data, int width, int height )
 	for( i = 0 ; i < c ; i += 4 )
 	{
 		data[i + 3] = 255 - data[i + 3];
+	}
+}
+
+/*
+=================
+R_InvertGreen
+=================
+*/
+static void R_InvertGreen( byte* data, int width, int height )
+{
+	int		i;
+	int		c;
+
+	c = width * height * 4;
+
+	for( i = 0 ; i < c ; i += 4 )
+	{
+		data[i + 1] = 255 - data[i + 1];
 	}
 }
 
@@ -372,6 +392,42 @@ static void R_ImageAdd( byte* data1, int width1, int height1, byte* data2, int w
 	}
 }
 
+// SP begin
+static void R_CombineRgba( byte* data1, int width1, int height1, byte* data2, int width2, int height2, byte* data3, int width3, int height3 )
+{
+	assert( width1 == width2 );
+	//assert(width2 == width3);
+	assert( height1 == height2 );
+
+	for( int j = 0; j < 4 * height1; j += 4 )
+	{
+		for( int i = 0; i < 4 * width1; i += 4 )
+		{
+			// Assume that these textures are all grayscale images. just take the r channel of each and set them to
+			// the respective rgb.
+			byte r = data1[i + j * width1];
+
+			byte g = data2[i + j * width1];
+
+			byte b = 255;
+
+			if( data3 && width1 == width3 )
+			{
+				b = data3[i + j * width1];
+			}
+
+			byte a = 255;
+
+			data1[0 + i + j * width1] = r;
+			data1[1 + i + j * width1] = g;
+			data1[2 + i + j * width1] = b;
+			data1[3 + i + j * width1] = a;
+		}
+	}
+
+}
+// SP end
+
 
 // we build a canonical token form of the image program here
 static char parseBuffer[MAX_IMAGE_NAME];
@@ -419,8 +475,7 @@ static bool R_ParseImageProgram_r( idLexer& src, byte** pic, int* width, int* he
 								   ID_TIME_T* timestamps, textureUsage_t* usage )
 {
 	idToken		token;
-	float		scale;
-	ID_TIME_T		timestamp;
+	ID_TIME_T	timestamp;
 
 	src.ReadToken( &token );
 
@@ -454,7 +509,7 @@ static bool R_ParseImageProgram_r( idLexer& src, byte** pic, int* width, int* he
 
 		src.ReadToken( &token );
 		AppendToken( token );
-		scale = token.GetFloatValue();
+		float scale = token.GetFloatValue();
 
 		// process it
 		if( pic )
@@ -609,6 +664,23 @@ static bool R_ParseImageProgram_r( idLexer& src, byte** pic, int* width, int* he
 		return true;
 	}
 
+	// RB: invertGreen to allow flipping the Y-Axis of normal maps
+	if( !token.Icmp( "invertGreen" ) )
+	{
+		MatchAndAppendToken( src, "(" );
+
+		R_ParseImageProgram_r( src, pic, width, height, timestamps, usage );
+
+		// process it
+		if( pic )
+		{
+			R_InvertGreen( *pic, *width, *height );
+		}
+
+		MatchAndAppendToken( src, ")" );
+		return true;
+	}
+
 	if( !token.Icmp( "invertColor" ) )
 	{
 		MatchAndAppendToken( src, "(" );
@@ -637,7 +709,7 @@ static bool R_ParseImageProgram_r( idLexer& src, byte** pic, int* width, int* he
 		if( pic )
 		{
 			int		c;
-			c = *width** height * 4;
+			c = *width * *height * 4;
 			for( i = 0 ; i < c ; i += 4 )
 			{
 				( *pic )[i + 1] =
@@ -662,7 +734,7 @@ static bool R_ParseImageProgram_r( idLexer& src, byte** pic, int* width, int* he
 		if( pic )
 		{
 			int		c;
-			c = *width** height * 4;
+			c = *width * *height * 4;
 			for( i = 0 ; i < c ; i += 4 )
 			{
 				( *pic )[i + 3] = ( ( *pic )[i + 0] + ( *pic )[i + 1] + ( *pic )[i + 2] ) / 3;
@@ -676,6 +748,58 @@ static bool R_ParseImageProgram_r( idLexer& src, byte** pic, int* width, int* he
 		return true;
 	}
 
+	// SP begin
+	if( !token.Icmp( "combineRgba" ) )
+	{
+		byte* pic2 = nullptr;
+		byte* pic3 = nullptr;
+		int	width2, height2;
+		int width3, height3;
+
+		MatchAndAppendToken( src, "(" );
+
+		if( !R_ParseImageProgram_r( src, pic, width, height, timestamps, usage ) )
+		{
+			return false;
+		}
+
+		MatchAndAppendToken( src, "," );
+
+		if( !R_ParseImageProgram_r( src, pic ? &pic2 : NULL, &width2, &height2, timestamps, usage ) )
+		{
+			if( pic )
+			{
+				R_StaticFree( *pic );
+				*pic = NULL;
+			}
+			return false;
+		}
+
+		MatchAndAppendToken( src, "," );
+
+		if( !R_ParseImageProgram_r( src, pic2 ? &pic3 : NULL, &width3, &height3, timestamps, usage ) )
+		{
+			if( pic )
+			{
+				R_StaticFree( *pic );
+				*pic = NULL;
+			}
+			return false;
+		}
+
+		// process it
+		if( pic )
+		{
+			R_CombineRgba( *pic, *width, *height, pic2, width2, height2, pic3, width3, height3 );
+			R_StaticFree( pic2 );
+			R_StaticFree( pic3 );
+		}
+
+		MatchAndAppendToken( src, ")" );
+		return true;
+	}
+	// SP end
+
 	// if we are just parsing instead of loading or checking,
 	// don't do the R_LoadImage
 	if( !timestamps && !pic )
@@ -684,7 +808,7 @@ static bool R_ParseImageProgram_r( idLexer& src, byte** pic, int* width, int* he
 	}
 
 	// load it as an image
-	R_LoadImage( token.c_str(), pic, width, height, &timestamp, true );
+	R_LoadImage( token.c_str(), pic, width, height, &timestamp, true, usage );
 
 	if( timestamp == -1 )
 	{

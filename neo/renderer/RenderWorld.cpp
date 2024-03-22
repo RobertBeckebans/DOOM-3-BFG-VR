@@ -1347,10 +1347,6 @@ guiPoint_t idRenderWorldLocal::GuiTrace( qhandle_t entityHandle, idAnimator* ani
 	return pt;
 }
 
-
-
-
-
 /*
 ===================
 idRenderWorldLocal::ModelTrace

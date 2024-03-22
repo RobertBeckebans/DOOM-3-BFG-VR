@@ -228,9 +228,18 @@ typedef enum
 	TD_LOOKUP_TABLE_RGBA,	// RGBA lookup table
 	TD_COVERAGE,			// coverage map for fill depth pass when YCoCG is used
 	TD_DEPTH,				// depth buffer copy for motion blur
-	// RB begin
+	TD_SPECULAR_PBR_RMAO,	// may be compressed, and always zeros the alpha channel, linear RGB R = roughness, G = metal, B = ambient occlusion
+	TD_SPECULAR_PBR_RMAOD,	// may be compressed, alpha channel contains displacement map
+	TD_HIGHQUALITY_CUBE,	// motorsep - Uncompressed cubemap texture (RGB colorspace)
+	TD_LOWQUALITY_CUBE,		// motorsep - Compressed cubemap texture (RGB colorspace DXT5)
 	TD_SHADOW_ARRAY,		// 2D depth buffer array for shadow mapping
-	// RB end
+	TD_RG16F,
+	TD_RGBA16F,
+	TD_RGBA32F,
+	TD_R32F,
+	TD_R11G11B10F,			// memory efficient HDR RGB format with only 32bpp
+	TD_R8F,					// Stephen: Added for ambient occlusion render target.
+	TD_DEPTH_STENCIL,       // depth buffer and stencil buffer
 } textureUsage_t;
 
 typedef enum
@@ -326,7 +335,7 @@ public:
 		levelLoadReferenced = true;
 	}
 	void		ActuallyLoadImage( bool fromBackEnd );
-	void		ActuallySaveImage(); // carl
+
 	//---------------------------------------------
 	// Platform specific implementations
 	//---------------------------------------------
@@ -370,21 +379,43 @@ public:
 		return defaulted;
 	}
 
-	static void			GetGeneratedName( idStr& _name, const textureUsage_t& _usage, const cubeFiles_t& _cube );
-
-	// Should be called at least once
-	void		SetSamplerState( textureFilter_t tf, textureRepeat_t tr );
+	static void	GetGeneratedName( idStr& _name, const textureUsage_t& _usage, const cubeFiles_t& _cube );
 
 	// used by callback functions to specify the actual data
 	// data goes from the bottom to the top line of the image, as OpenGL expects it
 	// These perform an implicit Bind() on the current texture unit
 	// FIXME: should we implement cinematics this way, instead of with explicit calls?
-	void		GenerateImage( const byte* pic, int width, int height,
-							   textureFilter_t filter, textureRepeat_t repeat, textureUsage_t usage );
+	void		GenerateImage( const byte* pic,
+							   int width, int height,
+							   textureFilter_t filter,
+							   textureRepeat_t repeat,
+							   textureUsage_t usage,
+							   textureSamples_t samples = SAMPLE_1,
+							   cubeFiles_t cubeFiles = CF_2D,
+							   bool isRenderTarget = false );
+
 	void		GenerateCubeImage( const byte* pic[6], int size,
 								   textureFilter_t filter, textureUsage_t usage );
 
 	void		SetTexParameters();	// update aniso and trilinear
+
+	// DG: added for imgui integration (to be used with ImGui::Image() etc)
+	void*		GetImGuiTextureID()
+	{
+		if( !IsLoaded() )
+		{
+			// load the image on demand here, which isn't our normal game operating mode
+			ActuallyLoadImage( true );
+		}
+
+#if defined( USE_VULKAN )
+		return ( void* )( intptr_t )image;
+#else
+		return ( void* )( intptr_t )texnum;
+#endif
+
+	}
+	// DG end
 
 	// Koz begin
 	GLuint		GetTexNum() const
@@ -396,8 +427,9 @@ public:
 private:
 	friend class idImageManager;
 
-	void				AllocImage();
 	void				DeriveOpts();
+	void				AllocImage();
+	void				SetSamplerState( textureFilter_t tf, textureRepeat_t tr );
 
 	// parameters that define this image
 	idStr				imgName;				// game path, including extension (except for cube maps), may be an image program
@@ -427,19 +459,18 @@ private:
 	GLuint				internalFormat;
 	GLuint				dataFormat;
 	GLuint				dataType;
-
-
 };
 
-
-
-
 // data is RGBA
+void	LoadPNG( const char* filename, unsigned char** pic, int* width, int* height, ID_TIME_T* timestamp );
+
+void	LoadTGA( const char* name, byte** pic, int* width, int* height, ID_TIME_T* timestamp );
 void	R_WriteTGA( const char* filename, const byte* data, int width, int height, bool flipVertical = false, const char* basePath = "fs_savepath" );
 // data is in top-to-bottom raster order unless flipVertical is set
 
 // RB begin
 void	R_WritePNG( const char* filename, const byte* data, int bytesPerPixel, int width, int height, bool flipVertical = false, const char* basePath = "fs_savepath" );
+void	R_WriteEXR( const char* filename, const void* data, int channelsPerPixel, int width, int height, const char* basePath = "fs_savepath" );
 // RB end
 
 class idImageManager
@@ -463,7 +494,7 @@ public:
 	// grid pattern.
 	// Will automatically execute image programs if needed.
 	idImage* 			ImageFromFile( const char* name,
-									   textureFilter_t filter, textureRepeat_t repeat, textureUsage_t usage, cubeFiles_t cubeMap = CF_2D );
+									   textureFilter_t filter, textureRepeat_t repeat, textureUsage_t usage, cubeFiles_t cubeMap = CF_2D, int cubeMapSize = 0 );
 
 	// look for a loaded image, whatever the parameters
 	idImage* 			GetImage( const char* name ) const;
@@ -556,8 +587,6 @@ public:
 
 extern idImageManager*	globalImages;		// pointer to global list for the rest of the system
 
-int MakePowerOfTwo( int num );
-
 /*
 ====================================================================
 
@@ -577,8 +606,17 @@ byte* R_MipMap( const byte* in, int width, int height );
 void R_BlendOverTexture( byte* data, int pixelCount, const byte blend[4] );
 void R_HorizontalFlip( byte* data, int width, int height );
 void R_VerticalFlip( byte* data, int width, int height );
+void R_VerticalFlipRGB16F( byte* data, int width, int height );
 void R_RotatePic( byte* data, int width );
 void R_ApplyCubeMapTransforms( int i, byte* data, int size );
+// SP begin
+// This method takes in a cubemap from a single image. Depending on the side (0-5),
+// the image will be extracted from data and returned. The dimensions will be size x size.
+byte* R_GenerateCubeMapSideFromSingleImage( byte* data, int srcWidth, int srcHeight, int size, int side );
+// SP end
+
+idVec4 R_CalculateMipRect( uint dimensions, uint mip );
+int R_CalculateUsedAtlasPixels( int dimensions );
 
 /*
 ====================================================================
@@ -588,9 +626,11 @@ IMAGEFILES
 ====================================================================
 */
 
-void R_LoadImage( const char* name, byte** pic, int* width, int* height, ID_TIME_T* timestamp, bool makePowerOf2 );
+// RB: added texture usage for PBR _rmao[d] HACK
+void R_LoadImage( const char* name, byte** pic, int* width, int* height, ID_TIME_T* timestamp, bool makePowerOf2, textureUsage_t* usage );
+
 // pic is in top to bottom raster format
-bool R_LoadCubeImages( const char* cname, cubeFiles_t extensions, byte* pic[6], int* size, ID_TIME_T* timestamp );
+bool R_LoadCubeImages( const char* cname, cubeFiles_t extensions, byte* pic[6], int* size, ID_TIME_T* timestamp, int cubeMapSize = 0 );
 
 /*
 ====================================================================

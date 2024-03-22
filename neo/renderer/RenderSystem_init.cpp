@@ -27,8 +27,10 @@ If you have questions concerning this license or the applicable additional terms
 ===========================================================================
 */
 
-#pragma hdrstop
 #include "precompiled.h"
+#pragma hdrstop
+
+//#include "libs/imgui/imgui.h"
 
 #include "RenderCommon.h"
 #include "DXT/DXTCodec.h" // Carl
@@ -378,6 +380,7 @@ void R_SetNewMode( const bool fullInit )
 				r_fullscreen.SetInteger( 1 );
 				R_GetModeListForDisplay( r_fullscreen.GetInteger() - 1, modeList );
 			}
+
 			if( modeList.Num() < 1 )
 			{
 				idLib::Printf( "Going to safe mode because mode list failed." );
@@ -554,47 +557,6 @@ void R_TestImage_f( const idCmdArgs& args )
 	{
 		tr.testImage = globalImages->ImageFromFile( args.Argv( 1 ), TF_DEFAULT, TR_REPEAT, TD_DEFAULT );
 	}
-}
-
-/*
-================
-//Carl: ExtractTGA_f
-================
-*/
-void ExtractTGA_f( const idCmdArgs& args )
-{
-	idStr		relativePath;
-	idStr		extension;
-	//idFileList *fileList;
-	int			imageNum;
-	idImage*		img = NULL;
-	//idDxtDecoder dxt;
-
-	if( args.Argc() != 2 )
-	{
-		common->Printf( "usage: ExtractTGA <image path or image number>\n" );
-		return;
-	}
-
-	if( idStr::IsNumeric( args.Argv( 1 ) ) )
-	{
-		imageNum = atoi( args.Argv( 1 ) );
-		if( imageNum >= 0 && imageNum < globalImages->images.Num() )
-		{
-			img = globalImages->images[imageNum];
-		}
-	}
-	else
-	{
-		img = globalImages->ImageFromFile( args.Argv( 1 ), TF_DEFAULT, TR_REPEAT, TD_DEFAULT );
-	}
-	if( !img )
-	{
-		common->Warning( "Image '%s' not found.\n", args.Argv( 1 ) );
-		return;
-	}
-	common->Printf( "Saving image\n" );
-	img->ActuallySaveImage();
 }
 
 /*
@@ -1068,47 +1030,7 @@ void R_ScreenShot_f( const idCmdArgs& args )
 	common->Printf( "Wrote %s\n", checkname.c_str() );
 }
 
-/*
-===============
-R_StencilShot
-Save out a screenshot showing the stencil buffer expanded by 16x range
-===============
-*/
-void R_StencilShot()
-{
-	int			i, c;
 
-	int	width = tr.GetWidth();
-	int	height = tr.GetHeight();
-
-	int	pix = width * height;
-
-	c = pix * 3 + 18;
-	idTempArray< byte > buffer( c );
-	memset( buffer.Ptr(), 0, 18 );
-
-	idTempArray< byte > byteBuffer( pix );
-
-	glReadPixels( 0, 0, width, height, GL_STENCIL_INDEX , GL_UNSIGNED_BYTE, byteBuffer.Ptr() );
-
-	for( i = 0 ; i < pix ; i++ )
-	{
-		buffer[18 + i * 3] =
-			buffer[18 + i * 3 + 1] =
-				//		buffer[18+i*3+2] = ( byteBuffer[i] & 15 ) * 16;
-				buffer[18 + i * 3 + 2] = byteBuffer[i];
-	}
-
-	// fill in the header (this is vertically flipped, which glReadPixels emits)
-	buffer[2] = 2;		// uncompressed type
-	buffer[12] = width & 255;
-	buffer[13] = width >> 8;
-	buffer[14] = height & 255;
-	buffer[15] = height >> 8;
-	buffer[16] = 24;	// pixel size
-
-	fileSystem->WriteFile( "screenshots/stencilShot.tga", buffer.Ptr(), c, "fs_savepath" );
-}
 
 /*
 ==================
@@ -1124,7 +1046,7 @@ void R_EnvShot_f( const idCmdArgs& args )
 	idStr		fullname;
 	const char*	baseName;
 	int			i;
-	idMat3		axis[7], oldAxis;
+	idMat3		axis[6], oldAxis;
 	renderView_t	ref;
 	viewDef_t	primary;
 	int			blends;
@@ -1168,33 +1090,36 @@ void R_EnvShot_f( const idCmdArgs& args )
 	primary = *tr.primaryView;
 
 	memset( &axis, 0, sizeof( axis ) );
-	axis[0][0][0] = 1; // this one gets ignored as it always come out wrong.
-	axis[0][1][2] = 1; // and so we repeat this axis as the last one.
+
+	// +X
+	axis[0][0][0] = 1;
+	axis[0][1][2] = 1;
 	axis[0][2][1] = 1;
 
+	// -X
 	axis[1][0][0] = -1;
 	axis[1][1][2] = -1;
 	axis[1][2][1] = 1;
 
+	// +Y
 	axis[2][0][1] = 1;
 	axis[2][1][0] = -1;
 	axis[2][2][2] = -1;
 
+	// -Y
 	axis[3][0][1] = -1;
 	axis[3][1][0] = -1;
 	axis[3][2][2] = 1;
 
+	// +Z
 	axis[4][0][2] = 1;
 	axis[4][1][0] = -1;
 	axis[4][2][1] = 1;
 
+	// -Z
 	axis[5][0][2] = -1;
 	axis[5][1][0] = 1;
 	axis[5][2][1] = 1;
-
-	axis[6][0][0] = 1; // this is the repetition of the first axis
-	axis[6][1][2] = 1;
-	axis[6][2][1] = 1;
 
 	// let's get the game window to a "size" resolution
 	if( ( res_w != size ) || ( res_h != size ) )
@@ -1204,31 +1129,22 @@ void R_EnvShot_f( const idCmdArgs& args )
 		R_SetNewMode( false ); // the same as "vid_restart"
 	} // FIXME that's a hack!!
 
-	for( i = 0 ; i < 7 ; i++ )
-	{
+	// so we return to that axis and fov after the fact.
+	oldAxis = primary.renderView.viewaxis;
+	old_fov_x = primary.renderView.fov_x;
+	old_fov_y = primary.renderView.fov_y;
 
+	for( i = 0 ; i < 6 ; i++ )
+	{
 		ref = primary.renderView;
 
-		if( i == 0 )
-		{
-			// so we return to that axis and fov after the fact.
-			oldAxis = ref.viewaxis;
-			old_fov_x = ref.fov_x;
-			old_fov_y = ref.fov_y;
-			//this is part of the hack
-			extension = "_wrong";
-		}
-		else
-		{
-			// this keeps being part of the hack
-			extension = envDirection[ i - 1 ]; //yes, indeed, this is totally part of the hack!
-		}
+		extension = envDirection[ i ];
 
 		ref.fov_x = ref.fov_y = 90;
 		ref.viewaxis = axis[i];
 		fullname.Format( "env/%s%s", baseName, extension );
 
-		tr.TakeScreenshot( size, size, fullname, blends, &ref, TGA );
+		tr.TakeScreenshot( size, size, fullname, blends, &ref, PNG );
 	}
 
 	// restore the original resolution, axis and fov
@@ -1243,241 +1159,6 @@ void R_EnvShot_f( const idCmdArgs& args )
 }
 
 //============================================================================
-
-static idMat3		cubeAxis[6];
-
-
-/*
-==================
-R_SampleCubeMap
-==================
-*/
-void R_SampleCubeMap( const idVec3& dir, int size, byte* buffers[6], byte result[4] )
-{
-	float	adir[3];
-	int		axis, x, y;
-
-	adir[0] = fabs( dir[0] );
-	adir[1] = fabs( dir[1] );
-	adir[2] = fabs( dir[2] );
-
-	if( dir[0] >= adir[1] && dir[0] >= adir[2] )
-	{
-		axis = 0;
-	}
-	else if( -dir[0] >= adir[1] && -dir[0] >= adir[2] )
-	{
-		axis = 1;
-	}
-	else if( dir[1] >= adir[0] && dir[1] >= adir[2] )
-	{
-		axis = 2;
-	}
-	else if( -dir[1] >= adir[0] && -dir[1] >= adir[2] )
-	{
-		axis = 3;
-	}
-	else if( dir[2] >= adir[1] && dir[2] >= adir[2] )
-	{
-		axis = 4;
-	}
-	else
-	{
-		axis = 5;
-	}
-
-	float	fx = ( dir * cubeAxis[axis][1] ) / ( dir * cubeAxis[axis][0] );
-	float	fy = ( dir * cubeAxis[axis][2] ) / ( dir * cubeAxis[axis][0] );
-
-	fx = -fx;
-	fy = -fy;
-	x = size * 0.5 * ( fx + 1 );
-	y = size * 0.5 * ( fy + 1 );
-	if( x < 0 )
-	{
-		x = 0;
-	}
-	else if( x >= size )
-	{
-		x = size - 1;
-	}
-	if( y < 0 )
-	{
-		y = 0;
-	}
-	else if( y >= size )
-	{
-		y = size - 1;
-	}
-
-	result[0] = buffers[axis][( y * size + x ) * 4 + 0];
-	result[1] = buffers[axis][( y * size + x ) * 4 + 1];
-	result[2] = buffers[axis][( y * size + x ) * 4 + 2];
-	result[3] = buffers[axis][( y * size + x ) * 4 + 3];
-}
-
-/*
-==================
-R_MakeAmbientMap_f
-
-R_MakeAmbientMap_f <basename> [size]
-
-Saves out env/<basename>_amb_ft.tga, etc
-==================
-*/
-void R_MakeAmbientMap_f( const idCmdArgs& args )
-{
-	idStr fullname;
-	const char*	baseName;
-	int			i;
-	renderView_t	ref;
-	viewDef_t	primary;
-	int			downSample;
-	int			outSize;
-	byte*		buffers[6];
-	int			width = 0, height = 0;
-
-	if( args.Argc() != 2 && args.Argc() != 3 )
-	{
-		common->Printf( "USAGE: ambientshot <basename> [size]\n" );
-		return;
-	}
-	baseName = args.Argv( 1 );
-
-	downSample = 0;
-	if( args.Argc() == 3 )
-	{
-		outSize = atoi( args.Argv( 2 ) );
-	}
-	else
-	{
-		outSize = 32;
-	}
-
-	memset( &cubeAxis, 0, sizeof( cubeAxis ) );
-	cubeAxis[0][0][0] = 1;
-	cubeAxis[0][1][2] = 1;
-	cubeAxis[0][2][1] = 1;
-
-	cubeAxis[1][0][0] = -1;
-	cubeAxis[1][1][2] = -1;
-	cubeAxis[1][2][1] = 1;
-
-	cubeAxis[2][0][1] = 1;
-	cubeAxis[2][1][0] = -1;
-	cubeAxis[2][2][2] = -1;
-
-	cubeAxis[3][0][1] = -1;
-	cubeAxis[3][1][0] = -1;
-	cubeAxis[3][2][2] = 1;
-
-	cubeAxis[4][0][2] = 1;
-	cubeAxis[4][1][0] = -1;
-	cubeAxis[4][2][1] = 1;
-
-	cubeAxis[5][0][2] = -1;
-	cubeAxis[5][1][0] = 1;
-	cubeAxis[5][2][1] = 1;
-
-	// read all of the images
-	for( i = 0 ; i < 6 ; i++ )
-	{
-		fullname.Format( "env/%s%s.%s", baseName, envDirection[i], fileExten[TGA] );
-		common->Printf( "loading %s\n", fullname.c_str() );
-		const bool captureToImage = false;
-		common->UpdateScreen( captureToImage );
-		R_LoadImage( fullname, &buffers[i], &width, &height, NULL, true );
-		if( !buffers[i] )
-		{
-			common->Printf( "failed.\n" );
-			for( i-- ; i >= 0 ; i-- )
-			{
-				Mem_Free( buffers[i] );
-			}
-			return;
-		}
-	}
-
-	// resample with hemispherical blending
-	int	samples = 1000;
-
-	byte*	outBuffer = ( byte* )_alloca( outSize * outSize * 4 );
-
-	for( int map = 0 ; map < 2 ; map++ )
-	{
-		for( i = 0 ; i < 6 ; i++ )
-		{
-			for( int x = 0 ; x < outSize ; x++ )
-			{
-				for( int y = 0 ; y < outSize ; y++ )
-				{
-					idVec3	dir;
-					float	total[3];
-
-					dir = cubeAxis[i][0] + -( -1 + 2.0 * x / ( outSize - 1 ) ) * cubeAxis[i][1] + -( -1 + 2.0 * y / ( outSize - 1 ) ) * cubeAxis[i][2];
-					dir.Normalize();
-					total[0] = total[1] = total[2] = 0;
-					//samples = 1;
-					float	limit = map ? 0.95 : 0.25;		// small for specular, almost hemisphere for ambient
-
-					for( int s = 0 ; s < samples ; s++ )
-					{
-						// pick a random direction vector that is inside the unit sphere but not behind dir,
-						// which is a robust way to evenly sample a hemisphere
-						idVec3	test;
-						while( 1 )
-						{
-							for( int j = 0 ; j < 3 ; j++ )
-							{
-								test[j] = -1 + 2 * ( rand() & 0x7fff ) / ( float )0x7fff;
-							}
-							if( test.Length() > 1.0 )
-							{
-								continue;
-							}
-							test.Normalize();
-							if( test * dir > limit )  	// don't do a complete hemisphere
-							{
-								break;
-							}
-						}
-						byte	result[4];
-						//test = dir;
-						R_SampleCubeMap( test, width, buffers, result );
-						total[0] += result[0];
-						total[1] += result[1];
-						total[2] += result[2];
-					}
-					outBuffer[( y * outSize + x ) * 4 + 0] = total[0] / samples;
-					outBuffer[( y * outSize + x ) * 4 + 1] = total[1] / samples;
-					outBuffer[( y * outSize + x ) * 4 + 2] = total[2] / samples;
-					outBuffer[( y * outSize + x ) * 4 + 3] = 255;
-				}
-			}
-
-			if( map == 0 )
-			{
-				fullname.Format( "env/%s_amb%s.%s", baseName, envDirection[i], fileExten[TGA] );
-			}
-			else
-			{
-				fullname.Format( "env/%s_spec%s.%s", baseName, envDirection[i], fileExten[TGA] );
-			}
-			common->Printf( "writing %s\n", fullname.c_str() );
-			const bool captureToImage = false;
-			common->UpdateScreen( captureToImage );
-			R_WriteTGA( fullname, outBuffer, outSize, outSize );
-		}
-	}
-
-	for( i = 0 ; i < 6 ; i++ )
-	{
-		if( buffers[i] )
-		{
-			Mem_Free( buffers[i] );
-		}
-	}
-}
 
 void R_TransformCubemap( const char* orgDirection[6], const char* orgDir, const char* destDirection[6], const char* destDir, const char* baseName )
 {
@@ -1494,7 +1175,7 @@ void R_TransformCubemap( const char* orgDirection[6], const char* orgDir, const 
 		common->Printf( "loading %s\n", fullname.c_str() );
 		const bool captureToImage = false;
 		common->UpdateScreen( captureToImage );
-		R_LoadImage( fullname, &buffers[i], &width, &height, NULL, true );
+		R_LoadImage( fullname, &buffers[i], &width, &height, NULL, true, NULL );
 
 		//check if the buffer is troublesome
 		if( !buffers[i] )
@@ -1864,13 +1545,11 @@ void R_InitCommands()
 	cmdSystem->AddCommand( "touchGui", R_TouchGui_f, CMD_FL_RENDERER, "touches a gui" );
 	cmdSystem->AddCommand( "screenshot", R_ScreenShot_f, CMD_FL_RENDERER, "takes a screenshot" );
 	cmdSystem->AddCommand( "envshot", R_EnvShot_f, CMD_FL_RENDERER, "takes an environment shot" );
-	cmdSystem->AddCommand( "makeAmbientMap", R_MakeAmbientMap_f, CMD_FL_RENDERER | CMD_FL_CHEAT, "makes an ambient map" );
 	cmdSystem->AddCommand( "envToSky", R_TransformEnvToSkybox_f, CMD_FL_RENDERER | CMD_FL_CHEAT, "transforms environment textures to sky box textures" );
 	cmdSystem->AddCommand( "skyToEnv", R_TransformSkyboxToEnv_f, CMD_FL_RENDERER | CMD_FL_CHEAT, "transforms sky box textures to environment textures" );
 	cmdSystem->AddCommand( "gfxInfo", GfxInfo_f, CMD_FL_RENDERER, "show graphics info" );
 	cmdSystem->AddCommand( "modulateLights", R_ModulateLights_f, CMD_FL_RENDERER | CMD_FL_CHEAT, "modifies shader parms on all lights" );
 	cmdSystem->AddCommand( "testImage", R_TestImage_f, CMD_FL_RENDERER | CMD_FL_CHEAT, "displays the given image centered on screen", idCmdSystem::ArgCompletion_ImageName );
-	cmdSystem->AddCommand( "extractTGA", ExtractTGA_f, CMD_FL_RENDERER, "extracts texture as TGA file", idCmdSystem::ArgCompletion_ImageName ); // Koz from tmek/carl
 	cmdSystem->AddCommand( "testVideo", R_TestVideo_f, CMD_FL_RENDERER | CMD_FL_CHEAT, "displays the given cinematic", idCmdSystem::ArgCompletion_VideoName );
 	cmdSystem->AddCommand( "reportSurfaceAreas", R_ReportSurfaceAreas_f, CMD_FL_RENDERER, "lists all used materials sorted by surface area" );
 	cmdSystem->AddCommand( "showInteractionMemory", R_ShowInteractionMemory_f, CMD_FL_RENDERER, "shows memory used by interactions" );

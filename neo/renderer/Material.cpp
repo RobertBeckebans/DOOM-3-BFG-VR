@@ -3,6 +3,9 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2014-2016 Robert Beckebans
+Copyright (C) 2014-2016 Kot in Action Creative Artel
+Copyright (C) 2022 Stephen Pridham
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -26,8 +29,8 @@ If you have questions concerning this license or the applicable additional terms
 ===========================================================================
 */
 
-#pragma hdrstop
 #include "precompiled.h"
+#pragma hdrstop
 
 
 #include "RenderCommon.h"
@@ -85,6 +88,7 @@ void idMaterial::CommonInit()
 	surfaceFlags = SURFTYPE_NONE;
 	materialFlags = 0;
 	sort = SS_BAD;
+	subViewType = SUBVIEW_NONE;
 	stereoEye = 0;
 	coverage = MC_BAD;
 	cullType = CT_FRONT_SIDED;
@@ -108,6 +112,7 @@ void idMaterial::CommonInit()
 	hasSubview = false;
 	allowOverlays = true;
 	unsmoothedTangents = false;
+	mikktspace = false; // RB
 	gui = NULL;
 	memset( deformRegisters, 0, sizeof( deformRegisters ) );
 	editorAlpha = 1.0;
@@ -181,6 +186,11 @@ void idMaterial::FreeData()
 				Mem_Free( stages[i].newStage );
 				stages[i].newStage = NULL;
 			}
+			if( stages[i].stencilStage != nullptr )
+			{
+				Mem_Free( stages[i].stencilStage );
+				stages[i].stencilStage = nullptr;
+			}
 		}
 		R_StaticFree( stages );
 		stages = NULL;
@@ -242,7 +252,32 @@ idImage* idMaterial::GetEditorImage() const
 	else
 	{
 		// look for an explicit one
-		editorImage = globalImages->ImageFromFile( editorImageName, TF_DEFAULT, TR_REPEAT, TD_DEFAULT );
+		// RB: changed to TD_DIFFUSE because BFG didn't ship the editor images and
+		// the qer_editorImage might be the same as the diffusemap
+		editorImage = globalImages->ImageFromFile( editorImageName, TF_DEFAULT, TR_REPEAT, TD_DIFFUSE );
+
+		// look for the diffusemap alternative like TrenchBroom does
+		// this is required to have the texture dimensions for the convertMapToValve220 cmd
+		if( editorImage && editorImage->IsLoaded() && editorImage->IsDefaulted() )
+		{
+			// _D3XP :: First check for a diffuse image, then use the first
+			if( numStages && stages )
+			{
+				int i;
+				for( i = 0; i < numStages; i++ )
+				{
+					if( stages[i].lighting == SL_DIFFUSE )
+					{
+						editorImage = stages[i].texture.image;
+						break;
+					}
+				}
+				if( !editorImage )
+				{
+					editorImage = stages[0].texture.image;
+				}
+			}
+		}
 	}
 
 	if( !editorImage )
@@ -253,6 +288,24 @@ idImage* idMaterial::GetEditorImage() const
 	return editorImage;
 }
 
+// RB - just look for first stage and fallback to editor image like D3Radiant does
+idImage* idMaterial::GetLightEditorImage() const
+{
+	if( numStages && stages )
+	{
+		for( int i = 0; i < numStages; i++ )
+		{
+			idImage* image = stages[i].texture.image;
+			if( image )
+			{
+				return image;
+			}
+		}
+	}
+
+	return GetEditorImage();
+}
+// RB end
 
 // info parms
 typedef struct
@@ -1043,17 +1096,17 @@ void idMaterial::ParseBlend( idLexer& src, shaderStage_t* stage )
 		stage->drawStateBits = GLS_SRCBLEND_ZERO | GLS_DSTBLEND_ONE;
 		return;
 	}
-	if( !token.Icmp( "bumpmap" ) )
+	if( !token.Icmp( "bumpmap" ) || !token.Icmp( "normalmap" ) )
 	{
 		stage->lighting = SL_BUMP;
 		return;
 	}
-	if( !token.Icmp( "diffusemap" ) )
+	if( !token.Icmp( "diffusemap" ) || !token.Icmp( "basecolormap" ) )
 	{
 		stage->lighting = SL_DIFFUSE;
 		return;
 	}
-	if( !token.Icmp( "specularmap" ) )
+	if( !token.Icmp( "specularmap" ) ||  !token.Icmp( "rmaomap" ) )
 	{
 		stage->lighting = SL_SPECULAR;
 		return;
@@ -1205,6 +1258,11 @@ void idMaterial::ParseFragmentMap( idLexer& src, newShaderStage_t* newStage )
 	{
 		src.ReadTokenOnLine( &token );
 
+		if( !token.Icmp( "normalMap" ) )
+		{
+			td = TD_BUMP;
+			continue;
+		}
 		if( !token.Icmp( "cubeMap" ) )
 		{
 			cubeMap = CF_NATIVE;
@@ -1213,6 +1271,11 @@ void idMaterial::ParseFragmentMap( idLexer& src, newShaderStage_t* newStage )
 		if( !token.Icmp( "cameraCubeMap" ) )
 		{
 			cubeMap = CF_CAMERA;
+			continue;
+		}
+		if( !token.Icmp( "cubeMapSingle" ) )
+		{
+			cubeMap = CF_SINGLE;
 			continue;
 		}
 		if( !token.Icmp( "nearest" ) )
@@ -1273,6 +1336,207 @@ void idMaterial::ParseFragmentMap( idLexer& src, newShaderStage_t* newStage )
 	if( !newStage->fragmentProgramImages[unit] )
 	{
 		newStage->fragmentProgramImages[unit] = globalImages->defaultImage;
+	}
+}
+
+/*
+===============
+idMaterial::ParseStencilCompare
+===============
+*/
+void idMaterial::ParseStencilCompare( const idToken& token, stencilComp_t* stencilComp )
+{
+	if( !token.Icmp( "Greater" ) )
+	{
+		*stencilComp = STENCIL_COMP_GREATER;
+		return;
+	}
+
+	if( !token.Icmp( "GEqual" ) )
+	{
+		*stencilComp = STENCIL_COMP_GEQUAL;
+		return;
+	}
+
+	if( !token.Icmp( "Less" ) )
+	{
+		*stencilComp = STENCIL_COMP_LESS;
+		return;
+	}
+
+	if( !token.Icmp( "LEqual" ) )
+	{
+		*stencilComp = STENCIL_COMP_LEQUAL;
+		return;
+	}
+
+	if( !token.Icmp( "Equal" ) )
+	{
+		*stencilComp = STENCIL_COMP_EQUAL;
+		return;
+	}
+
+	if( !token.Icmp( "NotEqual" ) )
+	{
+		*stencilComp = STENCIL_COMP_NOTEQUAL;
+		return;
+	}
+
+	if( !token.Icmp( "Always" ) )
+	{
+		*stencilComp = STENCIL_COMP_ALWAYS;
+		return;
+	}
+
+	if( !token.Icmp( "Never" ) )
+	{
+		*stencilComp = STENCIL_COMP_NEVER;
+		return;
+	}
+
+	common->Warning( "Material %s expected a valid stencil comparison function. Got %s", GetName(), token.c_str() );
+}
+
+/*
+===============
+idMaterial::ParseStencilOperation
+===============
+*/
+void idMaterial::ParseStencilOperation( const idToken& token, stencilOperation_t* stencilOp )
+{
+	if( !token.Icmp( "Keep" ) )
+	{
+		*stencilOp = STENCIL_OP_KEEP;
+		return;
+	}
+
+	if( !token.Icmp( "Zero" ) )
+	{
+		*stencilOp = STENCIL_OP_ZERO;
+		return;
+	}
+
+	if( !token.Icmp( "Replace" ) )
+	{
+		*stencilOp = STENCIL_OP_REPLACE;
+		return;
+	}
+
+	if( !token.Icmp( "IncrSat" ) )
+	{
+		*stencilOp = STENCIL_OP_INCRSAT;
+		return;
+	}
+
+	if( !token.Icmp( "DecrSat" ) )
+	{
+		*stencilOp = STENCIL_OP_DECRSAT;
+		return;
+	}
+
+	if( !token.Icmp( "Invert" ) )
+	{
+		*stencilOp = STENCIL_OP_INVERT;
+		return;
+	}
+
+	if( !token.Icmp( "IncrWrap" ) )
+	{
+		*stencilOp = STENCIL_OP_INCRWRAP;
+		return;
+	}
+
+	if( !token.Icmp( "DecrWrap" ) )
+	{
+		*stencilOp = STENCIL_OP_DECRWRAP;
+		return;
+	}
+
+	common->Warning( "Material %s expected a valid stencil operation function. Got %s", GetName(), token.c_str() );
+}
+
+/*
+===============
+idMaterial::ParseStencil
+===============
+*/
+void idMaterial::ParseStencil( idLexer& src, stencilStage_t* stencilStage )
+{
+	idToken	token;
+	src.ReadToken( &token );
+	if( token.Icmp( "{" ) )
+	{
+		common->Warning( "Material %s Missing { after stencil", GetName() );
+		return;
+	}
+
+	while( 1 )
+	{
+		if( TestMaterialFlag( MF_DEFAULTED ) )  	// we have a parse error
+		{
+			return;
+		}
+
+		if( !src.ExpectAnyToken( &token ) )
+		{
+			SetMaterialFlag( MF_DEFAULTED );
+			return;
+		}
+
+		if( !token.Icmp( "}" ) )
+		{
+			break;
+		}
+
+		if( !token.Icmp( "Ref" ) )
+		{
+			src.ReadTokenOnLine( &token );
+
+			if( !token.IsNumeric() )
+			{
+				common->Warning( "Material %s expected number for stencil ref value. Got %s", GetName(), token.c_str() );
+				continue;
+			}
+
+			if( token.GetIntValue() > 255 || token.GetIntValue() < 0 )
+			{
+				common->Warning( "Material %s expected stencil ref value between 0 and 255. Got %s", GetName(), token.c_str() );
+				continue;
+			}
+
+			stencilStage->ref = token.GetIntValue();
+			continue;
+		}
+
+		if( !token.Icmp( "Comp" ) )
+		{
+			src.ReadTokenOnLine( &token );
+			ParseStencilCompare( token, &stencilStage->comp );
+			continue;
+		}
+
+		if( !token.Icmp( "Pass" ) )
+		{
+			src.ReadTokenOnLine( &token );
+			ParseStencilOperation( token, &stencilStage->pass );
+			continue;
+		}
+
+		if( !token.Icmp( "Fail" ) )
+		{
+			src.ReadTokenOnLine( &token );
+			ParseStencilOperation( token, &stencilStage->fail );
+			continue;
+		}
+
+		if( !token.Icmp( "ZFail" ) )
+		{
+			src.ReadTokenOnLine( &token );
+			ParseStencilOperation( token, &stencilStage->zFail );
+			continue;
+		}
+
+		common->Warning( "Material %s expected a valid stencil keyword. Got %s.", GetName(), token.c_str() );
 	}
 }
 
@@ -1347,10 +1611,12 @@ void idMaterial::ParseStage( idLexer& src, const textureRepeat_t trpDefault )
 	textureRepeat_t		trp;
 	textureUsage_t		td;
 	cubeFiles_t			cubeMap;
+	int                 cubeMapSize = 0; // SP: The size of the cubemap for subimage uploading to the cubemap targets.
 	char				imageName[MAX_IMAGE_NAME];
 	int					a, b;
 	int					matrix[2][3];
 	newShaderStage_t	newStage;
+	stencilStage_t      stencilStage; // SP
 
 	if( numStages >= MAX_SHADER_STAGES )
 	{
@@ -1437,6 +1703,30 @@ void idMaterial::ParseStage( idLexer& src, const textureRepeat_t trpDefault )
 			ts->texgen = TG_SCREEN;
 			continue;
 		}
+
+		if( !token.Icmp( "guiRenderMap" ) )
+		{
+			// Emit fullscreen view of the gui to this dynamically generated texture
+			ts->dynamic = DI_GUI_RENDER;
+			ts->width = src.ParseInt();
+			ts->height = src.ParseInt();
+			continue;
+		}
+
+#if 0
+		if( !token.Icmp( "renderTargetMap" ) )
+		{
+			// Emit fullscreen view of the gui to this dynamically generated texture
+			idToken otherMaterialToken;
+			ts->dynamic = DI_RENDER_TARGET;
+			src.ReadToken( &otherMaterialToken );
+			ts->renderTargetMaterial = declManager->FindMaterial( otherMaterialToken.c_str() );
+			ts->width = src.ParseInt();
+			ts->height = src.ParseInt();
+			continue;
+		}
+#endif
+
 		if( !token.Icmp( "screen" ) )
 		{
 			ts->texgen = TG_SCREEN;
@@ -1497,6 +1787,21 @@ void idMaterial::ParseStage( idLexer& src, const textureRepeat_t trpDefault )
 			continue;
 		}
 
+		if( !token.Icmp( "cubeMapSingle" ) )
+		{
+			str = R_ParsePastImageProgram( src );
+			idStr::Copynz( imageName, str, sizeof( imageName ) );
+			cubeMap = CF_SINGLE;
+			td = TD_HIGHQUALITY_CUBE;
+			continue;
+		}
+
+		if( !token.Icmp( "cubeMapSize" ) )
+		{
+			cubeMapSize = src.ParseInt();
+			continue;
+		}
+
 		if( !token.Icmp( "cameraCubeMap" ) )
 		{
 			str = R_ParsePastImageProgram( src );
@@ -1550,6 +1855,11 @@ void idMaterial::ParseStage( idLexer& src, const textureRepeat_t trpDefault )
 		}
 		if( !token.Icmp( "uncompressed" ) )
 		{
+			continue;
+		}
+		if( !token.Icmp( "uncompressedCubeMap" ) )
+		{
+			td = TD_HIGHQUALITY_CUBE;	// motorsep 05-17-2015; token to mark cubemap/skybox to be uncompressed texture
 			continue;
 		}
 		if( !token.Icmp( "nopicmip" ) )
@@ -1860,6 +2170,16 @@ void idMaterial::ParseStage( idLexer& src, const textureRepeat_t trpDefault )
 			continue;
 		}
 
+		// SP Begin
+		if( !token.Icmp( "stencil" ) )
+		{
+			ParseStencil( src, &stencilStage );
+			ss->stencilStage = ( stencilStage_t* )Mem_Alloc( sizeof( stencilStage_t ), TAG_MATERIAL );
+			*ss->stencilStage = stencilStage;
+			continue;
+		}
+		// SP End
+
 
 		common->Warning( "unknown token '%s' in material '%s'", token.c_str(), GetName() );
 		SetMaterialFlag( MF_DEFAULTED );
@@ -1890,7 +2210,18 @@ void idMaterial::ParseStage( idLexer& src, const textureRepeat_t trpDefault )
 				td = TD_DIFFUSE;
 				break;
 			case SL_SPECULAR:
-				td = TD_SPECULAR;
+				if( idStr::FindText( imageName, "_rmaod", false ) != -1 )
+				{
+					td = TD_SPECULAR_PBR_RMAOD;
+				}
+				else if( idStr::FindText( imageName, "_rmao", false ) != -1 )
+				{
+					td = TD_SPECULAR_PBR_RMAO;
+				}
+				else
+				{
+					td = TD_SPECULAR;
+				}
 				break;
 			default:
 				break;
@@ -1903,10 +2234,13 @@ void idMaterial::ParseStage( idLexer& src, const textureRepeat_t trpDefault )
 		// create new coverage stage
 		shaderStage_t* newCoverageStage = &pd->parseStages[numStages];
 		numStages++;
+
 		// copy it
 		*newCoverageStage = *ss;
+
 		// toggle alphatest off for the current stage so it doesn't get called during the depth fill pass
 		ss->hasAlphaTest = false;
+
 		// toggle alpha test on for the coverage stage
 		newCoverageStage->hasAlphaTest = true;
 		newCoverageStage->lighting = SL_COVERAGE;
@@ -1915,7 +2249,7 @@ void idMaterial::ParseStage( idLexer& src, const textureRepeat_t trpDefault )
 		// now load the image with all the parms we parsed for the coverage stage
 		if( imageName[0] )
 		{
-			coverageTS->image = globalImages->ImageFromFile( imageName, tf, trp, TD_COVERAGE, cubeMap );
+			coverageTS->image = globalImages->ImageFromFile( imageName, tf, trp, TD_COVERAGE, cubeMap, cubeMapSize );
 			if( !coverageTS->image )
 			{
 				coverageTS->image = globalImages->defaultImage;
@@ -1931,7 +2265,7 @@ void idMaterial::ParseStage( idLexer& src, const textureRepeat_t trpDefault )
 	// now load the image with all the parms we parsed
 	if( imageName[0] )
 	{
-		ts->image = globalImages->ImageFromFile( imageName, tf, trp, td, cubeMap );
+		ts->image = globalImages->ImageFromFile( imageName, tf, trp, td, cubeMap, cubeMapSize );
 		if( !ts->image )
 		{
 			ts->image = globalImages->defaultImage;
@@ -2239,7 +2573,6 @@ void idMaterial::ParseMaterial( idLexer& src )
 			continue;
 		}
 
-
 		// polygonOffset
 		else if( !token.Icmp( "polygonOffset" ) )
 		{
@@ -2337,7 +2670,10 @@ void idMaterial::ParseMaterial( idLexer& src )
 			// volume would be coplanar with the surface, giving depth fighting
 			// we could make this no-self-shadows, but it may be more important
 			// to receive shadows from no-self-shadow monsters
-			SetMaterialFlag( MF_NOSHADOWS );
+			if( !r_useShadowMapping.GetBool() ) // motorsep 11-08-2014; when shadow mapping is on, we allow two-sided surfaces to cast shadows
+			{
+				SetMaterialFlag( MF_NOSHADOWS );
+			}
 		}
 		// backSided
 		else if( !token.Icmp( "backSided" ) )
@@ -2370,6 +2706,15 @@ void idMaterial::ParseMaterial( idLexer& src )
 		{
 			sort = SS_SUBVIEW;
 			coverage = MC_OPAQUE;
+			subViewType = SUBVIEW_MIRROR;
+			continue;
+		}
+		// direct portal
+		else if( !token.Icmp( "directPortal" ) )
+		{
+			sort = SS_SUBVIEW;
+			coverage = MC_OPAQUE;
+			subViewType = SUBVIEW_DIRECT_PORTAL;
 			continue;
 		}
 		// noFog
@@ -2382,6 +2727,18 @@ void idMaterial::ParseMaterial( idLexer& src )
 		else if( !token.Icmp( "unsmoothedTangents" ) )
 		{
 			unsmoothedTangents = true;
+			continue;
+		}
+		else if( !token.Icmp( "origin" ) )
+		{
+			SetMaterialFlag( MF_ORIGIN );
+			contentFlags = CONTENTS_ORIGIN;
+			continue;
+		}
+		// RB: mikktspace
+		else if( !token.Icmp( "mikktspace" ) )
+		{
+			mikktspace = true;
 			continue;
 		}
 		// lightFallofImage <imageprogram>
@@ -2457,7 +2814,7 @@ void idMaterial::ParseMaterial( idLexer& src )
 			continue;
 		}
 		// diffusemap for stage shortcut
-		else if( !token.Icmp( "diffusemap" ) )
+		else if( !token.Icmp( "diffusemap" ) || !token.Icmp( "basecolormap" ) )
 		{
 			str = R_ParsePastImageProgram( src );
 			idStr::snPrintf( buffer, sizeof( buffer ), "blend diffusemap\nmap %s\n}\n", str );
@@ -2478,8 +2835,19 @@ void idMaterial::ParseMaterial( idLexer& src )
 			newSrc.FreeSource();
 			continue;
 		}
+		// RB: rmaomap for stage shortcut
+		else if( !token.Icmp( "rmaomap" ) || !token.Icmp( "reflectionmap" )  || !token.Icmp( "pbrmap" ) )
+		{
+			str = R_ParsePastImageProgram( src );
+			idStr::snPrintf( buffer, sizeof( buffer ), "blend rmaomap\nmap %s\n}\n", str );
+			newSrc.LoadMemory( buffer, strlen( buffer ), "rmaomap" );
+			newSrc.SetFlags( LEXFL_NOFATALERRORS | LEXFL_NOSTRINGCONCAT | LEXFL_NOSTRINGESCAPECHARS | LEXFL_ALLOWPATHNAMES );
+			ParseStage( newSrc, trpDefault );
+			newSrc.FreeSource();
+			continue;
+		}
 		// normalmap for stage shortcut
-		else if( !token.Icmp( "bumpmap" ) )
+		else if( !token.Icmp( "bumpmap" ) || !token.Icmp( "normalmap" ) )
 		{
 			str = R_ParsePastImageProgram( src );
 			idStr::snPrintf( buffer, sizeof( buffer ), "blend bumpmap\nmap %s\n}\n", str );
@@ -2505,6 +2873,33 @@ void idMaterial::ParseMaterial( idLexer& src )
 
 			// noShadows
 			SetMaterialFlag( MF_NOSHADOWS );
+			continue;
+		}
+
+		// motorsep 11-23-2014; material LOD keys that define what LOD iteration the surface falls into
+		else if( !token.Icmp( "lod1" ) )
+		{
+			SetMaterialFlag( MF_LOD1 );
+			continue;
+		}
+		else if( !token.Icmp( "lod2" ) )
+		{
+			SetMaterialFlag( MF_LOD2 );
+			continue;
+		}
+		else if( !token.Icmp( "lod3" ) )
+		{
+			SetMaterialFlag( MF_LOD3 );
+			continue;
+		}
+		else if( !token.Icmp( "lod4" ) )
+		{
+			SetMaterialFlag( MF_LOD4 );
+			continue;
+		}
+		else if( !token.Icmp( "persistentLOD" ) )
+		{
+			SetMaterialFlag( MF_LOD_PERSISTENT );
 			continue;
 		}
 		else if( token == "{" )
@@ -3241,16 +3636,38 @@ bool idMaterial::SetDefaultText()
 	if( 1 )    //fileSystem->ReadFile( GetName(), NULL ) != -1 ) {
 	{
 		char generated[2048];
-		idStr::snPrintf( generated, sizeof( generated ),
-						 "material %s // IMPLICITLY GENERATED\n"
-						 "{\n"
-						 "{\n"
-						 "blend blend\n"
-						 "colored\n"
-						 "map \"%s\"\n"
-						 "clamp\n"
-						 "}\n"
-						 "}\n", GetName(), GetName() );
+
+		// RB: HACK super hack for light editor 2D rendering
+		idStr matName = GetName();
+		if( matName.IcmpPrefix( "lighteditor/" ) == 0 )
+		{
+			idStr imageName = GetName();
+			imageName.StripLeading( "lighteditor/" );
+
+			idStr::snPrintf( generated, sizeof( generated ),
+							 "material %s // IMPLICITLY GENERATED\n"
+							 "{\n"
+							 "{\n"
+							 "blend blend\n"
+							 "colored\n"
+							 "map \"%s\"\n"
+							 "clamp\n"
+							 "}\n"
+							 "}\n", matName.c_str(), imageName.c_str() );
+		}
+		else
+		{
+			idStr::snPrintf( generated, sizeof( generated ),
+							 "material %s // IMPLICITLY GENERATED\n"
+							 "{\n"
+							 "{\n"
+							 "blend blend\n"
+							 "colored\n"
+							 "map \"%s\"\n"
+							 "clamp\n"
+							 "}\n"
+							 "}\n", GetName(), GetName() );
+		}
 		SetText( generated );
 		return true;
 	}

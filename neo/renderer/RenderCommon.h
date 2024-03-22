@@ -1179,8 +1179,6 @@ void R_FreeDerivedData();
 void R_ReCreateWorldReferences();
 void R_CheckForEntityDefsUsingModel( idRenderModel* model );
 void R_ModulateLights_f( const idCmdArgs& args );
-// Carl: Console command to extract a .bimage as a TGA file
-void ExtractTGA_f( const idCmdArgs& args );
 
 
 /*

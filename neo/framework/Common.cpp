@@ -870,7 +870,7 @@ Com_StartBuild_f
 */
 CONSOLE_COMMAND( startBuild, "prepares to make a build", NULL )
 {
-	globalImages->StartBuild();
+	//globalImages->StartBuild();
 }
 
 /*
@@ -884,7 +884,7 @@ CONSOLE_COMMAND( finishBuild, "finishes the build process", NULL )
 	{
 		game->CacheDictionaryMedia( NULL );
 	}
-	globalImages->FinishBuild( ( args.Argc() > 1 ) );
+	//globalImages->FinishBuild( ( args.Argc() > 1 ) );
 }
 
 /*

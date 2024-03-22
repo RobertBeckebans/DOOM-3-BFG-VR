@@ -3,6 +3,8 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2021 Robert Beckebans
+Copyright (C) 2021 Stephen Pridham
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -25,8 +27,8 @@ If you have questions concerning this license or the applicable additional terms
 
 ===========================================================================
 */
-#pragma hdrstop
 #include "precompiled.h"
+#pragma hdrstop
 
 
 #include "RenderCommon.h"
@@ -527,6 +529,31 @@ void R_VerticalFlip( byte* data, int width, int height )
 	}
 }
 
+// RB: halfFloat_t helper
+struct ColorRGB16F
+{
+	uint16	red;
+	uint16	green;
+	uint16	blue;
+};
+
+void R_VerticalFlipRGB16F( byte* data, int width, int height )
+{
+	int			i, j;
+	ColorRGB16F	temp;
+
+	for( i = 0; i < width; i++ )
+	{
+		for( j = 0; j < height / 2; j++ )
+		{
+			temp = *( ( ColorRGB16F* )data + j * width + i );
+
+			*( ( ColorRGB16F* )data + j * width + i ) = *( ( ColorRGB16F* )data + ( height - 1 - j ) * width + i );
+			*( ( ColorRGB16F* )data + ( height - 1 - j ) * width + i ) = temp;
+		}
+	}
+}
+
 void R_RotatePic( byte* data, int width )
 {
 	int		i, j;
@@ -570,3 +597,107 @@ void R_ApplyCubeMapTransforms( int iter, byte* data, int size )
 	}
 }
 
+
+// This is the most efficient way to atlas a mip chain to a 2d texture
+// https://twitter.com/SebAaltonen/status/1327188239451611139
+
+idVec4 R_CalculateMipRect( uint dimensions, uint mip )
+{
+	uint pixels_mip = dimensions >> mip;
+	idVec4 uv_rect = idVec4( 0, 0, pixels_mip, pixels_mip );
+
+	if( mip > 0 )
+	{
+		uv_rect.x = dimensions;
+		uv_rect.y = dimensions - pixels_mip * 2;
+	}
+
+	return uv_rect;
+}
+
+int R_CalculateUsedAtlasPixels( int dimensions )
+{
+	int numPixels = 0;
+	const int numMips = idMath::BitsForInteger( dimensions );
+
+	for( int mip = 0; mip < numMips; mip++ )
+	{
+		idVec4 dstRect = R_CalculateMipRect( dimensions, mip );
+
+		numPixels += ( dstRect.z * dstRect.w );
+	}
+
+	return numPixels;
+}
+
+// SP begin
+byte* R_GenerateCubeMapSideFromSingleImage( byte* data, int srcWidth, int srcHeight, int size, int side )
+{
+	size_t x = 0, y = 0;
+	switch( side )
+	{
+		case 0:
+		{
+			// negative Z, front
+			x = size;
+			y = size;
+			break;
+		}
+		case 1:
+		{
+			// positive Z, back
+			x = 3 * size;
+			y = size;
+			break;
+		}
+		case 2:
+		{
+			// negative X, left
+			x = 0;
+			y = size;
+			break;
+		}
+		case 3:
+		{
+			// positive X, right
+			x = size * 2;
+			y = size;
+			break;
+		}
+		case 4:
+		{
+			// positive Y, top
+			x = size;
+			y = 0;
+			break;
+		}
+		case 5:
+		{
+			// negative Y, bottom
+			x = size;
+			y = 2 * ( size_t )size;
+			break;
+		}
+		default:
+		{
+			common->Warning( "Invalid side when generating cube map images" );
+			return nullptr;
+		}
+	}
+
+	const size_t copySize = ( size_t )size * ( size_t )size * 4;
+	byte* out = ( byte* )R_StaticAlloc( copySize, TAG_IMAGE );
+	uint32_t* out_p = ( uint32_t* )out;
+	const uint32_t* in_p = ( uint32_t* )data + x + y * srcWidth;
+
+	for( int j = 0; j < size; j++ )
+	{
+		for( int i = 0; i < size; i++ )
+		{
+			out_p[i + j * size] = in_p[i + j * srcWidth];
+		}
+	}
+
+	return out;
+}
+// SP end
