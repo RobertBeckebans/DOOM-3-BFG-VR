@@ -94,6 +94,13 @@ class idRenderBackend
 	friend class idImage;
 
 public:
+	idRenderBackend();
+	~idRenderBackend();
+
+	void				Init();
+	void				Shutdown();
+
+
 	const viewDef_t*		viewDef;
 	backEndCounters_t	pc;
 
@@ -148,11 +155,6 @@ static const int OCCLUSION_QUERY_TOO_OLD				= -1;
 ================================================================================================
 */
 
-void			GL_SetTimeDelta( uint64 delta );	// delta from GPU to CPU microseconds
-void			GL_StartFrame( int frame );			// inserts a timing mark for the start of the GPU frame
-void			GL_EndFrame();						// inserts a timing mark for the end of the GPU frame
-void			GL_WaitForEndFrame();				// wait for the GPU to reach the last end frame marker
-void			GL_GetLastFrameTime( uint64& startGPUTimeMicroSec, uint64& endGPUTimeMicroSec );	// GPU time between GL_StartFrame() and GL_EndFrame()
 void			GL_StartDepthPass( const idScreenRect& rect );
 void			GL_FinishDepthPass();
 void			GL_GetDepthPassRect( idScreenRect& rect );
@@ -194,11 +196,8 @@ void			GL_Color( float r, float g, float b );
 void			GL_Color( float r, float g, float b, float a );
 void			GL_SelectTexture( int unit );
 
-void			GL_Flush();		// flush the GPU command buffer
-void			GL_Finish();	// wait for the GPU to have executed all commands
 
 
 
 
-
-#endif // !__GRAPHICSAPIWRAPPER_H__
+#endif

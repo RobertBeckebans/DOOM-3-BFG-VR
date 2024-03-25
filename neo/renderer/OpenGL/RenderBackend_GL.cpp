@@ -570,70 +570,164 @@ void R_InitOpenGL()
 	// RB end
 }
 
-
-
 /*
 =============
-RB_DrawFlickerBox
+idRenderBackend::DrawElementsWithCounters
 =============
 */
-static void RB_DrawFlickerBox()
+void RB_DrawElementsWithCounters( const drawSurf_t* surf )
 {
-	if( !r_drawFlickerBox.GetBool() )
+	// get vertex buffer
+	const vertCacheHandle_t vbHandle = surf->ambientCache;
+	idVertexBuffer* vertexBuffer;
+	if( vertexCache.CacheIsStatic( vbHandle ) )
 	{
-		return;
-	}
-	if( tr.frameCount & 1 )
-	{
-		glClearColor( 1, 0, 0, 1 );
+		vertexBuffer = &vertexCache.staticData.vertexBuffer;
 	}
 	else
 	{
-		glClearColor( 0, 1, 0, 1 );
+		const uint64 frameNum = ( int )( vbHandle >> VERTCACHE_FRAME_SHIFT ) & VERTCACHE_FRAME_MASK;
+		if( frameNum != ( ( vertexCache.currentFrame - 1 ) & VERTCACHE_FRAME_MASK ) )
+		{
+			idLib::Warning( "RB_DrawElementsWithCounters, vertexBuffer == NULL" );
+			return;
+		}
+		vertexBuffer = &vertexCache.frameData[vertexCache.drawListNum].vertexBuffer;
 	}
-	glScissor( 0, 0, 256, 256 );
-	glClear( GL_COLOR_BUFFER_BIT );
-}
+	const int vertOffset = ( int )( vbHandle >> VERTCACHE_OFFSET_SHIFT ) & VERTCACHE_OFFSET_MASK;
 
-/*
-=============
-RB_SetBuffer
-=============
-*/
-static void	RB_SetBuffer( const void* data )
-{
-	// see which draw buffer we want to render the frame to
-
-	const setBufferCommand_t* cmd = ( const setBufferCommand_t* )data;
-
-	RENDERLOG_PRINTF( "---------- RB_SetBuffer ---------- to buffer # %d\n", cmd->buffer );
-
-	GL_Scissor( 0, 0, tr.GetWidth(), tr.GetHeight() );
-
-	// clear screen for debugging
-	// automatically enable this with several other debug tools
-	// that might leave unrendered portions of the screen
-	if( r_clear.GetFloat() || idStr::Length( r_clear.GetString() ) != 1 || r_singleArea.GetBool() || r_showOverDraw.GetBool() )
+	// get index buffer
+	const vertCacheHandle_t ibHandle = surf->indexCache;
+	idIndexBuffer* indexBuffer;
+	if( vertexCache.CacheIsStatic( ibHandle ) )
 	{
-		float c[3];
-		if( sscanf( r_clear.GetString(), "%f %f %f", &c[0], &c[1], &c[2] ) == 3 )
+		indexBuffer = &vertexCache.staticData.indexBuffer;
+	}
+	else
+	{
+		const uint64 frameNum = ( int )( ibHandle >> VERTCACHE_FRAME_SHIFT ) & VERTCACHE_FRAME_MASK;
+		if( frameNum != ( ( vertexCache.currentFrame - 1 ) & VERTCACHE_FRAME_MASK ) )
 		{
-			GL_Clear( true, false, false, 0, c[0], c[1], c[2], 1.0f );
+			idLib::Warning( "RB_DrawElementsWithCounters, indexBuffer == NULL" );
+			return;
 		}
-		else if( r_clear.GetInteger() == 2 )
+		indexBuffer = &vertexCache.frameData[vertexCache.drawListNum].indexBuffer;
+	}
+	// RB: 64 bit fixes, changed int to GLintptr
+	const GLintptr indexOffset = ( GLintptr )( ibHandle >> VERTCACHE_OFFSET_SHIFT ) & VERTCACHE_OFFSET_MASK;
+	// RB end
+
+	RENDERLOG_PRINTF( "Binding Buffers: %p:%i %p:%i\n", vertexBuffer, vertOffset, indexBuffer, indexOffset );
+
+	if( surf->jointCache )
+	{
+		// DG: this happens all the time in the erebus1 map with blendlight.vfp,
+		// so don't call assert (through verify) here until it's fixed (if fixable)
+		// else the game crashes on linux when using debug builds
+
+		// FIXME: fix this properly if possible?
+		// RB: yes but it would require an additional blend light skinned shader
+		//if( !verify( renderProgManager.ShaderUsesJoints() ) )
+		if( !renderProgManager.ShaderUsesJoints() )
+			// DG end
 		{
-			GL_Clear( true, false, false, 0, 0.0f, 0.0f,  0.0f, 1.0f );
-		}
-		else if( r_showOverDraw.GetBool() )
-		{
-			GL_Clear( true, false, false, 0, 1.0f, 1.0f, 1.0f, 1.0f );
-		}
-		else
-		{
-			GL_Clear( true, false, false, 0, 0.4f, 0.0f, 0.25f, 1.0f );
+			return;
 		}
 	}
+	else
+	{
+		if( !verify( !renderProgManager.ShaderUsesJoints() || renderProgManager.ShaderHasOptionalSkinning() ) )
+		{
+			return;
+		}
+	}
+
+
+	if( surf->jointCache )
+	{
+		idJointBuffer jointBuffer;
+		if( !vertexCache.GetJointBuffer( surf->jointCache, &jointBuffer ) )
+		{
+			idLib::Warning( "RB_DrawElementsWithCounters, jointBuffer == NULL" );
+			return;
+		}
+		assert( ( jointBuffer.GetOffset() & ( glConfig.uniformBufferOffsetAlignment - 1 ) ) == 0 );
+
+		// RB: 64 bit fixes, changed GLuint to GLintptr
+		const GLintptr ubo = reinterpret_cast< GLintptr >( jointBuffer.GetAPIObject() );
+		// RB end
+
+		glBindBufferRange( GL_UNIFORM_BUFFER, 0, ubo, jointBuffer.GetOffset(), jointBuffer.GetNumJoints() * sizeof( idJointMat ) );
+	}
+
+	renderProgManager.CommitUniforms();
+
+	// RB: 64 bit fixes, changed GLuint to GLintptr
+	if( backEnd.glState.currentIndexBuffer != ( GLintptr )indexBuffer->GetAPIObject() || !r_useStateCaching.GetBool() )
+	{
+		glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, ( GLintptr )indexBuffer->GetAPIObject() );
+		backEnd.glState.currentIndexBuffer = ( GLintptr )indexBuffer->GetAPIObject();
+	}
+
+	if( ( backEnd.glState.vertexLayout != LAYOUT_DRAW_VERT ) || ( backEnd.glState.currentVertexBuffer != ( GLintptr )vertexBuffer->GetAPIObject() ) || !r_useStateCaching.GetBool() )
+	{
+		glBindBuffer( GL_ARRAY_BUFFER, ( GLintptr )vertexBuffer->GetAPIObject() );
+		backEnd.glState.currentVertexBuffer = ( GLintptr )vertexBuffer->GetAPIObject();
+
+		glEnableVertexAttribArray( PC_ATTRIB_INDEX_VERTEX );
+		glEnableVertexAttribArray( PC_ATTRIB_INDEX_NORMAL );
+		glEnableVertexAttribArray( PC_ATTRIB_INDEX_COLOR );
+		glEnableVertexAttribArray( PC_ATTRIB_INDEX_COLOR2 );
+		glEnableVertexAttribArray( PC_ATTRIB_INDEX_ST );
+		glEnableVertexAttribArray( PC_ATTRIB_INDEX_TANGENT );
+
+#if defined(USE_GLES2) || defined(USE_GLES3)
+		glVertexAttribPointer( PC_ATTRIB_INDEX_VERTEX, 3, GL_FLOAT, GL_FALSE, sizeof( idDrawVert ), ( void* )( vertOffset + DRAWVERT_XYZ_OFFSET ) );
+		glVertexAttribPointer( PC_ATTRIB_INDEX_NORMAL, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof( idDrawVert ), ( void* )( vertOffset + DRAWVERT_NORMAL_OFFSET ) );
+		glVertexAttribPointer( PC_ATTRIB_INDEX_COLOR, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof( idDrawVert ), ( void* )( vertOffset + DRAWVERT_COLOR_OFFSET ) );
+		glVertexAttribPointer( PC_ATTRIB_INDEX_COLOR2, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof( idDrawVert ), ( void* )( vertOffset + DRAWVERT_COLOR2_OFFSET ) );
+#if defined(USE_ANGLE)
+		glVertexAttribPointer( PC_ATTRIB_INDEX_ST, 2, GL_HALF_FLOAT_OES, GL_TRUE, sizeof( idDrawVert ), ( void* )( vertOffset + DRAWVERT_ST_OFFSET ) );
+#else
+		glVertexAttribPointer( PC_ATTRIB_INDEX_ST, 2, GL_HALF_FLOAT, GL_TRUE, sizeof( idDrawVert ), ( void* )( vertOffset + DRAWVERT_ST_OFFSET ) );
+#endif
+		glVertexAttribPointer( PC_ATTRIB_INDEX_TANGENT, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof( idDrawVert ), ( void* )( vertOffset + DRAWVERT_TANGENT_OFFSET ) );
+
+#else
+		glVertexAttribPointer( PC_ATTRIB_INDEX_VERTEX, 3, GL_FLOAT, GL_FALSE, sizeof( idDrawVert ), ( void* )( DRAWVERT_XYZ_OFFSET ) );
+		glVertexAttribPointer( PC_ATTRIB_INDEX_NORMAL, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof( idDrawVert ), ( void* )( DRAWVERT_NORMAL_OFFSET ) );
+		glVertexAttribPointer( PC_ATTRIB_INDEX_COLOR, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof( idDrawVert ), ( void* )( DRAWVERT_COLOR_OFFSET ) );
+		glVertexAttribPointer( PC_ATTRIB_INDEX_COLOR2, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof( idDrawVert ), ( void* )( DRAWVERT_COLOR2_OFFSET ) );
+		glVertexAttribPointer( PC_ATTRIB_INDEX_ST, 2, GL_HALF_FLOAT, GL_TRUE, sizeof( idDrawVert ), ( void* )( DRAWVERT_ST_OFFSET ) );
+		glVertexAttribPointer( PC_ATTRIB_INDEX_TANGENT, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof( idDrawVert ), ( void* )( DRAWVERT_TANGENT_OFFSET ) );
+#endif // #if defined(USE_GLES2) || defined(USE_GLES3)
+
+		backEnd.glState.vertexLayout = LAYOUT_DRAW_VERT;
+	}
+	// RB end
+
+#if defined(USE_GLES3) //defined(USE_GLES2)
+	glDrawElements(	GL_TRIANGLES,
+					r_singleTriangle.GetBool() ? 3 : surf->numIndexes,
+					GL_INDEX_TYPE,
+					( triIndex_t* )indexOffset );
+#else
+	glDrawElementsBaseVertex( GL_TRIANGLES,
+							  r_singleTriangle.GetBool() ? 3 : surf->numIndexes,
+							  GL_INDEX_TYPE,
+							  ( triIndex_t* )indexOffset,
+							  vertOffset / sizeof( idDrawVert ) );
+#endif
+
+	// RB: added stats
+	backEnd.pc.c_drawElements++;
+	backEnd.pc.c_drawIndexes += surf->numIndexes;
+	// RB end
 }
+
+
+
+
 
 /*
 =============
@@ -659,8 +753,12 @@ const void GL_BlockingSwapBuffers()
 		common->Printf( "%i msec to glFinish\n", beforeSwap - beforeFinish );
 	}
 
-
 	GLimp_SwapBuffers();
+
+	// RB: at this time the image is presented on the screen
+
+	backEnd.glState.frameCounter++;
+	backEnd.glState.frameParity = backEnd.glState.frameCounter % NUM_FRAME_DATA;
 
 	if( game->isVR && !commonVr->hasOculusRift )
 	{
@@ -727,7 +825,6 @@ const void GL_BlockingSwapBuffers()
 		common->Printf( "blockToBlock: %i\n", delta );
 	}
 	prevBlockTime = exitBlockTime;
-
 }
 
 /*
@@ -789,6 +886,426 @@ void GL_SetDefaultState()
 	//renderProgManager.Unbind();
 }
 
+
+/*
+====================
+GL_State
+
+This routine is responsible for setting the most commonly changed state
+====================
+*/
+void GL_State( uint64 stateBits, bool forceGlState )
+{
+	uint64 diff = stateBits ^ backEnd.glState.glStateBits;
+
+	if( !r_useStateCaching.GetBool() || forceGlState )
+	{
+		// make sure everything is set all the time, so we
+		// can see if our delta checking is screwing up
+		diff = 0xFFFFFFFFFFFFFFFF;
+	}
+	else if( diff == 0 )
+	{
+		return;
+	}
+
+	//
+	// check depthFunc bits
+	//
+	if( diff & GLS_DEPTHFUNC_BITS )
+	{
+		switch( stateBits & GLS_DEPTHFUNC_BITS )
+		{
+			case GLS_DEPTHFUNC_EQUAL:
+				glDepthFunc( GL_EQUAL );
+				break;
+			case GLS_DEPTHFUNC_ALWAYS:
+				glDepthFunc( GL_ALWAYS );
+				break;
+			case GLS_DEPTHFUNC_LESS:
+				glDepthFunc( GL_LEQUAL );
+				break;
+			case GLS_DEPTHFUNC_GREATER:
+				glDepthFunc( GL_GEQUAL );
+				break;
+		}
+	}
+
+	//
+	// check blend bits
+	//
+	if( diff & ( GLS_SRCBLEND_BITS | GLS_DSTBLEND_BITS ) )
+	{
+		GLenum srcFactor = GL_ONE;
+		GLenum dstFactor = GL_ZERO;
+
+		switch( stateBits & GLS_SRCBLEND_BITS )
+		{
+			case GLS_SRCBLEND_ZERO:
+				srcFactor = GL_ZERO;
+				break;
+			case GLS_SRCBLEND_ONE:
+				srcFactor = GL_ONE;
+				break;
+			case GLS_SRCBLEND_DST_COLOR:
+				srcFactor = GL_DST_COLOR;
+				break;
+			case GLS_SRCBLEND_ONE_MINUS_DST_COLOR:
+				srcFactor = GL_ONE_MINUS_DST_COLOR;
+				break;
+			case GLS_SRCBLEND_SRC_ALPHA:
+				srcFactor = GL_SRC_ALPHA;
+				break;
+			case GLS_SRCBLEND_ONE_MINUS_SRC_ALPHA:
+				srcFactor = GL_ONE_MINUS_SRC_ALPHA;
+				break;
+			case GLS_SRCBLEND_DST_ALPHA:
+				srcFactor = GL_DST_ALPHA;
+				break;
+			case GLS_SRCBLEND_ONE_MINUS_DST_ALPHA:
+				srcFactor = GL_ONE_MINUS_DST_ALPHA;
+				break;
+			default:
+				assert( !"GL_State: invalid src blend state bits\n" );
+				break;
+		}
+
+		switch( stateBits & GLS_DSTBLEND_BITS )
+		{
+			case GLS_DSTBLEND_ZERO:
+				dstFactor = GL_ZERO;
+				break;
+			case GLS_DSTBLEND_ONE:
+				dstFactor = GL_ONE;
+				break;
+			case GLS_DSTBLEND_SRC_COLOR:
+				dstFactor = GL_SRC_COLOR;
+				break;
+			case GLS_DSTBLEND_ONE_MINUS_SRC_COLOR:
+				dstFactor = GL_ONE_MINUS_SRC_COLOR;
+				break;
+			case GLS_DSTBLEND_SRC_ALPHA:
+				dstFactor = GL_SRC_ALPHA;
+				break;
+			case GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA:
+				dstFactor = GL_ONE_MINUS_SRC_ALPHA;
+				break;
+			case GLS_DSTBLEND_DST_ALPHA:
+				dstFactor = GL_DST_ALPHA;
+				break;
+			case GLS_DSTBLEND_ONE_MINUS_DST_ALPHA:
+				dstFactor = GL_ONE_MINUS_DST_ALPHA;
+				break;
+			default:
+				assert( !"GL_State: invalid dst blend state bits\n" );
+				break;
+		}
+
+		// Only actually update GL's blend func if blending is enabled.
+		if( srcFactor == GL_ONE && dstFactor == GL_ZERO )
+		{
+			glDisable( GL_BLEND );
+		}
+		else
+		{
+			glEnable( GL_BLEND );
+			glBlendFunc( srcFactor, dstFactor );
+		}
+	}
+
+	//
+	// check depthmask
+	//
+	if( diff & GLS_DEPTHMASK )
+	{
+		if( stateBits & GLS_DEPTHMASK )
+		{
+			glDepthMask( GL_FALSE );
+		}
+		else
+		{
+			glDepthMask( GL_TRUE );
+		}
+	}
+
+	//
+	// check colormask
+	//
+	if( diff & ( GLS_REDMASK | GLS_GREENMASK | GLS_BLUEMASK | GLS_ALPHAMASK ) )
+	{
+		GLboolean r = ( stateBits & GLS_REDMASK ) ? GL_FALSE : GL_TRUE;
+		GLboolean g = ( stateBits & GLS_GREENMASK ) ? GL_FALSE : GL_TRUE;
+		GLboolean b = ( stateBits & GLS_BLUEMASK ) ? GL_FALSE : GL_TRUE;
+		GLboolean a = ( stateBits & GLS_ALPHAMASK ) ? GL_FALSE : GL_TRUE;
+		glColorMask( r, g, b, a );
+	}
+
+	//
+	// fill/line mode
+	//
+	if( diff & GLS_POLYMODE_LINE )
+	{
+		if( stateBits & GLS_POLYMODE_LINE )
+		{
+			glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+		}
+		else
+		{
+			glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+		}
+	}
+
+	//
+	// polygon offset
+	//
+	if( diff & GLS_POLYGON_OFFSET )
+	{
+		if( stateBits & GLS_POLYGON_OFFSET )
+		{
+			glPolygonOffset( backEnd.glState.polyOfsScale, backEnd.glState.polyOfsBias );
+			glEnable( GL_POLYGON_OFFSET_FILL );
+			glEnable( GL_POLYGON_OFFSET_LINE );
+		}
+		else
+		{
+			glDisable( GL_POLYGON_OFFSET_FILL );
+			glDisable( GL_POLYGON_OFFSET_LINE );
+		}
+	}
+
+	//
+	// stencil
+	//
+	if( diff & ( GLS_STENCIL_FUNC_BITS | GLS_STENCIL_OP_BITS ) )
+	{
+		if( ( stateBits & ( GLS_STENCIL_FUNC_BITS | GLS_STENCIL_OP_BITS ) ) != 0 )
+		{
+			glEnable( GL_STENCIL_TEST );
+		}
+		else
+		{
+			glDisable( GL_STENCIL_TEST );
+		}
+	}
+	if( diff & ( GLS_STENCIL_FUNC_BITS | GLS_STENCIL_FUNC_REF_BITS | GLS_STENCIL_FUNC_MASK_BITS ) )
+	{
+		GLuint ref = GLuint( ( stateBits & GLS_STENCIL_FUNC_REF_BITS ) >> GLS_STENCIL_FUNC_REF_SHIFT );
+		GLuint mask = GLuint( ( stateBits & GLS_STENCIL_FUNC_MASK_BITS ) >> GLS_STENCIL_FUNC_MASK_SHIFT );
+		GLenum func = 0;
+
+		switch( stateBits & GLS_STENCIL_FUNC_BITS )
+		{
+			case GLS_STENCIL_FUNC_NEVER:
+				func = GL_NEVER;
+				break;
+			case GLS_STENCIL_FUNC_LESS:
+				func = GL_LESS;
+				break;
+			case GLS_STENCIL_FUNC_EQUAL:
+				func = GL_EQUAL;
+				break;
+			case GLS_STENCIL_FUNC_LEQUAL:
+				func = GL_LEQUAL;
+				break;
+			case GLS_STENCIL_FUNC_GREATER:
+				func = GL_GREATER;
+				break;
+			case GLS_STENCIL_FUNC_NOTEQUAL:
+				func = GL_NOTEQUAL;
+				break;
+			case GLS_STENCIL_FUNC_GEQUAL:
+				func = GL_GEQUAL;
+				break;
+			case GLS_STENCIL_FUNC_ALWAYS:
+				func = GL_ALWAYS;
+				break;
+		}
+		glStencilFunc( func, ref, mask );
+	}
+	if( diff & ( GLS_STENCIL_OP_FAIL_BITS | GLS_STENCIL_OP_ZFAIL_BITS | GLS_STENCIL_OP_PASS_BITS ) )
+	{
+		GLenum sFail = 0;
+		GLenum zFail = 0;
+		GLenum pass = 0;
+
+		switch( stateBits & GLS_STENCIL_OP_FAIL_BITS )
+		{
+			case GLS_STENCIL_OP_FAIL_KEEP:
+				sFail = GL_KEEP;
+				break;
+			case GLS_STENCIL_OP_FAIL_ZERO:
+				sFail = GL_ZERO;
+				break;
+			case GLS_STENCIL_OP_FAIL_REPLACE:
+				sFail = GL_REPLACE;
+				break;
+			case GLS_STENCIL_OP_FAIL_INCR:
+				sFail = GL_INCR;
+				break;
+			case GLS_STENCIL_OP_FAIL_DECR:
+				sFail = GL_DECR;
+				break;
+			case GLS_STENCIL_OP_FAIL_INVERT:
+				sFail = GL_INVERT;
+				break;
+			case GLS_STENCIL_OP_FAIL_INCR_WRAP:
+				sFail = GL_INCR_WRAP;
+				break;
+			case GLS_STENCIL_OP_FAIL_DECR_WRAP:
+				sFail = GL_DECR_WRAP;
+				break;
+		}
+		switch( stateBits & GLS_STENCIL_OP_ZFAIL_BITS )
+		{
+			case GLS_STENCIL_OP_ZFAIL_KEEP:
+				zFail = GL_KEEP;
+				break;
+			case GLS_STENCIL_OP_ZFAIL_ZERO:
+				zFail = GL_ZERO;
+				break;
+			case GLS_STENCIL_OP_ZFAIL_REPLACE:
+				zFail = GL_REPLACE;
+				break;
+			case GLS_STENCIL_OP_ZFAIL_INCR:
+				zFail = GL_INCR;
+				break;
+			case GLS_STENCIL_OP_ZFAIL_DECR:
+				zFail = GL_DECR;
+				break;
+			case GLS_STENCIL_OP_ZFAIL_INVERT:
+				zFail = GL_INVERT;
+				break;
+			case GLS_STENCIL_OP_ZFAIL_INCR_WRAP:
+				zFail = GL_INCR_WRAP;
+				break;
+			case GLS_STENCIL_OP_ZFAIL_DECR_WRAP:
+				zFail = GL_DECR_WRAP;
+				break;
+		}
+		switch( stateBits & GLS_STENCIL_OP_PASS_BITS )
+		{
+			case GLS_STENCIL_OP_PASS_KEEP:
+				pass = GL_KEEP;
+				break;
+			case GLS_STENCIL_OP_PASS_ZERO:
+				pass = GL_ZERO;
+				break;
+			case GLS_STENCIL_OP_PASS_REPLACE:
+				pass = GL_REPLACE;
+				break;
+			case GLS_STENCIL_OP_PASS_INCR:
+				pass = GL_INCR;
+				break;
+			case GLS_STENCIL_OP_PASS_DECR:
+				pass = GL_DECR;
+				break;
+			case GLS_STENCIL_OP_PASS_INVERT:
+				pass = GL_INVERT;
+				break;
+			case GLS_STENCIL_OP_PASS_INCR_WRAP:
+				pass = GL_INCR_WRAP;
+				break;
+			case GLS_STENCIL_OP_PASS_DECR_WRAP:
+				pass = GL_DECR_WRAP;
+				break;
+		}
+		glStencilOp( sFail, zFail, pass );
+	}
+
+	backEnd.glState.glStateBits = stateBits;
+}
+
+
+/*
+=============
+idRenderBackend::DrawFlickerBox
+=============
+*/
+void RB_DrawFlickerBox()
+{
+	if( !r_drawFlickerBox.GetBool() )
+	{
+		return;
+	}
+	if( tr.frameCount & 1 )
+	{
+		glClearColor( 1, 0, 0, 1 );
+	}
+	else
+	{
+		glClearColor( 0, 1, 0, 1 );
+	}
+	glScissor( 0, 0, 256, 256 );
+	glClear( GL_COLOR_BUFFER_BIT );
+}
+
+/*
+=============
+RB_SetBuffer
+=============
+*/
+static void	RB_SetBuffer( const void* data )
+{
+	// see which draw buffer we want to render the frame to
+
+	const setBufferCommand_t* cmd = ( const setBufferCommand_t* )data;
+
+	RENDERLOG_PRINTF( "---------- RB_SetBuffer ---------- to buffer # %d\n", cmd->buffer );
+
+	GL_Scissor( 0, 0, tr.GetWidth(), tr.GetHeight() );
+
+	// clear screen for debugging
+	// automatically enable this with several other debug tools
+	// that might leave unrendered portions of the screen
+	if( r_clear.GetFloat() || idStr::Length( r_clear.GetString() ) != 1 || r_singleArea.GetBool() || r_showOverDraw.GetBool() )
+	{
+		float c[3];
+		if( sscanf( r_clear.GetString(), "%f %f %f", &c[0], &c[1], &c[2] ) == 3 )
+		{
+			GL_Clear( true, false, false, 0, c[0], c[1], c[2], 1.0f );
+		}
+		else if( r_clear.GetInteger() == 2 )
+		{
+			GL_Clear( true, false, false, 0, 0.0f, 0.0f,  0.0f, 1.0f );
+		}
+		else if( r_showOverDraw.GetBool() )
+		{
+			GL_Clear( true, false, false, 0, 1.0f, 1.0f, 1.0f, 1.0f );
+		}
+		else
+		{
+			GL_Clear( true, false, false, 0, 0.4f, 0.0f, 0.25f, 1.0f );
+		}
+	}
+}
+
+/*
+=============
+idRenderBackend::idRenderBackend
+=============
+*/
+idRenderBackend::idRenderBackend()
+{
+	glState.frameCounter = 0;
+	glState.frameParity = 0;
+
+	memset( glState.tmu, 0, sizeof( glState.tmu ) );
+	//memset( glState.stencilOperations, 0, sizeof( glcontext.stencilOperations ) );
+
+	memset( glState.renderLogMainBlockTimeQueryIds, 0, sizeof( glState.renderLogMainBlockTimeQueryIds ) );
+	memset( glState.renderLogMainBlockTimeQueryIssued, 0, sizeof( glState.renderLogMainBlockTimeQueryIssued ) );
+}
+
+/*
+=============
+idRenderBackend::~idRenderBackend
+=============
+*/
+idRenderBackend::~idRenderBackend()
+{
+
+}
+
 /*
 ====================
 R_MakeStereoRenderImage
@@ -806,7 +1323,7 @@ static void R_MakeStereoRenderImage( idImage* image )
 
 /*
 ====================
-RB_StereoRenderExecuteBackEndCommands
+idRenderBackend::StereoRenderExecuteBackEndCommands
 
 Renders the draw list twice, with slight modifications for left eye / right eye
 ====================
