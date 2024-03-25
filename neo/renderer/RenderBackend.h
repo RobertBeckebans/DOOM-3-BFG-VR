@@ -30,24 +30,93 @@ If you have questions concerning this license or the applicable additional terms
 #ifndef __RENDERER_BACKEND_H__
 #define __RENDERER_BACKEND_H__
 
+#include "RenderLog.h"
+
+bool			GL_CheckErrors_( const char* filename, int line );
+#if 1 // !defined(RETAIL)
+	#define         GL_CheckErrors()	GL_CheckErrors_(__FILE__, __LINE__)
+#else
+	#define         GL_CheckErrors()	false
+#endif
+// RB end
+
+struct tmu_t
+{
+	unsigned int	current2DMap;
+	unsigned int	current2DArray;
+	unsigned int	currentCubeMap;
+};
+
+const int MAX_MULTITEXTURE_UNITS =	8;
+
+struct glState_t
+{
+	tmu_t				tmu[ MAX_MULTITEXTURE_UNITS ];
+	int					currenttmu;
+
+	// RB: 64 bit fixes, changed unsigned int to uintptr_t
+	uintptr_t			currentVertexBuffer;
+	uintptr_t			currentIndexBuffer;
+
+	Framebuffer*		currentFramebuffer;		// RB: for offscreen rendering
+	// RB end
+
+	int					faceCulling;
+
+	vertexLayoutType_t	vertexLayout;
+
+	float				polyOfsScale;
+	float				polyOfsBias;
+
+	uint64				glStateBits;
+
+	uint64				frameCounter;
+	uint32				frameParity;
+
+	// for GL_TIME_ELAPSED_EXT queries
+	GLuint				renderLogMainBlockTimeQueryIds[ NUM_FRAME_DATA ][ MRB_TOTAL_QUERIES ];
+	uint32				renderLogMainBlockTimeQueryIssued[ NUM_FRAME_DATA ][ MRB_TOTAL_QUERIES ];
+};
+
 /*
-================================================================================================
+===========================================================================
 
-	Graphics API wrapper/helper functions
+idRenderBackend
 
-	This wraps platform specific graphics API functionality that is used at run-time. This
-	functionality is wrapped to avoid excessive conditional compilation and/or code duplication
-	throughout the run-time rendering code that is shared on all platforms.
+all state modified by the back end is separated from the front end state
 
-	Most other graphics API functions are called for initialization purposes and are called
-	directly from platform specific code implemented in files in the platform specific folders:
-
-	renderer/OpenGL/
-	renderer/DirectX/
-	renderer/GCM/
-
-================================================================================================
+===========================================================================
 */
+
+class idRenderBackend
+{
+	friend class Framebuffer;
+	friend class idImage;
+
+public:
+	const viewDef_t*		viewDef;
+	backEndCounters_t	pc;
+
+	const viewEntity_t* currentSpace;			// for detecting when a matrix must change
+	idScreenRect		currentScissor;			// for scissor clipping, local inside renderView viewport
+	glState_t			glState;				// for OpenGL state deltas
+
+	bool				currentRenderCopied;	// true if any material has already referenced _currentRender
+
+	idRenderMatrix		prevMVP[2];				// world MVP from previous frame for motion blur, per-eye
+
+	// RB begin
+	idRenderMatrix		shadowV[6];				// shadow depth view matrix
+	idRenderMatrix		shadowP[6];				// shadow depth projection matrix
+	// RB end
+
+	// surfaces used for code-based drawing
+	drawSurf_t			unitSquareSurface;
+	drawSurf_t			zeroOneCubeSurface;
+	drawSurf_t			testImageSurface;
+	drawSurf_t			hudSurface; // Koz hud mesh
+};
+
 
 class idImage;
 //class idTriangles;
@@ -129,14 +198,6 @@ void			GL_Flush();		// flush the GPU command buffer
 void			GL_Finish();	// wait for the GPU to have executed all commands
 
 
-// RB begin
-bool			GL_CheckErrors_( const char* filename, int line );
-#if 1 // !defined(RETAIL)
-	#define         GL_CheckErrors()	GL_CheckErrors_(__FILE__, __LINE__)
-#else
-	#define         GL_CheckErrors()	false
-#endif
-// RB end
 
 
 

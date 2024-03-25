@@ -49,7 +49,7 @@ idCVar r_useLightStencilSelect( "r_useLightStencilSelect", "0", CVAR_RENDERER | 
 
 extern idCVar stereoRender_swapEyes;
 
-backEndState_t	backEnd;
+idRenderBackend	backEnd;
 
 /*
 ================

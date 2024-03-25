@@ -210,7 +210,6 @@ public:
 	virtual void			RemoveDecals();
 
 	bool					IsDirectlyVisible() const;
-
 	renderEntity_t			parms;
 
 	float					modelMatrix[16];		// this is just a rearrangement of parms.axis and parms.origin
@@ -223,13 +222,11 @@ public:
 	int						lastModifiedFrameNum;	// to determine if it is constantly changing,
 	// and should go in the dynamic frame memory, or kept
 	// in the cached memory
-	bool					archived;				// for demo writing
 
 	idRenderModel* 			dynamicModel;			// if parms.model->IsDynamicModel(), this is the generated data
 	int						dynamicModelFrameCount;	// continuously animating dynamic models will recreate
 	// dynamicModel if this doesn't == tr.viewCount
 	idRenderModel* 			cachedDynamicModel;
-
 
 	// the local bounds used to place entityRefs, either from parms for dynamic entities, or a model bounds
 	idBounds				localReferenceBounds;
@@ -615,20 +612,6 @@ const idMaterial* R_RemapShaderBySkin( const idMaterial* shader, const idDeclSki
 
 //====================================================
 
-
-
-
-
-struct tmu_t
-{
-	unsigned int	current2DMap;
-	unsigned int	current2DArray;
-	unsigned int	currentCubeMap;
-};
-
-
-const int MAX_MULTITEXTURE_UNITS =	8;
-
 enum vertexLayoutType_t
 {
 	LAYOUT_UNKNOWN = 0,
@@ -638,72 +621,14 @@ enum vertexLayoutType_t
 	NUM_VERTEX_LAYOUTS
 };
 
-struct glState_t
-{
-	tmu_t				tmu[MAX_MULTITEXTURE_UNITS];
-
-	int					currenttmu;
-
-	int					faceCulling;
-
-	vertexLayoutType_t	vertexLayout;
-
-	// RB: 64 bit fixes, changed unsigned int to uintptr_t
-	uintptr_t			currentVertexBuffer;
-	uintptr_t			currentIndexBuffer;
-
-	Framebuffer*		currentFramebuffer;
-	// RB end
-
-	float				polyOfsScale;
-	float				polyOfsBias;
-
-	uint64				glStateBits;
-
-	uint64				frameCounter;
-	uint32				frameParity;
-
-	// for GL_TIME_ELAPSED_EXT queries
-	GLuint				renderLogMainBlockTimeQueryIds[ NUM_FRAME_DATA ][ MRB_TOTAL_QUERIES ];
-	uint32				renderLogMainBlockTimeQueryIssued[ NUM_FRAME_DATA ][ MRB_TOTAL_QUERIES ];
-};
-
-
-
-
-// all state modified by the back end is separated
-// from the front end state
-struct backEndState_t
-{
-	const viewDef_t*		viewDef;
-	backEndCounters_t	pc;
-
-	const viewEntity_t* currentSpace;			// for detecting when a matrix must change
-	idScreenRect		currentScissor;			// for scissor clipping, local inside renderView viewport
-	glState_t			glState;				// for OpenGL state deltas
-
-	bool				currentRenderCopied;	// true if any material has already referenced _currentRender
-
-	idRenderMatrix		prevMVP[2];				// world MVP from previous frame for motion blur, per-eye
-
-	// RB begin
-	idRenderMatrix		shadowV[6];				// shadow depth view matrix
-	idRenderMatrix		shadowP[6];				// shadow depth projection matrix
-	// RB end
-
-	// surfaces used for code-based drawing
-	drawSurf_t			unitSquareSurface;
-	drawSurf_t			zeroOneCubeSurface;
-	drawSurf_t			testImageSurface;
-	drawSurf_t			hudSurface; // Koz hud mesh
-};
-
 class idParallelJobList;
 
 const int MAX_GUI_SURFACES	= 1024;		// default size of the drawSurfs list for guis, will
 // be automatically expanded as needed
 
 static const int MAX_RENDER_CROPS = 8;
+
+#include "RenderBackend.h"
 
 /*
 ** Most renderer globals are defined here.
@@ -872,7 +797,7 @@ private:
 	bool					bInitialized;
 };
 
-extern backEndState_t		backEnd;
+extern idRenderBackend		backEnd;
 extern idRenderSystemLocal	tr;
 extern glconfig_t			glConfig;		// outside of TR since it shouldn't be cleared during ref re-init
 
