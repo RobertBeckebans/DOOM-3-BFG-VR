@@ -27,9 +27,10 @@ If you have questions concerning this license or the applicable additional terms
 ===========================================================================
 */
 
-#pragma hdrstop
 #include "precompiled.h"
+#pragma hdrstop
 
+#include "libs/imgui/imgui.h"
 
 #include "RenderCommon.h"
 
@@ -590,6 +591,24 @@ static void R_CreateRandom256Image( idImage* image )
 
 	image->GenerateImage( ( byte* )data, 256, 256, TF_NEAREST, TR_REPEAT, TD_LOOKUP_TABLE_RGBA );
 }
+static void R_CreateImGuiFontImage( idImage* image )
+{
+	ImGuiIO& io = ImGui::GetIO();
+
+	byte* pixels = NULL;
+	int width, height;
+	io.Fonts->GetTexDataAsRGBA32( &pixels, &width, &height ); // Load as RGBA 32-bits for OpenGL3 demo because it is more likely to be compatible with user's existing shader.
+
+	image->GenerateImage( ( byte* )pixels, width, height, TF_LINEAR, TR_CLAMP, TD_LOOKUP_TABLE_RGBA );
+
+	// Store our identifier
+	//io.Fonts->TexID = ( void* )( intptr_t )image->GetImGuiTextureID();
+	io.Fonts->TexID = ( void* )( intptr_t )declManager->FindMaterial( "_imguiFont" );
+
+	// Cleanup (don't clear the input data if you want to append new fonts later)
+	//io.Fonts->ClearInputData();
+	//io.Fonts->ClearTexData();
+}
 // RB end
 
 /*
@@ -622,6 +641,7 @@ void idImageManager::CreateIntrinsicImages()
 	jitterImage16 = globalImages->ImageFromFunction( "_jitter16", R_CreateJitterImage16 );
 
 	randomImage256 = globalImages->ImageFromFunction( "_random256", R_CreateRandom256Image );
+	imguiFontImage = ImageFromFunction( "_imguiFont", R_CreateImGuiFontImage );
 	// RB end
 
 	// scratchImage is used for screen wipes/doublevision etc..

@@ -2257,7 +2257,7 @@ void idUsercmdGenLocal::Mouse()
 			case M_DELTAZ:	// mouse wheel, may have multiple clicks
 			{
 				// DG: this seems like a good place to inject mousewheel deltas into ImGui
-				//ImGuiHook::InjectMouseWheel( value );
+				ImGuiHook::InjectMouseWheel( value );
 
 				int key = value < 0 ? K_MWHEELDOWN : K_MWHEELUP;
 				value = abs( value );

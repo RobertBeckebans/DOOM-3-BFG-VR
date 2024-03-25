@@ -592,7 +592,7 @@ void idCommonLocal::Frame()
 		renderSystem->OnFrame();
 
 		// DG: prepare new ImGui frame - I guess this is a good place, as all new events should be available?
-		//ImGuiHook::NewFrame();
+		ImGuiHook::NewFrame();
 
 		// Activate the shell if it's been requested
 		if( showShellRequested && game )

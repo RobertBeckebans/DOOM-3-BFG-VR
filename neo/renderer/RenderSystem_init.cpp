@@ -30,7 +30,7 @@ If you have questions concerning this license or the applicable additional terms
 #include "precompiled.h"
 #pragma hdrstop
 
-//#include "libs/imgui/imgui.h"
+#include "libs/imgui/imgui.h"
 
 #include "RenderCommon.h"
 #include "DXT/DXTCodec.h" // Carl
@@ -431,6 +431,9 @@ void R_SetNewMode( const bool fullInit )
 			if( GLimp_Init( parms ) )
 			{
 				// it worked
+
+				// DG: ImGui must be initialized after the window has been created, it needs an opengl context
+				ImGuiHook::Init( parms.width, parms.height );
 				break;
 			}
 		}
@@ -440,6 +443,9 @@ void R_SetNewMode( const bool fullInit )
 			if( GLimp_SetScreenParms( parms ) )
 			{
 				// it worked
+
+				// DG: ImGui must be initialized after the window has been created, it needs an opengl context
+				ImGuiHook::Init( parms.width, parms.height );
 				break;
 			}
 		}
@@ -1455,6 +1461,12 @@ void R_InitMaterials()
 	tr.defaultProjectedLight = declManager->FindMaterial( "lights/defaultProjectedLight" );
 	tr.whiteMaterial = declManager->FindMaterial( "_white" );
 	tr.charSetMaterial = declManager->FindMaterial( "textures/bigchars" );
+
+	// RB: create implicit material
+	tr.imgGuiMaterial = declManager->FindMaterial( "_imguiFont", true );
+
+	ImGuiIO& io = ImGui::GetIO();
+	io.Fonts->TexID = ( void* )( intptr_t )tr.imgGuiMaterial;
 }
 
 

@@ -37,26 +37,35 @@ struct guiModelSurface_t
 
 class idRenderMatrix;
 
+//namespace ImGui
+//{
+struct ImDrawData;
+//}
+
 class idGuiModel
 {
 public:
 	idGuiModel();
 
-	void	Clear();
+	void		Clear();
 
 	// allocates memory for verts and indexes in frame-temporary buffer memory
-	void	BeginFrame();
+	void		BeginFrame();
 
-	void	EmitToCurrentView( float modelMatrix[16], bool depthHack );
-	void	EmitFullScreen();
+	void		EmitToCurrentView( float modelMatrix[16], bool depthHack );
+	void		EmitFullScreen();
+
+	// RB
+	void		EmitImGui( ImDrawData* drawData );
 
 	// Koz
-	void	SetEye( int eye );
-	int		GetEye()
+	void		SetEye( int eye );
+	int			GetEye()
 	{
 		return renderEye;
 	};
-	bool	SurfaceValid()
+
+	bool		SurfaceValid()
 	{
 		return surf != NULL;
 	}
@@ -70,15 +79,14 @@ public:
 
 	//---------------------------
 private:
-	void	AdvanceSurf();
-	void	EmitSurfaces( float modelMatrix[16], float modelViewMatrix[16],
-						  bool depthHack, bool allowFullScreenStereoDepth, bool linkAsEntity );
+	void		AdvanceSurf();
+	void		EmitSurfaces( float modelMatrix[16], float modelViewMatrix[16], bool depthHack, bool allowFullScreenStereoDepth, bool linkAsEntity );
 
 	guiModelSurface_t* 			surf;
 
 	float						shaderParms[ MAX_ENTITY_SHADER_PARMS ];
 
-	int							renderEye;
+	int							renderEye; // Koz
 
 	static const float STEREO_DEPTH_NEAR;
 	static const float STEREO_DEPTH_MID;
@@ -93,8 +101,8 @@ private:
 	idDrawVert* 				vertexPointer;
 	triIndex_t* 				indexPointer;
 
-	int		numVerts;
-	int		numIndexes;
+	int							numVerts;
+	int							numIndexes;
 
 	idList<guiModelSurface_t, TAG_MODEL>	surfaces;
 };

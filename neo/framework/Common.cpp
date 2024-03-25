@@ -1756,7 +1756,7 @@ void idCommonLocal::Shutdown()
 	loadGUI = NULL;
 
 	printf( "ImGuiHook::Destroy();\n" );
-	//TODO ImGuiHook::Destroy();
+	ImGuiHook::Destroy();
 
 	printf( "delete renderWorld;\n" );
 	// SRS - Call FreeRenderWorld() vs. delete, otherwise worlds list not updated on shutdown
@@ -2164,10 +2164,10 @@ bool idCommonLocal::ProcessEvent( const sysEvent_t* event )
 		return true;
 	}
 
-	//if( ImGuiHook::InjectSysEvent( event ) )
-	//{
-	//	return true;
-	//}
+	if( ImGuiHook::InjectSysEvent( event ) )
+	{
+		return true;
+	}
 
 	// if we aren't in a game, force the console to take it
 	if( !mapSpawned )

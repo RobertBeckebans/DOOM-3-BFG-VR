@@ -26,10 +26,11 @@ If you have questions concerning this license or the applicable additional terms
 ===========================================================================
 */
 
-#pragma hdrstop
 #include "precompiled.h"
+#pragma hdrstop
 
 #include "RenderCommon.h"
+#include "../imgui/BFGimgui.h"
 
 idRenderSystemLocal	tr;
 idRenderSystem* renderSystem = &tr;
@@ -752,6 +753,8 @@ void idRenderSystemLocal::SwapCommandBuffers_FinishRendering(
 	// After coming back from an autoswap, we won't have anything to render
 	if( frameData->cmdHead->next != NULL )
 	{
+		ImGuiHook::Render();
+
 		// wait for our fence to hit, which means the swap has actually happened
 		// We must do this before clearing any resources the GPU may be using
 		void GL_BlockingSwapBuffers();
@@ -799,8 +802,6 @@ void idRenderSystemLocal::SwapCommandBuffers_FinishRendering(
 
 	// check for errors
 	GL_CheckErrors();
-
-
 }
 
 /*
@@ -814,6 +815,10 @@ const emptyCommand_t* idRenderSystemLocal::SwapCommandBuffers_FinishCommandBuffe
 	{
 		return NULL;
 	}
+
+	// RB: general GUI system path to treat ImGui surfaces in the renderer frontend like SWF
+	// this calls io.RenderDrawListsFn
+	ImGuiHook::Render();
 
 	// close any gui drawing
 	guiModel->EmitFullScreen();

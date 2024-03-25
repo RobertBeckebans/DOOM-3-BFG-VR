@@ -554,6 +554,7 @@ public:
 	idImage*			jitterImage4;
 	idImage*			jitterImage16;
 	idImage*			randomImage256;
+	idImage*			imguiFontImage;
 	// RB end
 	idImage* 			scratchImage;
 	idImage* 			scratchImage2;

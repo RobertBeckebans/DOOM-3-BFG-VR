@@ -3,6 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2013-2020 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -26,10 +27,11 @@ If you have questions concerning this license or the applicable additional terms
 ===========================================================================
 */
 
-#pragma hdrstop
 #include "precompiled.h"
+#pragma hdrstop
 
 #include "RenderCommon.h"
+#include "libs/imgui/imgui.h"
 
 const float idGuiModel::STEREO_DEPTH_NEAR = 0.0f;
 const float idGuiModel::STEREO_DEPTH_MID  = 0.5f;
@@ -122,14 +124,11 @@ void idGuiModel::EmitSurfaces( float modelMatrix[16], float modelViewMatrix[16],
 	// screenSeparation parameter for an X offset.
 	// The value is stored in the drawSurf sort value, which adjusts the matrix in the
 	// backend.
-	float
-	defaultStereoDepth = stereoRender_defaultGuiDepth.GetFloat();	// default to at-screen
+	float defaultStereoDepth = stereoRender_defaultGuiDepth.GetFloat();	// default to at-screen
 
 	// add the surfaces to this view
 	for( int i = 0; i < surfaces.Num(); i++ )
 	{
-
-
 		// koz fixme const guiModelSurface_t& guiSurf = surfaces[i];
 		guiModelSurface_t& guiSurf = surfaces[i];
 		if( guiSurf.numIndexes == 0 )
@@ -264,7 +263,6 @@ Creates a view that covers the screen and emit the surfaces
 */
 void idGuiModel::EmitFullScreen()
 {
-
 	if( surfaces[0].numIndexes == 0 )
 	{
 		return;
@@ -279,7 +277,7 @@ void idGuiModel::EmitFullScreen()
 	bool stereoEnabled = ( renderSystem->GetStereo3DMode() != STEREO3D_OFF );
 	if( stereoEnabled )
 	{
-		float screenSeparation = GetScreenSeparationForGuis();
+		const float screenSeparation = GetScreenSeparationForGuis();
 
 		// this will be negated on the alternate eyes, both rendered each frame
 		viewDef->renderView.stereoScreenSeparation = screenSeparation;
@@ -298,6 +296,7 @@ void idGuiModel::EmitFullScreen()
 	viewDef->scissor.x2 = viewDef->viewport.x2 - viewDef->viewport.x1;
 	viewDef->scissor.y2 = viewDef->viewport.y2 - viewDef->viewport.y1;
 
+	// RB: IMPORTANT - the projectionMatrix has a few changes to make it work with Vulkan
 	viewDef->projectionMatrix[0 * 4 + 0] = 2.0f / renderSystem->GetVirtualWidth();
 	viewDef->projectionMatrix[0 * 4 + 1] = 0.0f;
 	viewDef->projectionMatrix[0 * 4 + 2] = 0.0f;
@@ -307,8 +306,8 @@ void idGuiModel::EmitFullScreen()
 	viewDef->projectionMatrix[1 * 4 + 1] = -2.0f / renderSystem->GetVirtualHeight();
 	viewDef->projectionMatrix[1 * 4 + 2] = 0.0f;
 	viewDef->projectionMatrix[1 * 4 + 3] = 0.0f;
-	viewDef->projectionMatrix[2 * 4 + 0] = 0.0f;
 
+	viewDef->projectionMatrix[2 * 4 + 0] = 0.0f;
 	viewDef->projectionMatrix[2 * 4 + 1] = 0.0f;
 	viewDef->projectionMatrix[2 * 4 + 2] = -2.0f;
 	viewDef->projectionMatrix[2 * 4 + 3] = 0.0f;
@@ -354,6 +353,76 @@ void idGuiModel::EmitFullScreen()
 	// add the command to draw this view
 	R_AddDrawViewCmd( viewDef, true );
 }
+
+// RB begin
+/*
+================
+idGuiModel::ImGui_RenderDrawLists
+================
+*/
+void idGuiModel::EmitImGui( ImDrawData* drawData )
+{
+	// NOTE: this implementation does not support scissor clipping for the indivudal draw commands
+	// but it is sufficient for things like com_showFPS
+
+	const float sysWidth = renderSystem->GetWidth();
+	const float sysHeight = renderSystem->GetHeight();
+
+	idVec2 scaleToVirtual( ( float )renderSystem->GetVirtualWidth() / sysWidth, ( float )renderSystem->GetVirtualHeight() / sysHeight );
+
+	for( int a = 0; a < drawData->CmdListsCount; a++ )
+	{
+		const ImDrawList* cmd_list = drawData->CmdLists[a];
+		const ImDrawIdx* indexBufferOffset = &cmd_list->IdxBuffer.front();
+
+		int numVerts = cmd_list->VtxBuffer.size();
+
+		for( int b = 0; b < cmd_list->CmdBuffer.size(); b++ )
+		{
+			const ImDrawCmd* pcmd = &cmd_list->CmdBuffer[b];
+
+			int numIndexes = pcmd->ElemCount;
+
+			// support more than just the imGui Font texture
+			const idMaterial* mat = tr.imgGuiMaterial;
+			if( pcmd->TextureId && ( mat != ( const idMaterial* )pcmd->TextureId ) )
+			{
+				mat = ( const idMaterial* )pcmd->TextureId;
+			}
+
+			idDrawVert* verts = renderSystem->AllocTris( numVerts, indexBufferOffset, numIndexes, mat, STEREO_DEPTH_TYPE_NONE );
+			if( verts == NULL )
+			{
+				continue;
+			}
+
+			if( pcmd->UserCallback )
+			{
+				pcmd->UserCallback( cmd_list, pcmd );
+			}
+			else
+			{
+				for( int j = 0; j < numVerts; j++ )
+				{
+					const ImDrawVert* imVert = &cmd_list->VtxBuffer[j];
+
+					ALIGNTYPE16 idDrawVert tempVert;
+
+					//tempVert.xyz = idVec3( imVert->pos.x, imVert->pos.y, 0.0f );
+					tempVert.xyz.ToVec2() = idVec2( imVert->pos.x, imVert->pos.y ).Scale( scaleToVirtual );
+					tempVert.xyz.z = 0.0f;
+					tempVert.SetTexCoord( imVert->uv.x, imVert->uv.y );
+					tempVert.SetColor( imVert->col );
+
+					WriteDrawVerts16( &verts[j], &tempVert, 1 );
+				}
+			}
+
+			indexBufferOffset += pcmd->ElemCount;
+		}
+	}
+}
+// RB end
 
 /*
 =============
