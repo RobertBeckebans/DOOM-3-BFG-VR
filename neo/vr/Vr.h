@@ -87,11 +87,11 @@ typedef enum
 
 typedef enum
 {
-	FLASH_BODY,
-	FLASH_HEAD,
-	FLASH_GUN,
-	FLASH_HAND,
-	FLASH_MAX,
+	FLASHLIGHT_BODY,
+	FLASHLIGHT_HEAD,
+	FLASHLIGHT_GUN,
+	FLASHLIGHT_HAND,
+	FLASHLIGHT_MAX,
 } vr_flashlight_mode_t;
 
 void SwapWeaponHand();

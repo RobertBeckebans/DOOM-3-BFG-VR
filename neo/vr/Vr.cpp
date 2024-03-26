@@ -365,7 +365,7 @@ iVr::iVr()
 
 	chestDefaultDefined = false;
 
-	currentFlashlightPosition = FLASH_BODY;
+	currentFlashlightPosition = FLASHLIGHT_BODY;
 
 	handInGui = false;
 
@@ -2141,7 +2141,7 @@ iVr::GetCurrentFlashMode();
 void iVr::NextFlashMode()
 {
 	currentFlashMode++;
-	if( currentFlashMode >= FLASH_MAX )
+	if( currentFlashMode >= FLASHLIGHT_MAX )
 	{
 		currentFlashMode = 0;
 	}
