@@ -26,13 +26,13 @@ If you have questions concerning this license or the applicable additional terms
 ===========================================================================
 */
 
-#pragma hdrstop
 #include "precompiled.h"
+#pragma hdrstop
 
 
 #include "../Game_local.h"
 
-idCVar binaryLoadAnim( "binaryLoadAnim", "1", 0, "enable binary load/write of idMD5Anim" ); // Koz fixme does this need to be archived?
+idCVar binaryLoadAnim( "binaryLoadAnim", "1", 0, "enable binary load/write of idMD5Anim" );
 
 static const byte B_ANIM_MD5_VERSION = 101;
 static const unsigned int B_ANIM_MD5_MAGIC = ( 'B' << 24 ) | ( 'M' << 16 ) | ( 'D' << 8 ) | B_ANIM_MD5_VERSION;
@@ -1088,6 +1088,12 @@ idMD5Anim::CheckModelHierarchy
 */
 void idMD5Anim::CheckModelHierarchy( const idRenderModel* model ) const
 {
+	// RB
+	if( com_editors & EDITOR_EXPORTDEFS )
+	{
+		return;
+	}
+
 	if( jointInfo.Num() != model->NumJoints() )
 	{
 		if( !fileSystem->InProductionMode() )

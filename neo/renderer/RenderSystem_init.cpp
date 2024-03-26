@@ -153,7 +153,7 @@ idCVar r_shadowPolygonFactor( "r_shadowPolygonFactor", "0", CVAR_RENDERER | CVAR
 idCVar r_subviewOnly( "r_subviewOnly", "0", CVAR_RENDERER | CVAR_BOOL, "1 = don't render main view, allowing subviews to be debugged" );
 idCVar r_testGamma( "r_testGamma", "0", CVAR_RENDERER | CVAR_FLOAT, "if > 0 draw a grid pattern to test gamma levels", 0, 195 );
 idCVar r_testGammaBias( "r_testGammaBias", "0", CVAR_RENDERER | CVAR_FLOAT, "if > 0 draw a grid pattern to test gamma levels" );
-idCVar r_lightScale( "r_lightScale", "3", CVAR_ARCHIVE | CVAR_RENDERER | CVAR_FLOAT, "all light intensities are multiplied by this" );
+idCVar r_lightScale( "r_lightScale", "3", CVAR_ARCHIVE | CVAR_RENDERER | CVAR_FLOAT, "all light intensities are multiplied by this", 0, 10 );
 idCVar r_flareSize( "r_flareSize", "1", CVAR_RENDERER | CVAR_FLOAT, "scale the flare deforms from the material def" );
 
 idCVar r_skipPrelightShadows( "r_skipPrelightShadows", "0", CVAR_RENDERER | CVAR_BOOL, "skip the dmap generated static shadow volumes" );
@@ -168,6 +168,7 @@ idCVar r_screenFraction( "r_screenFraction", "100", CVAR_RENDERER | CVAR_INTEGER
 idCVar r_usePortals( "r_usePortals", "1", CVAR_RENDERER | CVAR_BOOL, " 1 = use portals to perform area culling, otherwise draw everything" );
 idCVar r_singleLight( "r_singleLight", "-1", CVAR_RENDERER | CVAR_INTEGER, "suppress all but one light" );
 idCVar r_singleEntity( "r_singleEntity", "-1", CVAR_RENDERER | CVAR_INTEGER, "suppress all but one entity" );
+idCVar r_singleEnvprobe( "r_singleEnvprobe", "-1", CVAR_RENDERER | CVAR_INTEGER, "suppress all but one environment probe" );
 idCVar r_singleSurface( "r_singleSurface", "-1", CVAR_RENDERER | CVAR_INTEGER, "suppress all but one surface on each entity" );
 idCVar r_singleArea( "r_singleArea", "0", CVAR_RENDERER | CVAR_BOOL, "only draw the portal area the view is actually in" );
 idCVar r_orderIndexes( "r_orderIndexes", "1", CVAR_RENDERER | CVAR_BOOL, "perform index reorganization to optimize vertex use" );
@@ -735,13 +736,13 @@ void R_ReadTiledPixels( int width, int height, byte* buffer, renderView_t* ref =
 			if( ref )
 			{
 				// discard anything currently on the list
-				tr.SwapCommandBuffers( NULL, NULL, NULL, NULL );
+				tr.SwapCommandBuffers( NULL, NULL, NULL, NULL, NULL, NULL );
 
 				// build commands to render the scene
 				tr.primaryWorld->RenderScene( ref );
 
 				// finish off these commands
-				const emptyCommand_t* cmd = tr.SwapCommandBuffers( NULL, NULL, NULL, NULL );
+				const emptyCommand_t* cmd = tr.SwapCommandBuffers( NULL, NULL, NULL, NULL, NULL, NULL );
 
 				// issue the commands to the GPU
 				tr.RenderCommandBuffers( cmd );
@@ -905,6 +906,33 @@ void idRenderSystemLocal::TakeScreenshot( int width, int height, const char* fil
 	R_StaticFree( buffer );
 
 	takingScreenshot = false;
+}
+
+// RB begin
+byte* idRenderSystemLocal::CaptureRenderToBuffer( int width, int height, renderView_t* ref )
+{
+	byte*		buffer;
+
+	takingScreenshot = true;
+
+	int pix = width * height;
+	//const int bufferSize = pix * 3 * 2;
+
+	// HDR only for now
+	//if( exten == EXR )
+	{
+		buffer = ( byte* )R_StaticAlloc( pix * 3 * 2 );
+	}
+	//else if( exten == PNG )
+	//{
+	//	buffer = ( byte* )R_StaticAlloc( pix * 3 );
+	//}
+
+	R_ReadTiledPixels( width, height, buffer, ref );
+
+	takingScreenshot = false;
+
+	return buffer;
 }
 
 /*
@@ -1601,7 +1629,9 @@ void idRenderSystemLocal::Clear()
 	guiRecursionLevel = 0;
 	guiModel = NULL;
 	memset( gammaTable, 0, sizeof( gammaTable ) );
+	memset( &cubeAxis, 0, sizeof( cubeAxis ) ); // RB
 	takingScreenshot = false;
+	takingEnvprobe = false;
 
 	if( unitSquareTriangles != NULL )
 	{
@@ -1613,6 +1643,12 @@ void idRenderSystemLocal::Clear()
 	{
 		Mem_Free( zeroOneCubeTriangles );
 		zeroOneCubeTriangles = NULL;
+	}
+
+	if( zeroOneSphereTriangles != NULL )
+	{
+		Mem_Free( zeroOneSphereTriangles );
+		zeroOneSphereTriangles = NULL;
 	}
 
 	if( testImageTriangles != NULL )
@@ -1630,6 +1666,11 @@ void idRenderSystemLocal::Clear()
 	// Koz end
 
 	frontEndJobList = NULL;
+
+	// RB
+	envprobeJobList = NULL;
+	envprobeJobs.Clear();
+	lightGridJobs.Clear();
 }
 
 /*
@@ -1775,6 +1816,72 @@ static srfTriangles_t* R_MakeZeroOneCubeTris()
 
 	return tri;
 }
+
+// RB begin
+static srfTriangles_t* R_MakeZeroOneSphereTris()
+{
+	srfTriangles_t* tri = ( srfTriangles_t* )Mem_ClearedAlloc( sizeof( *tri ), TAG_RENDER_TOOLS );
+
+	const float radius = 1.0f;
+	const int rings = 20.0f;
+	const int sectors = 20.0f;
+
+	tri->numVerts = ( rings * sectors );
+	tri->numIndexes = ( ( rings - 1 ) * sectors ) * 6;
+
+	const int indexSize = tri->numIndexes * sizeof( tri->indexes[0] );
+	const int allocatedIndexBytes = ALIGN( indexSize, 16 );
+	tri->indexes = ( triIndex_t* )Mem_Alloc( allocatedIndexBytes, TAG_RENDER_TOOLS );
+
+	const int vertexSize = tri->numVerts * sizeof( tri->verts[0] );
+	const int allocatedVertexBytes =  ALIGN( vertexSize, 16 );
+	tri->verts = ( idDrawVert* )Mem_ClearedAlloc( allocatedVertexBytes, TAG_RENDER_TOOLS );
+
+	idDrawVert* verts = tri->verts;
+
+	float const R = 1.0f / ( float )( rings - 1 );
+	float const S = 1.0f / ( float )( sectors - 1 );
+
+	int numTris = 0;
+	int numVerts = 0;
+	for( int r = 0; r < rings; ++r )
+	{
+		for( int s = 0; s < sectors; ++s )
+		{
+			const float y = sin( -idMath::HALF_PI +  idMath::PI * r * R );
+			const float x = cos( 2 * idMath::PI * s * S ) * sin( idMath::PI * r * R );
+			const float z = sin( 2 * idMath::PI * s * S ) * sin( idMath::PI * r * R );
+
+			verts[ numVerts ].SetTexCoord( s * S, r * R );
+			verts[ numVerts ].xyz = idVec3( x, y, z ) * radius;
+			verts[ numVerts ].SetNormal( x, y, z );
+			verts[ numVerts ].SetColor( 0xffffffff );
+			numVerts++;
+
+			if( r < ( rings - 1 ) )
+			{
+				int curRow = r * sectors;
+				int nextRow = ( r + 1 ) * sectors;
+				int nextS = ( s + 1 ) % sectors;
+
+				tri->indexes[( numTris * 3 ) + 2] = ( curRow + s );
+				tri->indexes[( numTris * 3 ) + 1] = ( nextRow + s );
+				tri->indexes[( numTris * 3 ) + 0] = ( nextRow + nextS );
+
+				numTris += 1;
+
+				tri->indexes[( numTris * 3 ) + 2] = ( curRow + s );
+				tri->indexes[( numTris * 3 ) + 1] = ( nextRow + nextS );
+				tri->indexes[( numTris * 3 ) + 0] = ( curRow + nextS );
+
+				numTris += 1;
+			}
+		}
+	}
+
+	return tri;
+}
+// RB end
 
 /*
 ================
@@ -1952,7 +2059,6 @@ idRenderSystemLocal::Init
 */
 void idRenderSystemLocal::Init()
 {
-
 	common->Printf( "------- Initializing renderSystem --------\n" );
 
 	// clear all our internal state
@@ -1965,7 +2071,7 @@ void idRenderSystemLocal::Init()
 	ambientLightVector[2] = 0.8925f;
 	ambientLightVector[3] = 1.0f;
 
-	memset( &backEnd, 0, sizeof( backEnd ) );
+	//memset( &backEnd, 0, sizeof( backEnd ) );
 
 	R_InitCvars();
 
@@ -1981,7 +2087,7 @@ void idRenderSystemLocal::Init()
 
 	globalImages->Init();
 
-	idCinematic::InitCinematic( );
+	idCinematic::InitCinematic();
 
 	// build brightness translation tables
 	R_SetColorMappings();
@@ -1995,16 +2101,58 @@ void idRenderSystemLocal::Init()
 	identitySpace.modelMatrix[1 * 4 + 1] = 1.0f;
 	identitySpace.modelMatrix[2 * 4 + 2] = 1.0f;
 
+	// set cubemap axis for cubemap sampling tools
+
+	// +X
+	cubeAxis[0][0][0] = 1;
+	cubeAxis[0][1][2] = 1;
+	cubeAxis[0][2][1] = 1;
+
+	// -X
+	cubeAxis[1][0][0] = -1;
+	cubeAxis[1][1][2] = -1;
+	cubeAxis[1][2][1] = 1;
+
+	// +Y
+	cubeAxis[2][0][1] = 1;
+	cubeAxis[2][1][0] = -1;
+	cubeAxis[2][2][2] = -1;
+
+	// -Y
+	cubeAxis[3][0][1] = -1;
+	cubeAxis[3][1][0] = -1;
+	cubeAxis[3][2][2] = 1;
+
+	// +Z
+	cubeAxis[4][0][2] = 1;
+	cubeAxis[4][1][0] = -1;
+	cubeAxis[4][2][1] = 1;
+
+	// -Z
+	cubeAxis[5][0][2] = -1;
+	cubeAxis[5][1][0] = 1;
+	cubeAxis[5][2][1] = 1;
+
 	// make sure the tr.unitSquareTriangles data is current in the vertex / index cache
 	if( unitSquareTriangles == NULL )
 	{
 		unitSquareTriangles = R_MakeFullScreenTris();
 	}
+
 	// make sure the tr.zeroOneCubeTriangles data is current in the vertex / index cache
 	if( zeroOneCubeTriangles == NULL )
 	{
 		zeroOneCubeTriangles = R_MakeZeroOneCubeTris();
+		R_DeriveTangents( zeroOneCubeTriangles ); // RB: we need normals for debugging reflections
 	}
+
+	// RB make sure the tr.zeroOneSphereTriangles data is current in the vertex / index cache
+	if( zeroOneSphereTriangles == NULL )
+	{
+		zeroOneSphereTriangles = R_MakeZeroOneSphereTris();
+		//R_DeriveTangents( zeroOneSphereTriangles );
+	}
+
 	// make sure the tr.testImageTriangles data is current in the vertex / index cache
 	if( testImageTriangles == NULL )
 	{
@@ -2018,11 +2166,12 @@ void idRenderSystemLocal::Init()
 	}
 
 	frontEndJobList = parallelJobManager->AllocJobList( JOBLIST_RENDERER_FRONTEND, JOBLIST_PRIORITY_MEDIUM, 2048, 0, NULL );
+	timerQueryId = 0;
 
 	bInitialized = true;
 
 	// make sure the command buffers are ready to accept the first screen update
-	SwapCommandBuffers( NULL, NULL, NULL, NULL );
+	SwapCommandBuffers( NULL, NULL, NULL, NULL, NULL, NULL );
 
 	common->Printf( "renderSystem initialized.\n" );
 	common->Printf( "--------------------------------------\n" );

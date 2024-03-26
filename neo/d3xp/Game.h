@@ -3,6 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2014-2016 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -46,6 +47,7 @@ struct gameReturn_t
 {
 
 	gameReturn_t() :
+		sessionCommand( "" ),       // SRS - Explicitly init sessionCommand otherwise can be optimized out and skipped with gcc or Apple clang
 		syncNextGameFrame( false ),
 		vibrationLow( 0 ),
 		vibrationHigh( 0 )
@@ -188,8 +190,8 @@ public:
 	virtual void				Shell_UpdateClientCountdown( int countdown ) = 0;
 	virtual void				Shell_UpdateLeaderboard( const idLeaderboardCallback* callback ) = 0;
 	virtual void				Shell_SetGameComplete() = 0;
-	virtual bool                SkipCinematicScene() = 0;
-	virtual bool                CheckInCinematic() = 0;
+	virtual bool				SkipCinematicScene() = 0;
+	virtual bool				CheckInCinematic() = 0;
 };
 
 extern idGame* 					game;
@@ -237,12 +239,13 @@ public:
 
 	// These are the canonical idDict to parameter parsing routines used by both the game and tools.
 	virtual void				ParseSpawnArgsToRenderLight( const idDict* args, renderLight_t* renderLight );
-	virtual void				ParseSpawnArgsToRenderEntity( const idDict* args, renderEntity_t* renderEntity );
+	virtual void				ParseSpawnArgsToRenderEntity( const idDict* args, renderEntity_t* renderEntity, const idDeclEntityDef* def = NULL );
+	virtual void				ParseSpawnArgsToRenderEnvprobe( const idDict* args, renderEnvironmentProbe_t* renderEnvprobe ); // RB
 	virtual void				ParseSpawnArgsToRefSound( const idDict* args, refSound_t* refSound );
 
 	// Animation system calls for non-game based skeletal rendering.
 	virtual idRenderModel* 		ANIM_GetModelFromEntityDef( const char* classname );
-	virtual const idVec3&		 ANIM_GetModelOffsetFromEntityDef( const char* classname );
+	virtual const idVec3&		ANIM_GetModelOffsetFromEntityDef( const char* classname );
 	virtual idRenderModel* 		ANIM_GetModelFromEntityDef( const idDict* args );
 	virtual idRenderModel* 		ANIM_GetModelFromName( const char* modelName );
 	virtual const idMD5Anim* 	ANIM_GetAnimFromEntityDef( const char* classname, const char* animname );
@@ -302,6 +305,7 @@ public:
 	virtual void				MapSave( const char* path = NULL ) const;
 	virtual void				MapSetEntityKeyVal( const char* name, const char* key, const char* val ) const ;
 	virtual void				MapCopyDictToEntity( const char* name, const idDict* dict ) const;
+	virtual void				MapCopyDictToEntityAtOrigin( const idVec3& org, const idDict* dict ) const;
 	virtual int					MapGetUniqueMatchingKeyVals( const char* key, const char* list[], const int max ) const;
 	virtual void				MapAddEntity( const idDict* dict ) const;
 	virtual int					MapGetEntitiesMatchingClassWithString( const char* classname, const char* match, const char* list[], const int max ) const;

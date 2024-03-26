@@ -26,8 +26,8 @@ If you have questions concerning this license or the applicable additional terms
 ===========================================================================
 */
 
-#pragma hdrstop
 #include "precompiled.h"
+#pragma hdrstop
 
 
 #include "../Game_local.h"
@@ -143,7 +143,6 @@ idSaveGame::WriteDecls
 */
 void idSaveGame::WriteDecls()
 {
-	//int start = file->Tell();
 	// Write out all loaded decls
 	for( int t = 0; t < declManager->GetNumDeclTypes(); t++ )
 	{
@@ -160,11 +159,9 @@ void idSaveGame::WriteDecls()
 				continue;
 			}
 			WriteString( declName );
-			//common->Printf("WriteDecls # %d name %s\n", t, declName);
 		}
 		WriteString( 0 );
 	}
-	//common->Printf("idSaveGame::WriteDecls %d bytes, @%d\n", file->Tell() - start, start); //Npi debug
 }
 
 /*
@@ -174,14 +171,11 @@ idSaveGame::WriteObjectList
 */
 void idSaveGame::WriteObjectList()
 {
-	//int start = file->Tell();
-	//common->Printf("idSaveGame::WriteObjectList() start num=%d @%d\n", objects.Num() - 1, file->Tell()); //Npi debug
 	WriteInt( objects.Num() - 1 );
 	for( int i = 1; i < objects.Num(); i++ )
 	{
 		WriteString( objects[ i ]->GetClassname() );
 	}
-	//common->Printf("idSaveGame::WriteObjectList %d bytes, @%d\n", file->Tell() - start, start); //Npi debug
 }
 
 /*
@@ -457,25 +451,20 @@ void idSaveGame::WriteDict( const idDict* dict )
 	int num;
 	int i;
 	const idKeyValue* kv;
-	//int posi = file->Tell();
 
 	if( !dict )
 	{
 		WriteInt( -1 );
-		//common->Printf("idSaveGame::WriteDict num(-1) dict @%d\n", posi); //Npi debug
 	}
 	else
 	{
 		num = dict->GetNumKeyVals();
-		//common->Printf("idSaveGame::WriteDict num(%d) dict @%d\n", num, posi); //Npi debug
 		WriteInt( num );
 		for( i = 0; i < num; i++ )
 		{
-			//posi = file->Tell();
 			kv = dict->GetKeyVal( i );
 			WriteString( kv->GetKey() );
 			WriteString( kv->GetValue() );
-			//common->Printf("idSaveGame::WriteDict #%d %s=%s @%d\n", i, kv->GetKey().c_str(), kv->GetValue().c_str(), posi); //Npi debug
 		}
 	}
 }
@@ -741,6 +730,21 @@ void idSaveGame::WriteRenderLight( const renderLight_t& renderLight )
 		WriteInt( 0 );
 	}
 }
+
+// RB begin
+void idSaveGame::WriteRenderEnvprobe( const renderEnvironmentProbe_t& renderEnvprobe )
+{
+	WriteVec3( renderEnvprobe.origin );
+
+	WriteInt( renderEnvprobe.suppressEnvprobeInViewID );
+	WriteInt( renderEnvprobe.allowEnvprobeInViewID );
+
+	for( int i = 0; i < MAX_ENTITY_SHADER_PARMS; i++ )
+	{
+		WriteFloat( renderEnvprobe.shaderParms[ i ] );
+	}
+}
+// Rb end
 
 /*
 ================
@@ -1161,7 +1165,7 @@ void idRestoreGame::RestoreObjects()
 	// regenerate render entities and render lights because are not saved
 	for( i = 1; i < objects.Num(); i++ )
 	{
-		if( objects[ i ] != NULL && objects[ i ]->IsType( idEntity::Type ) )
+		if( objects[ i ]->IsType( idEntity::Type ) )
 		{
 			idEntity* ent = static_cast<idEntity*>( objects[ i ] );
 			ent->UpdateVisuals();
@@ -1320,7 +1324,6 @@ void idRestoreGame::ReadString( idStr& string )
 {
 	string.Empty();
 
-	int start = file->Tell(); //Carl debug
 	int offset = -1;
 	ReadInt( offset );
 
@@ -1331,8 +1334,6 @@ void idRestoreGame::ReadString( idStr& string )
 
 	stringFile->Seek( offset, FS_SEEK_SET );
 	stringFile->ReadString( string );
-
-	//common->Printf("  ReadString(\"%s\") 4 bytes, start %d offset %d\n", string.c_str(), start, offset ); //Carl debug
 
 	return;
 }
@@ -1782,6 +1783,21 @@ void idRestoreGame::ReadRenderLight( renderLight_t& renderLight )
 	ReadInt( index );
 	renderLight.referenceSound = gameSoundWorld->EmitterForIndex( index );
 }
+
+// RB begin
+void idRestoreGame::ReadRenderEnvprobe( renderEnvironmentProbe_t& renderEnvprobe )
+{
+	ReadVec3( renderEnvprobe.origin );
+
+	ReadInt( renderEnvprobe.suppressEnvprobeInViewID );
+	ReadInt( renderEnvprobe.allowEnvprobeInViewID );
+
+	for( int i = 0; i < MAX_ENTITY_SHADER_PARMS; i++ )
+	{
+		ReadFloat( renderEnvprobe.shaderParms[ i ] );
+	}
+}
+// RB end
 
 /*
 ================

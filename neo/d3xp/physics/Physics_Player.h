@@ -207,7 +207,6 @@ public:
 private:
 	float					CmdScale( const usercmd_t& cmd ) const;
 	void					Accelerate( const idVec3& wishdir, const float wishspeed, const float accel );
-
 	bool					SlideMove( bool gravity, bool stepUp, bool stepDown, bool push );
 	void					Friction();
 	void					WaterJumpMove();

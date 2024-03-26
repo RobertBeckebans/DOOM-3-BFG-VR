@@ -3,7 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
-Copyright (C) 2012-2014 Robert Beckebans
+Copyright (C) 2012-2021 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -67,6 +67,7 @@ SURFACES
 class idRenderWorldLocal;
 struct viewEntity_t;
 struct viewLight_t;
+struct viewEnvprobe_t;
 
 // drawSurf_t structures command the back end to render surfaces
 // a given srfTriangles_t may be used with multiple viewEntity_t,
@@ -102,9 +103,12 @@ struct areaReference_t
 	areaReference_t* 		areaNext;				// chain in the area
 	areaReference_t* 		areaPrev;
 	areaReference_t* 		ownerNext;				// chain on either the entityDef or lightDef
-	idRenderEntityLocal* 	entity;					// only one of entity / light will be non-NULL
-	idRenderLightLocal* 	light;					// only one of entity / light will be non-NULL
-	struct portalArea_s*		area;					// so owners can find all the areas they are in
+
+	idRenderEntityLocal* 	entity;					// only one of entity / light / envprobe will be non-NULL
+	idRenderLightLocal* 	light;					// only one of entity / light / envprobe will be non-NULL
+	RenderEnvprobeLocal*	envprobe;				// only one of entity / light / envprobe will be non-NULL
+
+	struct portalArea_s*		area;				// so owners can find all the areas they are in
 };
 
 
@@ -121,6 +125,19 @@ public:
 	virtual int				GetIndex() = 0;
 };
 
+// RB : RennderEnvprobe should become the new public interface replacing the qhandle_t to envprobe defs in the idRenderWorld interface
+class RenderEnvprobe
+{
+public:
+	virtual					~RenderEnvprobe() {}
+
+	virtual void			FreeRenderEnvprobe() = 0;
+	virtual void			UpdateRenderEnvprobe( const renderEnvironmentProbe_t* ep, bool forceUpdate = false ) = 0;
+	virtual void			GetRenderEnvprobe( renderEnvironmentProbe_t* ep ) = 0;
+	virtual void			ForceUpdate() = 0;
+	virtual int				GetIndex() = 0;
+};
+// RB end
 
 // idRenderEntity should become the new public interface replacing the qhandle_t to entity defs in the idRenderWorld interface
 class idRenderEntity
@@ -193,6 +210,53 @@ public:
 	struct doublePortal_s* 	foggedPortals;
 };
 
+
+// RB begin
+class RenderEnvprobeLocal : public RenderEnvprobe
+{
+public:
+	RenderEnvprobeLocal();
+
+	virtual void			FreeRenderEnvprobe() override;
+	virtual void			UpdateRenderEnvprobe( const renderEnvironmentProbe_t* ep, bool forceUpdate = false ) override;
+	virtual void			GetRenderEnvprobe( renderEnvironmentProbe_t* ep ) override;
+	virtual void			ForceUpdate() override;
+	virtual int				GetIndex() override;
+
+	renderEnvironmentProbe_t	parms;					// specification
+
+	bool						envprobeHasMoved;		// the light has changed its position since it was
+	// first added, so the prelight model is not valid
+	idRenderWorldLocal* 		world;
+	int							index;					// in world envprobeDefs
+
+	int							areaNum;				// if not -1, we may be able to cull all the envprobe's
+	// interactions if !viewDef->connectedAreas[areaNum]
+
+	int							lastModifiedFrameNum;	// to determine if it is constantly changing,
+	// and should go in the dynamic frame memory, or kept
+	// in the cached memory
+	bool						archived;				// for demo writing
+
+	// derived information
+	//idPlane						lightProject[4];		// old style light projection where Z and W are flipped and projected lights lightProject[3] is divided by ( zNear + zFar )
+	//idRenderMatrix				baseLightProject;		// global xyz1 to projected light strq
+	idRenderMatrix				inverseBaseProbeProject;// transforms the zero-to-one cube to exactly cover the light in world space
+
+	idBounds					globalProbeBounds;
+
+	areaReference_t* 			references;				// each area the light is present in will have a lightRef
+	//idInteraction* 			firstInteraction;		// doubly linked list
+	//idInteraction* 			lastInteraction;
+
+	idImage* 					irradianceImage;		// cubemap image used for diffuse IBL by backend
+	idImage* 					radianceImage;			// cubemap image used for specular IBL by backend
+
+	// temporary helpers
+	int							viewCount;				// if == tr.viewCount, the envprobe is on the viewDef->viewEnvprobes list
+	viewEnvprobe_t* 			viewEnvprobe;
+};
+// RB end
 
 class idRenderEntityLocal : public idRenderEntity
 {
@@ -351,11 +415,96 @@ struct viewEntity_t
 	// be linked to the lights or added to the drawsurf list in a serial code section
 	drawSurf_t* 			drawSurfs;
 
+	// RB: use light grid of the best area this entity is in
+	bool					useLightGrid;
+	idImage* 				lightGridAtlasImage;
+	int						lightGridAtlasSingleProbeSize; // including border
+	int						lightGridAtlasBorderSize;
+
+	idVec3					lightGridOrigin;
+	idVec3					lightGridSize;
+	int						lightGridBounds[3];
+	// RB end
+
 	// R_AddSingleModel will build a chain of parameters here to setup shadow volumes
 	staticShadowVolumeParms_t* 		staticShadowVolumes;
 	dynamicShadowVolumeParms_t* 	dynamicShadowVolumes;
 };
 
+// RB: viewEnvprobes are allocated on the frame temporary stack memory
+// a viewEnvprobe contains everything that the back end needs out of an RenderEnvprobeLocal,
+// which the front end may be modifying simultaniously if running in SMP mode.
+
+// this structure will be especially helpful when we switch RBDOOM-3-BFG to forward cluster shading
+// because then we can evaluate all viewEnvprobes properly in each pixel shader along with all other lighting information
+struct viewEnvprobe_t
+{
+	viewEnvprobe_t* 		next;
+
+	// back end should NOT reference the lightDef, because it can change when running SMP
+	RenderEnvprobeLocal* 	envprobeDef;
+
+	// for scissor clipping, local inside renderView viewport
+	// scissorRect.Empty() is true if the viewEntity_t was never actually
+	// seen through any portals
+	idScreenRect			scissorRect;
+
+	// R_AddSingleEnvprobe() determined that the light isn't actually needed
+	bool					removeFromList;
+
+	idVec3					globalOrigin;				// global envprobe origin used by backend
+	idBounds				globalProbeBounds;
+
+	idRenderMatrix			inverseBaseProbeProject;	// the matrix for deforming the 'zeroOneCubeModel' to exactly cover the light volume in world space
+	idImage* 				irradianceImage;			// cubemap image used for diffuse IBL by backend
+	idImage* 				radianceImage;				// cubemap image used for specular IBL by backend
+};
+
+struct calcEnvprobeParms_t
+{
+	// input
+	byte*							radiance[6];			// HDR RGB16F standard OpenGL cubemap sides
+	int								freeRadiance;
+	int								samples;
+
+	int								outWidth;
+	int								outHeight;
+
+	bool							printProgress;
+	int								printWidth;
+	int								printHeight;
+
+	idStr							filename;
+
+	// output
+	halfFloat_t*					outBuffer;				// HDR R11G11B11F packed octahedron atlas
+	int								time;					// execution time in milliseconds
+};
+
+
+#define STORE_LIGHTGRID_SHDATA 0
+
+static const int LIGHTGRID_IRRADIANCE_BORDER_SIZE = 2;	// one pixel border all around the octahedron so 2 on each side
+static const int LIGHTGRID_IRRADIANCE_SIZE = 14 + LIGHTGRID_IRRADIANCE_BORDER_SIZE;
+
+struct calcLightGridPointParms_t
+{
+	// input
+	byte*							radiance[6];			// HDR RGB16F standard OpenGL cubemap sides
+	int								gridCoord[3];
+
+	int								outWidth;				// LIGHTGRID_IRRADIANCE_SIZE
+	int								outHeight;
+
+	// output
+#if STORE_LIGHTGRID_SHDATA
+	SphericalHarmonicsT<idVec3, 4>	shRadiance;				// L4 Spherical Harmonics
+#endif
+
+	halfFloat_t*					outBuffer;				// HDR R11G11B11F octahedron LIGHTGRID_IRRADIANCE_SIZE^2
+	int								time;					// execution time in milliseconds
+};
+// RB end
 
 const int	MAX_CLIP_PLANES	= 1;				// we may expand this to six for some subview issues
 
@@ -463,6 +612,18 @@ struct viewDef_t
 	// crossing a closed door.  This is used to avoid drawing interactions
 	// when the light is behind a closed door.
 	bool* 				connectedAreas;
+
+	// RB: collect environment probes like lights
+	viewEnvprobe_t*		viewEnvprobes;
+
+	// RB: nearest probe for now
+	idBounds			globalProbeBounds;
+	idRenderMatrix		inverseBaseEnvProbeProject;	// the matrix for deforming the 'zeroOneCubeModel' to exactly cover the environent probe volume in world space
+	idImage* 			irradianceImage;			// cubemap image used for diffuse IBL by backend
+	idImage* 			radianceImages[3];			// cubemap image used for specular IBL by backend
+	idVec4				radianceImageBlends;		// blending weights
+
+	Framebuffer*		targetRender;				// The framebuffer to render to
 };
 
 
@@ -692,13 +853,14 @@ public:
 	virtual void			DrawBigChar( int x, int y, int ch );
 	virtual void			DrawBigStringExt( int x, int y, const char* string, const idVec4& setColor, bool forceColor );
 
-	virtual const emptyCommand_t* 	SwapCommandBuffers( uint64* frontEndMicroSec, uint64* backEndMicroSec, uint64* shadowMicroSec, uint64* gpuMicroSec );
+	virtual const emptyCommand_t* 	SwapCommandBuffers( uint64* frontEndMicroSec, uint64* backEndMicroSec, uint64* shadowMicroSec, uint64* gpuMicroSec, backEndCounters_t* bc, performanceCounters_t* pc );
 
-	virtual void			SwapCommandBuffers_FinishRendering( uint64* frontEndMicroSec, uint64* backEndMicroSec, uint64* shadowMicroSec, uint64* gpuMicroSec );
+	virtual void			SwapCommandBuffers_FinishRendering( uint64* frontEndMicroSec, uint64* backEndMicroSec, uint64* shadowMicroSec, uint64* gpuMicroSec, backEndCounters_t* bc, performanceCounters_t* pc );
 	virtual const emptyCommand_t* 	SwapCommandBuffers_FinishCommandBuffers();
 
 	virtual void			RenderCommandBuffers( const emptyCommand_t* commandBuffers );
 	virtual void			TakeScreenshot( int width, int height, const char* fileName, int downSample, renderView_t* ref, int exten );
+	virtual byte*			CaptureRenderToBuffer( int width, int height, renderView_t* ref );
 	virtual void			CropRenderSize( int width, int height );
 	virtual void			CaptureRenderToImage( const char* imageName, bool clearColorAfterCopy = false );
 	virtual void			CaptureRenderToFile( const char* fileName, bool fixAlpha );
@@ -730,6 +892,7 @@ public:
 	bool					registered;		// cleared at shutdown, set at InitOpenGL
 
 	bool					takingScreenshot;
+	bool					takingEnvprobe;
 
 	int						frameCount;		// incremented every frame
 	int						viewCount;		// incremented every view (twice a scene if subviewed)
@@ -777,8 +940,11 @@ public:
 
 	unsigned short			gammaTable[256];	// brightness / gamma modify this
 
+	idMat3					cubeAxis[6]; // RB
+
 	srfTriangles_t* 		unitSquareTriangles;
 	srfTriangles_t* 		zeroOneCubeTriangles;
+	srfTriangles_t* 		zeroOneSphereTriangles;
 	srfTriangles_t* 		testImageTriangles;
 	srfTriangles_t*			hudTriangles; // Koz hud mesh
 
@@ -787,18 +953,25 @@ public:
 	// which are copied over from the frame that was just swapped.
 	drawSurf_t				unitSquareSurface_;
 	drawSurf_t				zeroOneCubeSurface_;
+	drawSurf_t				zeroOneSphereSurface_;
 	drawSurf_t				testImageSurface_;
 	drawSurf_t				hudSurface_;// Koz hud mesh
 
 	idParallelJobList* 		frontEndJobList;
 
-	unsigned				timerQueryId;		// for GL_TIME_ELAPSED_EXT queries
+	// RB irradiance and GGX background jobs
+	idParallelJobList* 					envprobeJobList;
+	idList<calcEnvprobeParms_t*>		envprobeJobs;
+	idList<calcLightGridPointParms_t*>	lightGridJobs;
+
 private:
+	unsigned				timerQueryId;		// for GL_TIME_ELAPSED_EXT queries
+
 	bool					bInitialized;
 };
 
-extern idRenderBackend		backEnd;
 extern idRenderSystemLocal	tr;
+extern idRenderBackend		backEnd;
 extern glconfig_t			glConfig;		// outside of TR since it shouldn't be cleared during ref re-init
 
 //
@@ -821,7 +994,7 @@ extern idCVar r_singleTriangle;				// only draw a single triangle per primitive
 extern idCVar r_logFile;					// number of frames to emit GL logs
 extern idCVar r_clear;						// force screen clear every frame
 extern idCVar r_subviewOnly;				// 1 = don't render main view, allowing subviews to be debugged
-extern idCVar r_lightScale;					// all light intensities are multiplied by this, which is normally 2
+extern idCVar r_lightScale;					// all light intensities are multiplied by this, which is normally 3
 extern idCVar r_flareSize;					// scale the flare deforms from the material def
 
 extern idCVar r_gamma;						// changes gamma tables
@@ -928,6 +1101,7 @@ extern idCVar r_testGammaBias;				// draw a grid pattern to test gamma levels
 
 extern idCVar r_singleLight;				// suppress all but one light
 extern idCVar r_singleEntity;				// suppress all but one entity
+extern idCVar r_singleEnvprobe;				// suppress all but one envprobe
 extern idCVar r_singleArea;					// only draw the portal area the view is actually in
 extern idCVar r_singleSurface;				// suppress all but one surface on each entity
 extern idCVar r_shadowPolygonOffset;		// bias value added to depth test for stencil shadow drawing
@@ -1096,6 +1270,10 @@ void R_DeriveLightData( idRenderLightLocal* light );
 void R_RenderLightFrustum( const renderLight_t& renderLight, idPlane lightFrustum[6] );
 
 srfTriangles_t* R_PolytopeSurface( int numPlanes, const idPlane* planes, idWinding** windings );
+
+void R_CreateEnvprobeRefs( RenderEnvprobeLocal* probe );
+void R_FreeEnvprobeDefDerivedData( RenderEnvprobeLocal* probe );
+
 // RB end
 void R_CreateLightRefs( idRenderLightLocal* light );
 void R_FreeLightDefDerivedData( idRenderLightLocal* light );
@@ -1104,7 +1282,6 @@ void R_FreeDerivedData();
 void R_ReCreateWorldReferences();
 void R_CheckForEntityDefsUsingModel( idRenderModel* model );
 void R_ModulateLights_f( const idCmdArgs& args );
-
 
 /*
 ============================================================
@@ -1116,6 +1293,19 @@ RENDERWORLD_PORTALS
 
 viewEntity_t* R_SetEntityDefViewEntity( idRenderEntityLocal* def );
 viewLight_t* R_SetLightDefViewLight( idRenderLightLocal* def );
+
+/*
+============================================================
+
+RENDERWORLD_ENVPROBES
+
+============================================================
+*/
+
+void R_SampleCubeMapHDR( const idVec3& dir, int size, byte* buffers[6], float result[3], float& u, float& v );
+void R_SampleCubeMapHDR16F( const idVec3& dir, int size, halfFloat_t* buffers[6], float result[3], float& u, float& v );
+
+idVec2 NormalizedOctCoord( int x, int y, const int probeSideLength );
 
 /*
 ====================================================================
@@ -1265,6 +1455,9 @@ void				R_InitDrawSurfFromTri( drawSurf_t& ds, srfTriangles_t& tri );
 // time, rather than being re-created each frame in the frame temporary buffers.
 void				R_CreateStaticBuffersForTri( srfTriangles_t& tri );
 
+// RB
+idVec3				R_ClosestPointPointTriangle( const idVec3& point, const idVec3& vertex1, const idVec3& vertex2, const idVec3& vertex3 );
+
 // deformable meshes precalculate as much as possible from a base frame, then generate
 // complete srfTriangles_t from just a new set of vertexes
 struct deformInfo_t
@@ -1323,15 +1516,6 @@ struct localTrace_t
 localTrace_t R_LocalTrace( const idVec3& start, const idVec3& end, const float radius, const srfTriangles_t* tri );
 void RB_ShowTrace( drawSurf_t** drawSurfs, int numDrawSurfs );
 
-/*
-=============================================================
-
-BACKEND
-
-=============================================================
-*/
-
-void RB_ExecuteBackEndCommands( const emptyCommand_t* cmds );
 
 /*
 ============================================================
@@ -1342,11 +1526,6 @@ TR_BACKEND_DRAW
 */
 
 void RB_SetMVP( const idRenderMatrix& mvp );
-void RB_DrawElementsWithCounters( const drawSurf_t* surf );
-void RB_DrawViewInternal( const viewDef_t* viewDef, const int stereoEye );
-void RB_DrawView( const void* data, const int stereoEye );
-void RB_CopyRender( const void* data );
-void RB_PostProcess( const void* data );
 
 /*
 =============================================================
@@ -1364,14 +1543,12 @@ void RB_ClearDebugLines( int time );
 void RB_AddDebugPolygon( const idVec4& color, const idWinding& winding, const int lifeTime, const bool depthTest );
 void RB_ClearDebugPolygons( int time );
 void RB_DrawBounds( const idBounds& bounds );
-void RB_ShowLights( drawSurf_t** drawSurfs, int numDrawSurfs );
-void RB_ShowLightCount( drawSurf_t** drawSurfs, int numDrawSurfs );
-void RB_PolygonClear();
-void RB_ScanStencilBuffer();
-void RB_ShowDestinationAlpha();
-void RB_ShowOverdraw();
-void RB_RenderDebugTools( drawSurf_t** drawSurfs, int numDrawSurfs );
+
 void RB_ShutdownDebugTools();
+void RB_SetVertexColorParms( stageVertexColor_t svc );
+
+
+
 
 //=============================================
 
@@ -1383,8 +1560,6 @@ void RB_ShutdownDebugTools();
 #include "jobs/dynamicshadowvolume/DynamicShadowVolume.h"
 #include "RenderBackend.h"
 #include "GLMatrix.h"
-
-
 
 #include "BufferObject.h"
 #include "RenderProgs.h"

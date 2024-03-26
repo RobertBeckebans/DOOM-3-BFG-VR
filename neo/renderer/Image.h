@@ -545,6 +545,7 @@ public:
 	idImage* 			alphaNotchImage;			// 2x1 texture with just 1110 and 1111 with point sampling
 	idImage* 			whiteImage;					// full of 0xff
 	idImage* 			blackImage;					// full of 0x00
+	idImage* 			cyanImage;					// cyan
 	idImage* 			noFalloffImage;				// all 255, but zero clamped
 	idImage* 			fogImage;					// increasing alpha is denser fog
 	idImage* 			fogEnterImage;				// adjust fogImage alpha based on terminator plane
@@ -554,7 +555,14 @@ public:
 	idImage*			jitterImage4;
 	idImage*			jitterImage16;
 	idImage*			randomImage256;
+	idImage*			blueNoiseImage256;
 	idImage*			imguiFontImage;
+
+	idImage* 			chromeSpecImage;				// only for the PBR color checker chart
+	idImage* 			plasticSpecImage;				// only for the PBR color checker chart
+	idImage*			brdfLutImage;
+	idImage*			defaultUACIrradianceCube;
+	idImage*			defaultUACRadianceCube;
 	// RB end
 	idImage* 			scratchImage;
 	idImage* 			scratchImage2;

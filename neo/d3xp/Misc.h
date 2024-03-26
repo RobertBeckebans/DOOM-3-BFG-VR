@@ -314,7 +314,7 @@ private:
 
   idStaticEntity
 
-  func_static
+  func_static or misc_model
 ===============================================================================
 */
 

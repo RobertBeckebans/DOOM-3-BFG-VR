@@ -3,7 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
-Copyright (C) 2013-2014 Robert Beckebans
+Copyright (C) 2013-2021 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -27,8 +27,8 @@ If you have questions concerning this license or the applicable additional terms
 ===========================================================================
 */
 
-#pragma hdrstop
 #include "precompiled.h"
+#pragma hdrstop
 
 #include "RenderCommon.h"
 
@@ -729,6 +729,151 @@ void R_CreateLightRefs( idRenderLightLocal* light )
 /*
 =================================================================================
 
+ENVPROBE DEFS
+
+=================================================================================
+*/
+
+void R_DeriveEnvprobeData( RenderEnvprobeLocal* probe )
+{
+	idStr basename = probe->world->mapName;
+	basename.StripFileExtension();
+
+	idStr fullname;
+
+	// determine the areaNum for the envprobe origin, which may let us
+	// cull the envprobe if it is behind a closed door
+	int areaNum = probe->world->PointInArea( probe->parms.origin );
+
+	if( areaNum != -1 )
+	{
+		// HACK: this should be in the gamecode and set by the entity properties
+		probe->globalProbeBounds = probe->world->AreaBounds( areaNum );
+	}
+	else
+	{
+		probe->globalProbeBounds.Clear();
+	}
+
+	// the probe index and entity name are bad indicators to cache the light data
+	// use the snapped world position instead
+	idVec3 point = probe->parms.origin;
+	point.SnapInt();
+
+	// load preconvolved cubemaps as mipmap chain packed octahedrons
+	fullname.Format( "env/%s/area%i_envprobe_%i_%i_%i_amb", basename.c_str(), areaNum, int( point.x ), int( point.y ), int( point.z ) );
+	fullname.ReplaceChar( '-', '_' );
+
+	probe->irradianceImage = globalImages->ImageFromFile( fullname, TF_LINEAR, TR_CLAMP, TD_R11G11B10F, CF_2D_PACKED_MIPCHAIN );
+
+	fullname.Format( "env/%s/area%i_envprobe_%i_%i_%i_spec", basename.c_str(), areaNum, int( point.x ), int( point.y ), int( point.z ) );
+	fullname.ReplaceChar( '-', '_' );
+
+	probe->radianceImage = globalImages->ImageFromFile( fullname, TF_DEFAULT, TR_CLAMP, TD_R11G11B10F, CF_2D_PACKED_MIPCHAIN );
+
+	// ------------------------------------
+	// compute the probe projection matrix
+	// ------------------------------------
+
+
+
+	idMat3 axis;
+	axis.Identity();
+
+	idRenderMatrix modelRenderMatrix;
+	idRenderMatrix::CreateFromOriginAxis( vec3_origin, axis, modelRenderMatrix );
+
+	// render from mins to maxs for debug rendering
+	//idRenderMatrix::CreateFromOriginAxis( probe->globalProbeBounds[0], axis, modelRenderMatrix );
+
+	idRenderMatrix inverseModelMatrix;
+	if( !idRenderMatrix::Inverse( modelRenderMatrix, inverseModelMatrix ) )
+	{
+		idLib::Warning( "lightMatrix invert failed" );
+	}
+
+	// move local bounds to center
+	idBounds localBounds;
+
+#if 0
+	idVec3 corners[8];
+	probe->globalProbeBounds.ToPoints( corners );
+
+	idVec3 corners2[8];
+	for( int i = 0; i < 8; i++ )
+	{
+		idVec4 p( corners[i].x, corners[i].y, corners[i].z, 1.0f );
+		idVec4 o;
+
+		inverseModelMatrix.TransformPoint( p, o );
+
+		corners2[i].Set( o.x, o.y, o.z );
+	}
+
+	localBounds.FromPoints( corners2, 8 );
+#else
+	//idVec3 center = probe->globalProbeBounds.GetCenter();
+
+	// offset it so it sits on 0 0 0
+	//center += center;
+
+	localBounds[0] = probe->globalProbeBounds[0] * 2;
+	localBounds[1] = probe->globalProbeBounds[1] * 2;
+
+	//idRenderMatrix::CreateFromOriginAxis( -probe->globalProbeBounds[0] * 2, axis, modelRenderMatrix );
+#endif
+
+	// calculate the matrix that transforms the unit cube to exactly cover the model in world space
+	idRenderMatrix::OffsetScaleForBounds( modelRenderMatrix, localBounds, probe->inverseBaseProbeProject );
+
+	// calculate the global model bounds by inverse projecting the unit cube with the 'inverseBaseModelProject'
+	//idRenderMatrix::ProjectedBounds( probe->globalProbeBounds, probe->inverseBaseProbeProject, bounds_unitCube, false );
+}
+
+void R_CreateEnvprobeRefs( RenderEnvprobeLocal* probe )
+{
+	// derive envprobe data
+	R_DeriveEnvprobeData( probe );
+
+	// determine the areaNum for the envprobe origin, which may let us
+	// cull the envprobe if it is behind a closed door
+	probe->areaNum = probe->world->PointInArea( probe->parms.origin );
+
+	// bump the view count so we can tell if an
+	// area already has a reference
+	tr.viewCount++;
+
+	// push the probe down the BSP tree into areas
+	probe->world->PushEnvprobeIntoTree_r( probe, 0 );
+}
+
+void R_FreeEnvprobeDefDerivedData( RenderEnvprobeLocal* probe )
+{
+	// TODO free all the interactions
+	//while( ldef->firstInteraction != NULL )
+	//{
+	//	ldef->firstInteraction->UnlinkAndFree();
+	//}
+
+	// free all the references to the envprobe
+	areaReference_t* nextRef = NULL;
+	for( areaReference_t* lref = probe->references; lref != NULL; lref = nextRef )
+	{
+		nextRef = lref->ownerNext;
+
+		// unlink from the area
+		lref->areaNext->areaPrev = lref->areaPrev;
+		lref->areaPrev->areaNext = lref->areaNext;
+
+		// put it back on the free list for reuse
+		probe->world->areaReferenceAllocator.Free( lref );
+	}
+	probe->references = NULL;
+}
+
+/*
+=================================================================================
+
 WORLD MODEL & LIGHT DEFS
 
 =================================================================================
@@ -766,6 +911,18 @@ void R_FreeDerivedData()
 			}
 			R_FreeLightDefDerivedData( light );
 		}
+
+		// RB begin
+		for( int i = 0; i < rw->envprobeDefs.Num(); i++ )
+		{
+			RenderEnvprobeLocal* probe = rw->envprobeDefs[i];
+			if( probe == NULL )
+			{
+				continue;
+			}
+			R_FreeEnvprobeDefDerivedData( probe );
+		}
+		// RB end
 	}
 }
 
@@ -845,6 +1002,21 @@ void R_ReCreateWorldReferences()
 			light->world->FreeLightDef( i );
 			rw->UpdateLightDef( i, &parms );
 		}
+
+		// RB begin
+		for( int i = 0; i < rw->envprobeDefs.Num(); i++ )
+		{
+			RenderEnvprobeLocal* probe = rw->envprobeDefs[i];
+			if( probe == NULL )
+			{
+				continue;
+			}
+			renderEnvironmentProbe_t parms = probe->parms;
+
+			probe->world->FreeLightDef( i );
+			rw->UpdateEnvprobeDef( i, &parms );
+		}
+		// RB end
 	}
 }
 

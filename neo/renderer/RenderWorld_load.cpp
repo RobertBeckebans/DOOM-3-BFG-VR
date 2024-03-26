@@ -3,6 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2015-2021 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -26,8 +27,8 @@ If you have questions concerning this license or the applicable additional terms
 ===========================================================================
 */
 
-#pragma hdrstop
 #include "precompiled.h"
+#pragma hdrstop
 
 #include "RenderCommon.h"
 
@@ -123,7 +124,7 @@ idRenderWorldLocal::ReadBinaryShadowModel
 */
 idRenderModel* idRenderWorldLocal::ReadBinaryModel( idFile* fileIn )
 {
-	idStr name;
+	idStrStatic< MAX_OSPATH > name;
 	fileIn->ReadString( name );
 	idRenderModel* model = renderModelManager->AllocModel();
 	model->InitEmpty( name );
@@ -313,7 +314,7 @@ idRenderWorldLocal::ReadBinaryShadowModel
 */
 idRenderModel* idRenderWorldLocal::ReadBinaryShadowModel( idFile* fileIn )
 {
-	idStr name;
+	idStrStatic< MAX_OSPATH > name;
 	fileIn->ReadString( name );
 	idRenderModel* model = renderModelManager->AllocModel();
 	model->InitEmpty( name );
@@ -417,10 +418,15 @@ void idRenderWorldLocal::SetupAreaRefs()
 	for( int i = 0; i < numPortalAreas; i++ )
 	{
 		portalAreas[i].areaNum = i;
+
 		portalAreas[i].lightRefs.areaNext =
 			portalAreas[i].lightRefs.areaPrev = &portalAreas[i].lightRefs;
+
 		portalAreas[i].entityRefs.areaNext =
 			portalAreas[i].entityRefs.areaPrev = &portalAreas[i].entityRefs;
+
+		portalAreas[i].envprobeRefs.areaNext =
+			portalAreas[i].envprobeRefs.areaPrev = &portalAreas[i].envprobeRefs;
 	}
 }
 
@@ -781,6 +787,18 @@ void idRenderWorldLocal::FreeDefs()
 		}
 	}
 
+	// RB: free all envprobeDefs
+	for( int i = 0; i < envprobeDefs.Num(); i++ )
+	{
+		RenderEnvprobeLocal* ep = envprobeDefs[i];
+		if( ep != NULL && ep->world == this )
+		{
+			FreeEnvprobeDef( i );
+			envprobeDefs[i] = NULL;
+		}
+	}
+	// RB end
+
 	// Reset decals and overlays
 	for( int i = 0; i < decals.Num(); i++ )
 	{
@@ -818,11 +836,11 @@ bool idRenderWorldLocal::InitFromMap( const char* name )
 	}
 
 	// load it
-	idStr filename = name;
+	idStrStatic< MAX_OSPATH > filename = name;
 	filename.SetFileExtension( PROC_FILE_EXT );
 
 	// check for generated file
-	idStr generatedFileName = filename;
+	idStrStatic< MAX_OSPATH > generatedFileName = filename;
 	generatedFileName.Insert( "generated/", 0 );
 	generatedFileName.SetFileExtension( "bproc" );
 
@@ -864,7 +882,7 @@ bool idRenderWorldLocal::InitFromMap( const char* name )
 			loaded = true;
 			for( int i = 0; i < numEntries; i++ )
 			{
-				idStr type;
+				idStrStatic< MAX_OSPATH > type;
 				file->ReadString( type );
 				type.ToLower();
 				if( type == "model" )
@@ -1065,7 +1083,6 @@ void idRenderWorldLocal::AddWorldModelEntities()
 	{
 		common->UpdateLevelLoadPacifier();
 
-
 		idRenderEntityLocal*	 def = new( TAG_RENDER_ENTITY ) idRenderEntityLocal;
 
 		// try and reuse a free spot
@@ -1117,7 +1134,11 @@ void idRenderWorldLocal::AddWorldModelEntities()
 
 		R_DeriveEntityData( def );
 
-		AddEntityRefToArea( def, &portalAreas[i] );
+		portalArea_t* area = &portalAreas[i];
+		AddEntityRefToArea( def, area );
+
+		// RB: remember BSP area AABB for quick lookup later
+		area->globalBounds = def->globalReferenceBounds;
 	}
 }
 

@@ -333,6 +333,17 @@ else()
 	
 endif()
 
+if(USE_SYSTEM_RAPIDJSON)
+	find_package(rapidjson REQUIRED)
+endif(USE_SYSTEM_RAPIDJSON)
+
+if (RAPIDJSON_FOUND)
+	include_directories("${RAPIDJSON_INCLUDE_DIRS}")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${RAPIDJSON_CXX_FLAGS}")
+else (RAPIDJSON_FOUND)
+	include_directories("libs/rapidjson/include")
+endif (RAPIDJSON_FOUND)
+
 if(WIN32)
 	if(CMAKE_SIZEOF_VOID_P EQUAL 4)
 		link_directories(${CMAKE_CURRENT_SOURCE_DIR}/libs/openvr/lib/win32)
@@ -612,6 +623,8 @@ set(OGGVORBIS_SOURCES
 	libs/oggvorbis/vorbissrc/bitrate.c
 	libs/oggvorbis/vorbissrc/vorbisfile.c)
 
+file(GLOB RAPIDJSON_INCLUDES libs/rapidjson/include/rapidjson/*.h)
+	
 file(GLOB SYS_INCLUDES sys/*.h)
 file(GLOB SYS_SOURCES sys/*.cpp)
 
@@ -634,6 +647,7 @@ set(GAMED3XP_INCLUDES
 	d3xp/Camera.h
 	#d3xp/EndLevel.h
 	d3xp/Entity.h
+	d3xp/EnvironmentProbe.h
 	d3xp/Fx.h
 	d3xp/Game.h
 	d3xp/GameEdit.h
@@ -671,6 +685,7 @@ set(GAMED3XP_SOURCES
 	d3xp/Camera.cpp
 	#d3xp/EndLevel.cpp
 	d3xp/Entity.cpp
+	d3xp/EnvironmentProbe.cpp
 	d3xp/Fx.cpp
 	d3xp/GameEdit.cpp
 	d3xp/Game_local.cpp
@@ -1187,6 +1202,7 @@ set(RBDOOM3_INCLUDES
 			${ZLIB_INCLUDES}
 			${MINIZIP_INCLUDES}
 			${GLEW_INCLUDES}
+			${RAPIDJSON_INCLUDES}
 			#${FREETYPE_SOURCES}
 			${SOUND_INCLUDES}
 			#${OGGVORBIS_INCLUDES}

@@ -3,6 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2014-2021 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -57,16 +58,73 @@ typedef struct doublePortal_s
 	struct doublePortal_s* 	nextFoggedPortal;
 } doublePortal_t;
 
+// RB: added Quake 3 style light grid
+// however this 2021 version features Spherical Harmonics instead of ambient + directed color
+struct lightGridPoint_t
+{
+	idVec3			origin;				// not saved to .proc
+	byte			valid;				// is not in the void
+
+	SphericalHarmonicsT<idVec3, 4>	shRadiance; // L4 Spherical Harmonics
+};
+
+class LightGrid
+{
+public:
+	idVec3					lightGridOrigin;
+	idVec3					lightGridSize;
+	int						lightGridBounds[3];
+
+	idList<lightGridPoint_t> lightGridPoints;
+
+	int						area;
+	idImage* 				irradianceImage;
+	int						imageSingleProbeSize; // including border
+	int						imageBorderSize;
+
+	LightGrid();
+
+	// setup light grid for given world bounds
+	void					SetupLightGrid( const idBounds& bounds, const char* baseName, const idRenderWorld* world, const idVec3& gridSize, int _area, int totalAreas, int maxProbes, bool printToConsole );
+
+	void					GetBaseGridCoord( const idVec3& origin, int gridCoord[3] );
+
+	int						GridCoordToProbeIndex( int gridCoord[3] );
+	void					ProbeIndexToGridCoord( const int probeIndex, int gridCoord[3] );
+
+	idVec3					GetGridCoordDebugColor( int gridCoord[3] );
+	idVec3					GetProbeIndexDebugColor( const int probeIndex );
+
+	int						CountValidGridPoints() const;
+
+	idImage*				GetIrradianceImage() const
+	{
+		return irradianceImage;
+	}
+
+	// fetch grid lighting on a per object basis
+	void					SetupEntityGridLighting( idRenderEntityLocal* def );
+
+private:
+	void					CalculateLightGridPointPositions( const idRenderWorld* world, int area );
+};
+// RB end
 
 typedef struct portalArea_s
 {
 	int				areaNum;
 	int				connectedAreaNum[NUM_PORTAL_ATTRIBUTES];	// if two areas have matching connectedAreaNum, they are
 	// not separated by a portal with the apropriate PS_BLOCK_* blockingBits
+
+	idBounds		globalBounds;	// RB: AABB of the BSP area used for light grid density
+
+	LightGrid		lightGrid;
+
 	int				viewCount;		// set by R_FindViewLightsAndEntities
 	portal_t* 		portals;		// never changes after load
 	areaReference_t	entityRefs;		// head/tail of doubly linked list, may change
 	areaReference_t	lightRefs;		// head/tail of doubly linked list, may change
+	areaReference_t	envprobeRefs;	// head/tail of doubly linked list, may change
 } portalArea_t;
 
 
@@ -115,6 +173,13 @@ public:
 	virtual	void			FreeLightDef( qhandle_t lightHandle );
 	virtual const renderLight_t* GetRenderLight( qhandle_t lightHandle ) const;
 
+	// RB: environment probes for IBL
+	virtual	qhandle_t		AddEnvprobeDef( const renderEnvironmentProbe_t* ep );
+	virtual	void			UpdateEnvprobeDef( qhandle_t envprobeHandle, const renderEnvironmentProbe_t* ep );
+	virtual	void			FreeEnvprobeDef( qhandle_t envprobeHandle );
+	virtual const renderEnvironmentProbe_t* GetRenderEnvprobe( qhandle_t envprobeHandle ) const;
+	// RB end
+
 	virtual bool			CheckAreaForPortalSky( int areaNum );
 
 	virtual	void			GenerateAllInteractions();
@@ -133,6 +198,7 @@ public:
 	virtual int				BoundsInAreas( const idBounds& bounds, int* areas, int maxAreas ) const;
 	virtual	int				NumPortalsInArea( int areaNum );
 	virtual exitPortal_t	GetPortal( int areaNum, int portalNum );
+	virtual	idBounds		AreaBounds( int areaNum ) const; // RB
 
 	virtual	guiPoint_t		GuiTrace( qhandle_t entityHandle, idAnimator* animator, const idVec3 start, const idVec3 end ) const; // Koz added animator
 	virtual bool			ModelTrace( modelTrace_t& trace, qhandle_t entityHandle, const idVec3& start, const idVec3& end, const float radius ) const;
@@ -175,8 +241,9 @@ public:
 
 	idList<idRenderModel*, TAG_MODEL>	localModels;
 
-	idList<idRenderEntityLocal*, TAG_ENTITY>	entityDefs;
-	idList<idRenderLightLocal*, TAG_LIGHT>		lightDefs;
+	idList<idRenderEntityLocal*, TAG_ENTITY>		entityDefs;
+	idList<idRenderLightLocal*, TAG_LIGHT>			lightDefs;
+	idList<RenderEnvprobeLocal*, TAG_ENVPROBE>		envprobeDefs; // RB
 
 	idBlockAlloc<areaReference_t, 1024> areaReferenceAllocator;
 	idBlockAlloc<idInteraction, 256>	interactionAllocator;
@@ -223,11 +290,31 @@ public:
 	//--------------------------
 	// RenderWorld_portals.cpp
 
+	// if we hit this many planes, we will just stop cropping the
+	// view down, which is still correct, just conservative
+	static const int MAX_PORTAL_PLANES	= 20;
+
+	struct portalStack_t
+	{
+		const portal_t* 		p;
+		const portalStack_t* 	next;
+		// positive side is outside the visible frustum
+		int						numPortalPlanes;
+		idPlane					portalPlanes[MAX_PORTAL_PLANES + 1];
+		idScreenRect			rect;
+	};
+
 	bool					CullEntityByPortals( const idRenderEntityLocal* entity, const portalStack_t* ps );
 	void					AddAreaViewEntities( int areaNum, const portalStack_t* ps );
 
 	bool					CullLightByPortals( const idRenderLightLocal* light, const portalStack_t* ps );
 	void					AddAreaViewLights( int areaNum, const portalStack_t* ps );
+
+	// RB begin
+	bool					CullEnvprobeByPortals( const RenderEnvprobeLocal* probe, const portalStack_t* ps );
+	void					AddAreaViewEnvprobes( int areaNum, const portalStack_t* ps );
+	// RB end
+
 	void					AddAreaToView( int areaNum, const portalStack_t* ps );
 	idScreenRect			ScreenRectFromWinding( const idWinding* w, const viewEntity_t* space );
 	bool					PortalIsFoggedOut( const portal_t* p );
@@ -260,6 +347,7 @@ public:
 
 	void					AddEntityRefToArea( idRenderEntityLocal* def, portalArea_t* area );
 	void					AddLightRefToArea( idRenderLightLocal* light, portalArea_t* area );
+	void					AddEnvprobeRefToArea( RenderEnvprobeLocal* probe, portalArea_t* area ); // RB
 
 	void					RecurseProcBSP_r( modelTrace_t* results, int parentNodeNum, int nodeNum, float p1f, float p2f, const idVec3& p1, const idVec3& p2 ) const;
 	void					BoundsInAreas_r( int nodeNum, const idBounds& bounds, int* areas, int* numAreas, int maxAreas ) const;
@@ -270,6 +358,7 @@ public:
 
 	void					PushFrustumIntoTree_r( idRenderEntityLocal* def, idRenderLightLocal* light, const frustumCorners_t& corners, int nodeNum );
 	void					PushFrustumIntoTree( idRenderEntityLocal* def, idRenderLightLocal* light, const idRenderMatrix& frustumTransform, const idBounds& frustumBounds );
+	void					PushEnvprobeIntoTree_r( RenderEnvprobeLocal* probe, int nodeNum ); // RB
 
 	idRenderModelDecal* 	AllocDecal( qhandle_t newEntityHandle, int startTime );
 	idRenderModelOverlay* 	AllocOverlay( qhandle_t newEntityHandle, int startTime );
@@ -277,6 +366,24 @@ public:
 	//-------------------------------
 	// tr_light.c
 	void					CreateLightDefInteractions( idRenderLightLocal* const ldef, const int renderViewID );
+
+// RB begin
+
+	//--------------------------
+	// RenderWorld_lightgrid.cpp
+
+//private:
+	void					SetupLightGrid();
+
+	void					WriteLightGridsToFile( const char* filename );
+	void					WriteLightGrid( idFile* fp, const LightGrid& lightGrid );
+
+	bool					LoadLightGridFile( const char* name );
+	void					LoadLightGridImages();
+
+	void					ParseLightGridPoints( idLexer* src, idFile* fileOut );
+	void					ReadBinaryLightGridPoints( idFile* file );
+// RB end
 };
 
 // if an entity / light combination has been evaluated and found to not genrate any surfaces or shadows,

@@ -3,6 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2014-2016 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -66,6 +67,7 @@ class idThread;
 class idEditEntities;
 class idLocationEntity;
 class idMenuHandler_Shell;
+class EnvironmentProbe; // RB
 
 const int MAX_CLIENTS			= MAX_PLAYERS;
 const int MAX_CLIENTS_IN_PVS	= MAX_CLIENTS >> 3;
@@ -75,6 +77,9 @@ const int ENTITYNUM_NONE		= MAX_GENTITIES - 1;
 const int ENTITYNUM_WORLD		= MAX_GENTITIES - 2;
 const int ENTITYNUM_MAX_NORMAL	= MAX_GENTITIES - 2;
 const int ENTITYNUM_FIRST_NON_REPLICATED	= ENTITYNUM_MAX_NORMAL - 256;
+
+// Admer: brush origin offsets for better TrenchBroom support
+constexpr const char* BRUSH_ORIGIN_KEY = "__brushOrigin";
 
 //============================================================================
 
@@ -703,6 +708,9 @@ private:
 	void					MapPopulate();
 	void					MapClear( bool clearClients );
 
+	// RB: spawn environment probes if there aren't any by default
+	void					PopulateEnvironmentProbes();
+
 	pvsHandle_t				GetClientPVS( idPlayer* player, pvsType_t type );
 	void					SetupPlayerPVS();
 	void					FreePlayerPVS();
@@ -711,8 +719,9 @@ private:
 	void					ShowTargets();
 	void					RunDebugInfo();
 
+	void					RunSharedThink();
+
 	void					InitScriptForMap();
-	// Koz made public void					SetScriptFPS( const float com_engineHz );
 	void					SpawnPlayer( int clientNum );
 
 	void					InitConsoleCommands();
@@ -903,6 +912,7 @@ const int	CINEMATIC_SKIP_DELAY	= SEC2MS( 2.0f );
 #include "Projectile.h"
 #include "Weapon.h"
 #include "Light.h"
+#include "EnvironmentProbe.h"
 #include "WorldSpawn.h"
 #include "Item.h"
 #include "PlayerView.h"

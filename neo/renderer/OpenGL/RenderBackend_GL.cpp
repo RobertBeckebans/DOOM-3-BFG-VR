@@ -147,6 +147,12 @@ static void CALLBACK DebugCallback( unsigned int source, unsigned int type,
 {
 	// it probably isn't safe to do an idLib::Printf at this point
 
+	if( type == GL_DEBUG_TYPE_ERROR )
+	{
+		OutputDebugString( message );
+		OutputDebugString( "\n" );
+	}
+
 	// RB: printf should be thread safe on Linux
 #if defined(_WIN32)
 	OutputDebugString( message );

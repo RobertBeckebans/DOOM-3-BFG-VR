@@ -160,7 +160,9 @@ const idEventDef EV_Player_ExitTeleporter( "exitTeleporter" );
 const idEventDef EV_Player_StopAudioLog( "stopAudioLog" );
 const idEventDef EV_Player_HideTip( "hideTip" );
 const idEventDef EV_Player_LevelTrigger( "levelTrigger" );
-const idEventDef EV_SpectatorTouch( "spectatorTouch", "et" );
+// RB: changed to internal event as it was not exposed to Doom Script by default and broke the automatic export
+const idEventDef EV_SpectatorTouch( "<spectatorTouch>", "et" );
+// RB end
 const idEventDef EV_Player_GiveInventoryItem( "giveInventoryItem", "s" );
 const idEventDef EV_Player_RemoveInventoryItem( "removeInventoryItem", "s" );
 const idEventDef EV_Player_GetIdealWeapon( "getIdealWeapon", NULL, 's' );
@@ -2521,7 +2523,6 @@ void idPlayer::Spawn()
 	{
 		headEnt->GetRenderEntity()->suppressSurfaceInViewID = entityNumber + 1;
 		headEnt->GetRenderEntity()->noSelfShadow = true;
-
 	}
 
 	if( common->IsMultiplayer() )
@@ -3822,7 +3823,6 @@ void idPlayer::Restart()
 
 	useInitialSpawns = true;
 	UpdateSkinSetup();
-
 }
 
 /*
@@ -4264,7 +4264,6 @@ void idPlayer::UpdateSkinSetup()
 	}
 }
 
-
 /*
 ===============
 idPlayer::UpdateHudStats
@@ -4663,10 +4662,7 @@ void idPlayer::DrawHUDVR( idMenuHandler_HUD* _hudManager )
 
 	weapon.GetEntity()->UpdateGUI();
 
-
-
 	renderSystem->CaptureRenderToImage( "_hudImage", true );
-
 }
 
 /*
@@ -7822,8 +7818,6 @@ void idPlayer::ClearFocus()
 	// Koz
 	commonVr->handInGui = false;
 	//weapon.GetEntity()->GetRenderEntity()->allowSurfaceInViewID = 0;
-
-
 }
 
 
@@ -9120,9 +9114,6 @@ idPlayer::UpdateDeltaViewAngles
 */
 void idPlayer::UpdateDeltaViewAngles( const idAngles& angles )
 {
-
-	//if ( game->isVR ) return;
-
 	// set the delta angle
 	idAngles delta;
 	for( int i = 0; i < 3; i++ )
@@ -15539,7 +15530,6 @@ idVec3	idPlayer::GunAcceleratingOffset()
 	return ofs;
 }
 
-
 /*
 ==============
 idPlayer::CalculateViewWeaponPos
@@ -15547,7 +15537,6 @@ idPlayer::CalculateViewWeaponPos
 Calculate the bobbing position of the view weapon
 ==============
 */
-
 void idPlayer::CalculateViewWeaponPos( idVec3& origin, idMat3& axis )
 {
 
@@ -17147,7 +17136,6 @@ void idPlayer::CalculateRenderView()
 
 	if( game->isVR )
 	{
-
 		// Koz headtracker does not modify the model rotations
 		// offsets to body rotation added here
 
@@ -19483,7 +19471,6 @@ idPlayer::GetControllerShake
 */
 void idPlayer::GetControllerShake( int& highMagnitude, int& lowMagnitude ) const
 {
-
 	if( Flicksync_InCutscene || gameLocal.inCinematic )
 	{
 		// no controller shake during cinematics

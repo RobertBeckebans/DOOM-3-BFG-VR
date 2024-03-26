@@ -219,6 +219,25 @@ typedef struct renderLight_s
 } renderLight_t;
 
 
+// RB begin
+typedef struct
+{
+	idVec3					origin;
+	float					shaderParms[MAX_ENTITY_SHADER_PARMS];
+
+	// if non-zero, the environment probe will not show up in the specific view,
+	// which may be used if we want to have slightly different muzzle
+	// flash lights for the player and other views
+	int						suppressEnvprobeInViewID;
+
+	// if non-zero, the environment probe will only show up in the specific view
+	// which can allow player gun gui lights and such to not effect everyone
+	int						allowEnvprobeInViewID;
+
+} renderEnvironmentProbe_t;
+// RB end
+
+
 // RB: added back refdef flags from Quake 3
 const int RDF_NOSHADOWS		= BIT( 0 ); // force renderer to use faster lighting only path
 const int RDF_NOAMBIENT		= BIT( 1 ); // don't render indirect lighting
@@ -333,6 +352,13 @@ public:
 	virtual	void			FreeLightDef( qhandle_t lightHandle ) = 0;
 	virtual const renderLight_t* GetRenderLight( qhandle_t lightHandle ) const = 0;
 
+	// RB: environment probes for IBL
+	virtual	qhandle_t		AddEnvprobeDef( const renderEnvironmentProbe_t* ep ) = 0;
+	virtual	void			UpdateEnvprobeDef( qhandle_t envprobeHandle, const renderEnvironmentProbe_t* ep ) = 0;
+	virtual	void			FreeEnvprobeDef( qhandle_t envprobeHandle ) = 0;
+	virtual const renderEnvironmentProbe_t* GetRenderEnvprobe( qhandle_t envprobeHandle ) const = 0;
+	// RB end
+
 	// Force the generation of all light / surface interactions at the start of a level
 	// If this isn't called, they will all be dynamically generated
 	virtual	void			GenerateAllInteractions() = 0;
@@ -406,6 +432,9 @@ public:
 
 	// returns one portal from an area
 	virtual exitPortal_t	GetPortal( int areaNum, int portalNum ) = 0;
+
+	// RB: returns the AABB of a BSP area
+	virtual	idBounds		AreaBounds( int areaNum ) const = 0;
 
 	//-------------- Tracing  -----------------
 

@@ -630,7 +630,7 @@ idMultiplayerGame::GameTime
 */
 const char* idMultiplayerGame::GameTime()
 {
-	static char buff[22];
+	static char buff[16];
 	int m, s, t, ms;
 
 	if( gameState == COUNTDOWN )
@@ -678,7 +678,7 @@ const char* idMultiplayerGame::GameTime()
 		t = s / 10;
 		s -= t * 10;
 
-		sprintf( buff, "%i:%i%i", m, t, s );
+		idStr::snPrintf( buff, sizeof( buff ), "%i:%i%i", m, t, s );
 	}
 	return &buff[0];
 }

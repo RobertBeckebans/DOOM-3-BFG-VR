@@ -26,8 +26,8 @@ If you have questions concerning this license or the applicable additional terms
 ===========================================================================
 */
 
-#pragma hdrstop
 #include "precompiled.h"
+#pragma hdrstop
 
 #include "../Game_local.h"
 
@@ -498,7 +498,6 @@ bool idPhysics_Player::SlideMove( bool gravity, bool stepUp, bool stepDown, bool
 
 	numbumps = 4;
 
-
 	primal_velocity = current.velocity;
 
 	if( gravity )
@@ -580,7 +579,6 @@ bool idPhysics_Player::SlideMove( bool gravity, bool stepUp, bool stepDown, bool
 
 				// trace along velocity
 				stepEnd = downTrace.endpos + time_left * current.velocity;
-
 				gameLocal.clip.Translation( stepTrace, downTrace.endpos, stepEnd, clipModel, clipModel->GetAxis(), clipMask, self );
 
 				// step down
@@ -842,7 +840,6 @@ bool idPhysics_Player::SlideMove( bool gravity, bool stepUp, bool stepDown, bool
 	{
 		current.velocity = endVelocity;
 	}
-
 
 	// come to a dead stop when the velocity orthogonal to the gravity flipped
 	clipVelocity = current.velocity - gravityNormal * current.velocity * gravityNormal;

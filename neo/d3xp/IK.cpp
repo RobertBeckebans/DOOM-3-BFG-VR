@@ -781,6 +781,7 @@ bool idIK_Walk::Init( idEntity* self, const char* anim, const idVec3& modelOffse
 	}
 
 	initialized = true;
+
 	return true;
 }
 
@@ -891,8 +892,6 @@ void idIK_Walk::Evaluate()
 		}
 	}
 
-
-
 	const idPhysics* phys = self->GetPhysics();
 
 	// test whether or not the character standing on the ground
@@ -954,8 +953,6 @@ void idIK_Walk::Evaluate()
 
 	animator->GetJointTransform( waistJoint, gameLocal.time, waistOrigin, waistAxis );
 	waistOrigin = modelOrigin + waistOrigin * modelAxis;
-
-
 
 	// adjust position of the waist
 	waistOffset = ( smallestShift + waistShift ) * normal;
@@ -1428,7 +1425,6 @@ idIK_Reach::Evaluate
 */
 void idIK_Reach::Evaluate()
 {
-
 	int i;
 	idVec3 modelOrigin, shoulderOrigin, elbowOrigin, handOrigin, shoulderDir, elbowDir, handDir;
 	idMat3 modelAxis, axis;

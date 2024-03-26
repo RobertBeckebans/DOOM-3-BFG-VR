@@ -3,6 +3,8 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2013-2020 Robert Beckebans
+Copyright (C) 2014-2016 Kot in Action Creative Artel
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -127,9 +129,22 @@ void idRenderSystemLocal::RenderCommandBuffers( const emptyCommand_t* const cmdH
 	// draw 2D graphics
 	if( !r_skipBackEnd.GetBool() )
 	{
-#if !defined(USE_GLES2) && !defined(USE_GLES3)
 		if( glConfig.timerQueryAvailable )
 		{
+#if 0
+			if( backEnd.glState.renderLogMainBlockTimeQueryIds[ backEnd.glState.frameParity ][ MRB_GPU_TIME ] == 0 )
+			{
+				glCreateQueries( GL_TIMESTAMP, 2, &backEnd.glState.renderLogMainBlockTimeQueryIds[ backEnd.glState.frameParity ][MRB_GPU_TIME ] );
+			}
+
+			glQueryCounter( backEnd.glState.renderLogMainBlockTimeQueryIds[ backEnd.glState.frameParity ][ MRB_GPU_TIME * 2 + 0 ], GL_TIMESTAMP );
+			backEnd.ExecuteBackEndCommands( cmdHead );
+			glQueryCounter( backEnd.glState.renderLogMainBlockTimeQueryIds[ backEnd.glState.frameParity ][ MRB_GPU_TIME * 2 + 1 ], GL_TIMESTAMP );
+
+			backEnd.glState.renderLogMainBlockTimeQueryIssued[ backEnd.glState.frameParity ][ MRB_GPU_TIME * 2 + 1 ]++;
+
+			glFlush();
+#else
 			if( tr.timerQueryId == 0 )
 			{
 				glGenQueries( 1, & tr.timerQueryId );
@@ -137,10 +152,9 @@ void idRenderSystemLocal::RenderCommandBuffers( const emptyCommand_t* const cmdH
 			glBeginQuery( GL_TIME_ELAPSED_EXT, tr.timerQueryId );
 			backEnd.ExecuteBackEndCommands( cmdHead );
 			glEndQuery( GL_TIME_ELAPSED_EXT );
-			glFlush();
+#endif
 		}
 		else
-#endif
 		{
 			backEnd.ExecuteBackEndCommands( cmdHead );
 		}
@@ -343,6 +357,7 @@ idRenderSystemLocal::idRenderSystemLocal
 idRenderSystemLocal::idRenderSystemLocal() :
 	unitSquareTriangles( NULL ),
 	zeroOneCubeTriangles( NULL ),
+	zeroOneSphereTriangles( NULL ),
 	testImageTriangles( NULL ),
 	bInitialized( false ),
 	hudTriangles( NULL ) // Koz hud mesh
@@ -716,10 +731,12 @@ const emptyCommand_t* idRenderSystemLocal::SwapCommandBuffers(
 	uint64* frontEndMicroSec,
 	uint64* backEndMicroSec,
 	uint64* shadowMicroSec,
-	uint64* gpuMicroSec )
+	uint64* gpuMicroSec,
+	backEndCounters_t* bc,
+	performanceCounters_t* pc
+)
 {
-
-	SwapCommandBuffers_FinishRendering( frontEndMicroSec, backEndMicroSec, shadowMicroSec, gpuMicroSec );
+	SwapCommandBuffers_FinishRendering( frontEndMicroSec, backEndMicroSec, shadowMicroSec, gpuMicroSec, bc, pc );
 
 	return SwapCommandBuffers_FinishCommandBuffers();
 }
@@ -733,11 +750,12 @@ void idRenderSystemLocal::SwapCommandBuffers_FinishRendering(
 	uint64* frontEndMicroSec,
 	uint64* backEndMicroSec,
 	uint64* shadowMicroSec,
-	uint64* gpuMicroSec )
+	uint64* gpuMicroSec,
+	backEndCounters_t* bc,
+	performanceCounters_t* pc
+)
 {
 	SCOPED_PROFILE_EVENT( "SwapCommandBuffers" );
-
-
 
 	if( gpuMicroSec != NULL )
 	{
@@ -751,7 +769,11 @@ void idRenderSystemLocal::SwapCommandBuffers_FinishRendering(
 
 
 	// After coming back from an autoswap, we won't have anything to render
-	if( frameData->cmdHead->next != NULL )
+	//if( frameData && frameData->cmdHead->next != NULL )
+
+	// keep capturing envprobes completely in the background
+	// and only update the screen when we update the progress bar in the console
+	if( !takingEnvprobe )
 	{
 		ImGuiHook::Render();
 
@@ -763,6 +785,25 @@ void idRenderSystemLocal::SwapCommandBuffers_FinishRendering(
 	// read back the start and end timer queries from the previous frame
 	if( glConfig.timerQueryAvailable )
 	{
+		GLuint64EXT gpuStartNanoseconds = 0;
+		GLuint64EXT gpuEndNanoseconds = 0;
+
+		GL_CheckErrors();
+
+#if 0
+		if( backEnd.glState.renderLogMainBlockTimeQueryIssued[ backEnd.glState.frameParity ^ 1 ][ MRB_GPU_TIME * 2 + 1 ] > 0 )
+		{
+			glGetQueryObjectui64vEXT( backEnd.glState.renderLogMainBlockTimeQueryIds[ backEnd.glState.frameParity ^ 1 ][ MRB_GPU_TIME * 2 + 0], GL_QUERY_RESULT, &gpuStartNanoseconds );
+			glGetQueryObjectui64vEXT( backEnd.glState.renderLogMainBlockTimeQueryIds[ backEnd.glState.frameParity ^ 1 ][ MRB_GPU_TIME * 2 + 1], GL_QUERY_RESULT, &gpuEndNanoseconds );
+
+			backEnd.pc.gpuMicroSec = ( gpuEndNanoseconds - gpuStartNanoseconds ) / 1000;
+
+			if( gpuMicroSec != NULL )
+			{
+				*gpuMicroSec = backEnd.pc.gpuMicroSec;
+			}
+		}
+#else
 		// RB: 64 bit fixes, changed int64 to GLuint64EXT
 		GLuint64EXT drawingTimeNanoseconds = 0;
 		// RB end
@@ -775,6 +816,60 @@ void idRenderSystemLocal::SwapCommandBuffers_FinishRendering(
 		{
 			*gpuMicroSec = drawingTimeNanoseconds / 1000;
 		}
+#endif
+
+		if( backEnd.glState.renderLogMainBlockTimeQueryIssued[ backEnd.glState.frameParity ^ 1 ][ MRB_FILL_DEPTH_BUFFER  * 2 + 1 ] > 0 )
+		{
+			glGetQueryObjectui64vEXT( backEnd.glState.renderLogMainBlockTimeQueryIds[ backEnd.glState.frameParity ^ 1 ][ MRB_FILL_DEPTH_BUFFER * 2 + 0], GL_QUERY_RESULT, &gpuStartNanoseconds );
+			glGetQueryObjectui64vEXT( backEnd.glState.renderLogMainBlockTimeQueryIds[ backEnd.glState.frameParity ^ 1 ][ MRB_FILL_DEPTH_BUFFER * 2 + 1], GL_QUERY_RESULT, &gpuEndNanoseconds );
+
+			backEnd.pc.gpuDepthMicroSec = ( gpuEndNanoseconds - gpuStartNanoseconds ) / 1000;
+		}
+
+		if( backEnd.glState.renderLogMainBlockTimeQueryIssued[ backEnd.glState.frameParity ^ 1 ][ MRB_SSAO_PASS  * 2 + 1 ] > 0 )
+		{
+			glGetQueryObjectui64vEXT( backEnd.glState.renderLogMainBlockTimeQueryIds[ backEnd.glState.frameParity ^ 1 ][ MRB_SSAO_PASS * 2 + 0], GL_QUERY_RESULT, &gpuStartNanoseconds );
+			glGetQueryObjectui64vEXT( backEnd.glState.renderLogMainBlockTimeQueryIds[ backEnd.glState.frameParity ^ 1 ][ MRB_SSAO_PASS * 2 + 1], GL_QUERY_RESULT, &gpuEndNanoseconds );
+
+			backEnd.pc.gpuScreenSpaceAmbientOcclusionMicroSec = ( gpuEndNanoseconds - gpuStartNanoseconds ) / 1000;
+		}
+
+		if( backEnd.glState.renderLogMainBlockTimeQueryIssued[ backEnd.glState.frameParity ^ 1 ][ MRB_AMBIENT_PASS  * 2 + 1 ] > 0 )
+		{
+			glGetQueryObjectui64vEXT( backEnd.glState.renderLogMainBlockTimeQueryIds[ backEnd.glState.frameParity ^ 1 ][ MRB_AMBIENT_PASS * 2 + 0], GL_QUERY_RESULT, &gpuStartNanoseconds );
+			glGetQueryObjectui64vEXT( backEnd.glState.renderLogMainBlockTimeQueryIds[ backEnd.glState.frameParity ^ 1 ][ MRB_AMBIENT_PASS * 2 + 1], GL_QUERY_RESULT, &gpuEndNanoseconds );
+
+			backEnd.pc.gpuAmbientPassMicroSec = ( gpuEndNanoseconds - gpuStartNanoseconds ) / 1000;
+		}
+
+		if( backEnd.glState.renderLogMainBlockTimeQueryIssued[ backEnd.glState.frameParity ^ 1 ][ MRB_DRAW_INTERACTIONS  * 2 + 1 ] > 0 )
+		{
+			glGetQueryObjectui64vEXT( backEnd.glState.renderLogMainBlockTimeQueryIds[ backEnd.glState.frameParity ^ 1 ][ MRB_DRAW_INTERACTIONS * 2 + 0], GL_QUERY_RESULT, &gpuStartNanoseconds );
+			glGetQueryObjectui64vEXT( backEnd.glState.renderLogMainBlockTimeQueryIds[ backEnd.glState.frameParity ^ 1 ][ MRB_DRAW_INTERACTIONS * 2 + 1], GL_QUERY_RESULT, &gpuEndNanoseconds );
+
+			backEnd.pc.gpuInteractionsMicroSec = ( gpuEndNanoseconds - gpuStartNanoseconds ) / 1000;
+		}
+
+		if( backEnd.glState.renderLogMainBlockTimeQueryIssued[ backEnd.glState.frameParity ^ 1 ][ MRB_DRAW_SHADER_PASSES  * 2 + 1 ] > 0 )
+		{
+			glGetQueryObjectui64vEXT( backEnd.glState.renderLogMainBlockTimeQueryIds[ backEnd.glState.frameParity ^ 1 ][ MRB_DRAW_SHADER_PASSES * 2 + 0], GL_QUERY_RESULT, &gpuStartNanoseconds );
+			glGetQueryObjectui64vEXT( backEnd.glState.renderLogMainBlockTimeQueryIds[ backEnd.glState.frameParity ^ 1 ][ MRB_DRAW_SHADER_PASSES * 2 + 1], GL_QUERY_RESULT, &gpuEndNanoseconds );
+
+			backEnd.pc.gpuShaderPassMicroSec = ( gpuEndNanoseconds - gpuStartNanoseconds ) / 1000;
+		}
+
+		if( backEnd.glState.renderLogMainBlockTimeQueryIssued[ backEnd.glState.frameParity ^ 1 ][ MRB_POSTPROCESS  * 2 + 1 ] > 0 )
+		{
+			glGetQueryObjectui64vEXT( backEnd.glState.renderLogMainBlockTimeQueryIds[ backEnd.glState.frameParity ^ 1 ][ MRB_POSTPROCESS * 2 + 0], GL_QUERY_RESULT, &gpuStartNanoseconds );
+			glGetQueryObjectui64vEXT( backEnd.glState.renderLogMainBlockTimeQueryIds[ backEnd.glState.frameParity ^ 1 ][ MRB_POSTPROCESS * 2 + 1], GL_QUERY_RESULT, &gpuEndNanoseconds );
+
+			backEnd.pc.gpuPostProcessingMicroSec = ( gpuEndNanoseconds - gpuStartNanoseconds ) / 1000;
+		}
+
+		for( int i = 0; i < MRB_TOTAL_QUERIES; i++ )
+		{
+			backEnd.glState.renderLogMainBlockTimeQueryIssued[ backEnd.glState.frameParity ^ 1 ][ i ] = 0;
+		}
 	}
 
 	//------------------------------
@@ -782,15 +877,28 @@ void idRenderSystemLocal::SwapCommandBuffers_FinishRendering(
 	// save out timing information
 	if( frontEndMicroSec != NULL )
 	{
-		*frontEndMicroSec = pc.frontEndMicroSec;
+		*frontEndMicroSec = this->pc.frontEndMicroSec;
 	}
+
 	if( backEndMicroSec != NULL )
 	{
 		*backEndMicroSec = backEnd.pc.cpuTotalMicroSec;
 	}
+
 	if( shadowMicroSec != NULL )
 	{
 		*shadowMicroSec = backEnd.pc.cpuShadowMicroSec;
+	}
+
+	// RB: TODO clean up the above and just pass entire backend and performance stats before they get cleared
+	if( bc != NULL )
+	{
+		*bc = backEnd.pc;
+	}
+
+	if( pc != NULL )
+	{
+		*pc = this->pc;
 	}
 
 	// print any other statistics and clear all of them
@@ -833,6 +941,7 @@ const emptyCommand_t* idRenderSystemLocal::SwapCommandBuffers_FinishCommandBuffe
 	// allocated at the start of the buffer memory to the backEnd referenced locations
 	backEnd.unitSquareSurface = tr.unitSquareSurface_;
 	backEnd.zeroOneCubeSurface = tr.zeroOneCubeSurface_;
+	backEnd.zeroOneSphereSurface = tr.zeroOneSphereSurface_;
 	backEnd.testImageSurface = tr.testImageSurface_;
 	backEnd.hudSurface = tr.hudSurface_; // Koz hud mesh
 
@@ -866,6 +975,7 @@ const emptyCommand_t* idRenderSystemLocal::SwapCommandBuffers_FinishCommandBuffe
 	//------------------------------
 	R_InitDrawSurfFromTri( tr.unitSquareSurface_, *tr.unitSquareTriangles );
 	R_InitDrawSurfFromTri( tr.zeroOneCubeSurface_, *tr.zeroOneCubeTriangles );
+	R_InitDrawSurfFromTri( tr.zeroOneSphereSurface_, *tr.zeroOneSphereTriangles );
 	R_InitDrawSurfFromTri( tr.testImageSurface_, *tr.testImageTriangles );
 	R_InitDrawSurfFromTri( tr.hudSurface_, *tr.hudTriangles ); // Koz hud mesh
 
@@ -910,7 +1020,6 @@ Returns the current cropped pixel coordinates
 void idRenderSystemLocal::GetCroppedViewport( idScreenRect* viewport )
 {
 	*viewport = renderCrops[currentRenderCrop];
-
 }
 
 /*
@@ -924,14 +1033,12 @@ In split screen mode the rendering size is also smaller.
 */
 void idRenderSystemLocal::PerformResolutionScaling( int& newWidth, int& newHeight )
 {
-
 	float xScale = 1.0f;
 	float yScale = 1.0f;
 	resolutionScale.GetCurrentResolutionScale( xScale, yScale );
 
 	newWidth = idMath::Ftoi( GetWidth() * xScale );
 	newHeight = idMath::Ftoi( GetHeight() * yScale );
-
 }
 
 /*
@@ -966,7 +1073,6 @@ void idRenderSystemLocal::CropRenderSize( int width, int height )
 	current.x2 = previous.x1 + width - 1;
 	current.y1 = previous.y2 - height + 1;
 	current.y2 = previous.y2;
-
 }
 
 /*
@@ -1014,7 +1120,7 @@ void idRenderSystemLocal::CaptureRenderToImage( const char* imageName, bool clea
 		common->Printf( "CaptureRenderToImage called when guiMode->surf == NULL\n" );
 	}
 
-	idImage*	 image = globalImages->GetImage( imageName );
+	idImage* image = globalImages->GetImage( imageName );
 	if( image == NULL )
 	{
 		image = globalImages->AllocImage( imageName );
@@ -1050,6 +1156,7 @@ void idRenderSystemLocal::CaptureRenderToFile( const char* fileName, bool fixAlp
 
 	guiModel->EmitFullScreen();
 	guiModel->Clear();
+
 	RenderCommandBuffers( frameData->cmdHead );
 
 	if( !commonVr->useFBO )  // Koz

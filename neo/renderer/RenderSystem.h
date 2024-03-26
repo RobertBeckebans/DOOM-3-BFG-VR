@@ -3,7 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
-Copyright (C) 2013-2014 Robert Beckebans
+Copyright (C) 2013-2016 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -48,6 +48,7 @@ enum stereo3DMode_t
 
 	// two full resolution views side by side, as for a dual cable display
 	STEREO3D_SIDE_BY_SIDE,
+
 	STEREO3D_INTERLACED,
 
 	// OpenGL quad buffer
@@ -133,7 +134,8 @@ struct performanceCounters_t
 	int		c_entityReferences;
 	int		c_lightReferences;
 	int		c_guiSurfs;
-	int		frontEndMicroSec;	// sum of time in all RE_RenderScene's in a frame
+
+	uint64	frontEndMicroSec;	// sum of time in all RE_RenderScene's in a frame
 };
 
 // CPU & GPU counters and timers
@@ -154,8 +156,6 @@ struct backEndCounters_t
 
 	uint64	cpuTotalMicroSec;		// total microseconds for backend run
 	uint64	cpuShadowMicroSec;
-
-#if 1
 	uint64	gpuDepthMicroSec;
 	uint64	gpuScreenSpaceAmbientOcclusionMicroSec;
 	uint64	gpuScreenSpaceReflectionsMicroSec;
@@ -164,7 +164,6 @@ struct backEndCounters_t
 	uint64	gpuShaderPassMicroSec;
 	uint64	gpuPostProcessingMicroSec;
 	uint64	gpuMicroSec;
-#endif
 };
 // RB end
 
@@ -200,7 +199,6 @@ struct glconfig_t
 	bool				anisotropicFilterAvailable;
 	bool				textureLODBiasAvailable;
 	bool				seamlessCubeMapAvailable;
-	bool				sRGBFramebufferAvailable;
 	bool				vertexBufferObjectAvailable;
 	bool				mapBufferRangeAvailable;
 	bool				vertexArrayObjectAvailable;
@@ -383,11 +381,11 @@ public:
 	//
 	// After this is called, new command buffers can be built up in parallel
 	// with the rendering of the closed off command buffers by RenderCommandBuffers()
-	virtual const emptyCommand_t* 	SwapCommandBuffers( uint64* frontEndMicroSec, uint64* backEndMicroSec, uint64* shadowMicroSec, uint64* gpuMicroSec ) = 0;
+	virtual const emptyCommand_t* 	SwapCommandBuffers( uint64* frontEndMicroSec, uint64* backEndMicroSec, uint64* shadowMicroSec, uint64* gpuMicroSec, backEndCounters_t* bc, performanceCounters_t* pc ) = 0;
 
 	// SwapCommandBuffers operation can be split in two parts for non-smp rendering
 	// where the GPU is idled intentionally for minimal latency.
-	virtual void			SwapCommandBuffers_FinishRendering( uint64* frontEndMicroSec, uint64* backEndMicroSec, uint64* shadowMicroSec, uint64* gpuMicroSec ) = 0;
+	virtual void			SwapCommandBuffers_FinishRendering( uint64* frontEndMicroSec, uint64* backEndMicroSec, uint64* shadowMicroSec, uint64* gpuMicroSec, backEndCounters_t* bc, performanceCounters_t* pc ) = 0;
 	virtual const emptyCommand_t* 	SwapCommandBuffers_FinishCommandBuffers() = 0;
 
 	// issues GPU commands to render a built up list of command buffers returned

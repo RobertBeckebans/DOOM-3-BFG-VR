@@ -33,6 +33,12 @@ If you have questions concerning this license or the applicable additional terms
 #include "libs/imgui/imgui.h"
 
 #include "RenderCommon.h"
+#include "Image_brdfLut.h"
+//#include "Image_blueNoiseVC_1M.h" // 256^2 R8 data
+#include "Image_blueNoiseVC_2.h" // 512^2 RGB8 data
+
+#include "Image_env_UAC_lobby_amb.h"
+#include "Image_env_UAC_lobby_spec.h"
 
 #define	DEFAULT_SIZE	16
 
@@ -133,6 +139,60 @@ static void R_BlackImage( idImage* image )
 						  TF_DEFAULT, TR_REPEAT, TD_DEFAULT );
 }
 
+static void R_CyanImage( idImage* image )
+{
+	byte	data[DEFAULT_SIZE][DEFAULT_SIZE][4];
+
+	for( int x = 0; x < DEFAULT_SIZE; x++ )
+	{
+		for( int y = 0; y < DEFAULT_SIZE; y++ )
+		{
+			data[y][x][0] = byte( colorCyan.x * 255 );
+			data[y][x][1] = byte( colorCyan.y * 255 );
+			data[y][x][2] = byte( colorCyan.z * 255 );
+			data[y][x][3] = byte( colorCyan.w * 255 );
+		}
+	}
+
+	image->GenerateImage( ( byte* )data, DEFAULT_SIZE, DEFAULT_SIZE, TF_DEFAULT, TR_REPEAT, TD_DIFFUSE );
+}
+
+static void R_ChromeSpecImage( idImage* image )
+{
+	byte	data[DEFAULT_SIZE][DEFAULT_SIZE][4];
+
+	for( int x = 0; x < DEFAULT_SIZE; x++ )
+	{
+		for( int y = 0; y < DEFAULT_SIZE; y++ )
+		{
+			data[y][x][0] = 0;
+			data[y][x][1] = 255;
+			data[y][x][2] = 255;
+			data[y][x][3] = 255;
+		}
+	}
+
+	image->GenerateImage( ( byte* )data, DEFAULT_SIZE, DEFAULT_SIZE, TF_DEFAULT, TR_REPEAT, TD_SPECULAR_PBR_RMAO );
+}
+
+static void R_PlasticSpecImage( idImage* image )
+{
+	byte	data[DEFAULT_SIZE][DEFAULT_SIZE][4];
+
+	for( int x = 0; x < DEFAULT_SIZE; x++ )
+	{
+		for( int y = 0; y < DEFAULT_SIZE; y++ )
+		{
+			data[y][x][0] = 0;
+			data[y][x][1] = 0;
+			data[y][x][2] = 255;
+			data[y][x][3] = 255;
+		}
+	}
+
+	image->GenerateImage( ( byte* )data, DEFAULT_SIZE, DEFAULT_SIZE, TF_DEFAULT, TR_REPEAT, TD_SPECULAR_PBR_RMAO );
+}
+
 static void R_RGBA8Image( idImage* image )
 {
 	byte	data[DEFAULT_SIZE][DEFAULT_SIZE][4];
@@ -170,6 +230,19 @@ static void R_VrSkyBoxImage( idImage* image )
 
 }
 // Koz end
+
+static void R_RGBA8LinearImage( idImage* image )
+{
+	byte	data[DEFAULT_SIZE][DEFAULT_SIZE][4];
+
+	memset( data, 0, sizeof( data ) );
+	data[0][0][0] = 16;
+	data[0][0][1] = 32;
+	data[0][0][2] = 48;
+	data[0][0][3] = 96;
+
+	image->GenerateImage( ( byte* )data, DEFAULT_SIZE, DEFAULT_SIZE, TF_LINEAR, TR_REPEAT, TD_LOOKUP_TABLE_RGBA );
+}
 
 static void R_DepthImage( idImage* image )
 {
@@ -591,6 +664,31 @@ static void R_CreateRandom256Image( idImage* image )
 
 	image->GenerateImage( ( byte* )data, 256, 256, TF_NEAREST, TR_REPEAT, TD_LOOKUP_TABLE_RGBA );
 }
+
+// RB
+static void R_CreateBlueNoise256Image( idImage* image )
+{
+	static byte	data[BLUENOISE_TEX_HEIGHT][BLUENOISE_TEX_WIDTH][4];
+
+	for( int x = 0; x < BLUENOISE_TEX_WIDTH; x++ )
+	{
+		for( int y = 0; y < BLUENOISE_TEX_HEIGHT; y++ )
+		{
+#if 1
+			data[x][y][0] = blueNoiseTexBytes[ y * BLUENOISE_TEX_PITCH + x * 3 + 0 ];
+			data[x][y][1] = blueNoiseTexBytes[ y * BLUENOISE_TEX_PITCH + x * 3 + 1 ];
+			data[x][y][2] = blueNoiseTexBytes[ y * BLUENOISE_TEX_PITCH + x * 3 + 2 ];
+#else
+			data[x][y][0] = blueNoiseTexBytes[ y * BLUENOISE_TEX_PITCH + x ];
+			data[x][y][1] = blueNoiseTexBytes[ y * BLUENOISE_TEX_PITCH + x ];
+			data[x][y][2] = blueNoiseTexBytes[ y * BLUENOISE_TEX_PITCH + x ];
+#endif
+			data[x][y][3] = 1;
+		}
+	}
+
+	image->GenerateImage( ( byte* )data, BLUENOISE_TEX_WIDTH, BLUENOISE_TEX_HEIGHT, TF_NEAREST, TR_REPEAT, TD_LOOKUP_TABLE_RGBA );
+}
 static void R_CreateImGuiFontImage( idImage* image )
 {
 	ImGuiIO& io = ImGui::GetIO();
@@ -609,7 +707,24 @@ static void R_CreateImGuiFontImage( idImage* image )
 	//io.Fonts->ClearInputData();
 	//io.Fonts->ClearTexData();
 }
+
+static void R_CreateBrdfLutImage( idImage* image )
+{
+	image->GenerateImage( ( byte* )brfLutTexBytes, BRDFLUT_TEX_WIDTH, BRDFLUT_TEX_HEIGHT, TF_LINEAR, TR_CLAMP, TD_RG16F );
+}
+
+static void R_CreateEnvprobeImage_UAC_lobby_irradiance( idImage* image )
+{
+	image->GenerateImage( ( byte* )IMAGE_ENV_UAC_LOBBY_AMB_H_Bytes, IMAGE_ENV_UAC_LOBBY_AMB_H_TEX_WIDTH, IMAGE_ENV_UAC_LOBBY_AMB_H_TEX_HEIGHT, TF_DEFAULT, TR_CLAMP, TD_R11G11B10F, SAMPLE_1, CF_2D_PACKED_MIPCHAIN );
+}
+
+static void R_CreateEnvprobeImage_UAC_lobby_radiance( idImage* image )
+{
+	image->GenerateImage( ( byte* )IMAGE_ENV_UAC_LOBBY_SPEC_H_Bytes, IMAGE_ENV_UAC_LOBBY_SPEC_H_TEX_WIDTH, IMAGE_ENV_UAC_LOBBY_SPEC_H_TEX_HEIGHT, TF_DEFAULT, TR_CLAMP, TD_R11G11B10F, SAMPLE_1, CF_2D_PACKED_MIPCHAIN );
+}
+
 // RB end
+
 
 /*
 ================
@@ -622,6 +737,7 @@ void idImageManager::CreateIntrinsicImages()
 	defaultImage = ImageFromFunction( "_default", R_DefaultImage );
 	whiteImage = ImageFromFunction( "_white", R_WhiteImage );
 	blackImage = ImageFromFunction( "_black", R_BlackImage );
+	cyanImage = ImageFromFunction( "_cyan", R_CyanImage );
 	flatNormalMap = ImageFromFunction( "_flat", R_FlatNormalImage );
 	alphaNotchImage = ImageFromFunction( "_alphaNotch", R_AlphaNotchImage );
 	fogImage = ImageFromFunction( "_fog", R_FogImage );
@@ -641,7 +757,12 @@ void idImageManager::CreateIntrinsicImages()
 	jitterImage16 = globalImages->ImageFromFunction( "_jitter16", R_CreateJitterImage16 );
 
 	randomImage256 = globalImages->ImageFromFunction( "_random256", R_CreateRandom256Image );
+	blueNoiseImage256 = globalImages->ImageFromFunction( "_blueNoise256", R_CreateBlueNoise256Image );
 	imguiFontImage = ImageFromFunction( "_imguiFont", R_CreateImGuiFontImage );
+
+	chromeSpecImage = ImageFromFunction( "_chromeSpec", R_ChromeSpecImage );
+	plasticSpecImage = ImageFromFunction( "_plasticSpec", R_PlasticSpecImage );
+	brdfLutImage = ImageFromFunction( "_brdfLut", R_CreateBrdfLutImage );
 	// RB end
 
 	// scratchImage is used for screen wipes/doublevision etc..
@@ -672,6 +793,11 @@ void idImageManager::CreateIntrinsicImages()
 
 	loadingIconImage = ImageFromFile( "textures/loadingicon2", TF_DEFAULT, TR_CLAMP, TD_DEFAULT, CF_2D );
 	hellLoadingIconImage = ImageFromFile( "textures/loadingicon3", TF_DEFAULT, TR_CLAMP, TD_DEFAULT, CF_2D );
+
+	// RB begin
+	defaultUACIrradianceCube = ImageFromFunction( "_defaultUACIrradiance", R_CreateEnvprobeImage_UAC_lobby_irradiance );
+	defaultUACRadianceCube = ImageFromFunction( "_defaultUACRadiance", R_CreateEnvprobeImage_UAC_lobby_radiance );
+	// RB end
 
 	release_assert( loadingIconImage->referencedOutsideLevelLoad );
 	release_assert( hellLoadingIconImage->referencedOutsideLevelLoad );

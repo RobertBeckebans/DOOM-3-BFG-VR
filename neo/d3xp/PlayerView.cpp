@@ -884,7 +884,6 @@ float	GetScreenSeparationForGuis()
 	return dists.screenSeparation;
 }
 
-
 /*
 ===================
 idPlayerView::EmitStereoEyeView
@@ -964,7 +963,6 @@ void idPlayerView::RenderPlayerView( idMenuHandler_HUD* hudManager )
 
 		if( game->isVR )
 		{
-
 			commonVr->lastCenterEyeAxis = view->viewaxis;
 			commonVr->lastCenterEyeOrigin = view->vieworg;
 
@@ -991,7 +989,6 @@ void idPlayerView::RenderPlayerView( idMenuHandler_HUD* hudManager )
 			}
 		}
 		// render both eye views each frame on the PC
-
 		for( int eye = 1 ; eye >= -1 ; eye -= 2 )
 		{
 			EmitStereoEyeView( eye, hudManager );

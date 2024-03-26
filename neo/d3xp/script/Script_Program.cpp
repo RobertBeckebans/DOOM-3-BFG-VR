@@ -27,8 +27,8 @@ If you have questions concerning this license or the applicable additional terms
 ===========================================================================
 */
 
-#pragma hdrstop
 #include "precompiled.h"
+#pragma hdrstop
 
 
 #include "../Game_local.h"
@@ -2368,7 +2368,6 @@ void idProgram::Save( idSaveGame* savefile ) const
 	int checksum = CalculateChecksum();
 	//common->Printf("idProgram::Save() saved_checksum:%d @%d\n", checksum, savefile->file->Tell()); //Npi debug
 	savefile->WriteInt( checksum );
-
 }
 
 /*
