@@ -3,6 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2015 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -218,6 +219,12 @@ typedef struct renderLight_s
 } renderLight_t;
 
 
+// RB: added back refdef flags from Quake 3
+const int RDF_NOSHADOWS		= BIT( 0 ); // force renderer to use faster lighting only path
+const int RDF_NOAMBIENT		= BIT( 1 ); // don't render indirect lighting
+const int RDF_IRRADIANCE	= BIT( 2 ); // render into 256^2 HDR render target for irradiance/radiance GGX calculation
+const int RDF_UNDERWATER	= BIT( 3 ); // TODO enable automatic underwater caustics and fog
+
 typedef struct renderView_s
 {
 	// player views will set this to a non-zero integer for model suppress / allow
@@ -241,6 +248,8 @@ typedef struct renderView_s
 	// the viewEyeBuffer may be of a different polarity than stereoScreenSeparation if the eyes have been swapped
 	int						viewEyeBuffer;				// -1 = left eye, 1 = right eye, 0 = monoscopic view or GUI
 	float					stereoScreenSeparation;		// projection matrix horizontal offset, positive or negative based on camera eye
+
+	int						rdflags;			// RB: RDF_NOSHADOWS, etc
 } renderView_t;
 
 
@@ -288,6 +297,12 @@ typedef enum
 	PS_BLOCK_ALL = ( 1 << NUM_PORTAL_ATTRIBUTES ) - 1
 } portalConnection_t;
 
+// Admer: Suppress Windows API DrawText, so IntelliSense can properly highlight idRenderWorld::DrawText
+#ifdef _WIN32
+	#ifdef DrawText
+		#undef DrawText
+	#endif
+#endif
 
 class idRenderWorld
 {

@@ -135,14 +135,14 @@ void idRenderSystemLocal::RenderCommandBuffers( const emptyCommand_t* const cmdH
 				glGenQueries( 1, & tr.timerQueryId );
 			}
 			glBeginQuery( GL_TIME_ELAPSED_EXT, tr.timerQueryId );
-			RB_ExecuteBackEndCommands( cmdHead );
+			backEnd.ExecuteBackEndCommands( cmdHead );
 			glEndQuery( GL_TIME_ELAPSED_EXT );
 			glFlush();
 		}
 		else
 #endif
 		{
-			RB_ExecuteBackEndCommands( cmdHead );
+			backEnd.ExecuteBackEndCommands( cmdHead );
 		}
 	}
 
@@ -757,8 +757,7 @@ void idRenderSystemLocal::SwapCommandBuffers_FinishRendering(
 
 		// wait for our fence to hit, which means the swap has actually happened
 		// We must do this before clearing any resources the GPU may be using
-		void GL_BlockingSwapBuffers();
-		GL_BlockingSwapBuffers();
+		backEnd.GL_BlockingSwapBuffers();
 	}
 
 	// read back the start and end timer queries from the previous frame

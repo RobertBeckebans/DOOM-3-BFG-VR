@@ -119,8 +119,8 @@ public:
 
 	void				FrameStart( void );
 
-	void				OpenVrGetRight( idVec3& position, idQuat& rotation );
-	void				OpenVrGetLeft( idVec3& position, idQuat& rotation );
+	//void				OpenVrGetRight( idVec3& position, idQuat& rotation );
+	//void				OpenVrGetLeft( idVec3& position, idQuat& rotation );
 
 	void				MotionControlSetRotationOffset();
 	void				MotionControlSetOffset();
@@ -133,7 +133,7 @@ public:
 	void				MotionControllerSetHapticOpenVR( int hand, unsigned short value );
 
 	void				MSAAResolve( void );
-	void				FXAAResolve( idImage* leftCurrent, idImage* rightCurrent );
+	//void				FXAAResolve( idImage* leftCurrent, idImage* rightCurrent );
 	void				FXAASetUniforms( Framebuffer FBO );
 
 	void				CalcAimMove( float& yawDelta, float& pitchDelta );

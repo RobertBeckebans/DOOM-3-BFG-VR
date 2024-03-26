@@ -27,16 +27,14 @@ If you have questions concerning this license or the applicable additional terms
 ===========================================================================
 */
 
-#pragma hdrstop
 #include "precompiled.h"
+#pragma hdrstop
 
 #include "../RenderCommon.h"
 #include "../simplex.h"	// line font definition
 
 idCVar r_showCenterOfProjection( "r_showCenterOfProjection", "0", CVAR_RENDERER | CVAR_BOOL, "Draw a cross to show the center of projection" );
 idCVar r_showLines( "r_showLines", "0", CVAR_RENDERER | CVAR_INTEGER, "1 = draw alternate horizontal lines, 2 = draw alternate vertical lines" );
-
-
 
 #define MAX_DEBUG_LINES			16384
 
@@ -88,6 +86,8 @@ int				rb_debugPolygonTime = 0;
 static void RB_DrawText( const char* text, const idVec3& origin, float scale, const idVec4& color, const idMat3& viewAxis, const int align );
 
 void RB_SetMVP( const idRenderMatrix& mvp );
+
+#if 0
 
 /*
 ================
@@ -918,10 +918,14 @@ static void RB_ShowTris( drawSurf_t** drawSurfs, int numDrawSurfs )
 	}
 }
 
+#endif
+
 void idRenderSystemLocal::OnFrame()
 {
 	// TODO
 }
+
+#if 0
 
 /*
 =====================
@@ -1985,776 +1989,782 @@ static void RB_ShowPortals()
 	renderProgManager.BindShader_Color();
 	GL_State( GLS_DEPTHFUNC_ALWAYS );
 
-	( ( idRenderWorldLocal* )backEnd.viewDef->renderWorld )->ShowPortals();
-}
+	/*
+	=====================
+	idRenderWorldLocal::ShowPortals
 
-/*
-================
-RB_ClearDebugText
-================
-*/
-void RB_ClearDebugText( int time )
-{
-	int			i;
-	int			num;
-	debugText_t*	text;
-
-	rb_debugTextTime = time;
-
-	if( !time )
+	Debugging tool, won't work correctly with SMP or when mirrors are present
+	=====================
+	*/
+	void idRenderWorldLocal::ShowPortals()
 	{
-		// free up our strings
-		text = rb_debugText;
-		for( i = 0; i < MAX_DEBUG_TEXT; i++, text++ )
+		int			i, j;
+		portalArea_t*	area;
+		portal_t*	p;
+		idWinding*	w;
+
+		idRenderWorldLocal& world = *viewDef->renderWorld;
+
+		// flood out through portals, setting area viewCount
+		for( i = 0; i < numPortalAreas; i++ )
 		{
-			text->text.Clear();
-		}
-		rb_numDebugText = 0;
-		return;
-	}
-
-	// copy any text that still needs to be drawn
-	num	= 0;
-	text = rb_debugText;
-	for( i = 0; i < rb_numDebugText; i++, text++ )
-	{
-		if( text->lifeTime > time )
-		{
-			if( num != i )
-			{
-				rb_debugText[ num ] = *text;
-			}
-			num++;
-		}
-	}
-	rb_numDebugText = num;
-}
-
-/*
-================
-RB_AddDebugText
-================
-*/
-void RB_AddDebugText( const char* text, const idVec3& origin, float scale, const idVec4& color, const idMat3& viewAxis, const int align, const int lifetime, const bool depthTest )
-{
-	debugText_t* debugText;
-
-	if( rb_numDebugText < MAX_DEBUG_TEXT )
-	{
-		debugText = &rb_debugText[ rb_numDebugText++ ];
-		debugText->text			= text;
-		debugText->origin		= origin;
-		debugText->scale		= scale;
-		debugText->color		= color;
-		debugText->viewAxis		= viewAxis;
-		debugText->align		= align;
-		debugText->lifeTime		= rb_debugTextTime + lifetime;
-		debugText->depthTest	= depthTest;
-	}
-}
-
-/*
-================
-RB_DrawTextLength
-
-  returns the length of the given text
-================
-*/
-float RB_DrawTextLength( const char* text, float scale, int len )
-{
-	int i, num, index, charIndex;
-	float spacing, textLen = 0.0f;
-
-	if( text && *text )
-	{
-		if( !len )
-		{
-			len = strlen( text );
-		}
-		for( i = 0; i < len; i++ )
-		{
-			charIndex = text[i] - 32;
-			if( charIndex < 0 || charIndex > NUM_SIMPLEX_CHARS )
+			area = &portalAreas[i];
+			if( area->viewCount != tr.viewCount )
 			{
 				continue;
 			}
-			num = simplex[charIndex][0] * 2;
-			spacing = simplex[charIndex][1];
-			index = 2;
-
-			while( index - 2 < num )
+			for( p = area->portals; p; p = p->next )
 			{
-				if( simplex[charIndex][index] < 0 )
+				w = p->w;
+				if( !w )
 				{
-					index++;
 					continue;
 				}
-				index += 2;
-				if( simplex[charIndex][index] < 0 )
+
+				if( portalAreas[ p->intoArea ].viewCount != tr.viewCount )
 				{
-					index++;
-					continue;
+					// red = can't see
+					GL_Color( 1, 0, 0 );
 				}
+				else
+				{
+					// green = see through
+					GL_Color( 0, 1, 0 );
+				}
+
+				// RB begin
+				renderProgManager.CommitUniforms();
+				// RB end
+
+				glBegin( GL_LINE_LOOP );
+				for( j = 0; j < w->GetNumPoints(); j++ )
+				{
+					glVertex3fv( ( *w )[j].ToFloatPtr() );
+				}
+				glEnd();
 			}
-			textLen += spacing * scale;
 		}
 	}
-	return textLen;
-}
 
-/*
-================
-RB_DrawText
 
-  oriented on the viewaxis
-  align can be 0-left, 1-center (default), 2-right
-================
-*/
-static void RB_DrawText( const char* text, const idVec3& origin, float scale, const idVec4& color, const idMat3& viewAxis, const int align )
-{
-	renderProgManager.BindShader_Color();
+#endif
 
-	// RB begin
-	GL_Color( color[0], color[1], color[2], 1 /*color[3]*/ );
-	renderProgManager.CommitUniforms();
-	// RB end
-
-	int i, j, len, num, index, charIndex, line;
-	float textLen = 1.0f, spacing = 1.0f;
-	idVec3 org, p1, p2;
-
-	if( text && *text )
+	/*
+	================
+	RB_ClearDebugText
+	================
+	*/
+	void RB_ClearDebugText( int time )
 	{
-		glBegin( GL_LINES );
+		int			i;
+		int			num;
+		debugText_t*	text;
 
-		if( text[0] == '\n' )
+		rb_debugTextTime = time;
+
+		if( !time )
 		{
-			line = 1;
+			// free up our strings
+			text = rb_debugText;
+			for( i = 0; i < MAX_DEBUG_TEXT; i++, text++ )
+			{
+				text->text.Clear();
+			}
+			rb_numDebugText = 0;
+			return;
+		}
+
+		// copy any text that still needs to be drawn
+		num	= 0;
+		text = rb_debugText;
+		for( i = 0; i < rb_numDebugText; i++, text++ )
+		{
+			if( text->lifeTime > time )
+			{
+				if( num != i )
+				{
+					rb_debugText[ num ] = *text;
+				}
+				num++;
+			}
+		}
+		rb_numDebugText = num;
+	}
+
+	/*
+	================
+	RB_AddDebugText
+	================
+	*/
+	void RB_AddDebugText( const char* text, const idVec3 & origin, float scale, const idVec4 & color, const idMat3 & viewAxis, const int align, const int lifetime, const bool depthTest )
+	{
+		debugText_t* debugText;
+
+		if( rb_numDebugText < MAX_DEBUG_TEXT )
+		{
+			debugText = &rb_debugText[ rb_numDebugText++ ];
+			debugText->text			= text;
+			debugText->origin		= origin;
+			debugText->scale		= scale;
+			debugText->color		= color;
+			debugText->viewAxis		= viewAxis;
+			debugText->align		= align;
+			debugText->lifeTime		= rb_debugTextTime + lifetime;
+			debugText->depthTest	= depthTest;
+		}
+	}
+
+	/*
+	================
+	RB_DrawTextLength
+
+	  returns the length of the given text
+	================
+	*/
+	float RB_DrawTextLength( const char* text, float scale, int len )
+	{
+		int i, num, index, charIndex;
+		float spacing, textLen = 0.0f;
+
+		if( text && *text )
+		{
+			if( !len )
+			{
+				len = strlen( text );
+			}
+			for( i = 0; i < len; i++ )
+			{
+				charIndex = text[i] - 32;
+				if( charIndex < 0 || charIndex > NUM_SIMPLEX_CHARS )
+				{
+					continue;
+				}
+				num = simplex[charIndex][0] * 2;
+				spacing = simplex[charIndex][1];
+				index = 2;
+
+				while( index - 2 < num )
+				{
+					if( simplex[charIndex][index] < 0 )
+					{
+						index++;
+						continue;
+					}
+					index += 2;
+					if( simplex[charIndex][index] < 0 )
+					{
+						index++;
+						continue;
+					}
+				}
+				textLen += spacing * scale;
+			}
+		}
+		return textLen;
+	}
+
+	/*
+	================
+	RB_DrawText
+
+	  oriented on the viewaxis
+	  align can be 0-left, 1-center (default), 2-right
+	================
+	*/
+	static void RB_DrawText( const char* text, const idVec3 & origin, float scale, const idVec4 & color, const idMat3 & viewAxis, const int align )
+	{
+		renderProgManager.BindShader_Color();
+
+		// RB begin
+		backEnd.GL_Color( color[0], color[1], color[2], 1 /*color[3]*/ );
+		renderProgManager.CommitUniforms();
+		// RB end
+
+		int i, j, len, num, index, charIndex, line;
+		float textLen = 1.0f, spacing = 1.0f;
+		idVec3 org, p1, p2;
+
+		if( text && *text )
+		{
+			glBegin( GL_LINES );
+
+			if( text[0] == '\n' )
+			{
+				line = 1;
+			}
+			else
+			{
+				line = 0;
+			}
+
+			len = strlen( text );
+			for( i = 0; i < len; i++ )
+			{
+
+				if( i == 0 || text[i] == '\n' )
+				{
+					org = origin - viewAxis[2] * ( line * 36.0f * scale );
+					if( align != 0 )
+					{
+						for( j = 1; i + j <= len; j++ )
+						{
+							if( i + j == len || text[i + j] == '\n' )
+							{
+								textLen = RB_DrawTextLength( text + i, scale, j );
+								break;
+							}
+						}
+						if( align == 2 )
+						{
+							// right
+							org += viewAxis[1] * textLen;
+						}
+						else
+						{
+							// center
+							org += viewAxis[1] * ( textLen * 0.5f );
+						}
+					}
+					line++;
+				}
+
+				charIndex = text[i] - 32;
+				if( charIndex < 0 || charIndex > NUM_SIMPLEX_CHARS )
+				{
+					continue;
+				}
+				num = simplex[charIndex][0] * 2;
+				spacing = simplex[charIndex][1];
+				index = 2;
+
+				while( index - 2 < num )
+				{
+					if( simplex[charIndex][index] < 0 )
+					{
+						index++;
+						continue;
+					}
+					p1 = org + scale * simplex[charIndex][index] * -viewAxis[1] + scale * simplex[charIndex][index + 1] * viewAxis[2];
+					index += 2;
+					if( simplex[charIndex][index] < 0 )
+					{
+						index++;
+						continue;
+					}
+					p2 = org + scale * simplex[charIndex][index] * -viewAxis[1] + scale * simplex[charIndex][index + 1] * viewAxis[2];
+
+					glVertex3fv( p1.ToFloatPtr() );
+					glVertex3fv( p2.ToFloatPtr() );
+				}
+				org -= viewAxis[1] * ( spacing * scale );
+			}
+
+			glEnd();
+		}
+	}
+
+#if 0
+	/*
+	================
+	RB_ShowDebugText
+	================
+	*/
+	void RB_ShowDebugText()
+	{
+		int			i;
+		int			width;
+		debugText_t*	text;
+
+		if( !rb_numDebugText )
+		{
+			return;
+		}
+
+		// all lines are expressed in world coordinates
+		RB_SimpleWorldSetup();
+
+		globalImages->BindNull();
+
+		width = r_debugLineWidth.GetInteger();
+		if( width < 1 )
+		{
+			width = 1;
+		}
+		else if( width > 10 )
+		{
+			width = 10;
+		}
+
+		// draw lines
+		glLineWidth( width );
+
+
+		if( !r_debugLineDepthTest.GetBool() )
+		{
+			GL_State( GLS_POLYMODE_LINE | GLS_DEPTHFUNC_ALWAYS );
 		}
 		else
 		{
-			line = 0;
+			GL_State( GLS_POLYMODE_LINE );
 		}
 
-		len = strlen( text );
-		for( i = 0; i < len; i++ )
+		text = rb_debugText;
+		for( i = 0; i < rb_numDebugText; i++, text++ )
 		{
-
-			if( i == 0 || text[i] == '\n' )
+			if( !text->depthTest )
 			{
-				org = origin - viewAxis[2] * ( line * 36.0f * scale );
-				if( align != 0 )
-				{
-					for( j = 1; i + j <= len; j++ )
-					{
-						if( i + j == len || text[i + j] == '\n' )
-						{
-							textLen = RB_DrawTextLength( text + i, scale, j );
-							break;
-						}
-					}
-					if( align == 2 )
-					{
-						// right
-						org += viewAxis[1] * textLen;
-					}
-					else
-					{
-						// center
-						org += viewAxis[1] * ( textLen * 0.5f );
-					}
-				}
-				line++;
+				RB_DrawText( text->text, text->origin, text->scale, text->color, text->viewAxis, text->align );
 			}
+		}
 
-			charIndex = text[i] - 32;
-			if( charIndex < 0 || charIndex > NUM_SIMPLEX_CHARS )
+		if( !r_debugLineDepthTest.GetBool() )
+		{
+			GL_State( GLS_POLYMODE_LINE );
+		}
+
+		text = rb_debugText;
+		for( i = 0; i < rb_numDebugText; i++, text++ )
+		{
+			if( text->depthTest )
 			{
-				continue;
+				RB_DrawText( text->text, text->origin, text->scale, text->color, text->viewAxis, text->align );
 			}
-			num = simplex[charIndex][0] * 2;
-			spacing = simplex[charIndex][1];
-			index = 2;
+		}
 
-			while( index - 2 < num )
+		glLineWidth( 1 );
+	}
+
+#endif
+
+	/*
+	================
+	RB_ClearDebugLines
+	================
+	*/
+	void RB_ClearDebugLines( int time )
+	{
+		int			i;
+		int			num;
+		debugLine_t*	line;
+
+		rb_debugLineTime = time;
+
+		if( !time )
+		{
+			rb_numDebugLines = 0;
+			return;
+		}
+
+		// copy any lines that still need to be drawn
+		num	= 0;
+		line = rb_debugLines;
+		for( i = 0; i < rb_numDebugLines; i++, line++ )
+		{
+			if( line->lifeTime > time )
 			{
-				if( simplex[charIndex][index] < 0 )
+				if( num != i )
 				{
-					index++;
-					continue;
+					rb_debugLines[ num ] = *line;
 				}
-				p1 = org + scale * simplex[charIndex][index] * -viewAxis[1] + scale * simplex[charIndex][index + 1] * viewAxis[2];
-				index += 2;
-				if( simplex[charIndex][index] < 0 )
-				{
-					index++;
-					continue;
-				}
-				p2 = org + scale * simplex[charIndex][index] * -viewAxis[1] + scale * simplex[charIndex][index + 1] * viewAxis[2];
-
-				glVertex3fv( p1.ToFloatPtr() );
-				glVertex3fv( p2.ToFloatPtr() );
+				num++;
 			}
-			org -= viewAxis[1] * ( spacing * scale );
+		}
+		rb_numDebugLines = num;
+	}
+
+	/*
+	================
+	RB_AddDebugLine
+	================
+	*/
+	void RB_AddDebugLine( const idVec4 & color, const idVec3 & start, const idVec3 & end, const int lifeTime, const bool depthTest )
+	{
+		debugLine_t* line;
+
+		if( rb_numDebugLines < MAX_DEBUG_LINES )
+		{
+			line = &rb_debugLines[ rb_numDebugLines++ ];
+			line->rgb		= color;
+			line->start		= start;
+			line->end		= end;
+			line->depthTest = depthTest;
+			line->lifeTime	= rb_debugLineTime + lifeTime;
+		}
+	}
+
+
+#if 0
+	/*
+	================
+	RB_ShowDebugLines
+	================
+	*/
+	void RB_ShowDebugLines()
+	{
+		int			i;
+		int			width;
+		debugLine_t*	line;
+
+		if( !rb_numDebugLines )
+		{
+			return;
+		}
+
+		// all lines are expressed in world coordinates
+		RB_SimpleWorldSetup();
+
+		// RB begin
+		renderProgManager.BindShader_VertexColor();
+		renderProgManager.CommitUniforms();
+		// RB end
+
+		globalImages->BindNull();
+
+		width = r_debugLineWidth.GetInteger();
+		if( width < 1 )
+		{
+			width = 1;
+		}
+		else if( width > 10 )
+		{
+			width = 10;
+		}
+
+		// draw lines
+		glLineWidth( width );
+
+		if( !r_debugLineDepthTest.GetBool() )
+		{
+			GL_State( GLS_POLYMODE_LINE | GLS_DEPTHFUNC_ALWAYS );
+		}
+		else
+		{
+			GL_State( GLS_POLYMODE_LINE );
+		}
+
+		glBegin( GL_LINES );
+
+		line = rb_debugLines;
+		for( i = 0; i < rb_numDebugLines; i++, line++ )
+		{
+			if( !line->depthTest )
+			{
+				glColor3fv( line->rgb.ToFloatPtr() );
+				glVertex3fv( line->start.ToFloatPtr() );
+				glVertex3fv( line->end.ToFloatPtr() );
+			}
+		}
+		glEnd();
+
+		if( !r_debugLineDepthTest.GetBool() )
+		{
+			GL_State( GLS_POLYMODE_LINE );
+		}
+
+		glBegin( GL_LINES );
+
+		line = rb_debugLines;
+		for( i = 0; i < rb_numDebugLines; i++, line++ )
+		{
+			if( line->depthTest )
+			{
+				glColor4fv( line->rgb.ToFloatPtr() );
+				glVertex3fv( line->start.ToFloatPtr() );
+				glVertex3fv( line->end.ToFloatPtr() );
+			}
 		}
 
 		glEnd();
-	}
-}
 
-/*
-================
-RB_ShowDebugText
-================
-*/
-void RB_ShowDebugText()
-{
-	int			i;
-	int			width;
-	debugText_t*	text;
-
-	if( !rb_numDebugText )
-	{
-		return;
+		glLineWidth( 1 );
+		GL_State( GLS_DEFAULT );
 	}
 
-	// all lines are expressed in world coordinates
-	RB_SimpleWorldSetup();
+#endif
 
-	globalImages->BindNull();
-
-	width = r_debugLineWidth.GetInteger();
-	if( width < 1 )
+	/*
+	================
+	RB_ClearDebugPolygons
+	================
+	*/
+	void RB_ClearDebugPolygons( int time )
 	{
-		width = 1;
-	}
-	else if( width > 10 )
-	{
-		width = 10;
-	}
+		int				i;
+		int				num;
+		debugPolygon_t*	poly;
 
-	// draw lines
-	glLineWidth( width );
+		rb_debugPolygonTime = time;
 
-
-	if( !r_debugLineDepthTest.GetBool() )
-	{
-		GL_State( GLS_POLYMODE_LINE | GLS_DEPTHFUNC_ALWAYS );
-	}
-	else
-	{
-		GL_State( GLS_POLYMODE_LINE );
-	}
-
-	text = rb_debugText;
-	for( i = 0; i < rb_numDebugText; i++, text++ )
-	{
-		if( !text->depthTest )
+		if( !time )
 		{
-			RB_DrawText( text->text, text->origin, text->scale, text->color, text->viewAxis, text->align );
+			rb_numDebugPolygons = 0;
+			return;
 		}
-	}
 
-	if( !r_debugLineDepthTest.GetBool() )
-	{
-		GL_State( GLS_POLYMODE_LINE );
-	}
+		// copy any polygons that still need to be drawn
+		num	= 0;
 
-	text = rb_debugText;
-	for( i = 0; i < rb_numDebugText; i++, text++ )
-	{
-		if( text->depthTest )
+		poly = rb_debugPolygons;
+		for( i = 0; i < rb_numDebugPolygons; i++, poly++ )
 		{
-			RB_DrawText( text->text, text->origin, text->scale, text->color, text->viewAxis, text->align );
-		}
-	}
-
-	glLineWidth( 1 );
-}
-
-/*
-================
-RB_ClearDebugLines
-================
-*/
-void RB_ClearDebugLines( int time )
-{
-	int			i;
-	int			num;
-	debugLine_t*	line;
-
-	rb_debugLineTime = time;
-
-	if( !time )
-	{
-		rb_numDebugLines = 0;
-		return;
-	}
-
-	// copy any lines that still need to be drawn
-	num	= 0;
-	line = rb_debugLines;
-	for( i = 0; i < rb_numDebugLines; i++, line++ )
-	{
-		if( line->lifeTime > time )
-		{
-			if( num != i )
+			if( poly->lifeTime > time )
 			{
-				rb_debugLines[ num ] = *line;
+				if( num != i )
+				{
+					rb_debugPolygons[ num ] = *poly;
+				}
+				num++;
 			}
-			num++;
 		}
-	}
-	rb_numDebugLines = num;
-}
-
-/*
-================
-RB_AddDebugLine
-================
-*/
-void RB_AddDebugLine( const idVec4& color, const idVec3& start, const idVec3& end, const int lifeTime, const bool depthTest )
-{
-	debugLine_t* line;
-
-	if( rb_numDebugLines < MAX_DEBUG_LINES )
-	{
-		line = &rb_debugLines[ rb_numDebugLines++ ];
-		line->rgb		= color;
-		line->start		= start;
-		line->end		= end;
-		line->depthTest = depthTest;
-		line->lifeTime	= rb_debugLineTime + lifeTime;
-	}
-}
-
-/*
-================
-RB_ShowDebugLines
-================
-*/
-void RB_ShowDebugLines()
-{
-	int			i;
-	int			width;
-	debugLine_t*	line;
-
-	if( !rb_numDebugLines )
-	{
-		return;
+		rb_numDebugPolygons = num;
 	}
 
-	// all lines are expressed in world coordinates
-	RB_SimpleWorldSetup();
-
-	// RB begin
-	renderProgManager.BindShader_VertexColor();
-	renderProgManager.CommitUniforms();
-	// RB end
-
-	globalImages->BindNull();
-
-	width = r_debugLineWidth.GetInteger();
-	if( width < 1 )
+	/*
+	================
+	RB_AddDebugPolygon
+	================
+	*/
+	void RB_AddDebugPolygon( const idVec4 & color, const idWinding & winding, const int lifeTime, const bool depthTest )
 	{
-		width = 1;
-	}
-	else if( width > 10 )
-	{
-		width = 10;
-	}
+		debugPolygon_t* poly;
 
-	// draw lines
-	glLineWidth( width );
-
-	if( !r_debugLineDepthTest.GetBool() )
-	{
-		GL_State( GLS_POLYMODE_LINE | GLS_DEPTHFUNC_ALWAYS );
-	}
-	else
-	{
-		GL_State( GLS_POLYMODE_LINE );
-	}
-
-	glBegin( GL_LINES );
-
-	line = rb_debugLines;
-	for( i = 0; i < rb_numDebugLines; i++, line++ )
-	{
-		if( !line->depthTest )
+		if( rb_numDebugPolygons < MAX_DEBUG_POLYGONS )
 		{
-			glColor3fv( line->rgb.ToFloatPtr() );
-			glVertex3fv( line->start.ToFloatPtr() );
-			glVertex3fv( line->end.ToFloatPtr() );
+			poly = &rb_debugPolygons[ rb_numDebugPolygons++ ];
+			poly->rgb		= color;
+			poly->winding	= winding;
+			poly->depthTest = depthTest;
+			poly->lifeTime	= rb_debugPolygonTime + lifeTime;
 		}
 	}
-	glEnd();
 
-	if( !r_debugLineDepthTest.GetBool() )
+#if 0
+	/*
+	================
+	RB_ShowDebugPolygons
+	================
+	*/
+	void RB_ShowDebugPolygons()
 	{
-		GL_State( GLS_POLYMODE_LINE );
-	}
+		int				i, j;
+		debugPolygon_t*	poly;
 
-	glBegin( GL_LINES );
-
-	line = rb_debugLines;
-	for( i = 0; i < rb_numDebugLines; i++, line++ )
-	{
-		if( line->depthTest )
+		if( !rb_numDebugPolygons )
 		{
-			glColor4fv( line->rgb.ToFloatPtr() );
-			glVertex3fv( line->start.ToFloatPtr() );
-			glVertex3fv( line->end.ToFloatPtr() );
+			return;
 		}
-	}
 
-	glEnd();
+		// all lines are expressed in world coordinates
+		RB_SimpleWorldSetup();
 
-	glLineWidth( 1 );
-	GL_State( GLS_DEFAULT );
-}
+		// RB begin
+		renderProgManager.BindShader_VertexColor();
+		renderProgManager.CommitUniforms();
+		// RB end
 
-/*
-================
-RB_ClearDebugPolygons
-================
-*/
-void RB_ClearDebugPolygons( int time )
-{
-	int				i;
-	int				num;
-	debugPolygon_t*	poly;
+		globalImages->BindNull();
 
-	rb_debugPolygonTime = time;
-
-	if( !time )
-	{
-		rb_numDebugPolygons = 0;
-		return;
-	}
-
-	// copy any polygons that still need to be drawn
-	num	= 0;
-
-	poly = rb_debugPolygons;
-	for( i = 0; i < rb_numDebugPolygons; i++, poly++ )
-	{
-		if( poly->lifeTime > time )
+		if( r_debugPolygonFilled.GetBool() )
 		{
-			if( num != i )
-			{
-				rb_debugPolygons[ num ] = *poly;
-			}
-			num++;
+			GL_State( GLS_POLYGON_OFFSET | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_DEPTHMASK );
+			GL_PolygonOffset( -1, -2 );
 		}
-	}
-	rb_numDebugPolygons = num;
-}
+		else
+		{
+			GL_State( GLS_POLYGON_OFFSET | GLS_POLYMODE_LINE );
+			GL_PolygonOffset( -1, -2 );
+		}
 
-/*
-================
-RB_AddDebugPolygon
-================
-*/
-void RB_AddDebugPolygon( const idVec4& color, const idWinding& winding, const int lifeTime, const bool depthTest )
-{
-	debugPolygon_t* poly;
-
-	if( rb_numDebugPolygons < MAX_DEBUG_POLYGONS )
-	{
-		poly = &rb_debugPolygons[ rb_numDebugPolygons++ ];
-		poly->rgb		= color;
-		poly->winding	= winding;
-		poly->depthTest = depthTest;
-		poly->lifeTime	= rb_debugPolygonTime + lifeTime;
-	}
-}
-
-/*
-================
-RB_ShowDebugPolygons
-================
-*/
-void RB_ShowDebugPolygons()
-{
-	int				i, j;
-	debugPolygon_t*	poly;
-
-	if( !rb_numDebugPolygons )
-	{
-		return;
-	}
-
-	// all lines are expressed in world coordinates
-	RB_SimpleWorldSetup();
-
-	// RB begin
-	renderProgManager.BindShader_VertexColor();
-	renderProgManager.CommitUniforms();
-	// RB end
-
-	globalImages->BindNull();
-
-	if( r_debugPolygonFilled.GetBool() )
-	{
-		GL_State( GLS_POLYGON_OFFSET | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_DEPTHMASK );
-		GL_PolygonOffset( -1, -2 );
-	}
-	else
-	{
-		GL_State( GLS_POLYGON_OFFSET | GLS_POLYMODE_LINE );
-		GL_PolygonOffset( -1, -2 );
-	}
-
-	poly = rb_debugPolygons;
-	for( i = 0; i < rb_numDebugPolygons; i++, poly++ )
-	{
+		poly = rb_debugPolygons;
+		for( i = 0; i < rb_numDebugPolygons; i++, poly++ )
+		{
 //		if ( !poly->depthTest ) {
 
-		glColor4fv( poly->rgb.ToFloatPtr() );
+			glColor4fv( poly->rgb.ToFloatPtr() );
 
-		glBegin( GL_POLYGON );
+			glBegin( GL_POLYGON );
 
-		for( j = 0; j < poly->winding.GetNumPoints(); j++ )
-		{
-			glVertex3fv( poly->winding[j].ToFloatPtr() );
+			for( j = 0; j < poly->winding.GetNumPoints(); j++ )
+			{
+				glVertex3fv( poly->winding[j].ToFloatPtr() );
+			}
+
+			glEnd();
+//		}
 		}
 
-		glEnd();
-//		}
+		GL_State( GLS_DEFAULT );
+
+		if( r_debugPolygonFilled.GetBool() )
+		{
+			glDisable( GL_POLYGON_OFFSET_FILL );
+		}
+		else
+		{
+			glDisable( GL_POLYGON_OFFSET_LINE );
+		}
+
+		GL_State( GLS_DEFAULT );
 	}
 
-	GL_State( GLS_DEFAULT );
-
-	if( r_debugPolygonFilled.GetBool() )
+	/*
+	================
+	RB_ShowCenterOfProjection
+	================
+	*/
+	void RB_ShowCenterOfProjection()
 	{
-		glDisable( GL_POLYGON_OFFSET_FILL );
-	}
-	else
-	{
-		glDisable( GL_POLYGON_OFFSET_LINE );
-	}
+		if( !r_showCenterOfProjection.GetBool() )
+		{
+			return;
+		}
 
-	GL_State( GLS_DEFAULT );
-}
-
-/*
-================
-RB_ShowCenterOfProjection
-================
-*/
-void RB_ShowCenterOfProjection()
-{
-	if( !r_showCenterOfProjection.GetBool() )
-	{
-		return;
-	}
-
-	const int w = backEnd.viewDef->scissor.GetWidth();
-	const int h = backEnd.viewDef->scissor.GetHeight();
-	glClearColor( 1, 0, 0, 1 );
-	for( float f = 0.0f ; f <= 1.0f ; f += 0.125f )
-	{
+		const int w = backEnd.viewDef->scissor.GetWidth();
+		const int h = backEnd.viewDef->scissor.GetHeight();
+		glClearColor( 1, 0, 0, 1 );
+		for( float f = 0.0f ; f <= 1.0f ; f += 0.125f )
+		{
+			glScissor( w * f - 1 , 0, 3, h );
+			glClear( GL_COLOR_BUFFER_BIT );
+			glScissor( 0, h * f - 1 , w, 3 );
+			glClear( GL_COLOR_BUFFER_BIT );
+		}
+		glClearColor( 0, 1, 0, 1 );
+		float f = 0.5f;
 		glScissor( w * f - 1 , 0, 3, h );
 		glClear( GL_COLOR_BUFFER_BIT );
 		glScissor( 0, h * f - 1 , w, 3 );
 		glClear( GL_COLOR_BUFFER_BIT );
-	}
-	glClearColor( 0, 1, 0, 1 );
-	float f = 0.5f;
-	glScissor( w * f - 1 , 0, 3, h );
-	glClear( GL_COLOR_BUFFER_BIT );
-	glScissor( 0, h * f - 1 , w, 3 );
-	glClear( GL_COLOR_BUFFER_BIT );
 
-	glScissor( 0, 0, w, h );
-}
-
-/*
-================
-RB_ShowLines
-
-Draw exact pixel lines to check pixel center sampling
-================
-*/
-void RB_ShowLines()
-{
-	if( !r_showLines.GetBool() )
-	{
-		return;
+		glScissor( 0, 0, w, h );
 	}
 
-	glEnable( GL_SCISSOR_TEST );
-	if( backEnd.viewDef->renderView.viewEyeBuffer == 0 )
-	{
-		glClearColor( 1, 0, 0, 1 );
-	}
-	else if( backEnd.viewDef->renderView.viewEyeBuffer == 1 )
-	{
-		glClearColor( 0, 1, 0, 1 );
-	}
-	else
-	{
-		glClearColor( 0, 0, 1, 1 );
-	}
+	/*
+	================
+	RB_ShowLines
 
-	const int start = ( r_showLines.GetInteger() > 2 );	// 1,3 = horizontal, 2,4 = vertical
-	if( r_showLines.GetInteger() == 1 || r_showLines.GetInteger() == 3 )
+	Draw exact pixel lines to check pixel center sampling
+	================
+	*/
+	void RB_ShowLines()
 	{
-		for( int i = start ; i < tr.GetHeight() ; i += 2 )
+		if( !r_showLines.GetBool() )
 		{
-			glScissor( 0, i, tr.GetWidth(), 1 );
-			glClear( GL_COLOR_BUFFER_BIT );
+			return;
+		}
+
+		glEnable( GL_SCISSOR_TEST );
+		if( backEnd.viewDef->renderView.viewEyeBuffer == 0 )
+		{
+			glClearColor( 1, 0, 0, 1 );
+		}
+		else if( backEnd.viewDef->renderView.viewEyeBuffer == 1 )
+		{
+			glClearColor( 0, 1, 0, 1 );
+		}
+		else
+		{
+			glClearColor( 0, 0, 1, 1 );
+		}
+
+		const int start = ( r_showLines.GetInteger() > 2 );	// 1,3 = horizontal, 2,4 = vertical
+		if( r_showLines.GetInteger() == 1 || r_showLines.GetInteger() == 3 )
+		{
+			for( int i = start ; i < tr.GetHeight() ; i += 2 )
+			{
+				glScissor( 0, i, tr.GetWidth(), 1 );
+				glClear( GL_COLOR_BUFFER_BIT );
+			}
+		}
+		else
+		{
+			for( int i = start ; i < tr.GetWidth() ; i += 2 )
+			{
+				glScissor( i, 0, 1, tr.GetHeight() );
+				glClear( GL_COLOR_BUFFER_BIT );
+			}
 		}
 	}
-	else
-	{
-		for( int i = start ; i < tr.GetWidth() ; i += 2 )
-		{
-			glScissor( i, 0, 1, tr.GetHeight() );
-			glClear( GL_COLOR_BUFFER_BIT );
-		}
-	}
-}
 
 
-/*
-================
-RB_TestGamma
-================
-*/
+	/*
+	================
+	RB_TestGamma
+	================
+	*/
 #define	G_WIDTH		512
 #define	G_HEIGHT	512
 #define	BAR_HEIGHT	64
 
-void RB_TestGamma()
-{
-	byte	image[G_HEIGHT][G_WIDTH][4];
-	int		i, j;
-	int		c, comp;
-	int		v, dither;
-	int		mask, y;
-
-	if( r_testGamma.GetInteger() <= 0 )
+	void RB_TestGamma()
 	{
-		return;
-	}
+		byte	image[G_HEIGHT][G_WIDTH][4];
+		int		i, j;
+		int		c, comp;
+		int		v, dither;
+		int		mask, y;
 
-	v = r_testGamma.GetInteger();
-	if( v <= 1 || v >= 196 )
-	{
-		v = 128;
-	}
+		if( r_testGamma.GetInteger() <= 0 )
+		{
+			return;
+		}
 
-	memset( image, 0, sizeof( image ) );
+		v = r_testGamma.GetInteger();
+		if( v <= 1 || v >= 196 )
+		{
+			v = 128;
+		}
 
-	for( mask = 0; mask < 8; mask++ )
-	{
-		y = mask * BAR_HEIGHT;
+		memset( image, 0, sizeof( image ) );
+
+		for( mask = 0; mask < 8; mask++ )
+		{
+			y = mask * BAR_HEIGHT;
+			for( c = 0; c < 4; c++ )
+			{
+				v = c * 64 + 32;
+				// solid color
+				for( i = 0; i < BAR_HEIGHT / 2; i++ )
+				{
+					for( j = 0; j < G_WIDTH / 4; j++ )
+					{
+						for( comp = 0; comp < 3; comp++ )
+						{
+							if( mask & ( 1 << comp ) )
+							{
+								image[y + i][c * G_WIDTH / 4 + j][comp] = v;
+							}
+						}
+					}
+					// dithered color
+					for( j = 0; j < G_WIDTH / 4; j++ )
+					{
+						if( ( i ^ j ) & 1 )
+						{
+							dither = c * 64;
+						}
+						else
+						{
+							dither = c * 64 + 63;
+						}
+						for( comp = 0; comp < 3; comp++ )
+						{
+							if( mask & ( 1 << comp ) )
+							{
+								image[y + BAR_HEIGHT / 2 + i][c * G_WIDTH / 4 + j][comp] = dither;
+							}
+						}
+					}
+				}
+			}
+		}
+
+		// draw geometrically increasing steps in the bottom row
+		y = 0 * BAR_HEIGHT;
+		float	scale = 1;
 		for( c = 0; c < 4; c++ )
 		{
-			v = c * 64 + 32;
-			// solid color
-			for( i = 0; i < BAR_HEIGHT / 2; i++ )
-			{
-				for( j = 0; j < G_WIDTH / 4; j++ )
-				{
-					for( comp = 0; comp < 3; comp++ )
-					{
-						if( mask & ( 1 << comp ) )
-						{
-							image[y + i][c * G_WIDTH / 4 + j][comp] = v;
-						}
-					}
-				}
-				// dithered color
-				for( j = 0; j < G_WIDTH / 4; j++ )
-				{
-					if( ( i ^ j ) & 1 )
-					{
-						dither = c * 64;
-					}
-					else
-					{
-						dither = c * 64 + 63;
-					}
-					for( comp = 0; comp < 3; comp++ )
-					{
-						if( mask & ( 1 << comp ) )
-						{
-							image[y + BAR_HEIGHT / 2 + i][c * G_WIDTH / 4 + j][comp] = dither;
-						}
-					}
-				}
-			}
-		}
-	}
-
-	// draw geometrically increasing steps in the bottom row
-	y = 0 * BAR_HEIGHT;
-	float	scale = 1;
-	for( c = 0; c < 4; c++ )
-	{
-		v = ( int )( 64 * scale );
-		if( v < 0 )
-		{
-			v = 0;
-		}
-		else if( v > 255 )
-		{
-			v = 255;
-		}
-		scale = scale * 1.5;
-		for( i = 0; i < BAR_HEIGHT; i++ )
-		{
-			for( j = 0; j < G_WIDTH / 4; j++ )
-			{
-				image[y + i][c * G_WIDTH / 4 + j][0] = v;
-				image[y + i][c * G_WIDTH / 4 + j][1] = v;
-				image[y + i][c * G_WIDTH / 4 + j][2] = v;
-			}
-		}
-	}
-
-	glLoadIdentity();
-
-	glMatrixMode( GL_PROJECTION );
-	GL_State( GLS_DEPTHFUNC_ALWAYS );
-	GL_Color( 1, 1, 1 );
-	glPushMatrix();
-	glLoadIdentity();
-	glDisable( GL_TEXTURE_2D );
-	glOrtho( 0, 1, 0, 1, -1, 1 );
-	glRasterPos2f( 0.01f, 0.01f );
-	glDrawPixels( G_WIDTH, G_HEIGHT, GL_RGBA, GL_UNSIGNED_BYTE, image );
-	glPopMatrix();
-	glEnable( GL_TEXTURE_2D );
-	glMatrixMode( GL_MODELVIEW );
-}
-
-
-/*
-==================
-RB_TestGammaBias
-==================
-*/
-static void RB_TestGammaBias()
-{
-	byte	image[G_HEIGHT][G_WIDTH][4];
-
-	if( r_testGammaBias.GetInteger() <= 0 )
-	{
-		return;
-	}
-
-	int y = 0;
-	for( int bias = -40; bias < 40; bias += 10, y += BAR_HEIGHT )
-	{
-		float	scale = 1;
-		for( int c = 0; c < 4; c++ )
-		{
-			int v = ( int )( 64 * scale + bias );
-			scale = scale * 1.5;
+			v = ( int )( 64 * scale );
 			if( v < 0 )
 			{
 				v = 0;
@@ -2763,9 +2773,10 @@ static void RB_TestGammaBias()
 			{
 				v = 255;
 			}
-			for( int i = 0; i < BAR_HEIGHT; i++ )
+			scale = scale * 1.5;
+			for( i = 0; i < BAR_HEIGHT; i++ )
 			{
-				for( int j = 0; j < G_WIDTH / 4; j++ )
+				for( j = 0; j < G_WIDTH / 4; j++ )
 				{
 					image[y + i][c * G_WIDTH / 4 + j][0] = v;
 					image[y + i][c * G_WIDTH / 4 + j][1] = v;
@@ -2773,184 +2784,142 @@ static void RB_TestGammaBias()
 				}
 			}
 		}
+
+		glLoadIdentity();
+
+		glMatrixMode( GL_PROJECTION );
+		GL_State( GLS_DEPTHFUNC_ALWAYS );
+		GL_Color( 1, 1, 1 );
+		glPushMatrix();
+		glLoadIdentity();
+		glDisable( GL_TEXTURE_2D );
+		glOrtho( 0, 1, 0, 1, -1, 1 );
+		glRasterPos2f( 0.01f, 0.01f );
+		glDrawPixels( G_WIDTH, G_HEIGHT, GL_RGBA, GL_UNSIGNED_BYTE, image );
+		glPopMatrix();
+		glEnable( GL_TEXTURE_2D );
+		glMatrixMode( GL_MODELVIEW );
 	}
 
-	glLoadIdentity();
-	glMatrixMode( GL_PROJECTION );
-	GL_State( GLS_DEPTHFUNC_ALWAYS );
-	GL_Color( 1, 1, 1 );
-	glPushMatrix();
-	glLoadIdentity();
-	glDisable( GL_TEXTURE_2D );
-	glOrtho( 0, 1, 0, 1, -1, 1 );
-	glRasterPos2f( 0.01f, 0.01f );
-	glDrawPixels( G_WIDTH, G_HEIGHT, GL_RGBA, GL_UNSIGNED_BYTE, image );
-	glPopMatrix();
-	glEnable( GL_TEXTURE_2D );
-	glMatrixMode( GL_MODELVIEW );
-}
 
-/*
-================
-RB_TestImage
-
-Display a single image over most of the screen
-================
-*/
-void RB_TestImage()
-{
-	idImage*	image = NULL;
-	idImage* imageCr = NULL;
-	idImage* imageCb = NULL;
-	int		max;
-	float	w, h;
-
-	image = tr.testImage;
-	if( !image )
+	/*
+	==================
+	RB_TestGammaBias
+	==================
+	*/
+	static void RB_TestGammaBias()
 	{
-		return;
-	}
+		byte	image[G_HEIGHT][G_WIDTH][4];
 
-	if( tr.testVideo )
-	{
-		cinData_t	cin;
-
-		cin = tr.testVideo->ImageForTime( backEnd.viewDef->renderView.time[1] - tr.testVideoStartTime );
-		if( cin.imageY != NULL )
+		if( r_testGammaBias.GetInteger() <= 0 )
 		{
-			image = cin.imageY;
-			imageCr = cin.imageCr;
-			imageCb = cin.imageCb;
+			return;
+		}
+
+		int y = 0;
+		for( int bias = -40; bias < 40; bias += 10, y += BAR_HEIGHT )
+		{
+			float	scale = 1;
+			for( int c = 0; c < 4; c++ )
+			{
+				int v = ( int )( 64 * scale + bias );
+				scale = scale * 1.5;
+				if( v < 0 )
+				{
+					v = 0;
+				}
+				else if( v > 255 )
+				{
+					v = 255;
+				}
+				for( int i = 0; i < BAR_HEIGHT; i++ )
+				{
+					for( int j = 0; j < G_WIDTH / 4; j++ )
+					{
+						image[y + i][c * G_WIDTH / 4 + j][0] = v;
+						image[y + i][c * G_WIDTH / 4 + j][1] = v;
+						image[y + i][c * G_WIDTH / 4 + j][2] = v;
+					}
+				}
+			}
+		}
+
+		glLoadIdentity();
+		glMatrixMode( GL_PROJECTION );
+		GL_State( GLS_DEPTHFUNC_ALWAYS );
+		GL_Color( 1, 1, 1 );
+		glPushMatrix();
+		glLoadIdentity();
+		glDisable( GL_TEXTURE_2D );
+		glOrtho( 0, 1, 0, 1, -1, 1 );
+		glRasterPos2f( 0.01f, 0.01f );
+		glDrawPixels( G_WIDTH, G_HEIGHT, GL_RGBA, GL_UNSIGNED_BYTE, image );
+		glPopMatrix();
+		glEnable( GL_TEXTURE_2D );
+		glMatrixMode( GL_MODELVIEW );
+	}
+
+	/*
+	================
+	RB_TestImage
+
+	Display a single image over most of the screen
+	================
+	*/
+	void RB_TestImage()
+	{
+		idImage*	image = NULL;
+		idImage* imageCr = NULL;
+		idImage* imageCb = NULL;
+		int		max;
+		float	w, h;
+
+		image = tr.testImage;
+		if( !image )
+		{
+			return;
+		}
+
+		if( tr.testVideo )
+		{
+			cinData_t	cin;
+
+			cin = tr.testVideo->ImageForTime( backEnd.viewDef->renderView.time[1] - tr.testVideoStartTime );
+			if( cin.imageY != NULL )
+			{
+				image = cin.imageY;
+				imageCr = cin.imageCr;
+				imageCb = cin.imageCb;
+			}
+			else
+			{
+				tr.testImage = NULL;
+				return;
+			}
+			w = 0.25;
+			h = 0.25;
 		}
 		else
 		{
-			tr.testImage = NULL;
-			return;
+			max = image->GetUploadWidth() > image->GetUploadHeight() ? image->GetUploadWidth() : image->GetUploadHeight();
+
+			w = 0.25 * image->GetUploadWidth() / max;
+			h = 0.25 * image->GetUploadHeight() / max;
+
+			w *= ( float )renderSystem->GetHeight() / renderSystem->GetWidth();
 		}
-		w = 0.25;
-		h = 0.25;
-	}
-	else
-	{
-		max = image->GetUploadWidth() > image->GetUploadHeight() ? image->GetUploadWidth() : image->GetUploadHeight();
 
-		w = 0.25 * image->GetUploadWidth() / max;
-		h = 0.25 * image->GetUploadHeight() / max;
+		// Set State
+		GL_State( GLS_DEPTHFUNC_ALWAYS | GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO );
 
-		w *= ( float )renderSystem->GetHeight() / renderSystem->GetWidth();
-	}
+		// Set Parms
+		float texS[4] = { 1.0f, 0.0f, 0.0f, 0.0f };
+		float texT[4] = { 0.0f, 1.0f, 0.0f, 0.0f };
+		renderProgManager.SetRenderParm( RENDERPARM_TEXTUREMATRIX_S, texS );
+		renderProgManager.SetRenderParm( RENDERPARM_TEXTUREMATRIX_T, texT );
 
-	// Set State
-	GL_State( GLS_DEPTHFUNC_ALWAYS | GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO );
-
-	// Set Parms
-	float texS[4] = { 1.0f, 0.0f, 0.0f, 0.0f };
-	float texT[4] = { 0.0f, 1.0f, 0.0f, 0.0f };
-	renderProgManager.SetRenderParm( RENDERPARM_TEXTUREMATRIX_S, texS );
-	renderProgManager.SetRenderParm( RENDERPARM_TEXTUREMATRIX_T, texT );
-
-	float texGenEnabled[4] = { 0, 0, 0, 0 };
-	renderProgManager.SetRenderParm( RENDERPARM_TEXGEN_0_ENABLED, texGenEnabled );
-
-	// not really necessary but just for clarity
-	const float screenWidth = 1.0f;
-	const float screenHeight = 1.0f;
-	const float halfScreenWidth = screenWidth * 0.5f;
-	const float halfScreenHeight = screenHeight * 0.5f;
-
-	float scale[16] = { 0 };
-	scale[0] = w; // scale
-	scale[5] = h; // scale
-	scale[12] = halfScreenWidth - ( halfScreenWidth * w ); // translate
-	scale[13] = halfScreenHeight - ( halfScreenHeight * h ); // translate
-	scale[10] = 1.0f;
-	scale[15] = 1.0f;
-
-	float ortho[16] = { 0 };
-	ortho[0] = 2.0f / screenWidth;
-	ortho[5] = -2.0f / screenHeight;
-	ortho[10] = -2.0f;
-	ortho[12] = -1.0f;
-	ortho[13] = 1.0f;
-	ortho[14] = -1.0f;
-	ortho[15] = 1.0f;
-
-	float finalOrtho[16];
-	R_MatrixMultiply( scale, ortho, finalOrtho );
-
-	float projMatrixTranspose[16];
-	R_MatrixTranspose( finalOrtho, projMatrixTranspose );
-	renderProgManager.SetRenderParms( RENDERPARM_MVPMATRIX_X, projMatrixTranspose, 4 );
-
-//	glMatrixMode( GL_PROJECTION );
-//	glLoadMatrixf( finalOrtho );
-//	glMatrixMode( GL_MODELVIEW );
-//	glLoadIdentity();
-
-	// Set Color
-	GL_Color( 1, 1, 1, 1 );
-
-	// Bind the Texture
-	if( ( imageCr != NULL ) && ( imageCb != NULL ) )
-	{
-		GL_SelectTexture( 0 );
-		image->Bind();
-		GL_SelectTexture( 1 );
-		imageCr->Bind();
-		GL_SelectTexture( 2 );
-		imageCb->Bind();
-		renderProgManager.BindShader_Bink();
-	}
-	else
-	{
-		GL_SelectTexture( 0 );
-		image->Bind();
-		// Set Shader
-		renderProgManager.BindShader_Texture();
-	}
-
-	// Draw!
-	RB_DrawElementsWithCounters( &backEnd.testImageSurface );
-}
-
-// RB begin
-void RB_ShowShadowMaps()
-{
-	idImage*	image = NULL;
-	int		max;
-	float	w, h;
-
-	if( !r_showShadowMaps.GetBool() )
-	{
-		return;
-	}
-
-	image = globalImages->shadowImage[0];
-	if( !image )
-	{
-		return;
-	}
-
-	// Set State
-	GL_State( GLS_DEPTHFUNC_ALWAYS | GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO );
-
-	// Set Parms
-	float texS[4] = { 1.0f, 0.0f, 0.0f, 0.0f };
-	float texT[4] = { 0.0f, 1.0f, 0.0f, 0.0f };
-	renderProgManager.SetRenderParm( RENDERPARM_TEXTUREMATRIX_S, texS );
-	renderProgManager.SetRenderParm( RENDERPARM_TEXTUREMATRIX_T, texT );
-
-	float texGenEnabled[4] = { 0, 0, 0, 0 };
-	renderProgManager.SetRenderParm( RENDERPARM_TEXGEN_0_ENABLED, texGenEnabled );
-
-	for( int i = 0; i < ( r_shadowMapSplits.GetInteger() + 1 ); i++ )
-	{
-		max = image->GetUploadWidth() > image->GetUploadHeight() ? image->GetUploadWidth() : image->GetUploadHeight();
-
-		w = 0.25 * image->GetUploadWidth() / max;
-		h = 0.25 * image->GetUploadHeight() / max;
-
-		w *= ( float )renderSystem->GetHeight() / renderSystem->GetWidth();
+		float texGenEnabled[4] = { 0, 0, 0, 0 };
+		renderProgManager.SetRenderParm( RENDERPARM_TEXGEN_0_ENABLED, texGenEnabled );
 
 		// not really necessary but just for clarity
 		const float screenWidth = 1.0f;
@@ -2961,8 +2930,8 @@ void RB_ShowShadowMaps()
 		float scale[16] = { 0 };
 		scale[0] = w; // scale
 		scale[5] = h; // scale
-		scale[12] = ( halfScreenWidth * w * 2.1f * i ); // translate
-		scale[13] = halfScreenHeight + ( halfScreenHeight * h ); // translate
+		scale[12] = halfScreenWidth - ( halfScreenWidth * w ); // translate
+		scale[13] = halfScreenHeight - ( halfScreenHeight * h ); // translate
 		scale[10] = 1.0f;
 		scale[15] = 1.0f;
 
@@ -2982,272 +2951,374 @@ void RB_ShowShadowMaps()
 		R_MatrixTranspose( finalOrtho, projMatrixTranspose );
 		renderProgManager.SetRenderParms( RENDERPARM_MVPMATRIX_X, projMatrixTranspose, 4 );
 
-		float screenCorrectionParm[4];
-		screenCorrectionParm[0] = i;
-		screenCorrectionParm[1] = 0.0f;
-		screenCorrectionParm[2] = 0.0f;
-		screenCorrectionParm[3] = 1.0f;
-		renderProgManager.SetRenderParm( RENDERPARM_SCREENCORRECTIONFACTOR, screenCorrectionParm ); // rpScreenCorrectionFactor
-
-		//	glMatrixMode( GL_PROJECTION );
-		//	glLoadMatrixf( finalOrtho );
-		//	glMatrixMode( GL_MODELVIEW );
-		//	glLoadIdentity();
+//	glMatrixMode( GL_PROJECTION );
+//	glLoadMatrixf( finalOrtho );
+//	glMatrixMode( GL_MODELVIEW );
+//	glLoadIdentity();
 
 		// Set Color
 		GL_Color( 1, 1, 1, 1 );
 
-		GL_SelectTexture( 0 );
-		image->Bind();
-		glTexParameteri( GL_TEXTURE_2D_ARRAY, GL_TEXTURE_COMPARE_MODE, GL_NONE );
+		// Bind the Texture
+		if( ( imageCr != NULL ) && ( imageCb != NULL ) )
+		{
+			GL_SelectTexture( 0 );
+			image->Bind();
+			GL_SelectTexture( 1 );
+			imageCr->Bind();
+			GL_SelectTexture( 2 );
+			imageCb->Bind();
+			renderProgManager.BindShader_Bink();
+		}
+		else
+		{
+			GL_SelectTexture( 0 );
+			image->Bind();
+			// Set Shader
+			renderProgManager.BindShader_Texture();
+		}
 
-
-		renderProgManager.BindShader_DebugShadowMap();
-
+		// Draw!
 		RB_DrawElementsWithCounters( &backEnd.testImageSurface );
 	}
 
-	glTexParameteri( GL_TEXTURE_2D_ARRAY, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE );
-}
+// RB begin
+	void RB_ShowShadowMaps()
+	{
+		idImage*	image = NULL;
+		int		max;
+		float	w, h;
+
+		if( !r_showShadowMaps.GetBool() )
+		{
+			return;
+		}
+
+		image = globalImages->shadowImage[0];
+		if( !image )
+		{
+			return;
+		}
+
+		// Set State
+		GL_State( GLS_DEPTHFUNC_ALWAYS | GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO );
+
+		// Set Parms
+		float texS[4] = { 1.0f, 0.0f, 0.0f, 0.0f };
+		float texT[4] = { 0.0f, 1.0f, 0.0f, 0.0f };
+		renderProgManager.SetRenderParm( RENDERPARM_TEXTUREMATRIX_S, texS );
+		renderProgManager.SetRenderParm( RENDERPARM_TEXTUREMATRIX_T, texT );
+
+		float texGenEnabled[4] = { 0, 0, 0, 0 };
+		renderProgManager.SetRenderParm( RENDERPARM_TEXGEN_0_ENABLED, texGenEnabled );
+
+		for( int i = 0; i < ( r_shadowMapSplits.GetInteger() + 1 ); i++ )
+		{
+			max = image->GetUploadWidth() > image->GetUploadHeight() ? image->GetUploadWidth() : image->GetUploadHeight();
+
+			w = 0.25 * image->GetUploadWidth() / max;
+			h = 0.25 * image->GetUploadHeight() / max;
+
+			w *= ( float )renderSystem->GetHeight() / renderSystem->GetWidth();
+
+			// not really necessary but just for clarity
+			const float screenWidth = 1.0f;
+			const float screenHeight = 1.0f;
+			const float halfScreenWidth = screenWidth * 0.5f;
+			const float halfScreenHeight = screenHeight * 0.5f;
+
+			float scale[16] = { 0 };
+			scale[0] = w; // scale
+			scale[5] = h; // scale
+			scale[12] = ( halfScreenWidth * w * 2.1f * i ); // translate
+			scale[13] = halfScreenHeight + ( halfScreenHeight * h ); // translate
+			scale[10] = 1.0f;
+			scale[15] = 1.0f;
+
+			float ortho[16] = { 0 };
+			ortho[0] = 2.0f / screenWidth;
+			ortho[5] = -2.0f / screenHeight;
+			ortho[10] = -2.0f;
+			ortho[12] = -1.0f;
+			ortho[13] = 1.0f;
+			ortho[14] = -1.0f;
+			ortho[15] = 1.0f;
+
+			float finalOrtho[16];
+			R_MatrixMultiply( scale, ortho, finalOrtho );
+
+			float projMatrixTranspose[16];
+			R_MatrixTranspose( finalOrtho, projMatrixTranspose );
+			renderProgManager.SetRenderParms( RENDERPARM_MVPMATRIX_X, projMatrixTranspose, 4 );
+
+			float screenCorrectionParm[4];
+			screenCorrectionParm[0] = i;
+			screenCorrectionParm[1] = 0.0f;
+			screenCorrectionParm[2] = 0.0f;
+			screenCorrectionParm[3] = 1.0f;
+			renderProgManager.SetRenderParm( RENDERPARM_SCREENCORRECTIONFACTOR, screenCorrectionParm ); // rpScreenCorrectionFactor
+
+			//	glMatrixMode( GL_PROJECTION );
+			//	glLoadMatrixf( finalOrtho );
+			//	glMatrixMode( GL_MODELVIEW );
+			//	glLoadIdentity();
+
+			// Set Color
+			GL_Color( 1, 1, 1, 1 );
+
+			GL_SelectTexture( 0 );
+			image->Bind();
+			glTexParameteri( GL_TEXTURE_2D_ARRAY, GL_TEXTURE_COMPARE_MODE, GL_NONE );
+
+
+			renderProgManager.BindShader_DebugShadowMap();
+
+			RB_DrawElementsWithCounters( &backEnd.testImageSurface );
+		}
+
+		glTexParameteri( GL_TEXTURE_2D_ARRAY, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE );
+	}
 // RB end
 
-/*
-=================
-RB_DrawExpandedTriangles
-=================
-*/
-void RB_DrawExpandedTriangles( const srfTriangles_t* tri, const float radius, const idVec3& vieworg )
-{
-	int i, j, k;
-	idVec3 dir[6], normal, point;
-
-	for( i = 0; i < tri->numIndexes; i += 3 )
+	/*
+	=================
+	RB_DrawExpandedTriangles
+	=================
+	*/
+	void RB_DrawExpandedTriangles( const srfTriangles_t* tri, const float radius, const idVec3 & vieworg )
 	{
+		int i, j, k;
+		idVec3 dir[6], normal, point;
 
-		idVec3 p[3] = { tri->verts[ tri->indexes[ i + 0 ] ].xyz, tri->verts[ tri->indexes[ i + 1 ] ].xyz, tri->verts[ tri->indexes[ i + 2 ] ].xyz };
-
-		dir[0] = p[0] - p[1];
-		dir[1] = p[1] - p[2];
-		dir[2] = p[2] - p[0];
-
-		normal = dir[0].Cross( dir[1] );
-
-		if( normal * p[0] < normal * vieworg )
+		for( i = 0; i < tri->numIndexes; i += 3 )
 		{
-			continue;
+
+			idVec3 p[3] = { tri->verts[ tri->indexes[ i + 0 ] ].xyz, tri->verts[ tri->indexes[ i + 1 ] ].xyz, tri->verts[ tri->indexes[ i + 2 ] ].xyz };
+
+			dir[0] = p[0] - p[1];
+			dir[1] = p[1] - p[2];
+			dir[2] = p[2] - p[0];
+
+			normal = dir[0].Cross( dir[1] );
+
+			if( normal * p[0] < normal * vieworg )
+			{
+				continue;
+			}
+
+			dir[0] = normal.Cross( dir[0] );
+			dir[1] = normal.Cross( dir[1] );
+			dir[2] = normal.Cross( dir[2] );
+
+			dir[0].Normalize();
+			dir[1].Normalize();
+			dir[2].Normalize();
+
+			glBegin( GL_LINE_LOOP );
+
+			for( j = 0; j < 3; j++ )
+			{
+				k = ( j + 1 ) % 3;
+
+				dir[4] = ( dir[j] + dir[k] ) * 0.5f;
+				dir[4].Normalize();
+
+				dir[3] = ( dir[j] + dir[4] ) * 0.5f;
+				dir[3].Normalize();
+
+				dir[5] = ( dir[4] + dir[k] ) * 0.5f;
+				dir[5].Normalize();
+
+				point = p[k] + dir[j] * radius;
+				glVertex3f( point[0], point[1], point[2] );
+
+				point = p[k] + dir[3] * radius;
+				glVertex3f( point[0], point[1], point[2] );
+
+				point = p[k] + dir[4] * radius;
+				glVertex3f( point[0], point[1], point[2] );
+
+				point = p[k] + dir[5] * radius;
+				glVertex3f( point[0], point[1], point[2] );
+
+				point = p[k] + dir[k] * radius;
+				glVertex3f( point[0], point[1], point[2] );
+			}
+
+			glEnd();
 		}
-
-		dir[0] = normal.Cross( dir[0] );
-		dir[1] = normal.Cross( dir[1] );
-		dir[2] = normal.Cross( dir[2] );
-
-		dir[0].Normalize();
-		dir[1].Normalize();
-		dir[2].Normalize();
-
-		glBegin( GL_LINE_LOOP );
-
-		for( j = 0; j < 3; j++ )
-		{
-			k = ( j + 1 ) % 3;
-
-			dir[4] = ( dir[j] + dir[k] ) * 0.5f;
-			dir[4].Normalize();
-
-			dir[3] = ( dir[j] + dir[4] ) * 0.5f;
-			dir[3].Normalize();
-
-			dir[5] = ( dir[4] + dir[k] ) * 0.5f;
-			dir[5].Normalize();
-
-			point = p[k] + dir[j] * radius;
-			glVertex3f( point[0], point[1], point[2] );
-
-			point = p[k] + dir[3] * radius;
-			glVertex3f( point[0], point[1], point[2] );
-
-			point = p[k] + dir[4] * radius;
-			glVertex3f( point[0], point[1], point[2] );
-
-			point = p[k] + dir[5] * radius;
-			glVertex3f( point[0], point[1], point[2] );
-
-			point = p[k] + dir[k] * radius;
-			glVertex3f( point[0], point[1], point[2] );
-		}
-
-		glEnd();
-	}
-}
-
-/*
-================
-RB_ShowTrace
-
-Debug visualization
-
-FIXME: not thread safe!
-================
-*/
-void RB_ShowTrace( drawSurf_t** drawSurfs, int numDrawSurfs )
-{
-	int						i;
-	const srfTriangles_t*	tri;
-	const drawSurf_t*		surf;
-	idVec3					start, end;
-	idVec3					localStart, localEnd;
-	localTrace_t			hit;
-	float					radius;
-
-	if( r_showTrace.GetInteger() == 0 )
-	{
-		return;
 	}
 
-	if( r_showTrace.GetInteger() == 2 )
+	/*
+	================
+	RB_ShowTrace
+
+	Debug visualization
+
+	FIXME: not thread safe!
+	================
+	*/
+	void RB_ShowTrace( drawSurf_t** drawSurfs, int numDrawSurfs )
 	{
-		radius = 5.0f;
-	}
-	else
-	{
-		radius = 0.0f;
-	}
+		int						i;
+		const srfTriangles_t*	tri;
+		const drawSurf_t*		surf;
+		idVec3					start, end;
+		idVec3					localStart, localEnd;
+		localTrace_t			hit;
+		float					radius;
 
-	// determine the points of the trace
-	start = backEnd.viewDef->renderView.vieworg;
-	end = start + 4000 * backEnd.viewDef->renderView.viewaxis[0];
-
-	// check and draw the surfaces
-	globalImages->whiteImage->Bind();
-
-	// find how many are ambient
-	for( i = 0; i < numDrawSurfs; i++ )
-	{
-		surf = drawSurfs[i];
-		tri = surf->frontEndGeo;
-
-		if( tri == NULL || tri->verts == NULL )
+		if( r_showTrace.GetInteger() == 0 )
 		{
-			continue;
+			return;
 		}
 
-		// transform the points into local space
-		R_GlobalPointToLocal( surf->space->modelMatrix, start, localStart );
-		R_GlobalPointToLocal( surf->space->modelMatrix, end, localEnd );
-
-		// check the bounding box
-		if( !tri->bounds.Expand( radius ).LineIntersection( localStart, localEnd ) )
+		if( r_showTrace.GetInteger() == 2 )
 		{
-			continue;
+			radius = 5.0f;
+		}
+		else
+		{
+			radius = 0.0f;
 		}
 
-		glLoadMatrixf( surf->space->modelViewMatrix );
+		// determine the points of the trace
+		start = backEnd.viewDef->renderView.vieworg;
+		end = start + 4000 * backEnd.viewDef->renderView.viewaxis[0];
 
-		// highlight the surface
-		GL_State( GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA );
+		// check and draw the surfaces
+		globalImages->whiteImage->Bind();
 
-		GL_Color( 1, 0, 0, 0.25 );
-		RB_DrawElementsWithCounters( surf );
-
-		// draw the bounding box
-		GL_State( GLS_DEPTHFUNC_ALWAYS );
-
-		GL_Color( 1, 1, 1, 1 );
-		RB_DrawBounds( tri->bounds );
-
-		if( radius != 0.0f )
+		// find how many are ambient
+		for( i = 0; i < numDrawSurfs; i++ )
 		{
-			// draw the expanded triangles
-			GL_Color( 0.5f, 0.5f, 1.0f, 1.0f );
-			RB_DrawExpandedTriangles( tri, radius, localStart );
-		}
+			surf = drawSurfs[i];
+			tri = surf->frontEndGeo;
 
-		// check the exact surfaces
-		hit = R_LocalTrace( localStart, localEnd, radius, tri );
-		if( hit.fraction < 1.0 )
-		{
+			if( tri == NULL || tri->verts == NULL )
+			{
+				continue;
+			}
+
+			// transform the points into local space
+			R_GlobalPointToLocal( surf->space->modelMatrix, start, localStart );
+			R_GlobalPointToLocal( surf->space->modelMatrix, end, localEnd );
+
+			// check the bounding box
+			if( !tri->bounds.Expand( radius ).LineIntersection( localStart, localEnd ) )
+			{
+				continue;
+			}
+
+			glLoadMatrixf( surf->space->modelViewMatrix );
+
+			// highlight the surface
+			GL_State( GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA );
+
+			GL_Color( 1, 0, 0, 0.25 );
+			RB_DrawElementsWithCounters( surf );
+
+			// draw the bounding box
+			GL_State( GLS_DEPTHFUNC_ALWAYS );
+
 			GL_Color( 1, 1, 1, 1 );
-			RB_DrawBounds( idBounds( hit.point ).Expand( 1 ) );
+			RB_DrawBounds( tri->bounds );
+
+			if( radius != 0.0f )
+			{
+				// draw the expanded triangles
+				GL_Color( 0.5f, 0.5f, 1.0f, 1.0f );
+				RB_DrawExpandedTriangles( tri, radius, localStart );
+			}
+
+			// check the exact surfaces
+			hit = R_LocalTrace( localStart, localEnd, radius, tri );
+			if( hit.fraction < 1.0 )
+			{
+				GL_Color( 1, 1, 1, 1 );
+				RB_DrawBounds( idBounds( hit.point ).Expand( 1 ) );
+			}
 		}
 	}
-}
 
-/*
-=================
-RB_RenderDebugTools
-=================
-*/
-void RB_RenderDebugTools( drawSurf_t** drawSurfs, int numDrawSurfs )
-{
-	// don't do much if this was a 2D rendering
-	if( !backEnd.viewDef->viewEntitys )
+	/*
+	=================
+	RB_RenderDebugTools
+	=================
+	*/
+	void RB_RenderDebugTools( drawSurf_t** drawSurfs, int numDrawSurfs )
 	{
+		// don't do much if this was a 2D rendering
+		if( !backEnd.viewDef->viewEntitys )
+		{
+			RB_TestImage();
+			RB_ShowLines();
+			return;
+		}
+
+		renderLog.OpenMainBlock( MRB_DRAW_DEBUG_TOOLS );
+		RENDERLOG_PRINTF( "---------- RB_RenderDebugTools ----------\n" );
+
+		GL_State( GLS_DEFAULT );
+
+		GL_Scissor( backEnd.viewDef->viewport.x1 + backEnd.viewDef->scissor.x1,
+					backEnd.viewDef->viewport.y1 + backEnd.viewDef->scissor.y1,
+					backEnd.viewDef->scissor.x2 + 1 - backEnd.viewDef->scissor.x1,
+					backEnd.viewDef->scissor.y2 + 1 - backEnd.viewDef->scissor.y1 );
+		backEnd.currentScissor = backEnd.viewDef->scissor;
+
+		RB_ShowLightCount();
+		RB_ShowTexturePolarity( drawSurfs, numDrawSurfs );
+		RB_ShowTangentSpace( drawSurfs, numDrawSurfs );
+		RB_ShowVertexColor( drawSurfs, numDrawSurfs );
+		RB_ShowTris( drawSurfs, numDrawSurfs );
+		RB_ShowUnsmoothedTangents( drawSurfs, numDrawSurfs );
+		RB_ShowSurfaceInfo( drawSurfs, numDrawSurfs );
+		RB_ShowEdges( drawSurfs, numDrawSurfs );
+		RB_ShowNormals( drawSurfs, numDrawSurfs );
+		RB_ShowViewEntitys( backEnd.viewDef->viewEntitys );
+		RB_ShowLights();
+		// RB begin
+		RB_ShowShadowMapLODs();
+		RB_ShowShadowMaps();
+		// RB end
+
+		RB_ShowTextureVectors( drawSurfs, numDrawSurfs );
+		RB_ShowDominantTris( drawSurfs, numDrawSurfs );
+		if( r_testGamma.GetInteger() > 0 )  	// test here so stack check isn't so damn slow on debug builds
+		{
+			RB_TestGamma();
+		}
+		if( r_testGammaBias.GetInteger() > 0 )
+		{
+			RB_TestGammaBias();
+		}
 		RB_TestImage();
+		RB_ShowPortals();
+		RB_ShowSilhouette();
+		RB_ShowDepthBuffer();
+		RB_ShowIntensity();
+		RB_ShowCenterOfProjection();
 		RB_ShowLines();
-		return;
+		RB_ShowDebugLines();
+		RB_ShowDebugText();
+		RB_ShowDebugPolygons();
+		RB_ShowTrace( drawSurfs, numDrawSurfs );
+
+		renderLog.CloseMainBlock();
 	}
 
-	renderLog.OpenMainBlock( MRB_DRAW_DEBUG_TOOLS );
-	RENDERLOG_PRINTF( "---------- RB_RenderDebugTools ----------\n" );
+#endif
 
-	GL_State( GLS_DEFAULT );
-
-	GL_Scissor( backEnd.viewDef->viewport.x1 + backEnd.viewDef->scissor.x1,
-				backEnd.viewDef->viewport.y1 + backEnd.viewDef->scissor.y1,
-				backEnd.viewDef->scissor.x2 + 1 - backEnd.viewDef->scissor.x1,
-				backEnd.viewDef->scissor.y2 + 1 - backEnd.viewDef->scissor.y1 );
-	backEnd.currentScissor = backEnd.viewDef->scissor;
-
-	RB_ShowLightCount();
-	RB_ShowTexturePolarity( drawSurfs, numDrawSurfs );
-	RB_ShowTangentSpace( drawSurfs, numDrawSurfs );
-	RB_ShowVertexColor( drawSurfs, numDrawSurfs );
-	RB_ShowTris( drawSurfs, numDrawSurfs );
-	RB_ShowUnsmoothedTangents( drawSurfs, numDrawSurfs );
-	RB_ShowSurfaceInfo( drawSurfs, numDrawSurfs );
-	RB_ShowEdges( drawSurfs, numDrawSurfs );
-	RB_ShowNormals( drawSurfs, numDrawSurfs );
-	RB_ShowViewEntitys( backEnd.viewDef->viewEntitys );
-	RB_ShowLights();
-	// RB begin
-	RB_ShowShadowMapLODs();
-	RB_ShowShadowMaps();
-	// RB end
-
-	RB_ShowTextureVectors( drawSurfs, numDrawSurfs );
-	RB_ShowDominantTris( drawSurfs, numDrawSurfs );
-	if( r_testGamma.GetInteger() > 0 )  	// test here so stack check isn't so damn slow on debug builds
+	/*
+	=================
+	RB_ShutdownDebugTools
+	=================
+	*/
+	void RB_ShutdownDebugTools()
 	{
-		RB_TestGamma();
+		for( int i = 0; i < MAX_DEBUG_POLYGONS; i++ )
+		{
+			rb_debugPolygons[i].winding.Clear();
+		}
 	}
-	if( r_testGammaBias.GetInteger() > 0 )
-	{
-		RB_TestGammaBias();
-	}
-	RB_TestImage();
-	RB_ShowPortals();
-	RB_ShowSilhouette();
-	RB_ShowDepthBuffer();
-	RB_ShowIntensity();
-	RB_ShowCenterOfProjection();
-	RB_ShowLines();
-	RB_ShowDebugLines();
-	RB_ShowDebugText();
-	RB_ShowDebugPolygons();
-	RB_ShowTrace( drawSurfs, numDrawSurfs );
-
-	renderLog.CloseMainBlock();
-}
-
-/*
-=================
-RB_ShutdownDebugTools
-=================
-*/
-void RB_ShutdownDebugTools()
-{
-	for( int i = 0; i < MAX_DEBUG_POLYGONS; i++ )
-	{
-		rb_debugPolygons[i].winding.Clear();
-	}
-}

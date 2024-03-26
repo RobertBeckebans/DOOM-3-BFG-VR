@@ -55,7 +55,7 @@ void iVr::FXAASetUniforms( Framebuffer FBO )
 iVr::FXAAResolve
 ====================
 */
-
+/*
 void iVr::FXAAResolve( idImage* leftCurrent, idImage* rightCurrent )
 {
 
@@ -105,8 +105,8 @@ void iVr::FXAAResolve( idImage* leftCurrent, idImage* rightCurrent )
 	glCopyTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA8, 0, 0, rightCurrent->GetUploadWidth(), rightCurrent->GetUploadHeight(), 0 );
 
 	renderProgManager.Unbind();
-
 }
+*/
 
 
 
@@ -282,7 +282,6 @@ Does not perform hmd distortion correction.
 
 void iVr::HUDRender( idImage* image0, idImage* image1 )
 {
-
 	//static idAngles imuAngles = { 0.0, 0.0, 0.0 };
 	static idQuat imuRotation = { 0.0, 0.0, 0.0, 0.0 };
 	static idQuat imuRotationGL = { 0.0, 0.0, 0.0, 0.0 };
@@ -357,7 +356,7 @@ void iVr::HUDRender( idImage* image0, idImage* image1 )
 	}
 
 	glClearColor( 0, 0, 0, 0 );
-	GL_SelectTexture( 0 );
+	backEnd.GL_SelectTexture( 0 );
 
 	const float texS[4] = { 1.0f, 0.0f, 0.0f, 0.0f };
 	const float texT[4] = { 0.0f, 1.0f, 0.0f, 0.0f };
@@ -372,7 +371,6 @@ void iVr::HUDRender( idImage* image0, idImage* image1 )
 
 	for( int index = 0; index < 2; index++ )
 	{
-
 		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
 		if( index )
@@ -384,11 +382,8 @@ void iVr::HUDRender( idImage* image0, idImage* image1 )
 			image0->Bind();
 		}
 
-
-
 		if( commonVr->hasOculusRift )
 		{
-
 			VR_TranslationMatrix( 0.0f, 0.0f, 0.0f, eye );
 			//VR_TranslationMatrix( hmdEye[index].viewOffset[0], hmdEye[index].viewOffset[1], hmdEye[index].viewOffset[2], eye );
 
@@ -460,7 +455,7 @@ void iVr::HUDRender( idImage* image0, idImage* image1 )
 		renderProgManager.CommitUniforms();
 
 		// draw the hud for that eye
-		RB_DrawElementsWithCounters( &backEnd.unitSquareSurface );
+		backEnd.DrawElementsWithCounters( &backEnd.unitSquareSurface );
 
 		hmdEyeImage[index]->Bind();
 
@@ -470,7 +465,6 @@ void iVr::HUDRender( idImage* image0, idImage* image1 )
 	renderProgManager.Unbind();
 
 	globalFramebuffers.primaryFBO->Bind();
-
 }
 
 
@@ -707,16 +701,16 @@ void iVr::HMDRender( idImage* leftCurrent, idImage* rightCurrent )
 		//renderProgManager.BindShader_PostProcess(); // pass thru shader
 
 		renderProgManager.BindShader_Texture();
-		GL_Color( 1, 1, 1, 1 );
+		backEnd.GL_Color( 1, 1, 1, 1 );
 
 		glBindFramebuffer( GL_READ_FRAMEBUFFER, 0 );
 		glBindFramebuffer( GL_DRAW_FRAMEBUFFER, 0 );
-		GL_ViewportAndScissor( 0, 0, commonVr->hmdWidth / 2, commonVr->hmdHeight / 2 );
-		GL_SelectTexture( 0 );
+		backEnd.GL_ViewportAndScissor( 0, 0, commonVr->hmdWidth / 2, commonVr->hmdHeight / 2 );
+		backEnd.GL_SelectTexture( 0 );
 		rightCurrent->Bind();
 		glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER );
 		glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER );
-		RB_DrawElementsWithCounters( &backEnd.unitSquareSurface ); // draw it
+		backEnd.DrawElementsWithCounters( &backEnd.unitSquareSurface ); // draw it
 		renderProgManager.Unbind();
 
 		globalFramebuffers.primaryFBO->Bind();
@@ -969,11 +963,8 @@ last fullscreen texture then force a buffer swap.
 
 void iVr::HMDTrackStatic( bool is3D )
 {
-
-
 	if( game->isVR )
 	{
-
 		//common->Printf( "HmdTrackStatic called idFrame #%d\n", idLib::frameNumber);
 		if( commonVr->hmdCurrentRender[0] == NULL || commonVr->hmdCurrentRender[1] == NULL )
 		{
