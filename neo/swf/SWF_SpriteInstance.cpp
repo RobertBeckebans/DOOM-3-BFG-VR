@@ -25,8 +25,8 @@ If you have questions concerning this license or the applicable additional terms
 
 ===========================================================================
 */
-#pragma hdrstop
 #include "precompiled.h"
+#pragma hdrstop
 
 idSWFScriptObject_SpriteInstancePrototype spriteInstanceScriptObjectPrototype;
 
@@ -427,7 +427,7 @@ void idSWFSpriteInstance::RunTo( int targetFrame )
 		targetFrame = sprite->frameOffsets.Num() - 1;
 	}
 
-	//actions.Clear();
+	// actions.Clear();
 
 	uint32 firstActionCommand = sprite->frameOffsets[ targetFrame - 1 ];
 

@@ -25,8 +25,8 @@ If you have questions concerning this license or the applicable additional terms
 
 ===========================================================================
 */
-#pragma hdrstop
 #include "precompiled.h"
+#pragma hdrstop
 
 extern idCVar swf_debugShowAddress;
 
@@ -292,6 +292,10 @@ idStr idSWFScriptVar::ToString() const
 			return idStrId( value.i ).GetLocalizedString();
 		case SWF_VAR_STRING:
 			return *value.string;
+		// RB begin
+		case SWF_VAR_RESULT:
+			return *value.string;
+		// RB end
 
 		case SWF_VAR_FLOAT:
 			return va( "%g", value.f );
@@ -521,6 +525,10 @@ const char* idSWFScriptVar::TypeOf() const
 			return "stringid";
 		case SWF_VAR_STRING:
 			return "string";
+		// RB begin
+		case SWF_VAR_RESULT:
+			return "result";
+		// RB end
 
 		case SWF_VAR_FLOAT:
 			return "number";

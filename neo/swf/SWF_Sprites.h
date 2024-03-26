@@ -3,6 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2013-2015 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -28,6 +29,9 @@ If you have questions concerning this license or the applicable additional terms
 #ifndef __SWF_SPRITES_H__
 #define __SWF_SPRITES_H__
 
+#undef Bool
+#include "rapidjson/document.h"
+
 /*
 ================================================
 What the swf file format calls a "sprite" is known as a "movie clip" in Flash
@@ -45,6 +49,23 @@ public:
 
 	void	Read( idFile* f );
 	void	Write( idFile* f );
+
+	// RB begin
+	void	ReadJSON( rapidjson::Value& entry );
+
+	void	WriteJSON( idFile* f, int characterID );
+	void	WriteJSON_PlaceObject2( idFile* f, idSWFBitStream& bitstream, int characterID, int commandID, const char* indentPrefix = "" );
+	void	WriteJSON_PlaceObject3( idFile* f, idSWFBitStream& bitstream, int characterID, int commandID, const char* indentPrefix = "" );
+	void	WriteJSON_RemoveObject2( idFile* f, idSWFBitStream& bitstream, int characterID, int commandID, const char* indentPrefix = "" );
+	void	WriteJSON_DoAction( idFile* f, idSWFBitStream& bitstream, int characterID, int commandID, const char* indentPrefix = "" );
+
+	void	WriteSWF( idFile_SWF& f, int characterID );
+
+	uint16	GetFrameCount()
+	{
+		return frameCount;
+	}
+	// RB end
 
 	class idSWF* GetSWF()
 	{
