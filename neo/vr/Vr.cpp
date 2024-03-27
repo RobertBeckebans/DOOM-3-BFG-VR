@@ -249,57 +249,6 @@ iVr* vrSystem = &vrCom;
 iVoice _voice; //avoid nameclash with timidity
 iVoice* vrVoice = &_voice;
 
-void SwapBinding( int Old, int New )
-{
-	idStr s = idKeyInput::GetBinding( New );
-	idKeyInput::SetBinding( New, idKeyInput::GetBinding( Old ) );
-	idKeyInput::SetBinding( Old, s.c_str() );
-}
-
-void SwapWeaponHand()
-{
-	vr_weaponHand.SetInteger( 1 - vr_weaponHand.GetInteger() );
-	// swap teleport hand
-	if( vr_teleport.GetInteger() == 2 )
-	{
-		vr_teleport.SetInteger( 3 );
-	}
-	else if( vr_teleport.GetInteger() == 3 )
-	{
-		vr_teleport.SetInteger( 2 );
-	}
-	// swap motion controller bindings to other hand
-	for( int k = K_JOY17; k <= K_JOY18; k++ )
-	{
-		SwapBinding( k, k + 7 );
-	}
-	// JOY19 is the Touch menu button, which only exists on the left hand
-	for( int k = K_JOY20; k <= K_JOY23; k++ )
-	{
-		SwapBinding( k, k + 7 );
-	}
-	for( int k = K_JOY31; k <= K_JOY48; k++ )
-	{
-		SwapBinding( k, k + 18 );
-	}
-	SwapBinding( K_L_TOUCHTRIG, K_R_TOUCHTRIG );
-	SwapBinding( K_L_STEAMVRTRIG, K_R_STEAMVRTRIG );
-	if( vr_handSwapsAnalogs.GetBool() )
-	{
-		for( int k = K_TOUCH_LEFT_STICK_UP; k <= K_TOUCH_LEFT_STICK_RIGHT; k++ )
-		{
-			SwapBinding( k, k + 4 );
-		}
-		for( int k = K_STEAMVR_LEFT_PAD_UP; k <= K_STEAMVR_LEFT_PAD_RIGHT; k++ )
-		{
-			SwapBinding( k, k + 4 );
-		}
-		for( int k = K_STEAMVR_LEFT_JS_UP; k <= K_STEAMVR_LEFT_JS_RIGHT; k++ )
-		{
-			SwapBinding( k, k + 4 );
-		}
-	}
-}
 
 /*
 ==============
@@ -855,7 +804,6 @@ iVr::HMDInitializeDistortion
 
 void iVr::HMDInitializeDistortion()
 {
-
 	if(
 #ifdef USE_OVR
 		( !hmdSession || !hasOculusRift || !vr_enable.GetBool() )
@@ -874,7 +822,6 @@ void iVr::HMDInitializeDistortion()
 		m_mat4ProjectionRight = GetHMDMatrixProjectionEye( vr::Eye_Right );
 		m_mat4eyePosLeft = GetHMDMatrixPoseEye( vr::Eye_Left );
 		m_mat4eyePosRight = GetHMDMatrixPoseEye( vr::Eye_Right );
-
 
 		m_pHMD->GetProjectionRaw( vr::Eye_Left, &hmdEye[0].projectionOpenVR.projLeft, &hmdEye[0].projectionOpenVR.projRight, &hmdEye[0].projectionOpenVR.projUp, &hmdEye[0].projectionOpenVR.projDown );
 		m_pHMD->GetProjectionRaw( vr::Eye_Right, &hmdEye[1].projectionOpenVR.projLeft, &hmdEye[1].projectionOpenVR.projRight, &hmdEye[1].projectionOpenVR.projUp, &hmdEye[1].projectionOpenVR.projDown );
@@ -990,8 +937,10 @@ void iVr::HMDInitializeDistortion()
 
 			common->Printf( "Creating %d x %d MSAA framebuffer\n", primaryFBOWidth, primaryFBOHeight );
 			globalFramebuffers.primaryFBO = new Framebuffer( "_primaryFBO", primaryFBOWidth, primaryFBOHeight, true );
+
 			common->Printf( "Adding Depth/Stencil attachments to MSAA framebuffer\n" );
 			globalFramebuffers.primaryFBO->AddDepthStencilBuffer( GL_DEPTH24_STENCIL8 );
+
 			common->Printf( "Adding color attachment to MSAA framebuffer\n" );
 			globalFramebuffers.primaryFBO->AddColorBuffer( GL_RGBA, 0 );
 
@@ -2182,3 +2131,59 @@ void iVr::ForceChaperone( int which, bool force )
 		}
 }
 
+void iVr::SwapBinding( int Old, int New )
+{
+	idStr s = idKeyInput::GetBinding( New );
+	idKeyInput::SetBinding( New, idKeyInput::GetBinding( Old ) );
+	idKeyInput::SetBinding( Old, s.c_str() );
+}
+
+void iVr::SwapWeaponHand()
+{
+	vr_weaponHand.SetInteger( 1 - vr_weaponHand.GetInteger() );
+
+	// swap teleport hand
+	if( vr_teleport.GetInteger() == 2 )
+	{
+		vr_teleport.SetInteger( 3 );
+	}
+	else if( vr_teleport.GetInteger() == 3 )
+	{
+		vr_teleport.SetInteger( 2 );
+	}
+
+	// swap motion controller bindings to other hand
+	for( int k = K_JOY17; k <= K_JOY18; k++ )
+	{
+		SwapBinding( k, k + 7 );
+	}
+
+	// JOY19 is the Touch menu button, which only exists on the left hand
+	for( int k = K_JOY20; k <= K_JOY23; k++ )
+	{
+		SwapBinding( k, k + 7 );
+	}
+	for( int k = K_JOY31; k <= K_JOY48; k++ )
+	{
+		SwapBinding( k, k + 18 );
+	}
+
+	SwapBinding( K_L_TOUCHTRIG, K_R_TOUCHTRIG );
+	SwapBinding( K_L_STEAMVRTRIG, K_R_STEAMVRTRIG );
+
+	if( vr_handSwapsAnalogs.GetBool() )
+	{
+		for( int k = K_TOUCH_LEFT_STICK_UP; k <= K_TOUCH_LEFT_STICK_RIGHT; k++ )
+		{
+			SwapBinding( k, k + 4 );
+		}
+		for( int k = K_STEAMVR_LEFT_PAD_UP; k <= K_STEAMVR_LEFT_PAD_RIGHT; k++ )
+		{
+			SwapBinding( k, k + 4 );
+		}
+		for( int k = K_STEAMVR_LEFT_JS_UP; k <= K_STEAMVR_LEFT_JS_RIGHT; k++ )
+		{
+			SwapBinding( k, k + 4 );
+		}
+	}
+}

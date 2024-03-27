@@ -6160,7 +6160,8 @@ bool idPlayer::OtherHandImpulseSlot()
 	}
 	if( otherHandSlot == SLOT_WEAPON_HIP )
 	{
-		SwapWeaponHand();
+		vrSystem->SwapWeaponHand();
+
 		// Holster the PDA we are holding on the other side
 		if( vrSystem->PDAforced )
 		{
@@ -6183,7 +6184,8 @@ bool idPlayer::OtherHandImpulseSlot()
 	}
 	if( otherHandSlot == SLOT_WEAPON_BACK_BOTTOM )
 	{
-		SwapWeaponHand();
+		vrSystem->SwapWeaponHand();
+
 		// Holster the PDA we are holding on the other side
 		if( !common->IsMultiplayer() )
 		{
@@ -6202,7 +6204,8 @@ bool idPlayer::OtherHandImpulseSlot()
 	}
 	if( otherHandSlot == SLOT_WEAPON_BACK_TOP )
 	{
-		SwapWeaponHand();
+		vrSystem->SwapWeaponHand();
+
 		// Holster the PDA we are holding on the other side
 		if( !common->IsMultiplayer() )
 		{
@@ -6265,7 +6268,8 @@ bool idPlayer::WeaponHandImpulseSlot()
 	}
 	if( weaponHandSlot == SLOT_PDA_HIP )
 	{
-		SwapWeaponHand();
+		vrSystem->SwapWeaponHand();
+
 		// if we're holding a gun ( not a pointer finger or fist ) then holster the gun
 		//if ( !vrSystem->PDAforced && !objectiveSystemOpen && currentWeapon != weapon_fists )
 		//	SetupHolsterSlot();
@@ -6293,7 +6297,8 @@ bool idPlayer::WeaponHandImpulseSlot()
 	if( weaponHandSlot == SLOT_FLASHLIGHT_HEAD && vr_flashlightMode.GetInteger() == FLASHLIGHT_HEAD && currentWeapon == weapon_fists && !vrSystem->PDAforced && !objectiveSystemOpen
 			&& flashlight.IsValid() && !spectating && weaponEnabled && !hiddenWeapon && !gameLocal.world->spawnArgs.GetBool( "no_Weapons" ) )
 	{
-		SwapWeaponHand();
+		vrSystem->SwapWeaponHand();
+
 		// swap flashlight between head and hand
 		vr_flashlightMode.SetInteger( FLASHLIGHT_HAND );
 		return true;
@@ -6301,7 +6306,8 @@ bool idPlayer::WeaponHandImpulseSlot()
 	if( weaponHandSlot == SLOT_FLASHLIGHT_SHOULDER && vr_flashlightMode.GetInteger() == FLASHLIGHT_BODY && currentWeapon == weapon_fists && !vrSystem->PDAforced && !objectiveSystemOpen
 			&& flashlight.IsValid() && !spectating && weaponEnabled && !hiddenWeapon && !gameLocal.world->spawnArgs.GetBool( "no_Weapons" ) )
 	{
-		SwapWeaponHand();
+		vrSystem->SwapWeaponHand();
+
 		// swap flashlight between head and hand
 		vr_flashlightMode.SetInteger( FLASHLIGHT_HAND );
 		return true;

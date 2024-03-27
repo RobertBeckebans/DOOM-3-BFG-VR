@@ -1697,6 +1697,7 @@ void idConsoleLocal::Draw( bool forceFullScreen )
 #endif
 		vr_hmdPerfHud.ClearModified();
 	}
+
 	// Koz end
 	if( vr_asw.IsModified() )
 	{

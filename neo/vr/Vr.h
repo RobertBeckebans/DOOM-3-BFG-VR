@@ -95,7 +95,7 @@ typedef enum
 	FLASHLIGHT_MAX,
 } vr_flashlight_mode_t;
 
-void SwapWeaponHand();
+
 
 class idClipModel;
 
@@ -140,6 +140,13 @@ public:
 
 	bool				ShouldQuit();
 	void				ForceChaperone( int which, bool force );
+
+	void				SwapWeaponHand();
+
+private:
+	void				SwapBinding( int Old, int New );
+
+public:
 
 	//------------------
 
