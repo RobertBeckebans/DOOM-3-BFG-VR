@@ -44,13 +44,14 @@ static	int shadowMapResolutions[MAX_SHADOWMAP_RESOLUTIONS] = { 2048, 1024, 512, 
 static	int shadowMapResolutions[MAX_SHADOWMAP_RESOLUTIONS] = { 1024, 1024, 1024, 1024, 1024 };
 #endif
 
-void ResolveMSAA( void );
+void ResolveMSAA();
 
 class Framebuffer
 {
 public:
 
 	Framebuffer( const char* name, int width, int height, bool msaa ); // Koz add MSAA support
+	virtual ~Framebuffer();
 
 	static void				Init();
 	static void				Shutdown();
@@ -131,6 +132,8 @@ public:
 	}
 
 private:
+	static void R_ListFramebuffers_f( const idCmdArgs& args );
+
 	idStr					fboName;
 
 	// FBO object
@@ -154,8 +157,7 @@ private:
 	GLuint					colorTexnum;
 	GLuint					depthTexnum;
 
-
-	//static idList<Framebuffer*>	framebuffers;
+	static idList<Framebuffer*>	framebuffers;
 };
 
 struct globalFramebuffers_t
