@@ -2,7 +2,7 @@
 ===========================================================================
 
 Doom 3 BFG Edition GPL Source Code
-Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2013-2021 Samson Koz and contributors
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -415,161 +415,161 @@ private:
 
 #endif
 
-extern idCVar	vr_scale;
-extern idCVar	vr_normalViewHeight;
-extern idCVar	vr_useOculusProfile;
-extern idCVar	vr_manualIPDEnable;
-extern idCVar	vr_manualIPD;
-extern idCVar	vr_manualHeight;
-extern idCVar	vr_useFloorHeight;
+extern idCVar vr_scale;
+extern idCVar vr_normalViewHeight;
+extern idCVar vr_useOculusProfile;
+extern idCVar vr_manualIPDEnable;
+extern idCVar vr_manualIPD;
+extern idCVar vr_manualHeight;
+extern idCVar vr_useFloorHeight;
 
-//extern idCVar	vr_viewModelArms;
-extern idCVar	vr_wristStatMon;
-extern idCVar	vr_disableWeaponAnimation;
-extern idCVar	vr_headKick;
+//extern idCV vr_viewModelArms;
+extern idCVar vr_wristStatMon;
+extern idCVar vr_disableWeaponAnimation;
+extern idCVar vr_headKick;
 
-extern idCVar	vr_weaponHand;
+extern idCVar vr_weaponHand;
 
-extern idCVar	vr_flashlightMode;
+extern idCVar vr_flashlightMode;
 
-extern idCVar	vr_flashlightBodyPosX;
-extern idCVar	vr_flashlightBodyPosY;
-extern idCVar	vr_flashlightBodyPosZ;
+extern idCVar vr_flashlightBodyPosX;
+extern idCVar vr_flashlightBodyPosY;
+extern idCVar vr_flashlightBodyPosZ;
 
-extern idCVar	vr_flashlightHelmetPosX;
-extern idCVar	vr_flashlightHelmetPosY;
-extern idCVar	vr_flashlightHelmetPosZ;
+extern idCVar vr_flashlightHelmetPosX;
+extern idCVar vr_flashlightHelmetPosY;
+extern idCVar vr_flashlightHelmetPosZ;
 
-extern idCVar	vr_forward_keyhole;
+extern idCVar vr_forward_keyhole;
 
-extern idCVar	vr_PDAfixLocation;
+extern idCVar vr_PDAfixLocation;
 
-extern idCVar	vr_weaponPivotOffsetForward;
-extern idCVar	vr_weaponPivotOffsetHorizontal;
-extern idCVar	vr_weaponPivotOffsetVertical;
-extern idCVar	vr_weaponPivotForearmLength;
+extern idCVar vr_weaponPivotOffsetForward;
+extern idCVar vr_weaponPivotOffsetHorizontal;
+extern idCVar vr_weaponPivotOffsetVertical;
+extern idCVar vr_weaponPivotForearmLength;
 
 
-extern idCVar	vr_guiScale;
-extern idCVar	vr_guiSeparation;
+extern idCVar vr_guiScale;
+extern idCVar vr_guiSeparation;
 
-extern idCVar	vr_guiMode;
+extern idCVar vr_guiMode;
 
-extern idCVar	vr_hudScale;
-extern idCVar	vr_hudPosHor;
-extern idCVar	vr_hudPosVer;
-extern idCVar	vr_hudPosDis;
-extern idCVar	vr_hudPosLock;
-extern idCVar	vr_hudType;
-extern idCVar	vr_hudPosAngle;
-extern idCVar	vr_hudRevealAngle;
-extern idCVar	vr_hudTransparency;
-extern idCVar	vr_hudOcclusion;
+extern idCVar vr_hudScale;
+extern idCVar vr_hudPosHor;
+extern idCVar vr_hudPosVer;
+extern idCVar vr_hudPosDis;
+extern idCVar vr_hudPosLock;
+extern idCVar vr_hudType;
+extern idCVar vr_hudPosAngle;
+extern idCVar vr_hudRevealAngle;
+extern idCVar vr_hudTransparency;
+extern idCVar vr_hudOcclusion;
 
-extern idCVar	vr_hudHealth;
-extern idCVar	vr_hudAmmo;
-extern idCVar	vr_hudPickUps;
-extern idCVar	vr_hudTips;
-extern idCVar	vr_hudLocation;
-extern idCVar	vr_hudObjective;
-extern idCVar	vr_hudStamina;
-extern idCVar	vr_hudPills;
-extern idCVar	vr_hudComs;
-extern idCVar	vr_hudWeap;
-extern idCVar	vr_hudNewItems;
-extern idCVar	vr_hudFlashlight;
-extern idCVar	vr_hudLowHealth;
+extern idCVar vr_hudHealth;
+extern idCVar vr_hudAmmo;
+extern idCVar vr_hudPickUps;
+extern idCVar vr_hudTips;
+extern idCVar vr_hudLocation;
+extern idCVar vr_hudObjective;
+extern idCVar vr_hudStamina;
+extern idCVar vr_hudPills;
+extern idCVar vr_hudComs;
+extern idCVar vr_hudWeap;
+extern idCVar vr_hudNewItems;
+extern idCVar vr_hudFlashlight;
+extern idCVar vr_hudLowHealth;
 
-extern idCVar	vr_tweakTalkCursor;
-extern idCVar	vr_talkWakeMonsters;
-extern idCVar	vr_talkWakeMonsterRadius;
-extern idCVar	vr_talkMode;
-extern idCVar	vr_voiceCommands;
-extern idCVar	vr_voicePushToTalk;
-extern idCVar	vr_voiceRepeat;
-extern idCVar	vr_voiceMinVolume;
+extern idCVar vr_tweakTalkCursor;
+extern idCVar vr_talkWakeMonsters;
+extern idCVar vr_talkWakeMonsterRadius;
+extern idCVar vr_talkMode;
+extern idCVar vr_voiceCommands;
+extern idCVar vr_voicePushToTalk;
+extern idCVar vr_voiceRepeat;
+extern idCVar vr_voiceMinVolume;
 
-extern idCVar	vr_listMonitorName;
+extern idCVar vr_listMonitorName;
 
-extern idCVar	vr_enable;
-extern idCVar	vr_joystickMenuMapping;
+extern idCVar vr_enable;
+extern idCVar vr_joystickMenuMapping;
 
-extern idCVar	vr_trackingPredictionUserDefined;
+extern idCVar vr_trackingPredictionUserDefined;
 
-extern idCVar	vr_minLoadScreenTime;
+extern idCVar vr_minLoadScreenTime;
 
-extern idCVar	vr_deadzonePitch;
-extern idCVar	vr_deadzoneYaw;
-extern idCVar	vr_comfortDelta;
-extern idCVar	vr_comfortJetStrafeDelta;
+extern idCVar vr_deadzonePitch;
+extern idCVar vr_deadzoneYaw;
+extern idCVar vr_comfortDelta;
+extern idCVar vr_comfortJetStrafeDelta;
 
-//extern idCVar	vr_interactiveCinematic;
+//extern idCV vr_interactiveCinematic;
 
-extern idCVar	vr_headingBeamMode;
+extern idCVar vr_headingBeamMode;
 
-extern idCVar	vr_weaponSight;
-extern idCVar	vr_weaponSightToSurface;
+extern idCVar vr_weaponSight;
+extern idCVar vr_weaponSightToSurface;
 
-extern idCVar   vr_motionFlashPitchAdj;
-extern idCVar	vr_motionWeaponPitchAdj;
+extern idCVar vr_motionFlashPitchAdj;
+extern idCVar vr_motionWeaponPitchAdj;
 
-extern idCVar	vr_3dgui;
-extern idCVar	vr_shakeAmplitude;
-extern idCVar	vr_controllerStandard;
+extern idCVar vr_3dgui;
+extern idCVar vr_shakeAmplitude;
+extern idCVar vr_controllerStandard;
 
-extern idCVar	vr_offHandPosX;
-extern idCVar	vr_offHandPosY;
-extern idCVar	vr_offHandPosZ;
+extern idCVar vr_offHandPosX;
+extern idCVar vr_offHandPosY;
+extern idCVar vr_offHandPosZ;
 
-extern idCVar	vr_padDeadzone;
-extern idCVar	vr_jsDeadzone;
-extern idCVar	vr_padToButtonThreshold;
-extern idCVar	vr_knockBack;
-extern idCVar	vr_jumpBounce;
-extern idCVar	vr_stepSmooth;
+extern idCVar vr_padDeadzone;
+extern idCVar vr_jsDeadzone;
+extern idCVar vr_padToButtonThreshold;
+extern idCVar vr_knockBack;
+extern idCVar vr_jumpBounce;
+extern idCVar vr_stepSmooth;
 
-extern idCVar	vr_mountedWeaponController;
-extern idCVar	vr_walkSpeedAdjust;
+extern idCVar vr_mountedWeaponController;
+extern idCVar vr_walkSpeedAdjust;
 
-extern idCVar	vr_crouchTriggerDist;
-extern idCVar	vr_crouchMode;
-extern idCVar	vr_crouchHideBody;
+extern idCVar vr_crouchTriggerDist;
+extern idCVar vr_crouchMode;
+extern idCVar vr_crouchHideBody;
 
-extern idCVar	vr_wipPeriodMin;
-extern idCVar	vr_wipPeriodMax;
+extern idCVar vr_wipPeriodMin;
+extern idCVar vr_wipPeriodMax;
 
-extern idCVar	vr_wipVelocityMin;
-extern idCVar	vr_wipVelocityMax;
+extern idCVar vr_wipVelocityMin;
+extern idCVar vr_wipVelocityMax;
 
-extern idCVar	vr_headbbox;
+extern idCVar vr_headbbox;
 
-extern idCVar	vr_pdaPosX;
-extern idCVar	vr_pdaPosY;
-extern idCVar	vr_pdaPosZ;
+extern idCVar vr_pdaPosX;
+extern idCVar vr_pdaPosY;
+extern idCVar vr_pdaPosZ;
 
-extern idCVar	vr_pdaPitch;
+extern idCVar vr_pdaPitch;
 
-extern idCVar	vr_movePoint;
-extern idCVar	vr_moveClick;
-extern idCVar	vr_playerBodyMode;
-extern idCVar	vr_bodyToMove;
-extern idCVar	vr_moveThirdPerson;
+extern idCVar vr_movePoint;
+extern idCVar vr_moveClick;
+extern idCVar vr_playerBodyMode;
+extern idCVar vr_bodyToMove;
+extern idCVar vr_moveThirdPerson;
 
-extern idCVar	vr_stereoMirror;
+extern idCVar vr_stereoMirror;
 
-extern idCVar	vr_teleportSkipHandrails;
-extern idCVar	vr_teleportShowAimAssist;
-extern idCVar	vr_teleportButtonMode;
-extern idCVar	vr_teleportHint;
+extern idCVar vr_teleportSkipHandrails;
+extern idCVar vr_teleportShowAimAssist;
+extern idCVar vr_teleportButtonMode;
+extern idCVar vr_teleportHint;
 
-extern idCVar	vr_teleport;
-extern idCVar	vr_teleportMode;
-extern idCVar	vr_teleportMaxTravel;
-extern idCVar	vr_teleportThroughDoors;
-extern idCVar	vr_motionSickness;
-extern idCVar	vr_strobeTime;
-extern idCVar	vr_chaperone;
-extern idCVar	vr_chaperoneColor;
+extern idCVar vr_teleport;
+extern idCVar vr_teleportMode;
+extern idCVar vr_teleportMaxTravel;
+extern idCVar vr_teleportThroughDoors;
+extern idCVar vr_motionSickness;
+extern idCVar vr_strobeTime;
+extern idCVar vr_chaperone;
+extern idCVar vr_chaperoneColor;
 
 extern idCVar vr_slotDebug;
 extern idCVar vr_slotMag;

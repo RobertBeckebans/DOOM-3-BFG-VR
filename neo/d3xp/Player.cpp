@@ -11463,7 +11463,6 @@ idPlayer::RunPhysics_RemoteClientCorrection
 */
 void idPlayer::RunPhysics_RemoteClientCorrection()
 {
-
 	if( !AllowClientAuthPhysics() )
 	{
 		// We are still overriding client's position
@@ -11475,13 +11474,10 @@ void idPlayer::RunPhysics_RemoteClientCorrection()
 		return;
 	}
 
-
-
 	// Client is on a pusher... ignore him so he doesn't lag behind
 	bool becameUnlocked = false;
 	if( physicsObj.ClientPusherLocked( becameUnlocked ) )
 	{
-
 		// Check and see how far we've diverged.
 		idVec3 cmdPos( usercmd.pos[0], usercmd.pos[1], usercmd.pos[2] );
 		idVec3 newOrigin = physicsObj.GetOrigin();
@@ -11494,15 +11490,14 @@ void idPlayer::RunPhysics_RemoteClientCorrection()
 		{
 			return;
 		}
-
 	}
+
 	if( becameUnlocked )
 	{
 		// Client just got off of a mover, wait before listening to him
 		serverOverridePositionTime = gameLocal.GetServerGameTimeMs();
 		return;
 	}
-
 
 	// Correction
 	{

@@ -18,7 +18,6 @@ option(DOOM_CLASSIC
 option(FORCE_COLOR_OUTPUT
 		"Always produce ANSI-colored output (GNU/Clang only)." OFF)
 
-
 option(USE_PRECOMPILED_HEADERS
 		"Use precompiled headers during build" ON)
 		
