@@ -302,22 +302,6 @@ void SwapWeaponHand()
 }
 
 /*
-====================
-R_MakeFBOImage
-// Koz deleteme, using renderbuffers instead of textures.
-====================
-*/
-static void R_MakeFBOImage( idImage* image )
-{
-	idImageOpts	opts;
-	opts.width = fboWidth;
-	opts.height = fboHeight;
-	opts.numLevels = 1;
-	opts.format = FMT_RGBA8;
-	image->AllocImage( opts, TF_LINEAR, TR_CLAMP );
-}
-
-/*
 ==============
 iVr::iVr()
 ==============
@@ -502,6 +486,7 @@ idMat4 ConvertSteamVRMatrixToidMat4( const vr::HmdMatrix34_t& matPose )
 		matPose.m[0][2], matPose.m[1][2], matPose.m[2][2], matPose.m[3][2],
 		matPose.m[0][3], matPose.m[1][3], matPose.m[2][3], 1.0f
 	);
+
 	return matrixObj;
 }
 
@@ -694,15 +679,11 @@ iVr::OpenVRInit
 
 bool iVr::OpenVRInit()
 {
-
 	if( vr_APISelect.GetInteger() == 1 )  // Only use Oculus API
 	{
 		common->Printf( "OpenVRInit: vr_vrAPISelect set to only use Oculus API. Returning false." );
 		return false;
 	}
-
-
-
 
 	if( !vr::VR_IsHmdPresent() )
 	{
@@ -773,7 +754,7 @@ bool iVr::OpenVRInit()
 	// get this here so we have a resolution starting point for gl initialization.
 	m_pHMD->GetRecommendedRenderTargetSize( &hmdWidth, &hmdHeight );
 
-	vrSystem->hmdHz = ( int )( m_pHMD->GetFloatTrackedDeviceProperty( vr::k_unTrackedDeviceIndex_Hmd, vr::Prop_DisplayFrequency_Float ) + 0.5f );
+	hmdHz = ( int )( m_pHMD->GetFloatTrackedDeviceProperty( vr::k_unTrackedDeviceIndex_Hmd, vr::Prop_DisplayFrequency_Float ) + 0.5f );
 
 	officialIPD = m_pHMD->GetFloatTrackedDeviceProperty( vr::k_unTrackedDeviceIndex_Hmd, vr::Prop_UserIpdMeters_Float ) * 100;
 
@@ -794,11 +775,11 @@ bool iVr::OpenVRInit()
 		/ ( openVRfovEye[0][1] - openVRfovEye[0][0] );
 
 	VRScreenSeparation = fabs( VRScreenSeparation ) / 2.0f ;
-	com_engineHz.SetInteger( vrSystem->hmdHz );
+	com_engineHz.SetInteger( hmdHz );
 
 	common->Printf( "Hmd Driver: %s .\n", m_strDriver.c_str() );
 	common->Printf( "Hmd Display: %s .\n", m_strDisplay.c_str() );
-	common->Printf( "Hmd HZ %d, width %d, height %d\n", vrSystem->hmdHz, hmdWidth, hmdHeight );
+	common->Printf( "Hmd HZ %d, width %d, height %d\n", hmdHz, hmdWidth, hmdHeight );
 	common->Printf( "Hmd reported IPD in centimeters = %f \n", officialIPD );
 
 	common->Printf( "HMD Left Eye leftTan %f\n", openVRfovEye[1][0] );
@@ -811,6 +792,7 @@ bool iVr::OpenVRInit()
 	common->Printf( "HMD Right Eye upTan %f\n", openVRfovEye[0][2] );
 	common->Printf( "HMD Right Eye downTan %f\n", openVRfovEye[0][3] );
 	common->Printf( "OpenVR HMD Screen separation = %f\n", VRScreenSeparation );
+
 	return true;
 }
 
@@ -876,17 +858,17 @@ void iVr::HMDInitializeDistortion()
 
 	if(
 #ifdef USE_OVR
-		( !vrSystem->hmdSession || !vrSystem->hasOculusRift || !vr_enable.GetBool() )
+		( !hmdSession || !hasOculusRift || !vr_enable.GetBool() )
 		&&
 #endif
-		( !m_pHMD || !vrSystem->hasHMD || !vr_enable.GetBool() ) )
+		( !m_pHMD || !hasHMD || !vr_enable.GetBool() ) )
 	{
 		game->isVR = false;
 		return;
 	}
 
 
-	if( !vrSystem->hasOculusRift )
+	if( !hasOculusRift )
 	{
 		m_mat4ProjectionLeft = GetHMDMatrixProjectionEye( vr::Eye_Left );
 		m_mat4ProjectionRight = GetHMDMatrixProjectionEye( vr::Eye_Right );
@@ -932,8 +914,8 @@ void iVr::HMDInitializeDistortion()
 		for( int eye = 0; eye < 2; eye++ )
 		{
 
-			hmdEye[eye].eyeFov = vrSystem->hmdDesc.DefaultEyeFov[eye];
-			hmdEye[eye].eyeRenderDesc = ovr_GetRenderDesc( vrSystem->hmdSession, ( ovrEyeType )eye, hmdEye[eye].eyeFov );
+			hmdEye[eye].eyeFov = hmdDesc.DefaultEyeFov[eye];
+			hmdEye[eye].eyeRenderDesc = ovr_GetRenderDesc( hmdSession, ( ovrEyeType )eye, hmdEye[eye].eyeFov );
 
 			common->Printf( "Eye[%d] viewOffset %s\n", eye, hmdEye[eye].viewOffset.ToString() );
 			common->Printf( "Eye[%d] uvOffset[0] x = %f y = %f\n", eye, hmdEye[eye].UVScaleoffset[0].x, hmdEye[eye].UVScaleoffset[0].y );
@@ -958,7 +940,7 @@ void iVr::HMDInitializeDistortion()
 			hmdEye[eye].viewOffset.z = hmdEye[eye].eyeRenderDesc.HmdToEyePose.Position.z;
 			common->Printf( "EYE %d HmdToEyeOffset x %f y %f z %f\n", eye, hmdEye[eye].eyeRenderDesc.HmdToEyePose.Position.x, hmdEye[eye].eyeRenderDesc.HmdToEyePose.Position.y, hmdEye[eye].eyeRenderDesc.HmdToEyePose.Position.z );
 
-			rendertarget = ovr_GetFovTextureSize( vrSystem->hmdSession, ( ovrEyeType )eye, vrSystem->hmdEye[eye].eyeFov, vr_pixelDensity.GetFloat() ); // make sure both eyes render to the same size target
+			rendertarget = ovr_GetFovTextureSize( hmdSession, ( ovrEyeType )eye, hmdEye[eye].eyeFov, vr_pixelDensity.GetFloat() ); // make sure both eyes render to the same size target
 			hmdEye[eye].renderTarget.h = rendertarget.h; // Koz was height?
 			hmdEye[eye].renderTarget.w = rendertarget.w;
 			common->Printf( "Eye %d Rendertaget Width x Height = %d x %d\n", eye, rendertarget.w, rendertarget.h );
@@ -987,8 +969,6 @@ void iVr::HMDInitializeDistortion()
 		common->Printf( "Default recommended resolution = %i %i \n", hmdWidth, hmdHeight );
 		common->Printf( "Requested pixel density = %f \n", vr_pixelDensity.GetFloat() );
 		common->Printf( "\nWorking resolution ( default * pixelDensity ) = %i %i \n", primaryFBOWidth, primaryFBOHeight );
-
-
 
 		VR_AAmode = r_multiSamples.GetInteger() == 0 ? VR_AA_NONE : VR_AA_MSAA;
 
@@ -1055,7 +1035,7 @@ void iVr::HMDInitializeDistortion()
 		{
 			// either AA disabled or AA buffer creation failed. Try creating unaliased FBOs.
 
-			//primaryFBOimage = globalImages->ImageFromFunction( "_primaryFBOimage", R_MakeFBOImage );
+
 			common->Printf( "Creating framebuffer\n" );
 			globalFramebuffers.primaryFBO = new Framebuffer( "_primaryFBO", primaryFBOWidth, primaryFBOHeight, false ); // Koz
 			common->Printf( "Adding Depth/Stencil attachments to framebuffer\n" );
@@ -1093,11 +1073,11 @@ void iVr::HMDInitializeDistortion()
 
 	if( !useFBO )    // not using FBO's, will render to default framebuffer (screen)
 	{
-
 		primaryFBOWidth = renderSystem->GetNativeWidth() / 2;
 		primaryFBOHeight = renderSystem->GetNativeHeight();
 		rendertarget.w = primaryFBOWidth;
 		rendertarget.h = primaryFBOHeight;
+
 		for( int eye = 0; eye < 2; eye++ )
 		{
 			hmdEye[eye].renderTargetRes.x = primaryFBOWidth;
@@ -1295,7 +1275,6 @@ void iVr::HMDInitializeDistortion()
 	{
 		// override the default steam skybox, initially just set to black.  UpdateScreen can copy static images to skyBoxFront during level loads/saves
 
-
 		static vr::Texture_t* textures = new vr::Texture_t[6];
 		for( int i = 0; i < 6; i++ )
 		{
@@ -1346,7 +1325,6 @@ void iVr::HMDInitializeDistortion()
 		idVec3 bodyPosTemp = vec3_zero;
 		idVec3 absTemp = vec3_zero;
 
-
 		HMDGetOrientation( angTemp, headPosTemp, bodyPosTemp, absTemp, false );
 	}
 	else
@@ -1357,11 +1335,10 @@ void iVr::HMDInitializeDistortion()
 		}
 		while( !m_rTrackedDevicePose[vr::k_unTrackedDeviceIndex_Hmd].bPoseIsValid );
 
-
 		//Seems to take a few frames before a vaild yaw is returned, so zero the current tracked player position by pulling multiple poses;
 		for( int t = 0; t < 20; t++ )
 		{
-			vrSystem->HMDResetTrackingOriginOffset();
+			HMDResetTrackingOriginOffset();
 		}
 	}
 }
@@ -1409,7 +1386,6 @@ void iVr::HMDGetOrientation( idAngles& hmdAngles, idVec3& headPositionDelta, idV
 
 	static vr::TrackedDevicePose_t lastTrackedPoseOpenVR = { 0.0f };
 
-
 	if( !hasHMD )
 	{
 		hmdAngles.roll = 0.0f;
@@ -1427,8 +1403,7 @@ void iVr::HMDGetOrientation( idAngles& hmdAngles, idVec3& headPositionDelta, idV
 	poseLastHmdBodyPositionDelta = poseHmdBodyPositionDelta;
 	poseLastHmdAbsolutePosition = poseHmdAbsolutePosition;
 
-
-	if( vr_frameCheck.GetInteger() == 1 && idLib::frameNumber == lastFrame ) //&& !vrSystem->renderingSplash )
+	if( vr_frameCheck.GetInteger() == 1 && idLib::frameNumber == lastFrame ) //&& !renderingSplash )
 	{
 		//make sure to return the same values for this frame.
 		hmdAngles.roll = lastRoll;
@@ -1439,7 +1414,6 @@ void iVr::HMDGetOrientation( idAngles& hmdAngles, idVec3& headPositionDelta, idV
 
 		if( resetTrackingOffset == true )
 		{
-
 			trackingOriginOffset = lastHmdPosition;
 			trackingOriginHeight = trackingOriginOffset.z;
 			if( vr_useFloorHeight.GetInteger() == 0 )
@@ -1471,7 +1445,7 @@ void iVr::HMDGetOrientation( idAngles& hmdAngles, idVec3& headPositionDelta, idV
 			cinematicStartViewYaw = trackingOriginYawOffset;
 
 		}
-		common->Printf( "HMDGetOrientation FramCheck Bail == idLib:: framenumber  lf %d  ilfn %d  rendersplash = %d\n", lastFrame, idLib::frameNumber, vrSystem->renderingSplash );
+		common->Printf( "HMDGetOrientation FramCheck Bail == idLib:: framenumber  lf %d  ilfn %d  rendersplash = %d\n", lastFrame, idLib::frameNumber, renderingSplash );
 		return;
 	}
 
@@ -1507,8 +1481,8 @@ void iVr::HMDGetOrientation( idAngles& hmdAngles, idVec3& headPositionDelta, idV
 			translationPose = lastTrackedPoseOculus;
 		}
 
-		vrSystem->handPose[1] = hmdTrackingState.HandPoses[ovrHand_Left].ThePose;
-		vrSystem->handPose[0] = hmdTrackingState.HandPoses[ovrHand_Right].ThePose;
+		handPose[1] = hmdTrackingState.HandPoses[ovrHand_Left].ThePose;
+		handPose[0] = hmdTrackingState.HandPoses[ovrHand_Right].ThePose;
 
 		for( int i = 0; i < 2; i++ )
 		{
@@ -1594,9 +1568,9 @@ void iVr::HMDGetOrientation( idAngles& hmdAngles, idVec3& headPositionDelta, idV
 
 	if( resetTrackingOffset == true )
 	{
-
 		trackingOriginOffset = lastHmdPosition;
 		trackingOriginHeight = trackingOriginOffset.z;
+
 		if( vr_useFloorHeight.GetInteger() == 0 )
 		{
 			trackingOriginOffset.z += pm_normalviewheight.GetFloat() + 5 + CM_CLIP_EPSILON - vr_normalViewHeight.GetFloat() / vr_scale.GetFloat();
@@ -1618,11 +1592,13 @@ void iVr::HMDGetOrientation( idAngles& hmdAngles, idVec3& headPositionDelta, idV
 			trackingOriginOffset *= oldScale / newScale;
 			vr_scale.SetFloat( newScale );
 		}
+
 		common->Printf( "Resetting tracking yaw offset.\n Yaw = %f old offset = %f ", hmdAngles.yaw, trackingOriginYawOffset );
 		trackingOriginYawOffset = hmdAngles.yaw;
 		common->Printf( "New Tracking yaw offset %f\n", hmdAngles.yaw, trackingOriginYawOffset );
 		neckInitialized = false;
 		cinematicStartViewYaw = trackingOriginYawOffset;
+
 		return;
 	}
 
@@ -1644,10 +1620,10 @@ void iVr::HMDGetOrientation( idAngles& hmdAngles, idVec3& headPositionDelta, idV
 	lastAbsolutePosition = absolutePosition;
 	hmdPositionTracked = true;
 
-	vrSystem->hmdBodyTranslation = absolutePosition;
+	hmdBodyTranslation = absolutePosition;
 
 	idAngles hmd2 = hmdAngles;
-	hmd2.yaw -= vrSystem->bodyYawOffset;
+	hmd2.yaw -= bodyYawOffset;
 
 	//hmdAxis = hmd2.ToMat3();
 	hmdAxis = hmdAngles.ToMat3();
@@ -1689,9 +1665,9 @@ void iVr::HMDGetOrientation( idAngles& hmdAngles, idVec3& headPositionDelta, idV
 		chestAngles.yaw = 0;
 
 
-		//lastView = vrSystem->lastHMDViewAxis.ToAngles();
+		//lastView = lastHMDViewAxis.ToAngles();
 		//headAngles.roll = lastView.pitch;
-		//headAngles.pitch = vrSystem->lastHMDYaw - vrSystem->bodyYawOffset;
+		//headAngles.pitch = lastHMDYaw - bodyYawOffset;
 		//headAngles.yaw = lastView.roll;
 		//headAngles.Normalize360();
 		//gameLocal.GetLocalPlayer()->GetAnimator()->SetJointAxis( gameLocal.GetLocalPlayer()->chestPivotJoint, JOINTMOD_LOCAL, chestAngles.ToMat3() );
@@ -1755,7 +1731,7 @@ void iVr::HMDResetTrackingOriginOffset()
 
 	HMDGetOrientation( rot, head, body, absPos, true );
 
-	common->Printf( "New Yaw offset = %f\n", vrSystem->trackingOriginYawOffset );
+	common->Printf( "New Yaw offset = %f\n", trackingOriginYawOffset );
 }
 
 /*
@@ -1801,7 +1777,6 @@ iVr::MotionControlGetOpenVrController
 */
 void iVr::MotionControlGetOpenVrController( vr::TrackedDeviceIndex_t deviceNum, idVec3& motionPosition, idQuat& motionRotation )
 {
-
 	idMat4 m_rmat4DevicePose = ConvertSteamVRMatrixToidMat4( m_rTrackedDevicePose[( int )deviceNum].mDeviceToAbsoluteTracking );
 	static idQuat orientationPose;
 	static idQuat poseRot;
@@ -1828,7 +1803,7 @@ void iVr::MotionControlGetOpenVrController( vr::TrackedDeviceIndex_t deviceNum, 
 	angTemp.roll = poseAngles.roll;
 	angTemp.pitch = poseAngles.pitch;
 
-	motionPosition -= vrSystem->hmdBodyTranslation;
+	motionPosition -= hmdBodyTranslation;
 
 	angTemp.yaw -= trackingOriginYawOffset;// + bodyYawOffset;
 	angTemp.Normalize360();
@@ -1866,7 +1841,7 @@ void iVr::MotionControlGetTouchController( int hand, idVec3& motionPosition, idQ
 	angTemp.roll = poseAngles.roll;
 	angTemp.pitch = poseAngles.pitch;
 
-	motionPosition -= vrSystem->hmdBodyTranslation;
+	motionPosition -= hmdBodyTranslation;
 
 	angTemp.yaw -= trackingOriginYawOffset;// + bodyYawOffset;
 	angTemp.Normalize360();
@@ -2036,54 +2011,51 @@ be returned based on the current user aim mode.
 
 void iVr::CalcAimMove( float& yawDelta, float& pitchDelta )
 {
-
-	if( vrSystem->VR_USE_MOTION_CONTROLS )  // no independent aim or joystick pitch when using motion controllers.
+	if( VR_USE_MOTION_CONTROLS )
 	{
+		// no independent aim or joystick pitch when using motion controllers.
 		pitchDelta = 0.0f;
 		return;
 	}
 
-
 	float pitchDeadzone = vr_deadzonePitch.GetFloat();
 	float yawDeadzone = vr_deadzoneYaw.GetFloat();
 
-	vrSystem->independentWeaponPitch += pitchDelta;
+	independentWeaponPitch += pitchDelta;
 
-	if( vrSystem->independentWeaponPitch >= pitchDeadzone )
+	if( independentWeaponPitch >= pitchDeadzone )
 	{
-		vrSystem->independentWeaponPitch = pitchDeadzone;
+		independentWeaponPitch = pitchDeadzone;
 	}
-	if( vrSystem->independentWeaponPitch < -pitchDeadzone )
+	if( independentWeaponPitch < -pitchDeadzone )
 	{
-		vrSystem->independentWeaponPitch = -pitchDeadzone;
+		independentWeaponPitch = -pitchDeadzone;
 	}
 	pitchDelta = 0;
 
 	// if moving the character in third person, just turn immediately, no deadzones.
-	if( vrSystem->thirdPersonMovement )
+	if( thirdPersonMovement )
 	{
 		return;
 	}
 
+	independentWeaponYaw += yawDelta;
 
-	vrSystem->independentWeaponYaw += yawDelta;
-
-	if( vrSystem->independentWeaponYaw >= yawDeadzone )
+	if( independentWeaponYaw >= yawDeadzone )
 	{
-		yawDelta = vrSystem->independentWeaponYaw - yawDeadzone;
-		vrSystem->independentWeaponYaw = yawDeadzone;
+		yawDelta = independentWeaponYaw - yawDeadzone;
+		independentWeaponYaw = yawDeadzone;
 		return;
 	}
 
-	if( vrSystem->independentWeaponYaw < -yawDeadzone )
+	if( independentWeaponYaw < -yawDeadzone )
 	{
-		yawDelta = vrSystem->independentWeaponYaw + yawDeadzone;
-		vrSystem->independentWeaponYaw = -yawDeadzone;
+		yawDelta = independentWeaponYaw + yawDeadzone;
+		independentWeaponYaw = -yawDeadzone;
 		return;
 	}
 
 	yawDelta = 0.0f;
-
 }
 
 
@@ -2106,7 +2078,7 @@ void iVr::FrameStart()
 
 	static int lastFrame = -1;
 
-	if( idLib::frameNumber == lastFrame && !vrSystem->renderingSplash )
+	if( idLib::frameNumber == lastFrame && !renderingSplash )
 	{
 		return;
 	}
@@ -2120,16 +2092,15 @@ void iVr::FrameStart()
 
 	vr::VRCompositor()->WaitGetPoses( m_rTrackedDevicePose, vr::k_unMaxTrackedDeviceCount, NULL, 0 );
 
-
 	leftControllerDeviceNo = vr::VRSystem()->GetTrackedDeviceIndexForControllerRole( vr::TrackedControllerRole_LeftHand );
 	rightControllerDeviceNo = vr::VRSystem()->GetTrackedDeviceIndexForControllerRole( vr::TrackedControllerRole_RightHand );
 
 	/*
-	vr::VRControllerState_t& currentStateL = vrSystem->pControllerStateL;
-	m_pHMD->GetControllerState( vrSystem->leftControllerDeviceNo, &currentStateL );
+	vr::VRControllerState_t& currentStateL = pControllerStateL;
+	m_pHMD->GetControllerState( leftControllerDeviceNo, &currentStateL );
 
-	vr::VRControllerState_t& currentStateR = vrSystem->pControllerStateR;
-	m_pHMD->GetControllerState( vrSystem->rightControllerDeviceNo, &currentStateR );
+	vr::VRControllerState_t& currentStateR = pControllerStateR;
+	m_pHMD->GetControllerState( rightControllerDeviceNo, &currentStateR );
 	*/
 	//Sys_PollJoystickInputEvents( 5 ); // 5 is the device num for the steam vr controller, pull once per frame for now :(
 
@@ -2143,7 +2114,6 @@ void iVr::FrameStart()
 		poseHandRotationMat3[i] = poseHandRotationQuat[i].ToMat3();
 		poseHandRotationAngles[i] = poseHandRotationQuat[i].ToAngles();
 	}
-	return;
 }
 
 /*
@@ -2205,6 +2175,7 @@ void iVr::ForceChaperone( int which, bool force )
 	}
 	else
 #endif
+
 		if( hasHMD )
 		{
 			vr::VRChaperone()->ForceBoundsVisible( force );

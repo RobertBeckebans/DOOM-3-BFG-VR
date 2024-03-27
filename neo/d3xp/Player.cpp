@@ -8081,7 +8081,6 @@ idClipModel* idPlayer::LookForFocusIdAI()
 	idClipModel* clip;
 	int			listedClipModels;
 	idEntity*	ent;
-	int			i, j;
 	idVec3		start, end;
 	idMat3		scanAxis;
 	trace_t		trace;
@@ -8100,7 +8099,7 @@ idClipModel* idPlayer::LookForFocusIdAI()
 	// no pretense at sorting here, just assume that there will only be one active
 	// gui within range along the trace
 
-	for( i = 0; i < listedClipModels; i++ )
+	for( int i = 0; i < listedClipModels; i++ )
 	{
 		clip = clipModelList[i];
 		ent = clip->GetEntity();
@@ -8109,6 +8108,7 @@ idClipModel* idPlayer::LookForFocusIdAI()
 		{
 			continue;
 		}
+
 		if( ent->IsType( idAFAttachment::Type ) )
 		{
 			idEntity* body = static_cast<idAFAttachment*>( ent )->GetBody();
@@ -13288,7 +13288,6 @@ void idPlayer::SetWeaponHandPose()
 		//common->Printf( "Calling SetWeaponHandPose\n" );g
 		gameLocal.frameCommandThread->CallFunction( this, func, true );
 		gameLocal.frameCommandThread->Execute();
-
 	}
 	else
 	{
@@ -13445,7 +13444,6 @@ void idPlayer::Think()
 
 		SetWeaponHandPose();
 		SetFlashHandPose();
-
 	}
 	else
 	{
@@ -13458,7 +13456,6 @@ void idPlayer::Think()
 
 	if( !g_stopTime.GetBool() )  // && !vrSystem->VR_GAME_PAUSED )  // Koz pause vr
 	{
-
 		if( !noclip && !spectating && ( health > 0 ) && !IsHidden() )
 		{
 			TouchTriggers();
@@ -13566,15 +13563,10 @@ void idPlayer::Think()
 		}
 	}
 
-
-
 	static int lastFlashMode = vrSystem->GetCurrentFlashMode();
 	//static bool lastViewArms = vr_viewModelArms.GetBool();
 	static bool lastFists = false;
 	static bool lastHandInGui = false;
-
-
-
 
 	// Koz check for forced standard controller
 	if( vrSystem->VR_USE_MOTION_CONTROLS && vr_controllerStandard.GetInteger() )
@@ -13585,17 +13577,14 @@ void idPlayer::Think()
 	// Koz turn body on or off in vr, update hand poses/skins if body or weapon hand changes.
 	if( game->isVR )
 	{
-
 		if( vr_weaponHand.IsModified() )
 		{
 			UpdatePlayerSkinsPoses();
 			vr_weaponHand.ClearModified();
-
 		}
 
 		if( vr_flashlightMode.IsModified() || lastFlashMode != vrSystem->GetCurrentFlashMode() )
 		{
-
 			if( vr_flashlightMode.IsModified() )
 			{
 				vrSystem->currentFlashMode = vr_flashlightMode.GetInteger();

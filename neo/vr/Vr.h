@@ -106,6 +106,7 @@ public:
 
 	bool				OculusInit();
 	bool				OpenVRInit();
+
 	void				HMDInit();
 	void				HMDShutdown();
 	void				HMDInitializeDistortion();
