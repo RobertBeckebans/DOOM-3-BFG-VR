@@ -25,14 +25,13 @@ If you have questions concerning this license or the applicable additional terms
 
 ===========================================================================
 */
-#pragma hdrstop
 #include "precompiled.h"
+#pragma hdrstop
 #include "../Game_local.h"
 
 extern idCVar pm_stamina;
 extern idCVar in_useJoystick;
 extern idCVar flashlight_batteryDrainTimeMS;
-
 
 /*
 ========================
@@ -300,7 +299,6 @@ void idMenuScreen_HUD::UpdateHealthArmor( idPlayer* player )
 	if( common->IsMultiplayer() )
 	{
 		playerInfo->GetSprite()->SetYPos( 20.0f );
-
 	}
 	else
 	{
@@ -1182,7 +1180,6 @@ void idMenuScreen_HUD::UpdateWeaponStates( idPlayer* player, bool weaponChanged 
 		return;
 	}
 
-
 	idStr displayName;
 	if( common->IsMultiplayer() )
 	{
@@ -1622,7 +1619,6 @@ idMenuScreen_HUD::UpdatedSecurity
 */
 void idMenuScreen_HUD::UpdatedSecurity()
 {
-
 	// Koz begin
 	// Hud fade
 	if( game->isVR && security != NULL )
@@ -1896,8 +1892,6 @@ void  idMenuScreen_HUD::UpdateOxygen( bool show, int val )
 
 	if( show )
 	{
-
-
 		if( !oxygen->IsVisible() )
 		{
 			inVaccuum = true;

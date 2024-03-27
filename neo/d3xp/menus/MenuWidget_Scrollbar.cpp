@@ -25,8 +25,8 @@ If you have questions concerning this license or the applicable additional terms
 
 ===========================================================================
 */
-#pragma hdrstop
 #include "precompiled.h"
+#pragma hdrstop
 #include "../Game_local.h"
 
 void idMenuWidget_ScrollBar::Initialize( idMenuHandler* data )
@@ -268,7 +268,7 @@ bool idMenuWidget_ScrollBar::HandleAction( idWidgetAction& action, const idWidge
 			CalculatePosition( x, y );
 			return true;
 		}
-		case WIDGET_ACTION_EVENT_DRAG_STOP:
+		case( widgetAction_t ) WIDGET_ACTION_EVENT_DRAG_STOP:               // SRS - Cast actionHandler_t to widgetAction_t
 		{
 			dragging = false;
 			return true;

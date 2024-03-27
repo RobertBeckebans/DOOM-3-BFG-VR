@@ -25,8 +25,8 @@ If you have questions concerning this license or the applicable additional terms
 
 ===========================================================================
 */
-#pragma hdrstop
 #include "precompiled.h"
+#pragma hdrstop
 #include "../Game_local.h"
 
 extern idCVar g_demoMode;
@@ -268,7 +268,6 @@ void idMenuScreen_Shell_Pause::ShowScreen( const mainMenuTransition_t transition
 			isMpPause = false;
 			if( isDead )
 			{
-
 				option.Append( "#str_02187" );	// load game
 				menuOptions.Append( option );
 				option.Clear();

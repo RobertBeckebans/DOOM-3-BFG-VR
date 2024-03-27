@@ -25,8 +25,8 @@ If you have questions concerning this license or the applicable additional terms
 
 ===========================================================================
 */
-#pragma hdrstop
 #include "precompiled.h"
+#pragma hdrstop
 #include "../Game_local.h"
 
 
@@ -398,6 +398,7 @@ bool idMenuHandler_Shell::HandleGuiEvent( const sysEvent_t* sev )
 						bindScreen->ToggleWait( false );
 						bindScreen->Update();
 					}
+
 					waitForBinding = false;
 
 				}
@@ -630,7 +631,7 @@ void idMenuHandler_Shell::Initialize( const char* swfFile, idSoundWorld* sw )
 	}
 	else
 	{
-		idStr shortMapName = gameLocal.GetMapFileName();
+		idStrStatic< MAX_OSPATH > shortMapName = gameLocal.GetMapFileName();
 		shortMapName.StripFileExtension();
 		shortMapName.StripLeading( "maps/" );
 		shortMapName.StripLeading( "game/" );
