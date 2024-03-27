@@ -202,7 +202,7 @@ idVec3 idPhysics_Player::MotionMove( idVec3& moveVelocity ) // bool gravity, boo
 	//and slidemove will calc physics for going up/down steps or plane following
 	//remove this vel after calc, so only a finite movement will be imparted, not deltav
 
-	time_left = ( 1000 / commonVr->hmdHz ) * 0.001f; //frametime;
+	time_left = ( 1000 / vrSystem->hmdHz ) * 0.001f; //frametime;
 
 	// never turn against the ground plane
 	if( groundPlane )
@@ -759,7 +759,7 @@ bool idPhysics_Player::SlideMove( bool gravity, bool stepUp, bool stepDown, bool
 
 	// Leyland
 	blink = false;
-	idVec3 headOrigin = commonVr->uncrouchedHMDViewOrigin - current.origin;
+	idVec3 headOrigin = vrSystem->uncrouchedHMDViewOrigin - current.origin;
 	headOrigin.z = 0.f;
 
 	static const float headBodyLimit = 11.f;
@@ -773,9 +773,9 @@ bool idPhysics_Player::SlideMove( bool gravity, bool stepUp, bool stepDown, bool
 	// see if we can raise our head high enough
 	start = end = current.origin;
 	start.z += 20.f;
-	end.z = commonVr->uncrouchedHMDViewOrigin.z;
+	end.z = vrSystem->uncrouchedHMDViewOrigin.z;
 	gameLocal.clip.TraceBounds( trace, start, end, bounds, clipMask, self );
-	commonVr->headHeightDiff = trace.endpos.z - end.z;
+	vrSystem->headHeightDiff = trace.endpos.z - end.z;
 
 	if( trace.fraction < 1.f )
 	{
@@ -808,7 +808,7 @@ bool idPhysics_Player::SlideMove( bool gravity, bool stepUp, bool stepDown, bool
 	{
 		// see if we can make it there
 		start = current.origin;
-		start.z = commonVr->uncrouchedHMDViewOrigin.z + commonVr->headHeightDiff;
+		start.z = vrSystem->uncrouchedHMDViewOrigin.z + vrSystem->headHeightDiff;
 		end = headOrigin + start;
 		gameLocal.clip.TraceBounds( trace, start, end, bounds, clipMask, self );
 
@@ -819,7 +819,7 @@ bool idPhysics_Player::SlideMove( bool gravity, bool stepUp, bool stepDown, bool
 
 		headOrigin = trace.endpos - current.origin;
 	}
-	headOrigin.z = commonVr->headHeightDiff;
+	headOrigin.z = vrSystem->headHeightDiff;
 	// end Leyland
 
 	// step down
@@ -1206,7 +1206,7 @@ void idPhysics_Player::WalkMove()
 
 	// don't do anything if standing still
 	vel = current.velocity - ( current.velocity * gravityNormal ) * gravityNormal;
-	if( !vel.LengthSqr() && !commonVr->motionMoveDelta.x && !commonVr->motionMoveDelta.y )
+	if( !vel.LengthSqr() && !vrSystem->motionMoveDelta.x && !vrSystem->motionMoveDelta.y )
 	{
 		return;
 	}
@@ -1611,13 +1611,13 @@ void idPhysics_Player::CheckDuck()
 			// of course, I haven't tested crouching EVERYWHERE in the game yet.....
 			//
 		{
-			maxZ = pm_normalviewheight.GetFloat() + commonVr->poseHmdBodyPositionDelta.z + commonVr->headHeightDiff;
+			maxZ = pm_normalviewheight.GetFloat() + vrSystem->poseHmdBodyPositionDelta.z + vrSystem->headHeightDiff;
 			idMath::ClampFloat( pm_crouchheight.GetFloat(), pm_normalheight.GetFloat(), maxZ );
 			maxZ = ( int )maxZ; // if this is not cast as an int, it crashes the savegame file!!!!!!! WTF?
 
 			current.movementFlags &= ~PMF_DUCKED;
 			// If we're using floor height, it only counts as crouching if we're actually trying to duck, not simply sitting.
-			if( maxZ <= ( pm_crouchheight.GetFloat() + 2 ) && ( !vr_useFloorHeight.GetBool() || commonVr->userDuckingAmount > vr_crouchTriggerDist.GetFloat() / vr_scale.GetFloat() ) )
+			if( maxZ <= ( pm_crouchheight.GetFloat() + 2 ) && ( !vr_useFloorHeight.GetBool() || vrSystem->userDuckingAmount > vr_crouchTriggerDist.GetFloat() / vr_scale.GetFloat() ) )
 			{
 				playerSpeed = crouchSpeed;
 				if( !ladder )

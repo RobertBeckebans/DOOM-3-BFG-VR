@@ -748,7 +748,7 @@ int	idSWF::GetPlatform()
 {
 
 
-	if( in_useJoystick.GetBool() || commonVr->hasHMD || forceNonPCPlatform )
+	if( in_useJoystick.GetBool() || vrSystem->hasHMD || forceNonPCPlatform )
 	{
 		forceNonPCPlatform = false;
 		return 0;

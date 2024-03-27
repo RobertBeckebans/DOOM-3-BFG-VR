@@ -178,7 +178,7 @@ LONG WINAPI MainWndProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
 	switch( uMsg )
 	{
 		case WM_USER:
-			commonVoice->Event( wParam, lParam );
+			vrVoice->Event( wParam, lParam );
 			break;
 		case WM_WINDOWPOSCHANGED:
 			if( tr.IsInitialized() )

@@ -255,27 +255,27 @@ static void R_CheckCvars()
 	if( game->isVR )
 	{
 
-		if( vr_useFloorHeight.IsModified() || ( vr_normalViewHeight.IsModified() && vr_useFloorHeight.GetInteger() == 0 ) || vr_scale.IsModified() || commonVr->shouldRecenter )
+		if( vr_useFloorHeight.IsModified() || ( vr_normalViewHeight.IsModified() && vr_useFloorHeight.GetInteger() == 0 ) || vr_scale.IsModified() || vrSystem->shouldRecenter )
 		{
 #ifdef USE_OVR
-			if( commonVr->hasOculusRift )
+			if( vrSystem->hasOculusRift )
 			{
 				if( vr_useFloorHeight.GetInteger() >= 3 )
 				{
-					ovr_SetTrackingOriginType( commonVr->hmdSession, ovrTrackingOrigin_FloorLevel );
+					ovr_SetTrackingOriginType( vrSystem->hmdSession, ovrTrackingOrigin_FloorLevel );
 				}
 				else
 				{
-					ovr_SetTrackingOriginType( commonVr->hmdSession, ovrTrackingOrigin_EyeLevel );
+					ovr_SetTrackingOriginType( vrSystem->hmdSession, ovrTrackingOrigin_EyeLevel );
 				}
-				ovr_RecenterTrackingOrigin( commonVr->hmdSession );
-				commonVr->HMDResetTrackingOriginOffset();
+				ovr_RecenterTrackingOrigin( vrSystem->hmdSession );
+				vrSystem->HMDResetTrackingOriginOffset();
 			}
 #endif
 			vr_useFloorHeight.ClearModified();
 			vr_normalViewHeight.ClearModified();
 			vr_scale.ClearModified();
-			commonVr->shouldRecenter = false;
+			vrSystem->shouldRecenter = false;
 		}
 	}
 
@@ -1159,7 +1159,7 @@ void idRenderSystemLocal::CaptureRenderToFile( const char* fileName, bool fixAlp
 
 	RenderCommandBuffers( frameData->cmdHead );
 
-	if( !commonVr->useFBO )  // Koz
+	if( !vrSystem->useFBO )  // Koz
 	{
 		glReadBuffer( GL_BACK );
 	}

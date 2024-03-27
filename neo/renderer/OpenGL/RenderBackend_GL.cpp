@@ -748,7 +748,7 @@ void idRenderBackend::GL_StartFrame()
 	// the back left and back right buffers, which will have a
 	// performance penalty.
 
-	if( !commonVr->useFBO )
+	if( !vrSystem->useFBO )
 	{
 		glDrawBuffer( GL_BACK );    // Koz
 	}
@@ -798,9 +798,9 @@ void idRenderBackend::GL_BlockingSwapBuffers()
 	glState.frameCounter++;
 	glState.frameParity = glState.frameCounter % NUM_FRAME_DATA;
 
-	if( game->isVR && !commonVr->hasOculusRift )
+	if( game->isVR && !vrSystem->hasOculusRift )
 	{
-		commonVr->FrameStart();
+		vrSystem->FrameStart();
 	}
 
 	const int beforeFence = Sys_Milliseconds();
@@ -1776,7 +1776,7 @@ void idRenderBackend::StereoRenderExecuteBackEndCommands( const emptyCommand_t* 
 	// that eye.
 
 	// Koz begin
-	if( commonVr->useFBO )
+	if( vrSystem->useFBO )
 	{
 		globalFramebuffers.primaryFBO->Bind();
 	}
@@ -1879,7 +1879,7 @@ void idRenderBackend::StereoRenderExecuteBackEndCommands( const emptyCommand_t* 
 
 		// copy to the target
 		stereoRenderImages[ targetEye ]->CopyFramebuffer( 0, 0, renderSystem->GetWidth(), renderSystem->GetHeight() );
-		commonVr->hmdCurrentRender[targetEye] = stereoRenderImages[targetEye];
+		vrSystem->hmdCurrentRender[targetEye] = stereoRenderImages[targetEye];
 	}
 
 	// perform the final compositing / warping / deghosting to the actual framebuffer(s)
@@ -1895,7 +1895,7 @@ void idRenderBackend::StereoRenderExecuteBackEndCommands( const emptyCommand_t* 
 	// a confusing, half-ghosted view.
 	if( renderSystem->GetStereo3DMode() != STEREO3D_QUAD_BUFFER )
 	{
-		if( !commonVr->useFBO )
+		if( !vrSystem->useFBO )
 		{
 			glDrawBuffer( GL_BACK );    // Koz fixme
 		}
@@ -1972,15 +1972,15 @@ void idRenderBackend::StereoRenderExecuteBackEndCommands( const emptyCommand_t* 
 			{
 
 
-				if( commonVr->playerDead || ( game->Shell_IsActive() && !commonVr->PDAforced && !commonVr->PDAforcetoggle ) || ( !commonVr->PDAforced && common->Dialog().IsDialogActive() )
-						|| commonVr->isLoading || commonVr->showingIntroVideo || session->GetState() == idSession::LOADING || ( gameLocal.inCinematic && vr_cinematics.GetInteger() == 2 && vr_flicksyncCharacter.GetInteger() == 0 ) )
+				if( vrSystem->playerDead || ( game->Shell_IsActive() && !vrSystem->PDAforced && !vrSystem->PDAforcetoggle ) || ( !vrSystem->PDAforced && common->Dialog().IsDialogActive() )
+						|| vrSystem->isLoading || vrSystem->showingIntroVideo || session->GetState() == idSession::LOADING || ( gameLocal.inCinematic && vr_cinematics.GetInteger() == 2 && vr_flicksyncCharacter.GetInteger() == 0 ) )
 				{
-					commonVr->HMDTrackStatic( !commonVr->isLoading && !commonVr->showingIntroVideo && session->GetState() != idSession::LOADING );//  && (gameLocal.inCinematic && vr_cinematics.GetInteger() == 0) );
+					vrSystem->HMDTrackStatic( !vrSystem->isLoading && !vrSystem->showingIntroVideo && session->GetState() != idSession::LOADING );//  && (gameLocal.inCinematic && vr_cinematics.GetInteger() == 0) );
 
 				}
 				else
 				{
-					commonVr->HMDRender( stereoRenderImages[0], stereoRenderImages[1] );
+					vrSystem->HMDRender( stereoRenderImages[0], stereoRenderImages[1] );
 				}
 
 				// Koz GL_CheckErrors();

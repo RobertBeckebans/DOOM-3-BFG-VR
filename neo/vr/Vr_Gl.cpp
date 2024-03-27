@@ -164,7 +164,6 @@ void VR_MatrixMultiply( float in1[4][4], float in2[4][4], float ( &out )[4][4] )
 VR_QuatToRotation
 ================
 */
-
 void VR_QuatToRotation( idQuat q, float ( &out )[4][4] )
 {
 
@@ -254,7 +253,7 @@ void iVr::HUDRender( idImage* image0, idImage* image1 )
 		}
 	}
 
-	imuRotation = commonVr->poseHmdAngles.ToQuat();
+	imuRotation = vrSystem->poseHmdAngles.ToQuat();
 
 	imuRotationGL.x = -imuRotation.y; // convert from id coord system to gl
 	imuRotationGL.y = imuRotation.z;
@@ -262,23 +261,22 @@ void iVr::HUDRender( idImage* image0, idImage* image1 )
 	imuRotationGL.z = -imuRotation.x;
 	imuRotationGL.w = imuRotation.w;
 
-
 	VR_QuatToRotation( imuRotationGL, rot );
 
 	idAngles rollAng = ang_zero;
 
-	rollAng.yaw = -commonVr->poseHmdAngles.roll;
+	rollAng.yaw = -vrSystem->poseHmdAngles.roll;
 
 	VR_QuatToRotation( rollAng.ToQuat(), rot2 );
 
-	absolutePosition = commonVr->poseHmdAbsolutePosition;
+	absolutePosition = vrSystem->poseHmdAbsolutePosition;
 
 	traz = -1.5 + absolutePosition.x / movescale;
 	trax = absolutePosition.y / movescale;
 	tray = -absolutePosition.z / movescale;
 
 
-	if( commonVr->useFBO )  // we dont want to render this into an MSAA FBO.
+	if( vrSystem->useFBO )  // we dont want to render this into an MSAA FBO.
 	{
 		if( globalFramebuffers.primaryFBO->IsMSAA() )
 		{
@@ -322,22 +320,22 @@ void iVr::HUDRender( idImage* image0, idImage* image1 )
 			image0->Bind();
 		}
 
-		if( commonVr->hasOculusRift )
+		if( vrSystem->hasOculusRift )
 		{
 			VR_TranslationMatrix( 0.0f, 0.0f, 0.0f, eye );
 			//VR_TranslationMatrix( hmdEye[index].viewOffset[0], hmdEye[index].viewOffset[1], hmdEye[index].viewOffset[2], eye );
 
 			idx = 1.0f / ( hmdEye[index].eyeFov.LeftTan + hmdEye[index].eyeFov.RightTan );
 			idy = 1.0f / ( hmdEye[index].eyeFov.UpTan + hmdEye[index].eyeFov.DownTan );
-			sx = hmdEye[index].eyeFov.RightTan - hmdEye[index].eyeFov.LeftTan;// .projectionOpenVR.projRight + commonVr->hmdEye[index].projectionOpenVR.projLeft;
-			sy = hmdEye[index].eyeFov.UpTan - hmdEye[index].eyeFov.DownTan;// commonVr->hmdEye[index].projectionOpenVR.projDown + commonVr->hmdEye[index].projectionOpenVR.projUp;
+			sx = hmdEye[index].eyeFov.RightTan - hmdEye[index].eyeFov.LeftTan;// .projectionOpenVR.projRight + vrSystem->hmdEye[index].projectionOpenVR.projLeft;
+			sy = hmdEye[index].eyeFov.UpTan - hmdEye[index].eyeFov.DownTan;// vrSystem->hmdEye[index].projectionOpenVR.projDown + vrSystem->hmdEye[index].projectionOpenVR.projUp;
 		}
 		else
 		{
-			idx = 1.0f / ( commonVr->hmdEye[index].projectionOpenVR.projRight - commonVr->hmdEye[index].projectionOpenVR.projLeft );
-			idy = 1.0f / ( commonVr->hmdEye[index].projectionOpenVR.projDown - commonVr->hmdEye[index].projectionOpenVR.projUp );
-			sx = commonVr->hmdEye[index].projectionOpenVR.projRight + commonVr->hmdEye[index].projectionOpenVR.projLeft;
-			sy = commonVr->hmdEye[index].projectionOpenVR.projDown + commonVr->hmdEye[index].projectionOpenVR.projUp;
+			idx = 1.0f / ( vrSystem->hmdEye[index].projectionOpenVR.projRight - vrSystem->hmdEye[index].projectionOpenVR.projLeft );
+			idy = 1.0f / ( vrSystem->hmdEye[index].projectionOpenVR.projDown - vrSystem->hmdEye[index].projectionOpenVR.projUp );
+			sx = vrSystem->hmdEye[index].projectionOpenVR.projRight + vrSystem->hmdEye[index].projectionOpenVR.projLeft;
+			sy = vrSystem->hmdEye[index].projectionOpenVR.projDown + vrSystem->hmdEye[index].projectionOpenVR.projUp;
 		}
 
 
@@ -443,7 +441,7 @@ void iVr::HMDRender( idImage* leftCurrent, idImage* rightCurrent )
 		static ovrPosef			viewOffset[2] = { hmdEye[0].eyeRenderDesc.HmdToEyePose, hmdEye[1].eyeRenderDesc.HmdToEyePose };
 		static ovrViewScaleDesc viewScaleDesc;
 
-		if( commonVr->useFBO )  // if using FBOs, bind them, otherwise bind the default frame buffer.
+		if( vrSystem->useFBO )  // if using FBOs, bind them, otherwise bind the default frame buffer.
 		{
 
 			FBOW = globalFramebuffers.primaryFBO->GetWidth();
@@ -523,7 +521,7 @@ void iVr::HMDRender( idImage* leftCurrent, idImage* rightCurrent )
 			glFramebufferTexture2D( GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 0, 0 );
 			glFramebufferTexture2D( GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, 0, 0 );
 
-			ovr_CalcEyePoses( commonVr->hmdTrackingState.HeadPose.ThePose, viewOffset, eyeRenderPose );
+			ovr_CalcEyePoses( vrSystem->hmdTrackingState.HeadPose.ThePose, viewOffset, eyeRenderPose );
 
 			viewScaleDesc.HmdSpaceToWorldScaleInMeters = 0.0254f * vr_scale.GetFloat(); // inches to meters
 			viewScaleDesc.HmdToEyePose[0] = hmdEye[0].eyeRenderDesc.HmdToEyePose;
@@ -564,7 +562,7 @@ void iVr::HMDRender( idImage* leftCurrent, idImage* rightCurrent )
 				backEnd.glState.currentFramebuffer = NULL;
 
 				// draw the left eye texture.
-				//	glViewport( 0, 0, commonVr->hmdWidth / 4, commonVr->hmdHeight / 2 );
+				//	glViewport( 0, 0, vrSystem->hmdWidth / 4, vrSystem->hmdHeight / 2 );
 				glViewport( 0, 0, glConfig.nativeScreenWidth, glConfig.nativeScreenHeight );
 				GL_SelectTexture( 0 );
 				leftCurrent->Bind();
@@ -601,20 +599,20 @@ void iVr::HMDRender( idImage* leftCurrent, idImage* rightCurrent )
 			backEnd.glState.currentFramebuffer = NULL;
 
 
-			glViewport( 0, 0, commonVr->hmdWidth, commonVr->hmdHeight );
+			glViewport( 0, 0, vrSystem->hmdWidth, vrSystem->hmdHeight );
 			glClearColor( 0, 0, 0, 0 );
 			glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 			// Koz GL_CheckErrors();
 
 			// draw the left eye texture.
-			glViewport( 0, 0, commonVr->hmdWidth / 4, commonVr->hmdHeight / 2 );
+			glViewport( 0, 0, vrSystem->hmdWidth / 4, vrSystem->hmdHeight / 2 );
 			GL_SelectTexture( 0 );
 			leftCurrent->Bind();
 			glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER );
 			glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER );
 			RB_DrawElementsWithCounters( &backEnd.unitSquareSurface ); // draw it
 
-			glViewport( commonVr->hmdWidth / 4, 0, commonVr->hmdWidth / 4, commonVr->hmdHeight / 2 );
+			glViewport( vrSystem->hmdWidth / 4, 0, vrSystem->hmdWidth / 4, vrSystem->hmdHeight / 2 );
 			GL_SelectTexture( 0 );
 			rightCurrent->Bind();
 
@@ -645,7 +643,7 @@ void iVr::HMDRender( idImage* leftCurrent, idImage* rightCurrent )
 
 		glBindFramebuffer( GL_READ_FRAMEBUFFER, 0 );
 		glBindFramebuffer( GL_DRAW_FRAMEBUFFER, 0 );
-		backEnd.GL_ViewportAndScissor( 0, 0, commonVr->hmdWidth / 2, commonVr->hmdHeight / 2 );
+		backEnd.GL_ViewportAndScissor( 0, 0, vrSystem->hmdWidth / 2, vrSystem->hmdHeight / 2 );
 		backEnd.GL_SelectTexture( 0 );
 		rightCurrent->Bind();
 		glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER );
@@ -692,7 +690,7 @@ bool iVr::HMDRenderQuad( idImage* leftCurrent, idImage* rightCurrent )
 		static ovrPosef			eyeRenderPose[2];
 		static ovrPosef			viewOffset[2] = { hmdEye[0].eyeRenderDesc.HmdToEyePose, hmdEye[1].eyeRenderDesc.HmdToEyePose };
 
-		if( commonVr->useFBO ) // if using FBOs, bind them, otherwise bind the default frame buffer.
+		if( vrSystem->useFBO ) // if using FBOs, bind them, otherwise bind the default frame buffer.
 		{
 
 			FBOW = globalFramebuffers.primaryFBO->GetWidth();
@@ -790,11 +788,11 @@ bool iVr::HMDRenderQuad( idImage* leftCurrent, idImage* rightCurrent )
 				qdist = zdist.GetFloat();
 			}
 
-			idQuat viewForwardQ = idAngles( 0.0f, commonVr->cinematicStartViewYaw, 0.0f ).ToQuat();
+			idQuat viewForwardQ = idAngles( 0.0f, vrSystem->cinematicStartViewYaw, 0.0f ).ToQuat();
 			idMat3 viewMat = viewForwardQ.ToMat3();
-			idVec3 viewPos = commonVr->cinematicStartPosition - qdist * viewMat[0];
+			idVec3 viewPos = vrSystem->cinematicStartPosition - qdist * viewMat[0];
 
-			ovr_CalcEyePoses( commonVr->hmdTrackingState.HeadPose.ThePose, viewOffset, eyeRenderPose );
+			ovr_CalcEyePoses( vrSystem->hmdTrackingState.HeadPose.ThePose, viewOffset, eyeRenderPose );
 
 			ovrLayerQuad lg, lg2;
 			lg.Header.Type = ovrLayerType_Quad;
@@ -906,7 +904,7 @@ void iVr::HMDTrackStatic( bool is3D )
 	if( game->isVR )
 	{
 		//common->Printf( "HmdTrackStatic called idFrame #%d\n", idLib::frameNumber);
-		if( commonVr->hmdCurrentRender[0] == NULL || commonVr->hmdCurrentRender[1] == NULL )
+		if( vrSystem->hmdCurrentRender[0] == NULL || vrSystem->hmdCurrentRender[1] == NULL )
 		{
 			common->Printf( "VR_HmdTrackStatic no images to render\n" );
 			return;
@@ -915,7 +913,7 @@ void iVr::HMDTrackStatic( bool is3D )
 		//common->Printf( "is3d = %d\n", is3D );
 		if( !is3D )
 		{
-			if( HMDRenderQuad( commonVr->hmdCurrentRender[0], commonVr->hmdCurrentRender[1] ) )
+			if( HMDRenderQuad( vrSystem->hmdCurrentRender[0], vrSystem->hmdCurrentRender[1] ) )
 			{
 				return;
 			}
@@ -923,11 +921,11 @@ void iVr::HMDTrackStatic( bool is3D )
 
 		if( is3D )
 		{
-			HUDRender( commonVr->hmdCurrentRender[0], commonVr->hmdCurrentRender[1] );
+			HUDRender( vrSystem->hmdCurrentRender[0], vrSystem->hmdCurrentRender[1] );
 		}
 		else
 		{
-			HUDRender( commonVr->hmdCurrentRender[0], commonVr->hmdCurrentRender[0] ); // if not 3d just use left eye twice.
+			HUDRender( vrSystem->hmdCurrentRender[0], vrSystem->hmdCurrentRender[0] ); // if not 3d just use left eye twice.
 		}
 		HMDRender( hmdEyeImage[0], hmdEyeImage[1] );
 

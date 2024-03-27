@@ -147,7 +147,7 @@ void idSWF::Render( idRenderSystem* gui, int time, bool isSplitscreen )
 	float vr_mScale = 1.0;
 
 
-	if( commonVr->swfRenderMode == RENDERING_PDA )  // We dont need to render a full resolution PDA, it will be scaled down to fit the model in VR.
+	if( vrSystem->swfRenderMode == RENDERING_PDA )  // We dont need to render a full resolution PDA, it will be scaled down to fit the model in VR.
 	{
 		//sysWidth = 640;
 		//sysHeight = 480;
@@ -156,7 +156,7 @@ void idSWF::Render( idRenderSystem* gui, int time, bool isSplitscreen )
 
 	}
 
-	else if( commonVr->swfRenderMode == RENDERING_NORMAL )
+	else if( vrSystem->swfRenderMode == RENDERING_NORMAL )
 	{
 		sysWidth = renderSystem->GetVirtualWidth();
 		sysHeight = renderSystem->GetVirtualHeight() * 1.25; // fix the aspect
@@ -168,13 +168,13 @@ void idSWF::Render( idRenderSystem* gui, int time, bool isSplitscreen )
 	// In VR, scale SWF elements to a more appropriate size.
 	if( game->isVR )
 	{
-		if( commonVr->VR_GAME_PAUSED )
+		if( vrSystem->VR_GAME_PAUSED )
 		{
 			scale *= 0.8f;
 		}
 		else
 		{
-			switch( commonVr->swfRenderMode )
+			switch( vrSystem->swfRenderMode )
 			{
 				case RENDERING_PDA:
 					scale *= 1.25;
@@ -241,7 +241,7 @@ void idSWF::Render( idRenderSystem* gui, int time, bool isSplitscreen )
 
 		extern idCVar vr_debugTouchCursor;
 
-		if( !game->isVR || !game->IsInGame() || !( commonVr->VR_USE_MOTION_CONTROLS && vr_guiMode.GetInteger() == 2 ) || vr_debugTouchCursor.GetBool() ) //  hide the mouse cursor if using touchscreen
+		if( !game->isVR || !game->IsInGame() || !( vrSystem->VR_USE_MOTION_CONTROLS && vr_guiMode.GetInteger() == 2 ) || vr_debugTouchCursor.GetBool() ) //  hide the mouse cursor if using touchscreen
 			//	if ( !game->IsInGame() )
 		{
 

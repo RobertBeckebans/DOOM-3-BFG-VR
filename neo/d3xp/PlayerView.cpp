@@ -509,9 +509,9 @@ void idPlayerView::SingleView( const renderView_t* view, idMenuHandler_HUD* hudM
 	// Koz begin
 	if( g_showHud.GetBool() && !game->isVR )  // vr hud was drawn elsewhere and copied to texture
 	{
-		commonVr->swfRenderMode = RENDERING_HUD;
+		vrSystem->swfRenderMode = RENDERING_HUD;
 		player->DrawHUD( hudManager );
-		commonVr->swfRenderMode = RENDERING_NORMAL;
+		vrSystem->swfRenderMode = RENDERING_NORMAL;
 	}
 	// Koz end
 
@@ -597,7 +597,7 @@ void idPlayerView::SingleView( const renderView_t* view, idMenuHandler_HUD* hudM
 
 		if( bfgVision )
 		{
-			float extend = -0.5f * commonVr->VRScreenSeparation * renderSystem->GetVirtualWidth();
+			float extend = -0.5f * vrSystem->VRScreenSeparation * renderSystem->GetVirtualWidth();
 			float offset = -extend * view->viewEyeBuffer;
 
 			renderSystem->SetColor4( 1.0f, 1.0f, 1.0f, 1.0f );
@@ -619,12 +619,12 @@ void idPlayerView::SingleView( const renderView_t* view, idMenuHandler_HUD* hudM
 			int blockWidth = gameLocal.inCinematic ? width / 8 : width / 4;
 			int blockHeight = height / 4;
 
-			float offsetSize = commonVr->VRScreenSeparation * width;
-			float offset = ( gameLocal.inCinematic && vr_cinematics.GetInteger() == 2 ) ? 0 : offsetSize / commonVr->hmdAspect;
+			float offsetSize = vrSystem->VRScreenSeparation * width;
+			float offset = ( gameLocal.inCinematic && vr_cinematics.GetInteger() == 2 ) ? 0 : offsetSize / vrSystem->hmdAspect;
 
 			int start, barWidth;
 
-			blockWidth /= commonVr->hmdAspect;
+			blockWidth /= vrSystem->hmdAspect;
 
 			// top and bottom blackout bars should be the same regardless of screen separation
 
@@ -750,7 +750,7 @@ idPlayerView::ScreenFade
 void idPlayerView::ScreenFade()
 {
 	// Carl: Don't cover screen when we need to read the Flicksync HUD or PDA or see what's happening
-	if( !fadeTime || g_stopTime.GetBool() || player->objectiveSystemOpen || commonVr->PDAforced || commonVr->PDAforcetoggle || ( Flicksync_InCutscene && ( Flicksync_CueActive || Flicksync_CueCardActive ) ) )
+	if( !fadeTime || g_stopTime.GetBool() || player->objectiveSystemOpen || vrSystem->PDAforced || vrSystem->PDAforcetoggle || ( Flicksync_InCutscene && ( Flicksync_CueActive || Flicksync_CueCardActive ) ) )
 	{
 		return;
 	}
@@ -838,7 +838,7 @@ stereoDistances_t	CaclulateStereoDistances(
 		// head mounted display mode
 		dists.worldSeparation = CentimetersToWorldUnits( interOcularCentimeters * 0.5 );
 		dists.screenSeparation = 0.0f;
-		//dists.screenSeparation = commonVr->VRScreenSeparation;
+		//dists.screenSeparation = vrSystem->VRScreenSeparation;
 		return dists;
 	}
 
@@ -855,13 +855,13 @@ float GetIPD()
 	if( game->isVR && !vr_manualIPDEnable.GetInteger() && vr_useOculusProfile.GetInteger() )
 	{
 #ifdef USE_OVR
-		if( commonVr->hasOculusRift )
+		if( vrSystem->hasOculusRift )
 		{
-			return ( fabs( commonVr->hmdEye[0].viewOffset.x )  + fabs( commonVr->hmdEye[1].viewOffset.x ) ) * 100.0f;    // ipd in cm
+			return ( fabs( vrSystem->hmdEye[0].viewOffset.x )  + fabs( vrSystem->hmdEye[1].viewOffset.x ) ) * 100.0f;    // ipd in cm
 		}
 		else
 #endif
-			return commonVr-> m_pHMD->GetFloatTrackedDeviceProperty( vr::k_unTrackedDeviceIndex_Hmd, vr::Prop_UserIpdMeters_Float ) * 100;
+			return vrSystem-> m_pHMD->GetFloatTrackedDeviceProperty( vr::k_unTrackedDeviceIndex_Hmd, vr::Prop_UserIpdMeters_Float ) * 100;
 	}
 	return vr_manualIPD.GetFloat() / 10;
 }
@@ -918,8 +918,8 @@ void idPlayerView::EmitStereoEyeView( const int eye, idMenuHandler_HUD* hudManag
 	// Koz begin
 	if( game->isVR )
 	{
-		commonVr->lastViewOrigin = eyeView.vieworg;
-		commonVr->lastViewAxis = eyeView.viewaxis;
+		vrSystem->lastViewOrigin = eyeView.vieworg;
+		vrSystem->lastViewAxis = eyeView.viewaxis;
 	}
 	// Koz end
 
@@ -963,14 +963,14 @@ void idPlayerView::RenderPlayerView( idMenuHandler_HUD* hudManager )
 
 		if( game->isVR )
 		{
-			commonVr->lastCenterEyeAxis = view->viewaxis;
-			commonVr->lastCenterEyeOrigin = view->vieworg;
+			vrSystem->lastCenterEyeAxis = view->viewaxis;
+			vrSystem->lastCenterEyeOrigin = view->vieworg;
 
-			if( !commonVr->PDAforced && !commonVr->PDAforcetoggle && !game->IsPDAOpen() )  // Koz moved this so we can see the hud if we want, but still skip all other view effects.
+			if( !vrSystem->PDAforced && !vrSystem->PDAforcetoggle && !game->IsPDAOpen() )  // Koz moved this so we can see the hud if we want, but still skip all other view effects.
 			{
-				commonVr->swfRenderMode = RENDERING_HUD;
+				vrSystem->swfRenderMode = RENDERING_HUD;
 				player->DrawHUDVR( hudManager );
-				commonVr->swfRenderMode = RENDERING_NORMAL;
+				vrSystem->swfRenderMode = RENDERING_NORMAL;
 			}
 
 			if( player->objectiveSystemOpen )
@@ -978,12 +978,12 @@ void idPlayerView::RenderPlayerView( idMenuHandler_HUD* hudManager )
 				if( player->pdaMenu != NULL )
 				{
 
-					if( !commonVr->PDAforced && !commonVr->PDAforcetoggle )  // dont render the PDA gui if the PDA model been forced up to display the pause menus.
+					if( !vrSystem->PDAforced && !vrSystem->PDAforcetoggle )  // dont render the PDA gui if the PDA model been forced up to display the pause menus.
 					{
-						commonVr->swfRenderMode = RENDERING_PDA;
+						vrSystem->swfRenderMode = RENDERING_PDA;
 						player->pdaMenu->Update();
 						renderSystem->CaptureRenderToImage( "_pdaImage" );
-						commonVr->swfRenderMode = RENDERING_NORMAL;
+						vrSystem->swfRenderMode = RENDERING_NORMAL;
 					}
 				}
 			}
@@ -1006,8 +1006,8 @@ void idPlayerView::RenderPlayerView( idMenuHandler_HUD* hudManager )
 	{
 		fix = 0;
 	}
-	commonVr->ForceChaperone( 1, player->ShouldBlink() && ( fix == 1 || fix == 4 || fix == 5 || fix == 7 || fix == 9 ) );
-	if( vr_blink.GetFloat() > 0.f && player->ShouldBlink() && ( fix == 3 || fix == 4 || commonVr->leanBlank ) && !commonVr->VR_GAME_PAUSED )
+	vrSystem->ForceChaperone( 1, player->ShouldBlink() && ( fix == 1 || fix == 4 || fix == 5 || fix == 7 || fix == 9 ) );
+	if( vr_blink.GetFloat() > 0.f && player->ShouldBlink() && ( fix == 3 || fix == 4 || vrSystem->leanBlank ) && !vrSystem->VR_GAME_PAUSED )
 	{
 		static int next_strobe_time = 0;
 		int t = vr_strobeTime.GetInteger();
@@ -1015,7 +1015,7 @@ void idPlayerView::RenderPlayerView( idMenuHandler_HUD* hudManager )
 		{
 			next_strobe_time = gameLocal.realClientTime + t;    // ms
 		}
-		if( gameLocal.realClientTime >= next_strobe_time && t && !commonVr->leanBlank )
+		if( gameLocal.realClientTime >= next_strobe_time && t && !vrSystem->leanBlank )
 		{
 			Fade( idVec4( 0, 0, 0, 0 ), 0 );
 			next_strobe_time = gameLocal.realClientTime + t; // ms
@@ -1579,7 +1579,7 @@ void FullscreenFX_Warp::HighQuality()
 
 	if( game->isVR )
 	{
-		center.x += commonVr->VRScreenSeparation * tr.guiModel->GetEye() * 0.5f;
+		center.x += vrSystem->VRScreenSeparation * tr.guiModel->GetEye() * 0.5f;
 	}
 
 	center.y = renderSystem->GetVirtualHeight() / 2.0f;

@@ -523,16 +523,16 @@ void idConsoleLocal::DrawVRBinding()
 	int maxChar = ( LOCALSAFE_RIGHT - left ) / SMALLCHAR_WIDTH;
 	idStr temp;
 
-	if( commonVr->currentBindingDisplay.Icmp( "" ) != 0 )
+	if( vrSystem->currentBindingDisplay.Icmp( "" ) != 0 )
 	{
 		renderSystem->DrawSmallStringExt( LOCALSAFE_LEFT + SMALLCHAR_WIDTH * 28 , y - 4 , "Current Bindings:", colorWhite, true );
 		y += SMALLCHAR_HEIGHT + 4;
-		temp = commonVr->currentBindingDisplay.Left( maxChar );
+		temp = vrSystem->currentBindingDisplay.Left( maxChar );
 		renderSystem->DrawSmallStringExt( left, y, temp.c_str(), colorWhite, true );
-		if( commonVr->currentBindingDisplay.Length() > maxChar )
+		if( vrSystem->currentBindingDisplay.Length() > maxChar )
 		{
 			y += SMALLCHAR_HEIGHT + 4;
-			temp = commonVr->currentBindingDisplay.Mid( maxChar, maxChar );
+			temp = vrSystem->currentBindingDisplay.Mid( maxChar, maxChar );
 			renderSystem->DrawSmallStringExt( left, y, temp.c_str(), colorWhite, true );
 		}
 	}
@@ -554,12 +554,12 @@ float idConsoleLocal::DrawVRWip( float y )
 
 
 	idStr stepStr;
-	stepStr.Format( "Num Steps: %d", commonVr->wipNumSteps );
+	stepStr.Format( "Num Steps: %d", vrSystem->wipNumSteps );
 	int w = stepStr.Length() * SMALLCHAR_WIDTH;
 	renderSystem->DrawSmallStringExt( LOCALSAFE_RIGHT - 150 - w , idMath::Ftoi( y ) + 2, stepStr.c_str(), colorWhite, true );
 	y += SMALLCHAR_HEIGHT + 4;
 
-	switch( commonVr->wipStepState )
+	switch( vrSystem->wipStepState )
 	{
 		case 3:
 			stepStr = S_COLOR_RED;
@@ -587,37 +587,37 @@ float idConsoleLocal::DrawVRWip( float y )
 	renderSystem->DrawSmallStringExt( LOCALSAFE_RIGHT - 150 - w, idMath::Ftoi( y ) + 2, stepStr.c_str(), colorWhite, false );
 	y += SMALLCHAR_HEIGHT + 4;
 
-	stepStr.Format( "LPeriod: %d", commonVr->wipLastPeriod );
+	stepStr.Format( "LPeriod: %d", vrSystem->wipLastPeriod );
 	w = stepStr.LengthWithoutColors() * SMALLCHAR_WIDTH;
 	renderSystem->DrawSmallStringExt( LOCALSAFE_RIGHT - 150 - w, idMath::Ftoi( y ) + 2, stepStr.c_str(), colorWhite, false );
 	y += SMALLCHAR_HEIGHT + 4;
 
-	stepStr.Format( "LPeriod Vel: %f", commonVr->wipPeriodVel );
+	stepStr.Format( "LPeriod Vel: %f", vrSystem->wipPeriodVel );
 	w = stepStr.LengthWithoutColors() * SMALLCHAR_WIDTH;
 	renderSystem->DrawSmallStringExt( LOCALSAFE_RIGHT - 150 - w, idMath::Ftoi( y ) + 2, stepStr.c_str(), colorWhite, false );
 	y += SMALLCHAR_HEIGHT + 4;
 
-	stepStr.Format( "Avg Period: %f", commonVr->wipAvgPeriod );
+	stepStr.Format( "Avg Period: %f", vrSystem->wipAvgPeriod );
 	w = stepStr.LengthWithoutColors() * SMALLCHAR_WIDTH;
 	renderSystem->DrawSmallStringExt( LOCALSAFE_RIGHT - 150 - w, idMath::Ftoi( y ) + 2, stepStr.c_str(), colorWhite, false );
 	y += SMALLCHAR_HEIGHT + 4;
 
-	stepStr.Format( "Cur Delta %f", commonVr->wipCurrentDelta );
+	stepStr.Format( "Cur Delta %f", vrSystem->wipCurrentDelta );
 	w = stepStr.LengthWithoutColors() * SMALLCHAR_WIDTH;
 	renderSystem->DrawSmallStringExt( LOCALSAFE_RIGHT - 150 - w, idMath::Ftoi( y ) + 2, stepStr.c_str(), colorWhite, false );
 	y += SMALLCHAR_HEIGHT + 4;
 
-	stepStr.Format( "Cur Vel %f", commonVr->wipCurrentVelocity );
+	stepStr.Format( "Cur Vel %f", vrSystem->wipCurrentVelocity );
 	w = stepStr.LengthWithoutColors() * SMALLCHAR_WIDTH;
 	renderSystem->DrawSmallStringExt( LOCALSAFE_RIGHT - 150 - w, idMath::Ftoi( y ) + 2, stepStr.c_str(), colorWhite, false );
 	y += SMALLCHAR_HEIGHT + 4;
 
-	stepStr.Format( "Delta Tot %f", commonVr->wipTotalDelta );
+	stepStr.Format( "Delta Tot %f", vrSystem->wipTotalDelta );
 	w = stepStr.LengthWithoutColors() * SMALLCHAR_WIDTH;
 	renderSystem->DrawSmallStringExt( LOCALSAFE_RIGHT - 150 - w, idMath::Ftoi( y ) + 2, stepStr.c_str(), colorWhite, false );
 	y += SMALLCHAR_HEIGHT + 4;
 
-	stepStr.Format( "Delta Tot Avg %f", commonVr->wipTotalDeltaAvg );
+	stepStr.Format( "Delta Tot Avg %f", vrSystem->wipTotalDeltaAvg );
 	w = stepStr.LengthWithoutColors() * SMALLCHAR_WIDTH;
 	renderSystem->DrawSmallStringExt( LOCALSAFE_RIGHT - 150 - w, idMath::Ftoi( y ) + 2, stepStr.c_str(), colorWhite, false );
 	y += SMALLCHAR_HEIGHT + 4;
@@ -1693,7 +1693,7 @@ void idConsoleLocal::Draw( bool forceFullScreen )
 	if( vr_hmdPerfHud.IsModified() )
 	{
 #ifdef USE_OVR
-		ovr_SetInt( commonVr->hmdSession, "PerfHudMode", vr_hmdPerfHud.GetInteger() );
+		ovr_SetInt( vrSystem->hmdSession, "PerfHudMode", vr_hmdPerfHud.GetInteger() );
 #endif
 		vr_hmdPerfHud.ClearModified();
 	}

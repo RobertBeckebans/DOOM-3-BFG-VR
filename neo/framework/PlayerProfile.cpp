@@ -453,20 +453,20 @@ void idPlayerProfile::ExecConfig( bool save, bool forceDefault )
 		//cmdSystem->AppendCommandText( "exec vr_default.cfg\n" );
 		//cmdSystem->AppendCommandText( "exec vr.cfg\n" );
 
-		if( commonVr->hasOculusRift )
+		if( vrSystem->hasOculusRift )
 		{
 			cmdSystem->AppendCommandText( "exec vr_oculus_default.cfg\n" );
 		}
-		else if( commonVr->hasHMD )
+		else if( vrSystem->hasHMD )
 		{
 			cmdSystem->AppendCommandText( "exec vr_openvr_default.cfg\n" );
 		}
 
-		if( commonVr->hasOculusRift )
+		if( vrSystem->hasOculusRift )
 		{
 			cmdSystem->AppendCommandText( "exec vr_oculus.cfg\n" );
 		}
-		else if( commonVr->hasHMD )
+		else if( vrSystem->hasHMD )
 		{
 			cmdSystem->AppendCommandText( "exec vr_openvr.cfg\n" );
 		}

@@ -233,7 +233,7 @@ float idMenuScreen_HUD::GetHudAlpha()
 
 	idPlayer* player = gameLocal.GetLocalPlayer();
 
-	delta = vr_hudTransparency.GetFloat() / ( 250 / ( 1000 / commonVr->hmdHz ) );
+	delta = vr_hudTransparency.GetFloat() / ( 250 / ( 1000 / vrSystem->hmdHz ) );
 
 	if( vr_hudType.GetInteger() != VR_HUD_LOOK_DOWN )
 	{
@@ -263,7 +263,7 @@ float idMenuScreen_HUD::GetHudAlpha()
 		}
 	}
 
-	if( commonVr->lastHMDPitch >= vr_hudRevealAngle.GetFloat() || force )  // fade stats in
+	if( vrSystem->lastHMDPitch >= vr_hudRevealAngle.GetFloat() || force )  // fade stats in
 	{
 		currentAlpha += delta;
 		if( currentAlpha > vr_hudTransparency.GetFloat() )

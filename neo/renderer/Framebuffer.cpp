@@ -92,7 +92,7 @@ resolveFBO will be bound after this operation.
 
 void ResolveMSAA( void )
 {
-	if( commonVr->useFBO )
+	if( vrSystem->useFBO )
 	{
 		if( globalFramebuffers.primaryFBO->IsMSAA() )
 		{
@@ -198,7 +198,7 @@ void Framebuffer::BindDefault()
 		glBindRenderbuffer( GL_RENDERBUFFER, 0 );
 		backEnd.glState.currentFramebuffer = NULL;
 
-		if( commonVr->useFBO )
+		if( vrSystem->useFBO )
 		{
 			globalFramebuffers.primaryFBO->Bind();
 		}

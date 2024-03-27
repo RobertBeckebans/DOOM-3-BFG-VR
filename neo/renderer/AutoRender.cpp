@@ -80,7 +80,7 @@ void idAutoRender::StartBackgroundAutoSwaps( )
 	{
 		EndBackgroundAutoSwaps();
 	}
-	commonVr->lastRead = Sys_Milliseconds();
+	vrSystem->lastRead = Sys_Milliseconds();
 
 	//autoRenderIcon = iconType;
 
@@ -110,7 +110,7 @@ void idAutoRender::EndBackgroundAutoSwaps()
 {
 	idLib::Printf( "End Background AutoSwaps\n" );
 	StopThread();
-	commonVr->updateScreen = false;
+	vrSystem->updateScreen = false;
 
 }
 
@@ -122,11 +122,11 @@ idAutoRender::RenderFrame
 void idAutoRender::RenderFrame()
 {
 
-	commonVr->currentRead = Sys_Milliseconds();
-	if( commonVr->currentRead - commonVr->lastRead >= 5 )
+	vrSystem->currentRead = Sys_Milliseconds();
+	if( vrSystem->currentRead - vrSystem->lastRead >= 5 )
 	{
-		commonVr->updateScreen = true;
-		commonVr->lastRead = commonVr->currentRead;
+		vrSystem->updateScreen = true;
+		vrSystem->lastRead = vrSystem->currentRead;
 	}
 
 }

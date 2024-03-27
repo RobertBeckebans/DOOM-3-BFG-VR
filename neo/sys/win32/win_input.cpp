@@ -754,18 +754,18 @@ int Sys_PollMouseInputEvents( int mouseEvents[MAX_MOUSE_EVENTS][2] )
 
 void Sys_SetRumble( int device, int low, int hi )
 {
-	if( commonVr->hasOculusRift )
+	if( vrSystem->hasOculusRift )
 	{
 		// Koz begin
-		if( commonVr->VR_USE_MOTION_CONTROLS && vr_rumbleEnable.GetBool() )
+		if( vrSystem->VR_USE_MOTION_CONTROLS && vr_rumbleEnable.GetBool() )
 		{
-			commonVr->MotionControllerSetHapticOculus( low, hi );
+			vrSystem->MotionControllerSetHapticOculus( low, hi );
 			return;
 		}
 		// Koz end
 	}
 
-	else if( commonVr->motionControlType == MOTION_STEAMVR && vr_rumbleEnable.GetBool() )
+	else if( vrSystem->motionControlType == MOTION_STEAMVR && vr_rumbleEnable.GetBool() )
 	{
 
 		static int currentFrame = 0;
@@ -801,7 +801,7 @@ void Sys_SetRumble( int device, int low, int hi )
 			// dont send the controller zero values - no need to turn off pulse as already time based.
 			if( val >= 10 )
 			{
-				commonVr->MotionControllerSetHapticOpenVR( vr_weaponHand.GetInteger(), val );
+				vrSystem->MotionControllerSetHapticOpenVR( vr_weaponHand.GetInteger(), val );
 			}
 		}
 
@@ -1195,10 +1195,10 @@ int idJoystickWin32::PollInputEvents( int inputDeviceNum )
 	}
 #endif
 	// Carl: Update VR_USE_MOTION_CONTROLS if we've just started using the XBox controller
-	if( commonVr->VR_USE_MOTION_CONTROLS && vr_autoSwitchControllers.GetBool() && ( xis.Gamepad.wButtons || xis.Gamepad.bLeftTrigger > 64 || xis.Gamepad.bRightTrigger > 64
+	if( vrSystem->VR_USE_MOTION_CONTROLS && vr_autoSwitchControllers.GetBool() && ( xis.Gamepad.wButtons || xis.Gamepad.bLeftTrigger > 64 || xis.Gamepad.bRightTrigger > 64
 			|| abs( xis.Gamepad.sThumbLX ) + abs( xis.Gamepad.sThumbLY ) > XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE || abs( xis.Gamepad.sThumbRX ) + abs( xis.Gamepad.sThumbRY ) > XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE ) )
 	{
-		commonVr->VR_USE_MOTION_CONTROLS = false;
+		vrSystem->VR_USE_MOTION_CONTROLS = false;
 	}
 
 	for( int i = 0; i < 32; i++ )
@@ -1282,7 +1282,7 @@ int idJoystickWin32::PollInputEvents( int inputDeviceNum )
 		if( vr_talkMode.GetInteger() > 0 )
 		{
 			static bool oldTalk = false;
-			bool talk = commonVoice->GetTalkButton();
+			bool talk = vrVoice->GetTalkButton();
 			if( talk != oldTalk )
 			{
 				//common->Printf( "Posting talk input event\n" );
@@ -1298,7 +1298,7 @@ int idJoystickWin32::PollInputEvents( int inputDeviceNum )
 
 			for( int i = J_SAY_MIN; i <= max; ++i )
 			{
-				bool say = commonVoice->GetSayButton( i );
+				bool say = vrVoice->GetSayButton( i );
 				if( say != oldSay[ i - J_SAY_MIN ] )
 				{
 					//common->Printf( "Posting say input event %d %d\n", i, say );
@@ -1309,14 +1309,14 @@ int idJoystickWin32::PollInputEvents( int inputDeviceNum )
 		}
 		else
 		{
-			commonVr->forceRun = false;
+			vrSystem->forceRun = false;
 		}
 
 
 		//=============================
 		// Koz begin add SteamVR controllers
 
-		if( commonVr->hasHMD && !commonVr->hasOculusRift )  // was  commonVr->VR_USE_MOTION_CONTROLS && commonVr->motionControlType == MOTION_STEAMVR
+		if( vrSystem->hasHMD && !vrSystem->hasOculusRift )  // was  vrSystem->VR_USE_MOTION_CONTROLS && vrSystem->motionControlType == MOTION_STEAMVR
 		{
 			int dupeThreshold = vr_openVrStuckPadAxisFixThresh.GetInteger();
 			bool defaultX = false;
@@ -1351,11 +1351,11 @@ int idJoystickWin32::PollInputEvents( int inputDeviceNum )
 			bool lGood = false;
 			bool rGood = false;
 
-			vr::VRControllerState_t& currentStateL = commonVr->pControllerStateL;
-			lGood = commonVr->m_pHMD->GetControllerState( commonVr->leftControllerDeviceNo, &currentStateL, sizeof( currentStateL ) );
+			vr::VRControllerState_t& currentStateL = vrSystem->pControllerStateL;
+			lGood = vrSystem->m_pHMD->GetControllerState( vrSystem->leftControllerDeviceNo, &currentStateL, sizeof( currentStateL ) );
 
-			vr::VRControllerState_t& currentStateR = commonVr->pControllerStateR;
-			rGood = commonVr->m_pHMD->GetControllerState( commonVr->rightControllerDeviceNo, &currentStateR, sizeof( currentStateR ) );
+			vr::VRControllerState_t& currentStateR = vrSystem->pControllerStateR;
+			rGood = vrSystem->m_pHMD->GetControllerState( vrSystem->rightControllerDeviceNo, &currentStateR, sizeof( currentStateR ) );
 
 
 			// left steam controller
@@ -1366,7 +1366,7 @@ int idJoystickWin32::PollInputEvents( int inputDeviceNum )
 				{
 					uint32 axisNum = vr::Prop_Axis0Type_Int32 + axis;
 
-					axisType = vr::VRSystem()->GetInt32TrackedDeviceProperty( commonVr->leftControllerDeviceNo, ( vr::ETrackedDeviceProperty )( vr::Prop_Axis0Type_Int32 + axis ) );
+					axisType = vr::VRSystem()->GetInt32TrackedDeviceProperty( vrSystem->leftControllerDeviceNo, ( vr::ETrackedDeviceProperty )( vr::Prop_Axis0Type_Int32 + axis ) );
 					if( axisType == vr::k_eControllerAxis_Trigger )
 					{
 						triggerAxis[0] = axis;
@@ -1507,10 +1507,10 @@ int idJoystickWin32::PollInputEvents( int inputDeviceNum )
 				// process buttons ( appmenu, grip, trigger, touchpad pressed )
 				button = currentStateL.ulButtonPressed;
 
-				if( !commonVr->VR_USE_MOTION_CONTROLS && vr_autoSwitchControllers.GetBool() && ( button > oldButton[0] || trig > 0.25f || ( fabs( padX ) + fabs( padY ) > 0.5f ) ) )
+				if( !vrSystem->VR_USE_MOTION_CONTROLS && vr_autoSwitchControllers.GetBool() && ( button > oldButton[0] || trig > 0.25f || ( fabs( padX ) + fabs( padY ) > 0.5f ) ) )
 				{
-					commonVr->VR_USE_MOTION_CONTROLS = true;
-					commonVr->motionControlType = MOTION_STEAMVR;
+					vrSystem->VR_USE_MOTION_CONTROLS = true;
+					vrSystem->motionControlType = MOTION_STEAMVR;
 				}
 
 				if( button != oldButton[0] )
@@ -1612,7 +1612,7 @@ int idJoystickWin32::PollInputEvents( int inputDeviceNum )
 			{
 				for( int axis = 0; axis < vr::k_unControllerStateAxisCount; axis++ )
 				{
-					axisType = vr::VRSystem()->GetInt32TrackedDeviceProperty( commonVr->rightControllerDeviceNo, ( vr::ETrackedDeviceProperty )( ( int )vr::Prop_Axis0Type_Int32 + axis ) );
+					axisType = vr::VRSystem()->GetInt32TrackedDeviceProperty( vrSystem->rightControllerDeviceNo, ( vr::ETrackedDeviceProperty )( ( int )vr::Prop_Axis0Type_Int32 + axis ) );
 					if( axisType == vr::k_eControllerAxis_Trigger )
 					{
 						triggerAxis[1] = axis;
@@ -1746,10 +1746,10 @@ int idJoystickWin32::PollInputEvents( int inputDeviceNum )
 				// process buttons ( appmenu, grip, trigger, touchpad pressed )
 				button = currentStateR.ulButtonPressed;
 
-				if( !commonVr->VR_USE_MOTION_CONTROLS && vr_autoSwitchControllers.GetBool() && ( button > oldButton[0] || trig > 0.25f || ( fabs( padX ) + fabs( padY ) > 0.5f ) ) )
+				if( !vrSystem->VR_USE_MOTION_CONTROLS && vr_autoSwitchControllers.GetBool() && ( button > oldButton[0] || trig > 0.25f || ( fabs( padX ) + fabs( padY ) > 0.5f ) ) )
 				{
-					commonVr->VR_USE_MOTION_CONTROLS = true;
-					commonVr->motionControlType = MOTION_STEAMVR;
+					vrSystem->VR_USE_MOTION_CONTROLS = true;
+					vrSystem->motionControlType = MOTION_STEAMVR;
 				}
 
 				if( button != oldButton[1] )
@@ -1852,25 +1852,25 @@ int idJoystickWin32::PollInputEvents( int inputDeviceNum )
 		// Touch controllers will turn themselves off if not in use, and send no buttons.
 		// And Touch controllers were cleverly designed so if you place them on a flat surface, no buttons are bumped.
 #ifdef USE_OVR
-		if( commonVr->hasOculusRift )  // was ( commonVr->VR_USE_MOTION_CONTROLS && commonVr->motionControlType == MOTION_OCULUS )
+		if( vrSystem->hasOculusRift )  // was ( vrSystem->VR_USE_MOTION_CONTROLS && vrSystem->motionControlType == MOTION_OCULUS )
 		{
 
 			static ovrInputState oldInputState;
 			ovrInputState    inputState;
 
-			if( OVR_SUCCESS( ovr_GetInputState( commonVr->hmdSession, ovrControllerType_Touch, &inputState ) ) )
+			if( OVR_SUCCESS( ovr_GetInputState( vrSystem->hmdSession, ovrControllerType_Touch, &inputState ) ) )
 			{
 				// Carl: Update VR_USE_MOTION_CONTROLS if we've just started using Touch
-				if( !commonVr->VR_USE_MOTION_CONTROLS  && vr_autoSwitchControllers.GetBool() && !vr_controllerStandard.GetInteger() && (
+				if( !vrSystem->VR_USE_MOTION_CONTROLS  && vr_autoSwitchControllers.GetBool() && !vr_controllerStandard.GetInteger() && (
 							inputState.Buttons || inputState.HandTrigger[0] > 0.25f || inputState.HandTrigger[1] > 0.25f || inputState.IndexTrigger[0] > 0.25f || inputState.IndexTrigger[1] > 0.25f
 							|| ( fabs( inputState.Thumbstick[0].x ) + fabs( inputState.Thumbstick[0].y ) > 0.5f ) || ( fabs( inputState.Thumbstick[1].x ) + fabs( inputState.Thumbstick[1].y ) > 0.5f )
 							|| ( inputState.Touches & ( ovrTouch_LButtonMask | ovrTouch_RButtonMask ) ) ) )
 				{
-					unsigned int ctrlrs = ovr_GetConnectedControllerTypes( commonVr->hmdSession );
+					unsigned int ctrlrs = ovr_GetConnectedControllerTypes( vrSystem->hmdSession );
 					if( ( ctrlrs & ovrControllerType_Touch ) != 0 )
 					{
-						commonVr->VR_USE_MOTION_CONTROLS = true;
-						commonVr->motionControlType = MOTION_OCULUS;
+						vrSystem->VR_USE_MOTION_CONTROLS = true;
+						vrSystem->motionControlType = MOTION_OCULUS;
 					}
 				}
 
@@ -1980,7 +1980,7 @@ int idJoystickWin32::PollInputEvents( int inputDeviceNum )
 				{
 					fingerPose |= POSE_GRIP;
 				}
-				commonVr->fingerPose[HAND_LEFT] = fingerPose;
+				vrSystem->fingerPose[HAND_LEFT] = fingerPose;
 
 				//right hand
 				fingerPose = POSE_FINGER;
@@ -2005,7 +2005,7 @@ int idJoystickWin32::PollInputEvents( int inputDeviceNum )
 				{
 					fingerPose |= POSE_GRIP;
 				}
-				commonVr->fingerPose[HAND_RIGHT] = fingerPose;
+				vrSystem->fingerPose[HAND_RIGHT] = fingerPose;
 
 			}
 		}

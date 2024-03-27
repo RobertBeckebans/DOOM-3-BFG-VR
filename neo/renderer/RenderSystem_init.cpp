@@ -326,29 +326,29 @@ void R_SetNewMode( const bool fullInit )
 		// Koz
 		// Create a window for the Oculus mirror texture
 
-		if( commonVr->hasHMD && vr_enable.GetBool() )
+		if( vrSystem->hasHMD && vr_enable.GetBool() )
 		{
 			r_fullscreen.SetInteger( 0 ); // force a windowed mode
 
 #ifdef USE_OVR
-			if( commonVr->hasOculusRift )
+			if( vrSystem->hasOculusRift )
 			{
 				if( vr_stereoMirror.GetBool() )
 				{
-					r_windowWidth.SetInteger( commonVr->hmdDesc.Resolution.w / 2 );
+					r_windowWidth.SetInteger( vrSystem->hmdDesc.Resolution.w / 2 );
 				}
 				else
 				{
-					r_windowWidth.SetInteger( commonVr->hmdDesc.Resolution.w / 4 );
+					r_windowWidth.SetInteger( vrSystem->hmdDesc.Resolution.w / 4 );
 				}
 
-				r_windowHeight.SetInteger( commonVr->hmdDesc.Resolution.h / 2 );
+				r_windowHeight.SetInteger( vrSystem->hmdDesc.Resolution.h / 2 );
 			}
 			else
 #endif
 			{
-				r_windowWidth.SetInteger( commonVr->hmdWidth / 2 );
-				r_windowHeight.SetInteger( commonVr->hmdHeight / 2 );
+				r_windowWidth.SetInteger( vrSystem->hmdWidth / 2 );
+				r_windowHeight.SetInteger( vrSystem->hmdHeight / 2 );
 			}
 			r_swapInterval.SetInteger( 0 ); // force Vsync off for hmd.
 
@@ -417,7 +417,7 @@ void R_SetNewMode( const bool fullInit )
 
 		parms.multiSamples = r_multiSamples.GetInteger();
 		common->Printf( "R_SetNewMode r_multisamples = %d\n", parms.multiSamples );// Koz fixme
-		if( i == 0 && !commonVr->hasHMD )
+		if( i == 0 && !vrSystem->hasHMD )
 		{
 			parms.stereo = ( stereoRender_enable.GetInteger() == STEREO3D_QUAD_BUFFER );
 		}
@@ -2409,7 +2409,7 @@ int idRenderSystemLocal::GetWidth() const
 {
 	// Koz begin
 
-	if( commonVr->useFBO )
+	if( vrSystem->useFBO )
 	{
 		return globalFramebuffers.primaryFBO->GetWidth();
 	}
@@ -2432,7 +2432,7 @@ int idRenderSystemLocal::GetHeight() const
 {
 	// Koz begin
 
-	if( commonVr->useFBO )
+	if( vrSystem->useFBO )
 	{
 		return globalFramebuffers.primaryFBO->GetHeight();
 	}
@@ -2461,7 +2461,7 @@ int idRenderSystemLocal::GetVirtualWidth() const
 	{
 		return SCREEN_WIDTH;
 	}
-	if( commonVr->useFBO )
+	if( vrSystem->useFBO )
 	{
 		return globalFramebuffers.primaryFBO->GetWidth();
 	}
@@ -2481,7 +2481,7 @@ int idRenderSystemLocal::GetVirtualHeight() const
 		return SCREEN_HEIGHT;
 	}
 
-	if( commonVr->useFBO )
+	if( vrSystem->useFBO )
 	{
 		return globalFramebuffers.primaryFBO->GetHeight();
 	}

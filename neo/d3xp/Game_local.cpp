@@ -2794,7 +2794,7 @@ void idGameLocal::RunFrame( idUserCmdMgr& cmdMgr, gameReturn_t& ret )
 	static bool wasInCinematic = false;
 	static bool cutsceneEnded = false;
 
-	if( !common->IsMultiplayer() && g_stopTime.GetBool() || commonVr->VR_GAME_PAUSED )  // Koz vr pause
+	if( !common->IsMultiplayer() && g_stopTime.GetBool() || vrSystem->VR_GAME_PAUSED )  // Koz vr pause
 	{
 		// clear any debug lines from a previous frame
 		gameRenderWorld->DebugClearLines( time + 1 );
@@ -3300,8 +3300,8 @@ void idGameLocal::CalcFov( float base_fov, float& fov_x, float& fov_y ) const
 
 	if( game->isVR )
 	{
-		fov_x = commonVr->hmdFovX;
-		fov_y = commonVr->hmdFovY;
+		fov_x = vrSystem->hmdFovX;
+		fov_y = vrSystem->hmdFovY;
 		return;
 	}
 
@@ -5719,7 +5719,7 @@ void idGameLocal::SelectTimeGroup( int timeGroup )
 	// Koz: VR: We still render frames when game is paused. Make sure the 'fast' (player) timegroup is selected during pause.
 	// This prevents issues with player animation timing in pause.
 	// Nothing in the slow timegroup should change during pause.
-	if( timeGroup || ( commonVr->VR_GAME_PAUSED && commonVr->PDAforced ) )
+	if( timeGroup || ( vrSystem->VR_GAME_PAUSED && vrSystem->PDAforced ) )
 	{
 		fast.Get( time, previousTime, realClientTime );
 	}

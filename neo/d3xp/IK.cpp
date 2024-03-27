@@ -962,10 +962,10 @@ void idIK_Walk::Evaluate()
 
 		if( vr_crouchMode.GetInteger() == 0 || ( vr_crouchMode.GetInteger() != 0 && !player->IsCrouching() ) )
 		{
-			//common->Printf( "Body delta z %f\n", commonVr->poseHmdBodyPositionDelta.z );
-			if( commonVr->poseHmdBodyPositionDelta.z < 0.0f )
+			//common->Printf( "Body delta z %f\n", vrSystem->poseHmdBodyPositionDelta.z );
+			if( vrSystem->poseHmdBodyPositionDelta.z < 0.0f )
 			{
-				waistOffset.z += commonVr->poseHmdBodyPositionDelta.z;
+				waistOffset.z += vrSystem->poseHmdBodyPositionDelta.z;
 			}
 		}
 	}
@@ -1526,11 +1526,11 @@ void idIK_Reach::Evaluate()
 
 		if( i == 0 )
 		{
-			roll = idAngles( 0.0f, 0.0f, ( -commonVr->handRoll[i] * .1 ) - 50 ).ToMat3();
+			roll = idAngles( 0.0f, 0.0f, ( -vrSystem->handRoll[i] * .1 ) - 50 ).ToMat3();
 		}
 		else
 		{
-			roll = idAngles( 0.0f, 0.0f, ( -commonVr->handRoll[i] * .1 ) + 50 ).ToMat3();
+			roll = idAngles( 0.0f, 0.0f, ( -vrSystem->handRoll[i] * .1 ) + 50 ).ToMat3();
 		}
 
 		trsp = roll * axis;
@@ -1595,12 +1595,12 @@ void idIK_Reach::Evaluate()
 				elbowAxis[i] = rollf[i] * elbowAxis[i];
 			}
 
-			if( commonVr->VR_USE_MOTION_CONTROLS )
+			if( vrSystem->VR_USE_MOTION_CONTROLS )
 			{
-				commonVr->MotionControlGetHand( i, handP, handQ ); // get the rotation of the hand controller
+				vrSystem->MotionControlGetHand( i, handP, handQ ); // get the rotation of the hand controller
 
 
-				handOr = handQ.ToMat3() * idAngles( 0.0f, -commonVr->bodyYawOffset, 0.0f ).ToMat3();
+				handOr = handQ.ToMat3() * idAngles( 0.0f, -vrSystem->bodyYawOffset, 0.0f ).ToMat3();
 
 				gr = handOr[2]; // axis of the hand controller used for 'roll'
 				ma = -elbowAxis[i][2]; //axis of elbow joint ( forearm ) used to calculate roll difference from gr.
@@ -1648,11 +1648,11 @@ void idIK_Reach::Evaluate()
 				elbowAxis[i] = rollf[i] * elbowAxis[i];
 			}
 
-			if( commonVr->VR_USE_MOTION_CONTROLS )
+			if( vrSystem->VR_USE_MOTION_CONTROLS )
 			{
-				commonVr->MotionControlGetHand( i, handP, handQ ); // get the rotation of the hand controller
+				vrSystem->MotionControlGetHand( i, handP, handQ ); // get the rotation of the hand controller
 
-				handOr = handQ.ToMat3() * idAngles( 0.0f, -commonVr->bodyYawOffset, 0.0f ).ToMat3();;
+				handOr = handQ.ToMat3() * idAngles( 0.0f, -vrSystem->bodyYawOffset, 0.0f ).ToMat3();;
 
 				gr = handOr[2]; // axis of the hand controller used for 'roll'
 				ma = -elbowAxis[i][2]; //axis of elbow joint ( forearm ) used to calculate roll difference from gr.

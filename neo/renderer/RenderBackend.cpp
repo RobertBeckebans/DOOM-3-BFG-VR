@@ -4105,10 +4105,10 @@ void idRenderBackend::DrawView( const void* data, const int stereoEye )
 		idVec3& drawViewOrigin = cmd->viewDef->renderView.vieworg;
 		idMat3& drawViewAxis = cmd->viewDef->renderView.viewaxis;
 
-		hmdPosDelta = ( commonVr->poseHmdAbsolutePosition - commonVr->poseLastHmdAbsolutePosition ) ; // the delta in hmd position since the frame was initialy created and now
-		hmdAxisDelta = commonVr->poseHmdAngles.ToMat3() * commonVr->poseLastHmdAngles.ToMat3().Inverse();// the delta in hmd rotation since the frame was initialy created and now
+		hmdPosDelta = ( vrSystem->poseHmdAbsolutePosition - vrSystem->poseLastHmdAbsolutePosition ) ; // the delta in hmd position since the frame was initialy created and now
+		hmdAxisDelta = vrSystem->poseHmdAngles.ToMat3() * vrSystem->poseLastHmdAngles.ToMat3().Inverse();// the delta in hmd rotation since the frame was initialy created and now
 
-		ipdOffset = stereoEye * -commonVr->singleEyeIPD; // adjust origin from the stereoeye position, not the center eye position
+		ipdOffset = stereoEye * -vrSystem->singleEyeIPD; // adjust origin from the stereoeye position, not the center eye position
 
 		drawViewOrigin -= ipdOffset * drawViewAxis[1];
 		drawViewOrigin += hmdPosDelta;
@@ -4148,7 +4148,7 @@ void idRenderBackend::DrawView( const void* data, const int stereoEye )
 		}
 	}
 
-	commonVr->privateCamera = false;
+	vrSystem->privateCamera = false;
 
 	// Koz end
 

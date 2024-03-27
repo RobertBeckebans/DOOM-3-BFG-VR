@@ -275,7 +275,7 @@ void idMenuScreen_Shell_Bindings::UpdateBindingString()
 	int curIndex = options->GetViewIndex();
 	if( idStr::Icmp( keyboardBinds[curIndex].bind, "" ) == 0 )
 	{
-		commonVr->currentBindingDisplay = "";
+		vrSystem->currentBindingDisplay = "";
 	}
 	else
 	{
@@ -284,7 +284,7 @@ void idMenuScreen_Shell_Bindings::UpdateBindingString()
 
 			idStr bindings;
 
-			if( !bind.gamepad.IsEmpty() && ( in_useJoystick.GetBool() || commonVr->hasHMD ) )
+			if( !bind.gamepad.IsEmpty() && ( in_useJoystick.GetBool() || vrSystem->hasHMD ) )
 			{
 				idStrList joyBinds;
 				int start = 0;
@@ -321,13 +321,13 @@ void idMenuScreen_Shell_Bindings::UpdateBindingString()
 				// limited space in the menus, so dont list controllers we are not using,
 				// and list motion controllers first.
 
-				if( commonVr->VR_USE_MOTION_CONTROLS )
+				if( vrSystem->VR_USE_MOTION_CONTROLS )
 				{
 					for( int i = 0; i < joyBinds.Num(); i++ )
 					{
 						// only list bindings for motion controllers we are using due to limited space.
-						if( ( commonVr->motionControlType == MOTION_OCULUS && ( joyBinds[i].Icmpn( "L_TOUCH", 7 ) == 0 || joyBinds[i].Icmpn( "R_TOUCH", 7 ) == 0 ) ) ||
-								( commonVr->motionControlType == MOTION_STEAMVR && ( joyBinds[i].Icmpn( "L_STEAMVR", 9 ) == 0 || joyBinds[i].Icmpn( "R_STEAMVR", 9 ) == 0 ) ) )
+						if( ( vrSystem->motionControlType == MOTION_OCULUS && ( joyBinds[i].Icmpn( "L_TOUCH", 7 ) == 0 || joyBinds[i].Icmpn( "R_TOUCH", 7 ) == 0 ) ) ||
+								( vrSystem->motionControlType == MOTION_STEAMVR && ( joyBinds[i].Icmpn( "L_STEAMVR", 9 ) == 0 || joyBinds[i].Icmpn( "R_STEAMVR", 9 ) == 0 ) ) )
 						{
 							if( !bindings.IsEmpty() )
 							{
@@ -399,7 +399,7 @@ void idMenuScreen_Shell_Bindings::UpdateBindingString()
 			}
 
 			bindings.ToUpper();
-			commonVr->currentBindingDisplay = bindings;
+			vrSystem->currentBindingDisplay = bindings;
 
 		}
 	}
@@ -446,7 +446,7 @@ void idMenuScreen_Shell_Bindings::UpdateBindingDisplay()
 
 			idStr bindings;
 
-			if( !bind.gamepad.IsEmpty() && ( in_useJoystick.GetBool() || commonVr->hasHMD ) )
+			if( !bind.gamepad.IsEmpty() && ( in_useJoystick.GetBool() || vrSystem->hasHMD ) )
 			{
 				idStrList joyBinds;
 				int start = 0;
@@ -483,13 +483,13 @@ void idMenuScreen_Shell_Bindings::UpdateBindingDisplay()
 				//limited space in the menus, so dont list controllers we are not using,
 				//and list motion controllers 1st.
 
-				if( commonVr->VR_USE_MOTION_CONTROLS )
+				if( vrSystem->VR_USE_MOTION_CONTROLS )
 				{
 					for( int i = 0; i < joyBinds.Num(); i++ )
 					{
 						// only list bindings for motion controllers we are using due to limited space.
-						if( ( commonVr->motionControlType == MOTION_OCULUS && ( joyBinds[i].Icmpn( "L_TOUCH", 7 ) == 0 || joyBinds[i].Icmpn( "R_TOUCH", 7 ) == 0 ) ) ||
-								( commonVr->motionControlType == MOTION_STEAMVR && ( joyBinds[i].Icmpn( "L_STEAMVR", 9 ) == 0 || joyBinds[i].Icmpn( "R_STEAMVR", 9 ) == 0 ) ) )
+						if( ( vrSystem->motionControlType == MOTION_OCULUS && ( joyBinds[i].Icmpn( "L_TOUCH", 7 ) == 0 || joyBinds[i].Icmpn( "R_TOUCH", 7 ) == 0 ) ) ||
+								( vrSystem->motionControlType == MOTION_STEAMVR && ( joyBinds[i].Icmpn( "L_STEAMVR", 9 ) == 0 || joyBinds[i].Icmpn( "R_STEAMVR", 9 ) == 0 ) ) )
 						{
 							bool hasImage = false;
 							for( const char** b = buttonsWithImages; *b != 0; b++ )
@@ -751,7 +751,7 @@ bool idMenuScreen_Shell_Bindings::HandleAction( idWidgetAction& action, const id
 		case WIDGET_ACTION_GO_BACK:
 		{
 			menuData->SetNextScreen( SHELL_AREA_CONTROLS, MENU_TRANSITION_SIMPLE );
-			commonVr->currentBindingDisplay = ""; // Koz
+			vrSystem->currentBindingDisplay = ""; // Koz
 			return true;
 		}
 		case WIDGET_ACTION_JOY3_ON_PRESS:

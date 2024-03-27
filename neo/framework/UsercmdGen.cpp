@@ -508,7 +508,7 @@ void idUsercmdGenLocal::AdjustAngles()
 			pitchdelta = speed * in_pitchSpeed.GetFloat();
 		}
 
-		commonVr->CalcAimMove( yawdelta, pitchdelta ); // update the independent weapon angles and return any movement changes.
+		vrSystem->CalcAimMove( yawdelta, pitchdelta ); // update the independent weapon angles and return any movement changes.
 		viewangles[YAW] += yawdelta;
 		viewangles[PITCH] += pitchdelta;
 
@@ -604,7 +604,7 @@ void idUsercmdGenLocal::MouseMove()
 	if( vr_enable.GetBool() )
 	{
 		// update the independent weapon angles and return any view changes based on current aim mode
-		commonVr->CalcAimMove( yawdelta, pitchdelta );
+		vrSystem->CalcAimMove( yawdelta, pitchdelta );
 	}
 
 	viewangles[YAW] += yawdelta;
@@ -1209,7 +1209,7 @@ float idUsercmdGenLocal::MapAxis( idVec2& mappedMove, idVec2& mappedLook, int ax
 
 		case UB_IMPULSE34: // comfort turn right
 
-			if( commonVr->thirdPersonMovement )  // allow normal stick movement of character if in 3rd person mode
+			if( vrSystem->thirdPersonMovement )  // allow normal stick movement of character if in 3rd person mode
 			{
 				mappedLook.x += jaxisValue;
 			}
@@ -1225,7 +1225,7 @@ float idUsercmdGenLocal::MapAxis( idVec2& mappedMove, idVec2& mappedLook, int ax
 
 		case UB_IMPULSE35: // comfort turn left
 
-			if( commonVr->thirdPersonMovement )  // allow normal stick movement of character if in 3rd person mode
+			if( vrSystem->thirdPersonMovement )  // allow normal stick movement of character if in 3rd person mode
 			{
 				mappedLook.x -= jaxisValue;
 			}
@@ -1336,7 +1336,7 @@ void idUsercmdGenLocal::JoystickMove2()
 
 	if( game->isVR )
 	{
-		commonVr->CalcAimMove( yawDelta, pitchDelta );
+		vrSystem->CalcAimMove( yawDelta, pitchDelta );
 	}
 
 	viewangles[PITCH] += pitchDelta;
@@ -1348,7 +1348,7 @@ void idUsercmdGenLocal::JoystickMove2()
 
 	// Koz vr input -------------------do this again with the touch
 
-	if( commonVr->motionControlType == MOTION_OCULUS )
+	if( vrSystem->motionControlType == MOTION_OCULUS )
 	{
 		comfortTurn = 0.0;
 
@@ -1374,7 +1374,7 @@ void idUsercmdGenLocal::JoystickMove2()
 
 		if( vr_teleportMode.GetInteger() == 2 )
 		{
-			commonVr->leftMapped = leftMapped; // Jack: this has not been tested
+			vrSystem->leftMapped = leftMapped; // Jack: this has not been tested
 		}
 		else
 		{
@@ -1387,7 +1387,7 @@ void idUsercmdGenLocal::JoystickMove2()
 
 		if( game->isVR )
 		{
-			commonVr->CalcAimMove( yawDelta, pitchDelta );
+			vrSystem->CalcAimMove( yawDelta, pitchDelta );
 		}
 
 		viewangles[PITCH] += pitchDelta;
@@ -1400,7 +1400,7 @@ void idUsercmdGenLocal::JoystickMove2()
 
 	// Koz SteamVR -------------------and again for SteamVR left and right controllers
 
-	if( commonVr->motionControlType == MOTION_STEAMVR )
+	if( vrSystem->motionControlType == MOTION_STEAMVR )
 	{
 		comfortTurn = 0.0;
 		static int lastComfortTimeSteamVr = 0;
@@ -1455,7 +1455,7 @@ void idUsercmdGenLocal::JoystickMove2()
 
 		if( vr_teleportMode.GetInteger() == 2 )
 		{
-			commonVr->leftMapped = leftMapped;
+			vrSystem->leftMapped = leftMapped;
 		}
 		else
 		{
@@ -1468,7 +1468,7 @@ void idUsercmdGenLocal::JoystickMove2()
 
 		if( game->isVR )
 		{
-			commonVr->CalcAimMove( yawDelta, pitchDelta );
+			vrSystem->CalcAimMove( yawDelta, pitchDelta );
 		}
 
 		viewangles[PITCH] += pitchDelta;
@@ -1495,9 +1495,9 @@ void idUsercmdGenLocal::CmdButtons()
 	// check the attack button
 	if( ButtonState( UB_ATTACK ) )
 	{
-		if( commonVr->teleportButtonCount != 0 && vr_teleportMode.GetInteger() == 0 ) // dont cancel teleport
+		if( vrSystem->teleportButtonCount != 0 && vr_teleportMode.GetInteger() == 0 ) // dont cancel teleport
 		{
-			commonVr->teleportButtonCount = 0;
+			vrSystem->teleportButtonCount = 0;
 			teleportCanceled = 1;
 		}
 		else if( teleportCanceled == 0 )
@@ -1526,7 +1526,7 @@ void idUsercmdGenLocal::CmdButtons()
 
 	if( !game->isVR || game->isVR && vr_moveClick.GetInteger() <= 2 )  // Koz, do normal run if moveClick = 0
 	{
-		if( toggled_run.on || ( in_alwaysRun.GetBool() && common->IsMultiplayer() ) || commonVr->forceRun )
+		if( toggled_run.on || ( in_alwaysRun.GetBool() && common->IsMultiplayer() ) || vrSystem->forceRun )
 		{
 			cmd.buttons |= BUTTON_RUN;
 		}
@@ -1549,7 +1549,7 @@ void idUsercmdGenLocal::CmdButtons()
 	}
 
 	// Koz begin crouch trigger
-	if( commonVr->userDuckingAmount > vr_crouchTriggerDist.GetFloat() / vr_scale.GetFloat() && vr_crouchMode.GetInteger() == 1 )
+	if( vrSystem->userDuckingAmount > vr_crouchTriggerDist.GetFloat() / vr_scale.GetFloat() && vr_crouchMode.GetInteger() == 1 )
 	{
 		cmd.buttons |= BUTTON_CROUCH;
 	}
@@ -1608,7 +1608,7 @@ void idUsercmdGenLocal::CalcTorsoYawDelta()
 		}
 	}
 
-	if( influenceLevel == 0 && !gameLocal.inCinematic && commonVr->VR_USE_MOTION_CONTROLS && !commonVr->thirdPersonMovement && ( abs( cmd.forwardmove ) < MOVE_DEAD_ZONE || abs( cmd.rightmove ) < MOVE_DEAD_ZONE ) )
+	if( influenceLevel == 0 && !gameLocal.inCinematic && vrSystem->VR_USE_MOTION_CONTROLS && !vrSystem->thirdPersonMovement && ( abs( cmd.forwardmove ) < MOVE_DEAD_ZONE || abs( cmd.rightmove ) < MOVE_DEAD_ZONE ) )
 	{
 		idVec3 rightHandPos;
 		idVec3 rightHandForwardVec;
@@ -1636,7 +1636,7 @@ void idUsercmdGenLocal::CalcTorsoYawDelta()
 			return;
 		}
 		bodyYaw = gameLocal.GetLocalPlayer()->viewAngles.yaw;
-		viewYaw = gameLocal.GetLocalPlayer()->viewAngles.yaw - commonVr->bodyYawOffset + commonVr->poseHmdAngles.yaw;
+		viewYaw = gameLocal.GetLocalPlayer()->viewAngles.yaw - vrSystem->bodyYawOffset + vrSystem->poseHmdAngles.yaw;
 
 		viewYaw = idAngles( 0.0f, viewYaw, 0.0f ).Normalize180().yaw;
 		static float targetBodyYaw = viewYaw;
@@ -1644,12 +1644,12 @@ void idUsercmdGenLocal::CalcTorsoYawDelta()
 		hipPos = gameLocal.GetLocalPlayer()->GetPlayerPhysics()->GetOrigin();
 		hipPos.z += 48.0f;
 
-		rightHandPos = commonVr->currentHandWorldPosition[HAND_RIGHT /*0*/ ];// right Hand
+		rightHandPos = vrSystem->currentHandWorldPosition[HAND_RIGHT /*0*/ ];// right Hand
 		rightHandForwardVec = rightHandPos - hipPos;
 		rightHandForwardVec.z = 0.0f;
 		rightHandForwardVec.Normalize();
 
-		leftHandPos = commonVr->currentHandWorldPosition[HAND_LEFT /*1*/ ];// left hand
+		leftHandPos = vrSystem->currentHandWorldPosition[HAND_LEFT /*1*/ ];// left hand
 		leftHandForwardVec = leftHandPos - hipPos;
 		leftHandForwardVec.z = 0.0f;
 		leftHandForwardVec.Normalize();
@@ -1737,7 +1737,7 @@ void idUsercmdGenLocal::CalcTorsoYawDelta()
 
 		float cmdYaw = 0.0f;
 		//NPI : fabs(turnDelta)
-		float degPerFrame = fabs( turnDelta ) > 30 ? fabs( turnDelta ) : fabs( turnDelta ) / ( 200.0f / ( 1000 / commonVr->hmdHz ) ); // 1.0f;
+		float degPerFrame = fabs( turnDelta ) > 30 ? fabs( turnDelta ) : fabs( turnDelta ) / ( 200.0f / ( 1000 / vrSystem->hmdHz ) ); // 1.0f;
 
 		if( fabs( turnDelta ) < degPerFrame )
 		{
@@ -1756,9 +1756,9 @@ void idUsercmdGenLocal::CalcTorsoYawDelta()
 		//NPI : need to normalized yaw too : fix #351
 		viewangles[YAW] += cmdYaw;
 		viewangles[YAW] = idAngles( 0.0f, viewangles[YAW], 0.0f ).Normalize180().yaw;
-		commonVr->bodyYawOffset += cmdYaw;
-		commonVr->bodyYawOffset = idAngles( 0.0f, commonVr->bodyYawOffset, 0.0f ).Normalize180().yaw;
-		//gameRenderWorld->DebugLine(colorMagenta, commonVr->lastCenterEyeOrigin, commonVr->lastCenterEyeOrigin + idAngles(viewangles).Normalize180().ToForward() * 12.0f, 10);
+		vrSystem->bodyYawOffset += cmdYaw;
+		vrSystem->bodyYawOffset = idAngles( 0.0f, vrSystem->bodyYawOffset, 0.0f ).Normalize180().yaw;
+		//gameRenderWorld->DebugLine(colorMagenta, vrSystem->lastCenterEyeOrigin, vrSystem->lastCenterEyeOrigin + idAngles(viewangles).Normalize180().ToForward() * 12.0f, 10);
 
 	}
 }
@@ -1780,14 +1780,14 @@ void idUsercmdGenLocal::EvaluateVRMoveMode()
 	static int lastMoveTime = Sys_Milliseconds();
 
 
-	if( commonVr->didTeleport )
+	if( vrSystem->didTeleport )
 	{
-		commonVr->didTeleport = false;
+		vrSystem->didTeleport = false;
 		if( vr_teleportMode.GetInteger() == 0 )
 		{
-			viewangles[YAW] += commonVr->teleportDir;
-			common->Printf( "Teleport dir yaw adding %f angles to view \n", commonVr->teleportDir );
-			commonVr->teleportDir = 0.0f;
+			viewangles[YAW] += vrSystem->teleportDir;
+			common->Printf( "Teleport dir yaw adding %f angles to view \n", vrSystem->teleportDir );
+			vrSystem->teleportDir = 0.0f;
 			//return;
 		}
 	}
@@ -1909,7 +1909,7 @@ void idUsercmdGenLocal::EvaluateVRMoveMode()
 
 
 
-	if( commonVr->VR_USE_MOTION_CONTROLS && !commonVr->thirdPersonMovement
+	if( vrSystem->VR_USE_MOTION_CONTROLS && !vrSystem->thirdPersonMovement
 			&& ( vr_movePoint.GetInteger() == 1 || vr_movePoint.GetInteger() > 2 ) // move hands dependent
 			&& ( abs( cmd.forwardmove ) >= MOVE_DEAD_ZONE || abs( cmd.rightmove ) >= MOVE_DEAD_ZONE || vr_teleportMode.GetInteger() == 2 ) ) // body will follow motion from move vector
 	{
@@ -1931,15 +1931,15 @@ void idUsercmdGenLocal::EvaluateVRMoveMode()
 				break;
 		}
 
-		controllerAng = commonVr->poseHandRotationAngles[hand];
-		viewangles[YAW] += controllerAng.yaw - commonVr->bodyYawOffset;
-		commonVr->bodyYawOffset = controllerAng.yaw;
+		controllerAng = vrSystem->poseHandRotationAngles[hand];
+		viewangles[YAW] += controllerAng.yaw - vrSystem->bodyYawOffset;
+		vrSystem->bodyYawOffset = controllerAng.yaw;
 	}
-	else if( !commonVr->VR_USE_MOTION_CONTROLS || vr_movePoint.GetInteger() == 2 ) // body will follow view
+	else if( !vrSystem->VR_USE_MOTION_CONTROLS || vr_movePoint.GetInteger() == 2 ) // body will follow view
 	{
-		viewangles[YAW] += commonVr->poseHmdAngles.yaw - commonVr->bodyYawOffset;
-		//commonVr->bodyMoveAng = commonVr->poseHmdAngles.yaw; //Npi don't change bodyAng without cmd
-		commonVr->bodyYawOffset = commonVr->poseHmdAngles.yaw;
+		viewangles[YAW] += vrSystem->poseHmdAngles.yaw - vrSystem->bodyYawOffset;
+		//vrSystem->bodyMoveAng = vrSystem->poseHmdAngles.yaw; //Npi don't change bodyAng without cmd
+		vrSystem->bodyYawOffset = vrSystem->poseHmdAngles.yaw;
 	}
 }
 
@@ -2026,7 +2026,7 @@ void idUsercmdGenLocal::MakeCurrent()
 	{
 		if( abs( cmd.forwardmove ) >= MOVE_DEAD_ZONE || abs( cmd.rightmove ) >= MOVE_DEAD_ZONE )
 		{
-			commonVr->thirdPersonMovement = true;
+			vrSystem->thirdPersonMovement = true;
 			thirdPersonTime = Sys_Milliseconds();
 			// third person movement is switched off again in player.cpp
 			// once the speed hits zero and forwardmove and rightmove are 0
@@ -2036,16 +2036,16 @@ void idUsercmdGenLocal::MakeCurrent()
 			// in case the player has jumped on something moving in third person,
 			// put a timeout here so the view will snap back if the controls haven't been touched
 			// in a bit.
-			if( commonVr->thirdPersonMovement == true && ( Sys_Milliseconds() - thirdPersonTime ) > 300 )
+			if( vrSystem->thirdPersonMovement == true && ( Sys_Milliseconds() - thirdPersonTime ) > 300 )
 			{
-				commonVr->thirdPersonMovement = false;
+				vrSystem->thirdPersonMovement = false;
 			}
 
 		}
 	}
 	else
 	{
-		commonVr->thirdPersonMovement = false;
+		vrSystem->thirdPersonMovement = false;
 	}
 }
 

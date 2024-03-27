@@ -267,7 +267,7 @@ bool idSWF::HandleEvent( const sysEvent_t* event )
 		//common->Printf( "SWFEvents SE_KEY = %d\n", event->evValue );
 
 		if( event->evValue == K_MOUSE1
-				|| ( commonVr->scanningPDA && (
+				|| ( vrSystem->scanningPDA && (
 						 event->evValue == K_L_TOUCHTRIG
 						 || event->evValue == K_R_TOUCHTRIG
 						 || event->evValue == K_JOY_TRIGGER1
@@ -412,7 +412,7 @@ bool idSWF::HandleEvent( const sysEvent_t* event )
 			if( thisMenu.Icmp( lastMenu.c_str() ) != 0 )
 			{
 				//start new menus or screen with either stick.
-				commonVr->forceLeftStick = true;
+				vrSystem->forceLeftStick = true;
 				lastMenu = thisMenu;
 			}
 
@@ -423,13 +423,13 @@ bool idSWF::HandleEvent( const sysEvent_t* event )
 
 			if( !inPDAmenu )  // not in the PDA menu, force all stick axis movement to the left stick for menu control
 			{
-				commonVr->forceLeftStick = true;
+				vrSystem->forceLeftStick = true;
 			}
 			else
 			{
 				// we are in the PDA menu. handle toggling sticks and changing mappings as needed
 
-				if( !commonVr->forceLeftStick )
+				if( !vrSystem->forceLeftStick )
 				{
 					if( keyValue == K_TOUCH_RIGHT_STICK_LEFT ||
 							keyValue == K_TOUCH_LEFT_STICK_LEFT ||
@@ -440,7 +440,7 @@ bool idSWF::HandleEvent( const sysEvent_t* event )
 							keyValue == K_STEAMVR_RIGHT_JS_LEFT ||
 							keyValue == K_STEAMVR_LEFT_JS_LEFT )
 					{
-						commonVr->forceLeftStick = true;
+						vrSystem->forceLeftStick = true;
 					}
 				}
 				else
@@ -454,12 +454,12 @@ bool idSWF::HandleEvent( const sysEvent_t* event )
 							keyValue == K_STEAMVR_RIGHT_JS_RIGHT ||
 							keyValue == K_STEAMVR_LEFT_JS_RIGHT )
 					{
-						commonVr->forceLeftStick = false;
+						vrSystem->forceLeftStick = false;
 					}
 				}
 			}
 
-			if( commonVr->forceLeftStick )    // in the pda map right stick movement to the left sticks if forced
+			if( vrSystem->forceLeftStick )    // in the pda map right stick movement to the left sticks if forced
 			{
 				sourceAxis = rightStick;
 				destAxis = leftStick;
@@ -626,7 +626,7 @@ bool idSWF::HandleEvent( const sysEvent_t* event )
 			float sysWidth = renderSystem->GetWidth() * ( pixelAspect > 1.0f ? pixelAspect : 1.0f );
 			float sysHeight = renderSystem->GetHeight() / ( pixelAspect < 1.0f ? pixelAspect : 1.0f );
 
-			if( commonVr->swfRenderMode == RENDERING_PDA )  // We dont need to render a full resolution PDA, it will be scaled down to fit the model in VR.
+			if( vrSystem->swfRenderMode == RENDERING_PDA )  // We dont need to render a full resolution PDA, it will be scaled down to fit the model in VR.
 			{
 				sysWidth = 640;
 				sysHeight = 480;
@@ -640,13 +640,13 @@ bool idSWF::HandleEvent( const sysEvent_t* event )
 			// Koz
 			if( game->isVR )
 			{
-				if( commonVr->VR_GAME_PAUSED )
+				if( vrSystem->VR_GAME_PAUSED )
 				{
 					scale *= 0.8f;
 				}
 				else
 				{
-					switch( commonVr->swfRenderMode )
+					switch( vrSystem->swfRenderMode )
 					{
 						case RENDERING_PDA:
 							scale *= 1.25;

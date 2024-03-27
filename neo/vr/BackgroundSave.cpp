@@ -67,7 +67,7 @@ int BackgroundSave::Run()
 		// load file here
 	}
 
-	commonVr->vrIsBackgroundSaving = false; // file will be done loading or saving when this is reached.
+	vrSystem->vrIsBackgroundSaving = false; // file will be done loading or saving when this is reached.
 	return 0; // this ends the thread.
 }
 
@@ -80,7 +80,7 @@ BackgroundSave::StartBackgroundSave
 void BackgroundSave::StartBackgroundSave( backgroundSaveType_t loadSave, idStr saveName )
 {
 
-	if( commonVr->vrIsBackgroundSaving )
+	if( vrSystem->vrIsBackgroundSaving )
 	{
 		common->Warning( "Warning: StartBackgroundSave called when already running.\n" );
 		return;
@@ -102,7 +102,7 @@ void BackgroundSave::StartBackgroundSave( backgroundSaveType_t loadSave, idStr s
 	//StartThread("BackgroundAutoSwaps", CORE_0B, THREAD_NORMAL, AUTO_RENDER_STACK_SIZE );
 	StartThread( "BackgroundSave", CORE_ANY, THREAD_LOWEST, BACKGROUND_SAVE_STACK_SIZE );
 
-	commonVr->vrIsBackgroundSaving = true;
+	vrSystem->vrIsBackgroundSaving = true;
 
 }
 

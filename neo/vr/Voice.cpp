@@ -130,7 +130,7 @@ const char* words[] =
 #ifdef _WIN32
 void __stdcall SpeechCallback( WPARAM wParam, LPARAM lParam )
 {
-	commonVoice->Event( wParam, lParam );
+	vrVoice->Event( wParam, lParam );
 }
 #endif
 
@@ -253,14 +253,14 @@ void iVoice::HearWord( const char* w, int confidence )
 
 	int action = voiceCommandActions[index];
 
-	if( action == J_SAY_START_RUNNING && !commonVr->forceRun )
+	if( action == J_SAY_START_RUNNING && !vrSystem->forceRun )
 	{
-		commonVr->forceRun = true;
+		vrSystem->forceRun = true;
 		Say( "running" );
 	}
-	else if( ( action == J_SAY_STOP_RUNNING || action == J_SAY_START_RUNNING ) && commonVr->forceRun )
+	else if( ( action == J_SAY_STOP_RUNNING || action == J_SAY_START_RUNNING ) && vrSystem->forceRun )
 	{
-		commonVr->forceRun = false;
+		vrSystem->forceRun = false;
 		Say( "walking" );
 	}
 	else if( action == J_SAY_LIST )

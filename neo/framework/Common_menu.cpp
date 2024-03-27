@@ -157,7 +157,7 @@ void idCommonLocal::StartMenu( bool playIntro )
 	//if escape is pressed while the pda is rising, it will bring up the pause menu when we really want to close the pda, so hack that shit here for now.
 	if( game && game->isVR )
 	{
-		if( Sys_Milliseconds() - commonVr->pdaToggleTime < 3000 )
+		if( Sys_Milliseconds() - vrSystem->pdaToggleTime < 3000 )
 		{
 			idPlayer* player = gameLocal.GetLocalPlayer();
 			if( player != NULL )

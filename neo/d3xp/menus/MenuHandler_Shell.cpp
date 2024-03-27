@@ -67,7 +67,7 @@ void idMenuHandler_Shell::Update()
 		{
 			gui->StopSound();
 			showingIntro = false;
-			commonVr->showingIntroVideo = showingIntro;
+			vrSystem->showingIntroVideo = showingIntro;
 			introGui->Activate( false );
 			PlaySound( GUI_SOUND_MUSIC );
 		}
@@ -277,7 +277,7 @@ void idMenuHandler_Shell::Update()
 	}
 	else
 	{
-		commonVr->showingIntroVideo = false;
+		vrSystem->showingIntroVideo = false;
 	}
 
 	if( continueWaitForEnumerate )
@@ -1475,7 +1475,7 @@ idMenuHandler_Shell::StartGame
 */
 void idMenuHandler_Shell::StartGame( int index )
 {
-	commonVr->showingIntroVideo = false;
+	vrSystem->showingIntroVideo = false;
 	if( index == 0 )
 	{
 		cmdSystem->AppendCommandText( va( "map %s %d\n", "game/mars_city1", 0 ) );
@@ -1502,7 +1502,7 @@ void idMenuHandler_Shell::ShowDoomIntro()
 	StopSound();
 
 	showingIntro = true;
-	commonVr->showingIntroVideo = showingIntro;
+	vrSystem->showingIntroVideo = showingIntro;
 
 	delete introGui;
 	introGui = new idSWF( "doomIntro", common->MenuSW() );
@@ -1695,7 +1695,7 @@ void idMenuHandler_Shell::ShowROEIntro()
 	StopSound();
 
 	showingIntro = true;
-	commonVr->showingIntroVideo = showingIntro;
+	vrSystem->showingIntroVideo = showingIntro;
 
 	delete introGui;
 	introGui = new idSWF( "roeIntro", common->MenuSW() );
@@ -1883,7 +1883,7 @@ void idMenuHandler_Shell::ShowLEIntro()
 	StopSound();
 
 	showingIntro = true;
-	commonVr->showingIntroVideo = showingIntro;
+	vrSystem->showingIntroVideo = showingIntro;
 
 	delete introGui;
 	introGui = new idSWF( "leIntro", common->MenuSW() );

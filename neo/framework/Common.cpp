@@ -449,7 +449,7 @@ void idCommonLocal::WriteConfiguration()
 	// Koz begin
 	if( game->isVR )
 	{
-		if( commonVr->hasOculusRift )
+		if( vrSystem->hasOculusRift )
 		{
 			WriteConfigToFile( "vr_oculus.cfg" );
 		}
@@ -1290,8 +1290,8 @@ void idCommonLocal::Init( int argc, const char* const* argv, const char* cmdline
 		// this needs to happen before the cfg files are loaded.
 
 		// Koz
-		commonVr->HMDInit(); // Koz init the HMD.
-		commonVr->showingIntroVideo = true;
+		vrSystem->HMDInit(); // Koz init the HMD.
+		vrSystem->showingIntroVideo = true;
 
 		// exec the startup scripts
 		cmdSystem->BufferCommandText( CMD_EXEC_APPEND, "exec default.cfg\n" );
@@ -1307,11 +1307,11 @@ void idCommonLocal::Init( int argc, const char* const* argv, const char* cmdline
 		cmdSystem->BufferCommandText( CMD_EXEC_APPEND, "exec autoexec.cfg\n" );
 
 		// Koz begin
-		if( commonVr->hasOculusRift )
+		if( vrSystem->hasOculusRift )
 		{
 			cmdSystem->AppendCommandText( "exec vr_oculus_default.cfg\n" );
 		}
-		else if( commonVr->hasHMD )
+		else if( vrSystem->hasHMD )
 		{
 			cmdSystem->AppendCommandText( "exec vr_openvr_default.cfg\n" );
 		}
@@ -1319,11 +1319,11 @@ void idCommonLocal::Init( int argc, const char* const* argv, const char* cmdline
 
 		if( !SafeMode() && !g_demoMode.GetBool() )
 		{
-			if( commonVr->hasOculusRift )
+			if( vrSystem->hasOculusRift )
 			{
 				cmdSystem->AppendCommandText( "exec vr_oculus.cfg\n" );
 			}
-			else if( commonVr->hasHMD )
+			else if( vrSystem->hasHMD )
 			{
 				cmdSystem->AppendCommandText( "exec vr_openvr.cfg\n" );
 			}
@@ -1355,15 +1355,15 @@ void idCommonLocal::Init( int argc, const char* const* argv, const char* cmdline
 
 		// Koz begin
 		// initialize the HMD
-		if( commonVr->hasHMD )
+		if( vrSystem->hasHMD )
 		{
-			commonVr->HMDInitializeDistortion();
+			vrSystem->HMDInitializeDistortion();
 		}
 
 		// Koz end
 
 #ifdef _WIN32
-		commonVoice->VoiceInit();
+		vrVoice->VoiceInit();
 #endif
 
 		if( game->isVR )
@@ -1372,7 +1372,7 @@ void idCommonLocal::Init( int argc, const char* const* argv, const char* cmdline
 			if( vr_controllerStandard.GetInteger() == 1 )
 			{
 				common->Printf( "vr_controllerStandard has disabled motion controls\n" );
-				commonVr->VR_USE_MOTION_CONTROLS = false;
+				vrSystem->VR_USE_MOTION_CONTROLS = false;
 			}
 		}
 
@@ -1519,11 +1519,11 @@ void idCommonLocal::Init( int argc, const char* const* argv, const char* cmdline
 
 		if( game->isVR )
 		{
-			commonVr->HMDResetTrackingOriginOffset();
-			commonVr->FrameStart();
+			vrSystem->HMDResetTrackingOriginOffset();
+			vrSystem->FrameStart();
 		}
 
-		commonVr->renderingSplash = true;
+		vrSystem->renderingSplash = true;
 
 		if( showVideo )
 		{
@@ -1550,10 +1550,10 @@ void idCommonLocal::Init( int argc, const char* const* argv, const char* cmdline
 		{
 			if( game->isVR )
 			{
-				if( commonVr->hasHMD )
+				if( vrSystem->hasHMD )
 				{
 					idLib::frameNumber++;
-					commonVr->FrameStart();
+					vrSystem->FrameStart();
 				}
 			}
 			else
@@ -1565,7 +1565,7 @@ void idCommonLocal::Init( int argc, const char* const* argv, const char* cmdline
 			Sys_GenerateEvents();
 		};
 #endif
-		commonVr->HMDResetTrackingOriginOffset();
+		vrSystem->HMDResetTrackingOriginOffset();
 
 		splashScreen = declManager->FindMaterial( "guis/lookforward" );
 
@@ -1575,10 +1575,10 @@ void idCommonLocal::Init( int argc, const char* const* argv, const char* cmdline
 		{
 			while( centered == 0 )
 			{
-				if( commonVr->hasHMD )
+				if( vrSystem->hasHMD )
 				{
 					idLib::frameNumber++;
-					commonVr->FrameStart();
+					vrSystem->FrameStart();
 				}
 				RenderSplash();
 				Sys_GenerateEvents();
@@ -1627,10 +1627,10 @@ void idCommonLocal::Init( int argc, const char* const* argv, const char* cmdline
 
 		if( game->isVR )
 		{
-			commonVr->HMDResetTrackingOriginOffset();
+			vrSystem->HMDResetTrackingOriginOffset();
 		}
 
-		commonVr->renderingSplash = false;
+		vrSystem->renderingSplash = false;
 
 		// print all warnings queued during initialization
 		PrintWarnings();
@@ -1699,9 +1699,9 @@ void idCommonLocal::Init( int argc, const char* const* argv, const char* cmdline
 	if( game->isVR ) // Koz override these for VR
 	{
 		cvarSystem->SetCVarString( "r_swapInterval", "0" );
-		cvarSystem->SetCVarInteger( "com_engineHz", commonVr->hmdHz );
-		com_engineHz_denominator = 100LL * commonVr->hmdHz;
-		com_engineHz_latched = commonVr->hmdHz;
+		cvarSystem->SetCVarInteger( "com_engineHz", vrSystem->hmdHz );
+		com_engineHz_denominator = 100LL * vrSystem->hmdHz;
+		com_engineHz_latched = vrSystem->hmdHz;
 
 		if( vr_asw.GetInteger() != 0 )
 		{

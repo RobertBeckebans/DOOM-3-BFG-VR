@@ -2157,11 +2157,11 @@ idWeapon::LowerWeapon
 void idWeapon::LowerWeapon()
 {
 
-	if( game->isVR && commonVr->handInGui )
+	if( game->isVR && vrSystem->handInGui )
 	{
 		return;    // Koz never lower weapon if hand is in gui
 	}
-	if( commonVr->VR_USE_MOTION_CONTROLS && !owner->GuiActive() && !gameLocal.inCinematic )
+	if( vrSystem->VR_USE_MOTION_CONTROLS && !owner->GuiActive() && !gameLocal.inCinematic )
 	{
 		return;
 	}
@@ -2866,8 +2866,8 @@ bool idWeapon::GetMuzzlePositionWithHacks( idVec3& origin, idMat3& axis )
 		case WEAPON_FISTS:
 		case WEAPON_SOULCUBE:
 		case WEAPON_PDA:
-			origin = commonVr->lastViewOrigin; // Koz fixme set the origin and axis to the players view
-			axis = commonVr->lastViewAxis;
+			origin = vrSystem->lastViewOrigin; // Koz fixme set the origin and axis to the players view
+			axis = vrSystem->lastViewAxis;
 			return false;
 			break;
 
@@ -3538,7 +3538,7 @@ void idWeapon::PresentWeapon( bool showViewModel )
 			showViewModel = false;
 		}
 		//show the viewmodel in all views - flashlight visibilty set in calcViewFlashPosition
-		else if( !isPlayerFlashlight && !commonVr->handInGui )
+		else if( !isPlayerFlashlight && !vrSystem->handInGui )
 		{
 			renderEntity.allowSurfaceInViewID = 0;    // Koz fixme
 		}
@@ -4862,7 +4862,7 @@ void idWeapon::GetProjectileLaunchOriginAndAxis( idVec3& origin, idMat3& axis )
 			{
 				// if using motion controls, the muzzle axis should be the tracked direction of
 				// hand movement, not the barrel axis. (unless the controller is mounted on something like a topshot, then you have a grenade launcher.)
-				if( commonVr->VR_USE_MOTION_CONTROLS && !vr_mountedWeaponController.GetBool() )
+				if( vrSystem->VR_USE_MOTION_CONTROLS && !vr_mountedWeaponController.GetBool() )
 				{
 					axis = owner->throwDirection.ToMat3();
 					break;
@@ -5090,7 +5090,7 @@ void idWeapon::Event_LaunchProjectiles( int num_projectiles, float spread, float
 			// make sure the projectile starts inside the bounding box of the owner
 			// Carl: unless it's a grenade, in which case we want to be able to drop it over a railing without inexplicably killing ourselves
 			// Npi for other weapons too, game compute if there is a mask_shot between player center and the gun muzzle : then shots was blocks, but in Vr player's center is too low and strange : Carl's start compute is much clever
-			if( game->isVR && commonVr->VR_USE_MOTION_CONTROLS && i == 0 )
+			if( game->isVR && vrSystem->VR_USE_MOTION_CONTROLS && i == 0 )
 			{
 				muzzle_pos = muzzleOrigin + muzzleAxis[ 0 ] * 2.0f;
 				// Carl: check that there's a grenade-sized gap at hand height from the center of our chest to our grenade,
@@ -5104,7 +5104,7 @@ void idWeapon::Event_LaunchProjectiles( int num_projectiles, float spread, float
 				// Ideally this should be our right shoulder at shoulder height, but I'm not sure how to get that.
 				if( tr.fraction < 1.0f )
 				{
-					start.z = commonVr->lastHMDViewOrigin.z - 6;
+					start.z = vrSystem->lastHMDViewOrigin.z - 6;
 					gameLocal.clip.Translation( tr, start, muzzle_pos, proj->GetPhysics()->GetClipModel(), proj->GetPhysics()->GetClipModel()->GetAxis(), MASK_SHOT_RENDERMODEL | CONTENTS_PLAYERCLIP, owner );
 				}
 				muzzle_pos = tr.endpos;
@@ -5722,7 +5722,7 @@ void idWeapon::Event_EjectBrass()
 	debris->Launch();
 
 	// Koz begin
-	if( game->isVR && commonVr->VR_USE_MOTION_CONTROLS )
+	if( game->isVR && vrSystem->VR_USE_MOTION_CONTROLS )
 	{
 		idAngles vwa = viewWeaponAxis.ToAngles();
 		vwa.yaw += 30.0f;
@@ -5770,7 +5770,7 @@ void idWeapon::Event_GetWeaponSkin()
 
 	if( isPlayerFlashlight )
 	{
-		vrSkinName = commonVr->GetCurrentFlashMode() == 2 ? "minivr/flashhands/0h" : "vr/flashhands/0h"; // mini flashlight skin for gun mount : normal flashlight skin
+		vrSkinName = vrSystem->GetCurrentFlashMode() == 2 ? "minivr/flashhands/0h" : "vr/flashhands/0h"; // mini flashlight skin for gun mount : normal flashlight skin
 	}
 	else
 	{
@@ -5792,10 +5792,10 @@ void idWeapon::Event_IsMotionControlled()
 {
 	static int isMC;
 
-	isMC = ( game->isVR && commonVr->VR_USE_MOTION_CONTROLS ) ? 1 : 0;
+	isMC = ( game->isVR && vrSystem->VR_USE_MOTION_CONTROLS ) ? 1 : 0;
 
 	// Koz debug common->Printf( "Event_IsMotionControlled returning %d\n", isMC );
-	//	idThread::ReturnInt( ( game->isVR && commonVr->VR_USE_MOTION_CONTROLS ) ? 1 : 0 );
+	//	idThread::ReturnInt( ( game->isVR && vrSystem->VR_USE_MOTION_CONTROLS ) ? 1 : 0 );
 
 	idThread::ReturnInt( isMC );
 }

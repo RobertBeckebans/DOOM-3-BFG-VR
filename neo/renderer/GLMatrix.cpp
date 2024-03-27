@@ -414,13 +414,13 @@ void R_SetupProjectionMatrix( viewDef_t* viewDef )
 
 	const float zNear = ( viewDef->renderView.cramZNear ) ? ( r_znear.GetFloat() * 0.25f ) : r_znear.GetFloat();
 
-	if( !commonVr->hasOculusRift && game->isVR )
+	if( !vrSystem->hasOculusRift && game->isVR )
 	{
 		int pEye = viewDef->renderView.viewEyeBuffer == -1 ? 0 : 1;
-		float idx = 1.0f / ( commonVr->hmdEye[pEye].projectionOpenVR.projRight - commonVr->hmdEye[pEye].projectionOpenVR.projLeft );
-		float idy = 1.0f / ( commonVr->hmdEye[pEye].projectionOpenVR.projDown - commonVr->hmdEye[pEye].projectionOpenVR.projUp );
-		float sx = commonVr->hmdEye[pEye].projectionOpenVR.projRight + commonVr->hmdEye[pEye].projectionOpenVR.projLeft;
-		float sy = commonVr->hmdEye[pEye].projectionOpenVR.projDown + commonVr->hmdEye[pEye].projectionOpenVR.projUp;
+		float idx = 1.0f / ( vrSystem->hmdEye[pEye].projectionOpenVR.projRight - vrSystem->hmdEye[pEye].projectionOpenVR.projLeft );
+		float idy = 1.0f / ( vrSystem->hmdEye[pEye].projectionOpenVR.projDown - vrSystem->hmdEye[pEye].projectionOpenVR.projUp );
+		float sx = vrSystem->hmdEye[pEye].projectionOpenVR.projRight + vrSystem->hmdEye[pEye].projectionOpenVR.projLeft;
+		float sy = vrSystem->hmdEye[pEye].projectionOpenVR.projDown + vrSystem->hmdEye[pEye].projectionOpenVR.projUp;
 
 		viewDef->projectionMatrix[0 * 4 + 0] = 2.0f * idx;
 		viewDef->projectionMatrix[1 * 4 + 0] = 0.0f;
@@ -480,24 +480,24 @@ void R_SetupProjectionMatrix( viewDef_t* viewDef )
 
 			if( game->CheckInCinematic() && vr_cinematics.GetInteger() == 2 )  // we are going to capture the scene and project it again later with the offset matrix so center it now
 			{
-				leftTan = ( commonVr->hmdEye[pEye].eyeFov.LeftTan + commonVr->hmdEye[pEye].eyeFov.RightTan ) / 2.0f;
+				leftTan = ( vrSystem->hmdEye[pEye].eyeFov.LeftTan + vrSystem->hmdEye[pEye].eyeFov.RightTan ) / 2.0f;
 				rightTan = leftTan;
-				upTan = ( commonVr->hmdEye[pEye].eyeFov.UpTan + commonVr->hmdEye[pEye].eyeFov.DownTan ) / 2.0f;
+				upTan = ( vrSystem->hmdEye[pEye].eyeFov.UpTan + vrSystem->hmdEye[pEye].eyeFov.DownTan ) / 2.0f;
 				downTan = upTan;
 			}
 			else
 			{
-				rightTan = commonVr->hmdEye[pEye].eyeFov.RightTan;
-				leftTan =  commonVr->hmdEye[pEye].eyeFov.LeftTan;
-				upTan = commonVr->hmdEye[pEye].eyeFov.UpTan;
-				downTan = commonVr->hmdEye[pEye].eyeFov.DownTan;
+				rightTan = vrSystem->hmdEye[pEye].eyeFov.RightTan;
+				leftTan =  vrSystem->hmdEye[pEye].eyeFov.LeftTan;
+				upTan = vrSystem->hmdEye[pEye].eyeFov.UpTan;
+				downTan = vrSystem->hmdEye[pEye].eyeFov.DownTan;
 			}
 
-			//ymax = zNear * commonVr->hmdEye[pEye].eyeFov.UpTan;
-			//ymin = -zNear * commonVr->hmdEye[pEye].eyeFov.DownTan;
+			//ymax = zNear * vrSystem->hmdEye[pEye].eyeFov.UpTan;
+			//ymin = -zNear * vrSystem->hmdEye[pEye].eyeFov.DownTan;
 
-			//xmax = zNear * commonVr->hmdEye[pEye].eyeFov.RightTan;
-			//xmin = -zNear * commonVr->hmdEye[pEye].eyeFov.LeftTan;
+			//xmax = zNear * vrSystem->hmdEye[pEye].eyeFov.RightTan;
+			//xmin = -zNear * vrSystem->hmdEye[pEye].eyeFov.LeftTan;
 
 			ymax = zNear * upTan;
 			ymin = -zNear * downTan;
@@ -570,13 +570,13 @@ void R_SetupProjectionMatrix2( const viewDef_t* viewDef, const float zNear, cons
 {
 	float depth = zFar - zNear;
 
-	if( !commonVr->hasOculusRift && game->isVR )
+	if( !vrSystem->hasOculusRift && game->isVR )
 	{
 		int pEye = viewDef->renderView.viewEyeBuffer == -1 ? 0 : 1;
-		float idx = 1.0f / ( commonVr->hmdEye[pEye].projectionOpenVR.projRight - commonVr->hmdEye[pEye].projectionOpenVR.projLeft );
-		float idy = 1.0f / ( commonVr->hmdEye[pEye].projectionOpenVR.projDown - commonVr->hmdEye[pEye].projectionOpenVR.projUp );
-		float sx = commonVr->hmdEye[pEye].projectionOpenVR.projRight + commonVr->hmdEye[pEye].projectionOpenVR.projLeft;
-		float sy = commonVr->hmdEye[pEye].projectionOpenVR.projDown + commonVr->hmdEye[pEye].projectionOpenVR.projUp;
+		float idx = 1.0f / ( vrSystem->hmdEye[pEye].projectionOpenVR.projRight - vrSystem->hmdEye[pEye].projectionOpenVR.projLeft );
+		float idy = 1.0f / ( vrSystem->hmdEye[pEye].projectionOpenVR.projDown - vrSystem->hmdEye[pEye].projectionOpenVR.projUp );
+		float sx = vrSystem->hmdEye[pEye].projectionOpenVR.projRight + vrSystem->hmdEye[pEye].projectionOpenVR.projLeft;
+		float sy = vrSystem->hmdEye[pEye].projectionOpenVR.projDown + vrSystem->hmdEye[pEye].projectionOpenVR.projUp;
 
 		projectionMatrix[0 * 4 + 0] = 2.0f * idx;
 		projectionMatrix[1 * 4 + 0] = 0.0f;
@@ -608,11 +608,11 @@ void R_SetupProjectionMatrix2( const viewDef_t* viewDef, const float zNear, cons
 		{
 			int pEye = viewDef->renderView.viewEyeBuffer == -1 ? 0 : 1;
 
-			ymax = zNear * commonVr->hmdEye[pEye].eyeFov.UpTan;
-			ymin = -zNear * commonVr->hmdEye[pEye].eyeFov.DownTan;
+			ymax = zNear * vrSystem->hmdEye[pEye].eyeFov.UpTan;
+			ymin = -zNear * vrSystem->hmdEye[pEye].eyeFov.DownTan;
 
-			xmax = zNear * commonVr->hmdEye[pEye].eyeFov.RightTan;
-			xmin = -zNear * commonVr->hmdEye[pEye].eyeFov.LeftTan;
+			xmax = zNear * vrSystem->hmdEye[pEye].eyeFov.RightTan;
+			xmin = -zNear * vrSystem->hmdEye[pEye].eyeFov.LeftTan;
 		}
 		else
 		{

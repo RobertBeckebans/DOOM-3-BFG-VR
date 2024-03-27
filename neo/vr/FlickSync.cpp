@@ -900,7 +900,7 @@ void Flicksync_DoGameOver()
 	{
 		Flicksync_ResumeCutscene();
 	}
-	commonVoice->Say( "Game Over" );
+	vrVoice->Say( "Game Over" );
 }
 
 void Flicksync_ScoreFail()
@@ -916,7 +916,7 @@ void Flicksync_ScoreFail()
 	Flicksync_FailsInARow++;
 	if( Flicksync_FailsInARow == 2 )
 	{
-		commonVoice->Say( "Final warning" );
+		vrVoice->Say( "Final warning" );
 	}
 	else if( Flicksync_FailsInARow == 3 )
 	{
@@ -924,7 +924,7 @@ void Flicksync_ScoreFail()
 	}
 	else
 	{
-		commonVoice->Say( "Miss" );
+		vrVoice->Say( "Miss" );
 	}
 }
 
@@ -961,14 +961,14 @@ void Flicksync_ScoreLine( int confidence, uint64 ourStartTime, uint64 realStartT
 		{
 			gameLocal.Printf( "%d: Flicksync_ScoreLine() early\n", gameLocal.framenum );
 		}
-		commonVoice->Say( "Early!" );
+		vrVoice->Say( "Early!" );
 		if( confidence < 0 )
 		{
-			commonVoice->Say( "Unclear." );
+			vrVoice->Say( "Unclear." );
 		}
 		else if( confidence > 0 )
 		{
-			commonVoice->Say( "Clear." );
+			vrVoice->Say( "Clear." );
 		}
 	}
 	else if( startDelay > 2 * seconds && endDelay > 2 * seconds )
@@ -978,14 +978,14 @@ void Flicksync_ScoreLine( int confidence, uint64 ourStartTime, uint64 realStartT
 		{
 			gameLocal.Printf( "%d: Flicksync_ScoreLine() late\n", gameLocal.framenum );
 		}
-		commonVoice->Say( "Late!" );
+		vrVoice->Say( "Late!" );
 		if( confidence < 0 )
 		{
-			commonVoice->Say( "Unclear." );
+			vrVoice->Say( "Unclear." );
 		}
 		else if( confidence > 0 )
 		{
-			commonVoice->Say( "Clear." );
+			vrVoice->Say( "Clear." );
 		}
 	}
 	else
@@ -997,16 +997,16 @@ void Flicksync_ScoreLine( int confidence, uint64 ourStartTime, uint64 realStartT
 		}
 		if( confidence < 0 )
 		{
-			commonVoice->Say( "Unclear!" );
+			vrVoice->Say( "Unclear!" );
 		}
 		else if( confidence > 0 )
 		{
 			Flicksync_Score += 50; // arbitrary bonus points for speaking clearly with OK timing
-			commonVoice->Say( "Bonus!" );
+			vrVoice->Say( "Bonus!" );
 		}
 		else
 		{
-			commonVoice->Say( "Good!" );
+			vrVoice->Say( "Good!" );
 		}
 	}
 
@@ -1381,7 +1381,7 @@ bool Flicksync_Voice( const char* entity, const char* animation, const char* lin
 		{
 			gameLocal.Printf( "%d: new Flicksync_Voice() while waiting for line. Pausing to wait for \"%s\"\n", gameLocal.framenum, waitingLine.text );
 		}
-		//commonVoice->Say("pausing to wait for %s", waitingLine.text);
+		//vrVoice->Say("pausing to wait for %s", waitingLine.text);
 		// pause cutscene until we hear the line we are waiting for
 		if( !line )
 		{
@@ -1400,7 +1400,7 @@ bool Flicksync_Voice( const char* entity, const char* animation, const char* lin
 		Flicksync_PauseCutscene();
 
 		// Repeat the cue line (the line spoken before ours) with subtitles
-		if( commonVoice->GetTalkButton() )
+		if( vrVoice->GetTalkButton() )
 		{
 			needCue = true;
 		}
@@ -1464,7 +1464,7 @@ bool Flicksync_Voice( const char* entity, const char* animation, const char* lin
 		{
 			gameLocal.Printf( "%d: Flicksync_Voice(): We already said this line early: %s\n", gameLocal.framenum, line );
 		}
-		//commonVoice->Say("Already heard %s", line);
+		//vrVoice->Say("Already heard %s", line);
 		// score it based on timing
 		Flicksync_ScoreLine( linesHeard[index].confidence, linesHeard[index].startTime, startTime, linesHeard[index].length, length );
 		//   clear any older lines than this line from list of heard lines
@@ -1489,7 +1489,7 @@ bool Flicksync_Voice( const char* entity, const char* animation, const char* lin
 		{
 			gameLocal.Printf( "%d: Flicksync_Voice(): Starting to wait for: %s\n", gameLocal.framenum, line );
 		}
-		//commonVoice->Say("Wait for %s", line);
+		//vrVoice->Say("Wait for %s", line);
 		//   set waiting line to this line
 		if( !line || idStr::Cmp( line, "" ) == 0 )
 		{
@@ -1577,12 +1577,12 @@ bool Flicksync_Fade( const char* entity )
 		{
 			gameLocal.Printf( "%d: Fade %s while waiting for line. Pausing to wait for \"%s\"\n", gameLocal.framenum, entity, waitingLine.text );
 		}
-		//commonVoice->Say("pausing to wait for %s", waitingLine.text);
+		//vrVoice->Say("pausing to wait for %s", waitingLine.text);
 		// pause cutscene until we hear the line we are waiting for
 		pausedFadeEntity = entity;
 		hasPausedFade = true;
 		Flicksync_PauseCutscene();
-		if( commonVoice->GetTalkButton() )
+		if( vrVoice->GetTalkButton() )
 		{
 			needCue = true;
 		}
@@ -1608,7 +1608,7 @@ void Flicksync_AddVoiceLines()
 	{
 		if( lineArray[i].text )
 		{
-			commonVoice->AddFlicksyncLine( lineArray[i].text );
+			vrVoice->AddFlicksyncLine( lineArray[i].text );
 		}
 	}
 }
@@ -1632,7 +1632,7 @@ void Flicksync_HearLine( const char* line, int confidence, uint64 startTime, uin
 #endif
 	}
 	const char* confidences[3] = { "low", "medium", "high" };
-	//commonVoice->Say("%s: %s", confidences[confidence + 1], line);
+	//vrVoice->Say("%s: %s", confidences[confidence + 1], line);
 
 	// if we are waiting for this line
 	if( hasWaitingLine && idStr::Cmp( waitingLine.text, line ) == 0 )
@@ -1661,7 +1661,7 @@ void Flicksync_HearLine( const char* line, int confidence, uint64 startTime, uin
 				gameLocal.Printf( "%d: Flicksync_HearLine(\"%s\") heard wrong line!\n", gameLocal.framenum, line );
 			}
 			Flicksync_StoppedTalking();
-			//commonVoice->Say("Sorry, was waiting to hear %s.", waitingLine.text);
+			//vrVoice->Say("Sorry, was waiting to hear %s.", waitingLine.text);
 		}
 		else
 		{
@@ -1669,7 +1669,7 @@ void Flicksync_HearLine( const char* line, int confidence, uint64 startTime, uin
 			{
 				gameLocal.Printf( "%d: Flicksync_HearLine(\"%s\") adding it to heard line list\n", gameLocal.framenum, line );
 			}
-			//commonVoice->Say("Add to heard list %s.", line);
+			//vrVoice->Say("Add to heard list %s.", line);
 		}
 
 		// add this line to list of heard lines
@@ -1734,7 +1734,7 @@ bool Flicksync_EndCutscene()
 		hasPausedFade = false; // it's impossible for a cutscene to end while waiting for us to fade
 		endAfterPause = true;
 		Flicksync_PauseCutscene();
-		if( commonVoice->GetTalkButton() )
+		if( vrVoice->GetTalkButton() )
 		{
 			needCue = true;
 		}
@@ -2039,7 +2039,7 @@ void Flicksync_GoToCutscene( t_cutscene scene )
 			gameLocal.Printf( "%d: Flicksync_Complete()\n", gameLocal.framenum );
 		}
 		Flicksync_complete = true;
-		commonVoice->Say( "Flick sync complete." );
+		vrVoice->Say( "Flick sync complete." );
 		if( vr_cutscenesOnly.GetInteger() == 1 )
 		{
 			// delete all AIs, dead bodies, and animated things (except generators), and unlock all doors
