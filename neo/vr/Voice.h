@@ -45,10 +45,10 @@ public:
 
 	iVoice();
 
-	void		VoiceInit( void );
-	bool		InitVoiceDictionary( void );
+	void		VoiceInit();
+	bool		InitVoiceDictionary();
 	static void		ListVoiceCmds_f( const idCmdArgs& args );
-	void		VoiceShutdown( void );
+	void		VoiceShutdown();
 	void		Speed( int talkingSpeed );
 
 	void		Say( VERIFY_FORMAT_STRING const char* fmt, ... );

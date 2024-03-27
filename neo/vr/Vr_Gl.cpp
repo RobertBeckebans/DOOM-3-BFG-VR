@@ -1,3 +1,31 @@
+/*
+===========================================================================
+
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 2013-2021 Samson Koz and contributors
+Copyright (C) 2024 Robert Beckebans
+
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
+
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
+
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
+
+If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
+
+===========================================================================
+*/
 
 #include "precompiled.h"
 #pragma hdrstop
@@ -15,11 +43,6 @@
 	#include "../libs/LibOVR/Include/Extras/OVR_Math.h"
 #endif
 
-idCVar zdist( "zdist", "-2.9", CVAR_FLOAT, "" );
-
-idCVar vr_cineDist( "vr_cineDist", "-2", CVAR_FLOAT | CVAR_ARCHIVE, "" );
-idCVar vr_cineSize( "vr_cineSize", "3", CVAR_FLOAT | CVAR_ARCHIVE, "" );
-
 
 void GLimp_SwapBuffers();
 void GL_BlockingSwapBuffers();
@@ -28,91 +51,9 @@ void GL_BlockingSwapBuffers();
 	extern PFNWGLSWAPINTERVALEXTPROC				wglSwapIntervalEXT;
 #endif
 
-/*
-====================
-iVr::FXAASetUniforms
-====================
-*/
-
-void iVr::FXAASetUniforms( Framebuffer FBO )
-{
-	int progr = renderProgManager.GetGLSLCurrentProgram();
-
-	//static GLuint scale = renderProgManager.GetUniformLocByName(progr, "Scale");
-	static GLuint scale1 = glGetUniformLocation( progr, "texScale" );
-
-	static GLuint resolution = glGetUniformLocation( progr, "buffersize" );
-
-	//common->Printf("Setting FXAA uniforms resolution = %d texScale = %d\n",resolution,scale1);
-	//glUniform2f(resolution, FBO.width, FBO.height);
-	glUniform2f( resolution, FBO.GetWidth(), FBO.GetHeight() );
-	glUniform2f( scale1, 1.0, 1.0 );
-
-}
-
-/*
-====================
-iVr::FXAAResolve
-====================
-*/
-/*
-void iVr::FXAAResolve( idImage* leftCurrent, idImage* rightCurrent )
-{
-
-	//VR_BindFBO ( GL_FRAMEBUFFER, VR_ResolveAAFBO ); // antialias image 0
-	globalFramebuffers.resolveFBO->Bind();
-	glClearColor( 0, 0, 0, 0 );
-	glClear( GL_COLOR_BUFFER_BIT );
-
-	renderProgManager.BindShader_VRFXAA();
-	//VR_SetFXAAUniforms( VR_ResolveAAFBO );
-
-	FXAASetUniforms( *globalFramebuffers.resolveFBO );
-	GL_SelectTexture( 0 );
-	leftCurrent->Bind();
-	glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER );
-	glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER );
-
-	GL_ViewportAndScissor( 0, 0, globalFramebuffers.resolveFBO->GetWidth(), globalFramebuffers.resolveFBO->GetHeight() );
-	RB_DrawElementsWithCounters( &backEnd.unitSquareSurface ); // draw it
-
-	//VR_BindFBO ( GL_READ_FRAMEBUFFER, VR_ResolveAAFBO );
-
-	//leftCurrent->Bind();
-	glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER );
-	glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER );
-	glCopyTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA8, 0, 0, leftCurrent->GetUploadWidth(), leftCurrent->GetUploadHeight(), 0 );
-
-	//VR_BindFBO ( GL_DRAW_FRAMEBUFFER, VR_ResolveAAFBO );
-	//glClearColor( 0, 0, 0, 0 );
-	glClear( GL_COLOR_BUFFER_BIT );
-
-	//renderProgManager.BindShader_VRFXAA();
-	//VR_SetFXAAUniforms( VR_ResolveAAFBO );
-
-	rightCurrent->Bind();
-	glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER );
-	glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER );
-
-	GL_ViewportAndScissor( 0, 0, globalFramebuffers.resolveFBO->GetWidth(), globalFramebuffers.resolveFBO->GetHeight() );
-	RB_DrawElementsWithCounters( &backEnd.unitSquareSurface ); // draw it
-
-	//VR_BindFBO ( GL_READ_FRAMEBUFFER, VR_ResolveAAFBO );
-
-	//rightCurrent->Bind();
-	glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER );
-	glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER );
-	glCopyTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA8, 0, 0, rightCurrent->GetUploadWidth(), rightCurrent->GetUploadHeight(), 0 );
-
-	renderProgManager.Unbind();
-}
-*/
-
-
 
 void VR_PerspectiveScale( eyeScaleOffset_t eye, GLfloat zNear, GLfloat zFar, float ( &out )[4][4] )
 {
-
 	GLfloat nf = 1.0f / ( zNear - zFar );
 
 	out[0][0] = eye.x.scale;
@@ -162,7 +103,6 @@ RotationMatrix
 
 void RotationMatrix( float angle, float x, float y, float z, float ( &out )[4][4] )
 {
-
 	float phi = DEG2RAD( angle );
 	float c = cosf( phi ); // cosine
 	float s = sinf( phi ); // sine

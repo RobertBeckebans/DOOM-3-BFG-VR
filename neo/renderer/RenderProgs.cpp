@@ -149,10 +149,6 @@ void idRenderProgManager::Init()
 		// RB begin
 		{ BUILTIN_DEBUG_SHADOWMAP, "builtin/debug/debug_shadowmap", "", 0, false, SHADER_STAGE_DEFAULT, LAYOUT_DRAW_VERT },
 		// RB end
-
-		// Koz begin
-		//{ BUILTIN_VRFXAA, "oculusVrFxaa.vfp", 0, false, SHADER_STAGE_DEFAULT, LAYOUT_DRAW_VERT },
-		// Koz end
 	};
 	int numBuiltins = sizeof( builtins ) / sizeof( builtins[0] );
 	vertexShaders.SetNum( numBuiltins );

@@ -3,6 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 2013-2021 Samson Koz and contributors
+Copyright (C) 2024 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -101,14 +102,13 @@ class idClipModel;
 class iVr
 {
 public:
-
 	iVr();
 
-	bool				OculusInit( void );
-	bool				OpenVRInit( void );
-	void				HMDInit( void );
-	void				HMDShutdown( void );
-	void				HMDInitializeDistortion( void );
+	bool				OculusInit();
+	bool				OpenVRInit();
+	void				HMDInit();
+	void				HMDShutdown();
+	void				HMDInitializeDistortion();
 	void				HMDGetOrientation( idAngles& hmdAngles, idVec3& headPositionDelta, idVec3& bodyPositionDelta, idVec3& absolutePosition, bool resetTrackingOffset );
 	void				HMDGetOrientationAbsolute( idAngles& hmdAngles, idVec3& positoin );
 	void				HMDRender( idImage* leftCurrent, idImage* rightCurrent );
@@ -117,7 +117,7 @@ public:
 	void				HUDRender( idImage* image0, idImage* image1 );
 	void				HMDResetTrackingOriginOffset();
 
-	void				FrameStart( void );
+	void				FrameStart();
 
 	//void				OpenVrGetRight( idVec3& position, idQuat& rotation );
 	//void				OpenVrGetLeft( idVec3& position, idQuat& rotation );
@@ -131,10 +131,6 @@ public:
 	void				MotionControlGetTouchController( int hand, idVec3& position, idQuat& rotation );
 	void				MotionControllerSetHapticOculus( float low, float hi );
 	void				MotionControllerSetHapticOpenVR( int hand, unsigned short value );
-
-	void				MSAAResolve( void );
-	//void				FXAAResolve( idImage* leftCurrent, idImage* rightCurrent );
-	void				FXAASetUniforms( Framebuffer FBO );
 
 	void				CalcAimMove( float& yawDelta, float& pitchDelta );
 

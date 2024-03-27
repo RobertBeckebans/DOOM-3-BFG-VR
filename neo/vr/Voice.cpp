@@ -614,7 +614,7 @@ iVoice::InitVoiceDictionary
 ==============
 */
 
-bool iVoice::InitVoiceDictionary( void )
+bool iVoice::InitVoiceDictionary()
 {
 	idLexer		parser( LEXFL_NOSTRINGESCAPECHARS | LEXFL_NOSTRINGCONCAT );
 	idToken		token;
@@ -708,7 +708,7 @@ iVoice::VoiceInit
 ==============
 */
 
-void iVoice::VoiceInit( void )
+void iVoice::VoiceInit()
 {
 #ifdef _WIN32
 	if( !InitVoiceDictionary() )
@@ -804,7 +804,7 @@ iVoice::VoiceShutdown
 ==============
 */
 
-void iVoice::VoiceShutdown( void )
+void iVoice::VoiceShutdown()
 {
 #ifdef _WIN32
 	if( pVoice )

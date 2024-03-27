@@ -3,6 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 2013-2021 Samson Koz and contributors
+Copyright (C) 2024 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -575,7 +576,7 @@ iVr::OculusInit
 ==============
 */
 
-bool iVr::OculusInit( void )
+bool iVr::OculusInit()
 {
 #ifndef USE_OVR
 	hasOculusRift = false;
@@ -691,7 +692,7 @@ iVr::OpenVRInit
 ==============
 */
 
-bool iVr::OpenVRInit( void )
+bool iVr::OpenVRInit()
 {
 
 	if( vr_APISelect.GetInteger() == 1 )  // Only use Oculus API
@@ -819,7 +820,7 @@ iVr::HMDInit
 ==============
 */
 
-void iVr::HMDInit( void )
+void iVr::HMDInit()
 {
 	hasHMD = false;
 	game->isVR = false;
@@ -843,7 +844,7 @@ iVr::HMDShutdown
 ==============
 */
 
-void iVr::HMDShutdown( void )
+void iVr::HMDShutdown()
 {
 #ifdef USE_OVR
 	if( hasOculusRift )
@@ -1743,7 +1744,7 @@ void iVr::HMDGetOrientationAbsolute( idAngles& hmdAngles, idVec3& position )
 iVr::HMDResetTrackingOriginOffset
 ==============
 */
-void iVr::HMDResetTrackingOriginOffset( void )
+void iVr::HMDResetTrackingOriginOffset()
 {
 	static idVec3 body = vec3_zero;
 	static idVec3 head = vec3_zero;
@@ -2092,7 +2093,7 @@ void iVr::CalcAimMove( float& yawDelta, float& pitchDelta )
 iVr::FrameStart
 ==============
 */
-void iVr::FrameStart( void )
+void iVr::FrameStart()
 {
 	//common->Printf( "Framestart called from frame %d\n", idLib::frameNumber );
 
