@@ -314,12 +314,6 @@ static const char* GLSLParmNames[RENDERPARM_TOTAL] =
 	// RB end
 
 	// Koz begin
-	"rpEyeToSourceUVOffset",
-	"rpEyeToSourceUVScale",
-	"rpInverseResolution",
-	"rpOverdriveScales",
-	"rpVignetteFade",
-
 	"rpStereoCorrection",
 	// Koz end
 
