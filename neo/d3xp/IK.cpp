@@ -256,7 +256,7 @@ bool idIK::SolveTwoArmBones( idVec3& startPos, idVec3& endPos, const idVec3& dir
 
 	// Koz - if using motion controls and displaying the body, and a controller is reporting a impossible position, restrain the arm length.
 
-	if( 0 && game->isVR && vr_playerBodyMode.GetInteger() == 0 )
+	if( 0 && vrSystem->IsActive() && vr_playerBodyMode.GetInteger() == 0 )
 	{
 		maxLen = ( len0 + len1 ) * 1.40f;
 		if( length > maxLen )

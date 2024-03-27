@@ -791,7 +791,7 @@ bool idRenderModelMD5::LoadBinaryModel( idFile* file, const ID_TIME_T sourceTime
 			meshes[i].shader = declManager->FindMaterial( materialName );
 
 
-			if( game->isVR )
+			if( vrSystem->IsActive() )
 			{
 
 				//if ( materialName == "textures/common/pda_gui"  )
@@ -1189,7 +1189,7 @@ void idRenderModelMD5::LoadModel()
 		{
 			meshes[i].shader = NULL;
 		}
-		else if( game->isVR )
+		else if( vrSystem->IsActive() )
 		{
 			if( materialName == "textures/common/pda_gui" || materialName == "_pdaImage" ||  materialName == "_pdaimage" )
 			{

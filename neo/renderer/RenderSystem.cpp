@@ -252,7 +252,7 @@ static void R_CheckCvars()
 {
 
 	// Koz
-	if( game->isVR )
+	if( vrSystem->IsActive() )
 	{
 
 		if( vr_useFloorHeight.IsModified() || ( vr_normalViewHeight.IsModified() && vr_useFloorHeight.GetInteger() == 0 ) || vr_scale.IsModified() || vrSystem->shouldRecenter )

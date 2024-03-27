@@ -142,7 +142,7 @@ void idPhysics_Player::Accelerate( const idVec3& wishdir, const float wishspeed,
 	}
 
 	// Koz instant accel/decel
-	if( game->isVR && vr_instantAccel.GetBool() && vr_teleportMode.GetInteger() != 2 && walking && groundPlane && !OnLadder() )
+	if( vrSystem->IsActive() && vr_instantAccel.GetBool() && vr_teleportMode.GetInteger() != 2 && walking && groundPlane && !OnLadder() )
 	{
 		idVec3 newVel = wishspeed * wishdir;
 		current.velocity.x = newVel.x;
@@ -872,7 +872,7 @@ void idPhysics_Player::Friction()
 		vel += ( vel * gravityNormal ) * gravityNormal;
 
 		// Koz instant accel/decel
-		if( game->isVR && vr_instantAccel.GetBool() && vr_teleportMode.GetInteger() != 2 && groundPlane && !OnLadder() )
+		if( vrSystem->IsActive() && vr_instantAccel.GetBool() && vr_teleportMode.GetInteger() != 2 && groundPlane && !OnLadder() )
 		{
 			if( command.forwardmove == 0 && command.rightmove == 0 )
 			{
@@ -1603,7 +1603,7 @@ void idPhysics_Player::CheckDuck()
 	else
 	{
 
-		if( current.movementType == PM_NORMAL && game->isVR && vr_crouchMode.GetInteger() == 0 && !( command.buttons & BUTTON_CROUCH ) )
+		if( current.movementType == PM_NORMAL && vrSystem->IsActive() && vr_crouchMode.GetInteger() == 0 && !( command.buttons & BUTTON_CROUCH ) )
 			// game is in full motion crouch mode, dont do anything except change the bounding box to crouch height if ducking
 			// and change the player speed to crouch speed if player has ducked enough.
 			// thought I was going to have to do a bunch of bullshit to toggle the crouch anim
@@ -2471,7 +2471,7 @@ idPhysics_Player::ApplyImpulse
 */
 void idPhysics_Player::ApplyImpulse( const int id, const idVec3& point, const idVec3& impulse )
 {
-	if( current.movementType != PM_NOCLIP && !( game->isVR && !vr_knockBack.GetBool() ) ) // Koz fixme knockback
+	if( current.movementType != PM_NOCLIP && !( vrSystem->IsActive() && !vr_knockBack.GetBool() ) ) // Koz fixme knockback
 	{
 		current.velocity += impulse * invMass;
 	}

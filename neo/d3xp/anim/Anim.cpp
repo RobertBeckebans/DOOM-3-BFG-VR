@@ -121,7 +121,7 @@ idMD5Anim::Length
 */
 int idMD5Anim::Length() const
 {
-	if( vr_disableWeaponAnimation.GetBool() && game->isVR )
+	if( vr_disableWeaponAnimation.GetBool() && vrSystem->IsActive() )
 	{
 		// Koz - disable weapon idle animations in VR, so aim is only affected by motion controls
 		// Originally set the length to 1 at animation load time, but this way the user can toggle

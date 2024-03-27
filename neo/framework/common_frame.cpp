@@ -367,7 +367,7 @@ void idCommonLocal::Draw()
 		}
 
 		// Koz begin
-		if( ( !game->isVR || vrSystem->playerDead ) || ( !vrSystem->PDAforced && !vrSystem->PDAforcetoggle ) )
+		if( ( !vrSystem->IsActive() || vrSystem->playerDead ) || ( !vrSystem->PDAforced && !vrSystem->PDAforcetoggle ) )
 		{
 			// Koz render any menus outside of game ( main menu etc )
 			game->Shell_Render();
@@ -408,7 +408,7 @@ void idCommonLocal::Draw()
 		// draw the wipe material on top of this if it hasn't completed yet
 		DrawWipeModel();
 
-		if( !game->isVR )
+		if( !vrSystem->IsActive() )
 		{
 			Dialog().Render( loadGUI != NULL );
 			console->Draw( false );
@@ -471,7 +471,7 @@ void idCommonLocal::UpdateScreen( bool captureToImage, bool releaseMouse )
 	renderSystem->RenderCommandBuffers( cmd );
 	frameTiming.finishRenderTime = Sys_Microseconds();  // SRS - Added frame timing for out-of-sequence updates (e.g. used in timedemo "twice" mode)
 
-	if( game->isVR )
+	if( vrSystem->IsActive() )
 	{
 		//static int lastTrack = Sys_Milliseconds();
 		//if ( Sys_Milliseconds() - lastTrack >9 )
@@ -560,7 +560,7 @@ void idCommonLocal::Frame()
 		// This is the only place this is incremented
 		idLib::frameNumber++;
 
-		if( game->isVR && vrSystem->hasOculusRift )
+		if( vrSystem->IsActive() && vrSystem->hasOculusRift )
 		{
 			vrSystem->FrameStart();
 		}
@@ -726,7 +726,7 @@ void idCommonLocal::Frame()
 				ingame = game->IsInGame();
 			}
 
-			if( game->isVR )
+			if( vrSystem->IsActive() )
 			{
 				static bool ing, shellact, vrpause, pauseG, forcet, pdaf, savlo, playerd, wasl = false;
 
@@ -927,7 +927,7 @@ void idCommonLocal::Frame()
 		// build a new usercmd
 		int deviceNum = session->GetSignInManager().GetMasterInputDevice();
 
-		if( game->isVR )
+		if( vrSystem->IsActive() )
 		{
 			//Sys_PollJoystickInputEvents( 0 );
 			usercmdGen->BuildCurrentUsercmd( 0 );

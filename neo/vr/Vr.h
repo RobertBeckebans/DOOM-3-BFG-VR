@@ -104,6 +104,11 @@ class iVr
 public:
 	iVr();
 
+	bool				IsActive() const
+	{
+		return isActive;
+	}
+
 	bool				OculusInit();
 	bool				OpenVRInit();
 
@@ -146,6 +151,7 @@ public:
 private:
 	void				SwapBinding( int Old, int New );
 
+	bool				isActive;
 public:
 
 	//------------------

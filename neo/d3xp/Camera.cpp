@@ -722,7 +722,7 @@ void idCameraAnim::GetViewParms( renderView_t* view )
 	}
 
 	// Koz begin
-	if( game->isVR && ( vr_cinematics.GetInteger() == 0 && vr_flicksyncCharacter.GetInteger() == 0 ) )
+	if( vrSystem->IsActive() && ( vr_cinematics.GetInteger() == 0 && vr_flicksyncCharacter.GetInteger() == 0 ) )
 	{
 		// Clamp the camera origin to camera cut locations.
 		// This eliminates camera panning and smooth movements in cutscenes,
@@ -1090,7 +1090,7 @@ void idCameraAnim::GetViewParms( renderView_t* view )
 		}
 	}
 
-	if( game->isVR && gameLocal.inCinematic )
+	if( vrSystem->IsActive() && gameLocal.inCinematic )
 	{
 		// override any camera fov changes. Unless you *like* the taste of hurl.
 

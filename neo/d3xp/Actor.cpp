@@ -2130,7 +2130,7 @@ bool idActor::UpdateAnimationControllers()
 	// when going up/down stairs.
 
 	// Koz vr arm ik
-	//if ( game->isVR && armIK.IsInitialized() )
+	//if ( vrSystem->IsActive() && armIK.IsInitialized() )
 	//{
 	//	armIK.Evaluate();
 	//	success = true;

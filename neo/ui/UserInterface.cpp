@@ -548,7 +548,7 @@ void idUserInterfaceLocal::DrawCursor()
 	else
 	{
 		// Koz dont draw cursor if using motion controls in touchscreen mode
-		if( !game->isVR || vr_controllerStandard.GetInteger() == 1 || !vrSystem->VR_USE_MOTION_CONTROLS || vr_guiMode.GetInteger() != 2 || vr_debugTouchCursor.GetBool() ) //!gameLocal.GetLocalPlayer()->GuiActive()
+		if( !vrSystem->IsActive() || vr_controllerStandard.GetInteger() == 1 || !vrSystem->VR_USE_MOTION_CONTROLS || vr_guiMode.GetInteger() != 2 || vr_debugTouchCursor.GetBool() ) //!gameLocal.GetLocalPlayer()->GuiActive()
 		{
 			dc->DrawCursor( &cursorX, &cursorY, 56.0f );
 		}

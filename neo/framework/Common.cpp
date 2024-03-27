@@ -447,7 +447,7 @@ void idCommonLocal::WriteConfiguration()
 	com_developer.SetBool( false );
 
 	// Koz begin
-	if( game->isVR )
+	if( vrSystem->IsActive() )
 	{
 		if( vrSystem->hasOculusRift )
 		{
@@ -1366,7 +1366,7 @@ void idCommonLocal::Init( int argc, const char* const* argv, const char* cmdline
 		vrVoice->VoiceInit();
 #endif
 
-		if( game->isVR )
+		if( vrSystem->IsActive() )
 		{
 
 			if( vr_controllerStandard.GetInteger() == 1 )
@@ -1517,7 +1517,7 @@ void idCommonLocal::Init( int argc, const char* const* argv, const char* cmdline
 		const int legalMinTime = 5000; //Carl: Don't force them to wait more than a second
 		const bool showVideo = ( !com_skipIntroVideos.GetBool() && fileSystem->UsingResourceFiles() );
 
-		if( game->isVR )
+		if( vrSystem->IsActive() )
 		{
 			vrSystem->HMDResetTrackingOriginOffset();
 			vrSystem->FrameStart();
@@ -1548,7 +1548,7 @@ void idCommonLocal::Init( int argc, const char* const* argv, const char* cmdline
 #if 1 //def ID_RETAIL
 		while( Sys_Milliseconds() - legalStartTime < legalMinTime )
 		{
-			if( game->isVR )
+			if( vrSystem->IsActive() )
 			{
 				if( vrSystem->hasHMD )
 				{
@@ -1571,7 +1571,7 @@ void idCommonLocal::Init( int argc, const char* const* argv, const char* cmdline
 
 		int centered = 0;
 
-		if( game->isVR )
+		if( vrSystem->IsActive() )
 		{
 			while( centered == 0 )
 			{
@@ -1625,7 +1625,7 @@ void idCommonLocal::Init( int argc, const char* const* argv, const char* cmdline
 			}
 		}
 
-		if( game->isVR )
+		if( vrSystem->IsActive() )
 		{
 			vrSystem->HMDResetTrackingOriginOffset();
 		}
@@ -1696,7 +1696,7 @@ void idCommonLocal::Init( int argc, const char* const* argv, const char* cmdline
 
 	extern idCVar vr_asw;
 	// Koz
-	if( game->isVR ) // Koz override these for VR
+	if( vrSystem->IsActive() ) // Koz override these for VR
 	{
 		cvarSystem->SetCVarString( "r_swapInterval", "0" );
 		cvarSystem->SetCVarInteger( "com_engineHz", vrSystem->hmdHz );
@@ -2022,7 +2022,7 @@ bool idCommonLocal::ProcessEvent( const sysEvent_t* event )
 
 	// hack this  up
 	// not enough buttons on the steamvr controller and still want to be able to bail out of cinematics, so the PDA button will nuke a cinematic
-	if( game->isVR )
+	if( vrSystem->IsActive() )
 	{
 		static bool send1 = false;
 		if( ( Flicksync_InCutscene || game->CheckInCinematic() == true ) && !send1 )

@@ -798,7 +798,7 @@ void idRenderBackend::GL_BlockingSwapBuffers()
 	glState.frameCounter++;
 	glState.frameParity = glState.frameCounter % NUM_FRAME_DATA;
 
-	if( game->isVR && !vrSystem->hasOculusRift )
+	if( vrSystem->IsActive() && !vrSystem->hasOculusRift )
 	{
 		vrSystem->FrameStart();
 	}
@@ -1968,7 +1968,7 @@ void idRenderBackend::StereoRenderExecuteBackEndCommands( const emptyCommand_t* 
 			// Koz begin
 			// This is the rift.
 
-			if( game->isVR )
+			if( vrSystem->IsActive() )
 			{
 
 

@@ -1403,7 +1403,7 @@ guiPoint_t idRenderWorldLocal::GuiTrace( qhandle_t entityHandle, idAnimator* ani
 
 	jointHandle_t guiJoints[4];
 
-	if( game->IsPDAOpen() && game->isVR )
+	if( game->IsPDAOpen() && vrSystem->IsActive() )
 	{
 
 		isPDA = idStr::Icmp( "models/md5/items/pda_view/pda_vr_idle.md5mesh", model->Name() ) == 0;

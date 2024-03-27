@@ -537,7 +537,7 @@ void idCommonLocal::ExecuteMapChange()
 	{
 		// allow com_engineHz to be changed between map loads
 
-		if( game->isVR )  // Koz
+		if( vrSystem->IsActive() )  // Koz
 		{
 			com_engineHz_denominator = 100LL * ( vrSystem->hmdHz );
 			com_engineHz_latched = ( vrSystem->hmdHz );
@@ -653,7 +653,7 @@ void idCommonLocal::ExecuteMapChange()
 			game->RunFrame( emptyCommandManager, emptyGameReturn );
 			// Koz fixme only in vr
 			// Koz: make sure to maintain smooth heatracking of loading screen when running frames.
-			if( game->isVR )
+			if( vrSystem->IsActive() )
 			{
 				//vrSystem->HMDTrackStatic();
 				//SwapBuffers( win32.hDC );
@@ -664,7 +664,7 @@ void idCommonLocal::ExecuteMapChange()
 		// kick off an auto-save of the game (so we can always continue in this map if we die before hitting an autosave)
 		common->Printf( "----- Saving Game -----\n" );
 
-		if( 1 /*!game->isVR*/ )
+		if( 1 /*!vrSystem->IsActive()*/ )
 		{
 			// don't autosave if were only viewing cutscenes
 			if( vr_cutscenesOnly.GetInteger() != 1 )
@@ -909,7 +909,7 @@ void idCommonLocal::UpdateLevelLoadPacifier()
 			}
 			txtVal->SetStrokeInfo( true, 1.75f, 0.75f );
 		}
-		if( !game->isVR )
+		if( !vrSystem->IsActive() )
 		{
 			UpdateScreen( false );    // Koz
 		}
@@ -1535,7 +1535,7 @@ CONSOLE_COMMAND_SHIP( saveGame, "saves a game", NULL )
 	const char* savename = ( args.Argc() > 1 ) ? args.Argv( 1 ) : "quick";
 
 	// Koz begin background save in VR
-	if( 0 && game->isVR )
+	if( 0 && vrSystem->IsActive() )
 	{
 		vrBackgroundSave.StartBackgroundSave( BACKGROUND_SAVE, savename );
 

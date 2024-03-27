@@ -358,7 +358,7 @@ void idProjectile::Launch( const idVec3& start, const idVec3& dir, const idVec3&
 	speed = velocity.Length() * launchPower;
 
 	// Koz if throwing a grenade use the tracked hand velocity when using motion controls if the controller is not mounted
-	if( game->isVR && vrSystem->VR_USE_MOTION_CONTROLS && !vr_mountedWeaponController.GetBool() && owner.GetEntity()->IsType( idPlayer::Type ) )
+	if( vrSystem->IsActive() && vrSystem->VR_USE_MOTION_CONTROLS && !vr_mountedWeaponController.GetBool() && owner.GetEntity()->IsType( idPlayer::Type ) )
 	{
 		idPlayer* player = static_cast<idPlayer*>( owner.GetEntity() );
 		if( player )

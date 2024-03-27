@@ -475,7 +475,7 @@ void idUsercmdGenLocal::AdjustAngles()
 	}
 
 
-	if( !game->isVR )
+	if( !vrSystem->IsActive() )
 	{
 		viewangles[YAW] -= speed * in_yawSpeed.GetFloat() * ButtonState( UB_LOOKRIGHT );
 		viewangles[YAW] += speed * in_yawSpeed.GetFloat() * ButtonState( UB_LOOKLEFT );
@@ -861,7 +861,7 @@ idVec2 JoypadFunction(
 	const bool	mergedThreshold )
 {
 
-	if( game->isVR && vr_joyCurves.GetInteger() != 0 )
+	if( vrSystem->IsActive() && vr_joyCurves.GetInteger() != 0 )
 	{
 		// skip default joy curves.
 		float sens = vr_joyCurveSensitivity.GetFloat();
@@ -1334,7 +1334,7 @@ void idUsercmdGenLocal::JoystickMove2()
 	pitchDelta = MS2SEC( pollTime - lastPollTime ) * rightMapped.y * pitchSpeed;;
 	yawDelta = MS2SEC( pollTime - lastPollTime ) * -rightMapped.x * yawSpeed;
 
-	if( game->isVR )
+	if( vrSystem->IsActive() )
 	{
 		vrSystem->CalcAimMove( yawDelta, pitchDelta );
 	}
@@ -1385,7 +1385,7 @@ void idUsercmdGenLocal::JoystickMove2()
 		pitchDelta = MS2SEC( pollTime - lastPollTime ) * rightMapped.y * pitchSpeed;;
 		yawDelta = MS2SEC( pollTime - lastPollTime ) * -rightMapped.x * yawSpeed;
 
-		if( game->isVR )
+		if( vrSystem->IsActive() )
 		{
 			vrSystem->CalcAimMove( yawDelta, pitchDelta );
 		}
@@ -1426,7 +1426,7 @@ void idUsercmdGenLocal::JoystickMove2()
 		}
 
 
-		if( !game->isVR || ( game->isVR && vr_joyCurves.GetInteger() < 2 ) )
+		if( !vrSystem->IsActive() || ( vrSystem->IsActive() && vr_joyCurves.GetInteger() < 2 ) )
 		{
 			leftMapped = JoypadFunction( mappedMove, 1.0f, threshold, range, shape, mergedThreshold );
 			rightMapped = JoypadFunction( mappedLook, aimAssist, threshold, range, shape, mergedThreshold );
@@ -1435,7 +1435,7 @@ void idUsercmdGenLocal::JoystickMove2()
 
 		CircleToSquare( leftMapped.x, leftMapped.y );
 
-		if( game->isVR && vr_joyCurves.GetInteger() == 3 )
+		if( vrSystem->IsActive() && vr_joyCurves.GetInteger() == 3 )
 		{
 			float lenSq = leftMapped.LengthSqr();
 			float len = sqrtf( lenSq );
@@ -1444,7 +1444,7 @@ void idUsercmdGenLocal::JoystickMove2()
 			leftMapped *= len;
 		}
 
-		if( game->isVR && vr_joyCurves.GetInteger() == 4 )
+		if( vrSystem->IsActive() && vr_joyCurves.GetInteger() == 4 )
 		{
 			leftMapped.x = 60 + leftMapped.x * .55;
 			leftMapped.y = 60 + leftMapped.y * .55;
@@ -1466,7 +1466,7 @@ void idUsercmdGenLocal::JoystickMove2()
 		pitchDelta = MS2SEC( pollTime - lastPollTime ) * rightMapped.y * pitchSpeed;
 		yawDelta = MS2SEC( pollTime - lastPollTime ) * -rightMapped.x * yawSpeed;
 
-		if( game->isVR )
+		if( vrSystem->IsActive() )
 		{
 			vrSystem->CalcAimMove( yawDelta, pitchDelta );
 		}
@@ -1524,7 +1524,7 @@ void idUsercmdGenLocal::CmdButtons()
 
 	// check the run button
 
-	if( !game->isVR || game->isVR && vr_moveClick.GetInteger() <= 2 )  // Koz, do normal run if moveClick = 0
+	if( !vrSystem->IsActive() || vrSystem->IsActive() && vr_moveClick.GetInteger() <= 2 )  // Koz, do normal run if moveClick = 0
 	{
 		if( toggled_run.on || ( in_alwaysRun.GetBool() && common->IsMultiplayer() ) || vrSystem->forceRun )
 		{
@@ -1990,7 +1990,7 @@ void idUsercmdGenLocal::MakeCurrent()
 		// aim assist
 		AimAssist();
 
-		if( game->isVR )
+		if( vrSystem->IsActive() )
 		{
 			EvaluateVRMoveMode();
 		}

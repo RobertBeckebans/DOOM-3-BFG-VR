@@ -638,7 +638,7 @@ bool idSWF::HandleEvent( const sysEvent_t* event )
 			float scale = swfScale * sysHeight / ( float )frameHeight;
 
 			// Koz
-			if( game->isVR )
+			if( vrSystem->IsActive() )
 			{
 				if( vrSystem->VR_GAME_PAUSED )
 				{

@@ -414,7 +414,7 @@ void R_SetupProjectionMatrix( viewDef_t* viewDef )
 
 	const float zNear = ( viewDef->renderView.cramZNear ) ? ( r_znear.GetFloat() * 0.25f ) : r_znear.GetFloat();
 
-	if( !vrSystem->hasOculusRift && game->isVR )
+	if( !vrSystem->hasOculusRift && vrSystem->IsActive() )
 	{
 		int pEye = viewDef->renderView.viewEyeBuffer == -1 ? 0 : 1;
 		float idx = 1.0f / ( vrSystem->hmdEye[pEye].projectionOpenVR.projRight - vrSystem->hmdEye[pEye].projectionOpenVR.projLeft );
@@ -471,7 +471,7 @@ void R_SetupProjectionMatrix( viewDef_t* viewDef )
 		// Koz begin : changing to allow the use of Oculus FOV values instead of the game FOV.
 		float ymax, ymin, xmax, xmin, width, height = 0;
 
-		if( game->isVR )
+		if( vrSystem->IsActive() )
 		{
 
 			int pEye = viewDef->renderView.viewEyeBuffer == -1 ? 0 : 1;
@@ -570,7 +570,7 @@ void R_SetupProjectionMatrix2( const viewDef_t* viewDef, const float zNear, cons
 {
 	float depth = zFar - zNear;
 
-	if( !vrSystem->hasOculusRift && game->isVR )
+	if( !vrSystem->hasOculusRift && vrSystem->IsActive() )
 	{
 		int pEye = viewDef->renderView.viewEyeBuffer == -1 ? 0 : 1;
 		float idx = 1.0f / ( vrSystem->hmdEye[pEye].projectionOpenVR.projRight - vrSystem->hmdEye[pEye].projectionOpenVR.projLeft );
@@ -604,7 +604,7 @@ void R_SetupProjectionMatrix2( const viewDef_t* viewDef, const float zNear, cons
 		// Koz begin : changing to allow the use of Oculus FOV values instead of the game FOV.
 		float ymax, ymin, xmax, xmin, width, height = 0;
 
-		if( game->isVR )
+		if( vrSystem->IsActive() )
 		{
 			int pEye = viewDef->renderView.viewEyeBuffer == -1 ? 0 : 1;
 

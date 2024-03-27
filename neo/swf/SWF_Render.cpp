@@ -166,7 +166,7 @@ void idSWF::Render( idRenderSystem* gui, int time, bool isSplitscreen )
 
 	// Koz begin
 	// In VR, scale SWF elements to a more appropriate size.
-	if( game->isVR )
+	if( vrSystem->IsActive() )
 	{
 		if( vrSystem->VR_GAME_PAUSED )
 		{
@@ -234,14 +234,14 @@ void idSWF::Render( idRenderSystem* gui, int time, bool isSplitscreen )
 
 		// Koz begin
 		// scale the mouse pointer in VR on gui screens.
-		// float mScale = game->isVR ? vr_guiScale.GetFloat() : 1.0f;
+		// float mScale = vrSystem->IsActive() ? vr_guiScale.GetFloat() : 1.0f;
 		// vr_mScale set earlier
 		// Koz end
 		//	vr_mScale = 1.0f;
 
 		extern idCVar vr_debugTouchCursor;
 
-		if( !game->isVR || !game->IsInGame() || !( vrSystem->VR_USE_MOTION_CONTROLS && vr_guiMode.GetInteger() == 2 ) || vr_debugTouchCursor.GetBool() ) //  hide the mouse cursor if using touchscreen
+		if( !vrSystem->IsActive() || !game->IsInGame() || !( vrSystem->VR_USE_MOTION_CONTROLS && vr_guiMode.GetInteger() == 2 ) || vr_debugTouchCursor.GetBool() ) //  hide the mouse cursor if using touchscreen
 			//	if ( !game->IsInGame() )
 		{
 

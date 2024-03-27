@@ -2502,7 +2502,7 @@ void idPlayer::Spawn()
 	playerView.SetPlayerEntity( this );
 
 	// Koz
-	if( game->isVR )
+	if( vrSystem->IsActive() )
 	{
 		//Carl: don't suppress drawing the player's body in 1st person if we want to see it (in VR)
 		renderEntity.suppressSurfaceInViewID = 0;
@@ -2585,7 +2585,7 @@ void idPlayer::Spawn()
 		hiddenWeapon = true;
 		if( weapon.GetEntity() )
 		{
-			if( !game->isVR )
+			if( !vrSystem->IsActive() )
 			{
 				weapon.GetEntity()->LowerWeapon();    // Koz
 			}
@@ -4166,7 +4166,7 @@ void idPlayer::UpdateSkinSetup()
 
 	gameExpansionType_t gameType;
 
-	if( game->isVR )
+	if( vrSystem->IsActive() )
 	{
 
 		idStr skinN = skin->GetName();
@@ -4499,7 +4499,7 @@ void idPlayer::DrawHUD( idMenuHandler_HUD* _hudManager )
 {
 	SCOPED_PROFILE_EVENT( "idPlayer::DrawHUD" );
 	// Koz begin
-	if( game->isVR && vr_hudType.GetInteger() == VR_HUD_NONE && !vr_flicksyncCharacter.GetInteger() )
+	if( vrSystem->IsActive() && vr_hudType.GetInteger() == VR_HUD_NONE && !vr_flicksyncCharacter.GetInteger() )
 	{
 		return;
 	}
@@ -5978,7 +5978,7 @@ void idPlayer::GivePDA( const idDeclPDA* pda, const char* securityItem, bool tog
 			{
 				if( toggle )  // Koz: toggle pda renders a fullscreen PDA in normal play, for VR we need to select the pda 'weapon'.
 				{
-					if( !game->isVR )
+					if( !vrSystem->IsActive() )
 					{
 						common->Printf( "idPlayer::GivePDA calling TogglePDA\n" );
 						TogglePDA();
@@ -6587,7 +6587,7 @@ void idPlayer::SelectWeapon( int num, bool force, bool specific )
 		hiddenWeapon ^= 1;
 		if( hiddenWeapon && weapon.GetEntity() )
 		{
-			if( !game->isVR || vrSystem->handInGui == true )
+			if( !vrSystem->IsActive() || vrSystem->handInGui == true )
 			{
 				weapon.GetEntity()->LowerWeapon();    // Koz
 			}
@@ -6679,7 +6679,7 @@ void idPlayer::SelectWeapon( int num, bool force, bool specific )
 		else if( ( weapon_pda >= 0 ) && ( num == weapon_pda ) && ( inventory.pdas.Num() == 0 ) )
 		{
 
-			if( game->isVR )
+			if( vrSystem->IsActive() )
 			{
 				//GivePDA( NULL, NULL, false ); // hack to allow the player to change system settings in the mars city level before the PDA is given by the receptionist.
 				idealWeapon = num;
@@ -7269,7 +7269,7 @@ void idPlayer::UpdateWeapon()
 
 	if( hiddenWeapon )
 	{
-		if( !game->isVR || vrSystem->handInGui == false )
+		if( !vrSystem->IsActive() || vrSystem->handInGui == false )
 		{
 			weapon.GetEntity()->LowerWeapon();    // KOZ FIXME HIDE WEAPon
 		}
@@ -7280,7 +7280,7 @@ void idPlayer::UpdateWeapon()
 		weapon.GetEntity()->GetRenderEntity()->suppressShadowInViewID = 0;
 	}
 
-	if( game->isVR && vrSystem->handInGui )
+	if( vrSystem->IsActive() && vrSystem->handInGui )
 	{
 		weapon.GetEntity()->GetRenderEntity()->suppressShadowInViewID = entityNumber + 1;
 	}
@@ -7870,7 +7870,7 @@ bool idPlayer::UpdateFocusPDA()
 	guiPoint_t	pt;
 	sysEvent_t	ev;
 
-	if( !game->isVR || !( game->IsPDAOpen() || vrSystem->VR_GAME_PAUSED || currentWeapon == weapon_pda ) )
+	if( !vrSystem->IsActive() || !( game->IsPDAOpen() || vrSystem->VR_GAME_PAUSED || currentWeapon == weapon_pda ) )
 	{
 		touching = false;
 		return false;
@@ -8269,7 +8269,7 @@ void idPlayer::UpdateFocus()
 	start = GetEyePosition();
 
 	// Koz begin
-	if( game->isVR )  // Koz fixme only when vr actually active.
+	if( vrSystem->IsActive() )  // Koz fixme only when vr actually active.
 	{
 		// Koz  in VR, if weapon equipped, use muzzle orientation to scan for accessible guis,
 		// otherwise use player center eye.
@@ -8313,7 +8313,7 @@ void idPlayer::UpdateFocus()
 		end = start + firstPersonViewAxis[0] * 80.0f;
 	}
 	// Koz end
-	if( game->isVR && vrSystem->VR_USE_MOTION_CONTROLS && vr_guiMode.GetInteger() == 2 )
+	if( vrSystem->IsActive() && vrSystem->VR_USE_MOTION_CONTROLS && vr_guiMode.GetInteger() == 2 )
 	{
 		talkScanEnd = start + weaponAxis[0] * ( scanRange + 40 );
 	}
@@ -8554,7 +8554,7 @@ void idPlayer::UpdateFocus()
 				}
 			}
 
-			if( !game->isVR || !( game->isVR && ( vr_guiMode.GetInteger() == 2 && vrSystem->VR_USE_MOTION_CONTROLS ) ) )
+			if( !vrSystem->IsActive() || !( vrSystem->IsActive() && ( vr_guiMode.GetInteger() == 2 && vrSystem->VR_USE_MOTION_CONTROLS ) ) )
 			{
 				// handle event normally
 				// clamp the mouse to the corner
@@ -9066,7 +9066,7 @@ void idPlayer::BobCycle( const idVec3& pushVelocity )
 	deltaTime = gameLocal.time - stepUpTime;
 	if( deltaTime < STEPUP_TIME )
 	{
-		if( game->isVR )
+		if( vrSystem->IsActive() )
 		{
 			viewBob += gravity * vr_stepSmooth.GetFloat() * ( stepUpDelta * ( STEPUP_TIME - deltaTime ) / STEPUP_TIME );
 		}
@@ -9089,7 +9089,7 @@ void idPlayer::BobCycle( const idVec3& pushVelocity )
 	if( delta < LAND_DEFLECT_TIME )
 	{
 		f = delta / LAND_DEFLECT_TIME;
-		if( game->isVR )
+		if( vrSystem->IsActive() )
 		{
 			viewBob -= gravity * vr_jumpBounce.GetFloat() * ( landChange * f );
 		}
@@ -9102,7 +9102,7 @@ void idPlayer::BobCycle( const idVec3& pushVelocity )
 	{
 		delta -= LAND_DEFLECT_TIME;
 		f = 1.0 - ( delta / LAND_RETURN_TIME );
-		if( game->isVR )
+		if( vrSystem->IsActive() )
 		{
 			viewBob -= gravity * vr_jumpBounce.GetFloat() * ( landChange * f );
 		}
@@ -9175,7 +9175,7 @@ void idPlayer::UpdateViewAngles()
 	}
 
 	// if dead
-	if( health <= 0 && !game->isVR ) // Carl: never roll or they'll get sick! Also don't steal control.  // Koz - only skip in vr
+	if( health <= 0 && !vrSystem->IsActive() ) // Carl: never roll or they'll get sick! Also don't steal control.  // Koz - only skip in vr
 	{
 		if( pm_thirdPersonDeath.GetBool() )
 		{
@@ -9251,7 +9251,7 @@ void idPlayer::UpdateViewAngles()
 	else
 	{
 		// don't let the player look up or down more than 90 degrees normally
-		if( !game->isVR )  // Koz skip check in vr
+		if( !vrSystem->IsActive() )  // Koz skip check in vr
 		{
 			const float restrict = 1.0f;
 
@@ -9576,7 +9576,7 @@ void idPlayer::TogglePDA()
 
 	if( inventory.pdas.Num() == 0 )
 	{
-		if( game->isVR )
+		if( vrSystem->IsActive() )
 		{
 			// Koz : hack to allow the player to change system settings in the mars city level before the PDA is given by the receptionist.
 			//GivePDA( NULL, NULL, false );
@@ -9685,7 +9685,7 @@ void idPlayer::SetClipModel()
 		physicsObj.SetClipModel( newClip, 1.0f );
 	}
 
-	if( game->isVR )
+	if( vrSystem->IsActive() )
 	{
 		vrSystem->bodyClip = newClip;
 
@@ -10156,7 +10156,7 @@ void idPlayer::EvaluateControls()
 			{
 				gameLocal.sessionCommand = "died";
 
-				if( game->isVR )
+				if( vrSystem->IsActive() )
 				{
 					vrSystem->wasLoaded = false;
 					vrSystem->playerDead = true;
@@ -10179,7 +10179,7 @@ void idPlayer::EvaluateControls()
 
 	bool doTeleport = false;
 
-	currentJetStrafe = ( game->isVR && vr_teleportMode.GetInteger() == 2  && ( ( fabs( vrSystem->leftMapped.x ) > strafeHiThresh ) || ( fabs( vrSystem->leftMapped.y ) > strafeHiThresh ) ) );
+	currentJetStrafe = ( vrSystem->IsActive() && vr_teleportMode.GetInteger() == 2  && ( ( fabs( vrSystem->leftMapped.x ) > strafeHiThresh ) || ( fabs( vrSystem->leftMapped.y ) > strafeHiThresh ) ) );
 
 	extern idCVar timescale;
 
@@ -10380,7 +10380,7 @@ void idPlayer::AdjustSpeed()
 		{
 			bobFrac = stamina / pm_staminathreshold.GetFloat();
 		}
-		if( game->isVR )
+		if( vrSystem->IsActive() )
 		{
 			speed = ( pm_walkspeed.GetFloat() + vr_walkSpeedAdjust.GetFloat() ) * ( 1.0f - bobFrac ) + pm_runspeed.GetFloat() * bobFrac;
 		}
@@ -10405,7 +10405,7 @@ void idPlayer::AdjustSpeed()
 			stamina = pm_stamina.GetFloat();
 		}
 
-		if( game->isVR )
+		if( vrSystem->IsActive() )
 		{
 			speed = pm_walkspeed.GetFloat() + vr_walkSpeedAdjust.GetFloat();
 		}
@@ -10525,7 +10525,7 @@ void idPlayer::AdjustBodyAngles()
 	// calculate the blending between down, straight, and up
 	frac = viewAngles.pitch / 90.0f;
 
-	if( game->isVR )  // Koz fixme check this way in vr only.
+	if( vrSystem->IsActive() )  // Koz fixme check this way in vr only.
 	{
 		//mmdanggg2: stop the model from bending down and getting in the way!!
 
@@ -10984,7 +10984,7 @@ void idPlayer::Move_Interpolated( float fraction )
 	{
 		// Koz begin
 		// dont change the eyeoffset if using full motion crouch.
-		if( game->isVR )
+		if( vrSystem->IsActive() )
 		{
 			if( vr_crouchMode.GetInteger() != 0 || ( usercmd.buttons & BUTTON_CROUCH ) )
 			{
@@ -11002,7 +11002,7 @@ void idPlayer::Move_Interpolated( float fraction )
 		newEyeOffset = 0.0f;
 	}
 	// Koz begin
-	else if( game->isVR )
+	else if( vrSystem->IsActive() )
 	{
 		newEyeOffset = pm_normalviewheight.GetFloat();
 		//Carl: Our body is too tall, so move our eyes higher so they don't clip the body
@@ -11126,7 +11126,7 @@ void idPlayer::Move()
 
 		idVec3	org;
 		idMat3	axis;
-		if( !game->isVR )
+		if( !vrSystem->IsActive() )
 		{
 			GetViewPos( org, axis ); // Koz default movement
 			physicsObj.SetPlayerInput( usercmd, axis[0] );
@@ -11283,7 +11283,7 @@ void idPlayer::Move()
 	{
 		// Koz begin
 
-		if( game->isVR )
+		if( vrSystem->IsActive() )
 		{
 			if( vr_crouchMode.GetInteger() != 0 || ( usercmd.buttons & BUTTON_CROUCH ) )
 			{
@@ -11352,7 +11352,7 @@ void idPlayer::Move()
 				vel.ToVec2() = physicsObj.GetOrigin().ToVec2() - groundEnt->GetPhysics()->GetAbsBounds().GetCenter().ToVec2();
 				vel.ToVec2().NormalizeFast();
 
-				if( game->isVR )
+				if( vrSystem->IsActive() )
 				{
 					vel.ToVec2() *= ( pm_walkspeed.GetFloat() + vr_walkSpeedAdjust.GetFloat() );
 				}
@@ -11654,7 +11654,7 @@ void idPlayer::UpdateHud()
 	}
 
 
-	if( game->isVR )
+	if( vrSystem->IsActive() )
 	{
 		UpdateVrHud();
 	}
@@ -13581,7 +13581,7 @@ void idPlayer::Think()
 	}
 
 	// Koz turn body on or off in vr, update hand poses/skins if body or weapon hand changes.
-	if( game->isVR )
+	if( vrSystem->IsActive() )
 	{
 		if( vr_weaponHand.IsModified() )
 		{
@@ -13653,7 +13653,7 @@ void idPlayer::Think()
 		if( headRenderEnt )
 		{
 			// Koz begin
-			if( game->isVR && vr_playerBodyMode.GetInteger() == 0 )  // show the head shadow
+			if( vrSystem->IsActive() && vr_playerBodyMode.GetInteger() == 0 )  // show the head shadow
 			{
 				headRenderEnt->suppressShadowInViewID = 0;
 			}
@@ -13765,7 +13765,7 @@ void idPlayer::Think()
 		}
 	}
 
-	if( game->isVR )
+	if( vrSystem->IsActive() )
 	{
 		UpdateHeadingBeam();    // Koz
 	}
@@ -14635,7 +14635,7 @@ void idPlayer::Damage( idEntity* inflictor, idEntity* attacker, const idVec3& di
 	}
 
 	// determine knockback
-	if( !game->isVR || ( game->isVR && vr_knockBack.GetBool() ) ) // Koz disable damage knockback in VR if desired.
+	if( !vrSystem->IsActive() || ( vrSystem->IsActive() && vr_knockBack.GetBool() ) ) // Koz disable damage knockback in VR if desired.
 	{
 		int knockback = 0;
 		damageDef->dict.GetInt( "knockback", "20", knockback );
@@ -15335,7 +15335,7 @@ float idPlayer::DefaultFov() const
 {
 	float fov;
 
-	if( game->isVR )  // Koz fixme report HMD fov in VR.
+	if( vrSystem->IsActive() )  // Koz fixme report HMD fov in VR.
 	{
 		fov = vrSystem->hmdFovX;
 	}
@@ -15369,7 +15369,7 @@ float idPlayer::CalcFov( bool honorZoom )
 {
 	float fov;
 	/*
-		if ( game->isVR ) // Koz only use HMD fov in VR
+		if ( vrSystem->IsActive() ) // Koz only use HMD fov in VR
 		{
 			return DefaultFov();
 		}
@@ -15530,7 +15530,7 @@ Calculate the bobbing position of the view weapon
 void idPlayer::CalculateViewWeaponPos( idVec3& origin, idMat3& axis )
 {
 
-	if( game->isVR )
+	if( vrSystem->IsActive() )
 	{
 		CalculateViewWeaponPosVR( origin, axis );
 		return;
@@ -15639,7 +15639,7 @@ void idPlayer::CalculateViewMainHandPosVR( idVec3& origin, idMat3& axis )
 
 	gunOrigin = GetEyePosition();
 
-	if( game->isVR && vrSystem->VR_USE_MOTION_CONTROLS )
+	if( vrSystem->IsActive() && vrSystem->VR_USE_MOTION_CONTROLS )
 	{
 		gunOrigin += vrSystem->leanOffset;
 	}
@@ -15724,7 +15724,7 @@ void idPlayer::CalculateViewWeaponPosVR( idVec3& origin, idMat3& axis )
 
 	gunOrigin = GetEyePosition();
 
-	if( game->isVR && vrSystem->VR_USE_MOTION_CONTROLS )
+	if( vrSystem->IsActive() && vrSystem->VR_USE_MOTION_CONTROLS )
 	{
 		gunOrigin += vrSystem->leanOffset;
 	}
@@ -16104,7 +16104,7 @@ void idPlayer::UpdateNeckPose()
 {
 	static idAngles headAngles, lastView = ang_zero;
 
-	if( !game->isVR )
+	if( !vrSystem->IsActive() )
 	{
 		return;
 	}
@@ -16306,18 +16306,18 @@ void idPlayer::CalculateViewFlashPos( idVec3& origin, idMat3& axis, idVec3 flash
 
 	origin = GetEyePosition();
 
-	if( game->isVR && vrSystem->VR_USE_MOTION_CONTROLS )
+	if( vrSystem->IsActive() && vrSystem->VR_USE_MOTION_CONTROLS )
 	{
 		origin += vrSystem->leanOffset;
 	}
 
 	axis = idAngles( 0.0, viewAngles.yaw, 0.0f ).ToMat3();
-	if( game->isVR )
+	if( vrSystem->IsActive() )
 	{
 		axis = idAngles( 0.0, viewAngles.yaw - vrSystem->bodyYawOffset, 0.0f ).ToMat3();
 	}
 
-	int flashMode = game->isVR ? vrSystem->GetCurrentFlashMode() : FLASHLIGHT_BODY;
+	int flashMode = vrSystem->IsActive() ? vrSystem->GetCurrentFlashMode() : FLASHLIGHT_BODY;
 
 	curWeap = weapon->IdentifyWeapon();
 
@@ -16341,7 +16341,7 @@ void idPlayer::CalculateViewFlashPos( idVec3& origin, idMat3& axis, idVec3 flash
 	{
 		idAngles flashAx = axis.ToAngles();
 		flashMode = FLASHLIGHT_HEAD;
-		if( game->isVR )
+		if( vrSystem->IsActive() )
 		{
 			axis = idAngles( flashAx.pitch, flashAx.yaw - vrSystem->bodyYawOffset, flashAx.roll ).ToMat3();
 		}
@@ -16446,7 +16446,7 @@ void idPlayer::CalculateViewFlashPos( idVec3& origin, idMat3& axis, idVec3 flash
 			static idVec3 baseAdjustPos = idVec3( -8.0f, -20.0f, -10.0f ); // rt, fwd, up
 			//static idVec3 baseAdjustPos = idVec3( 0, 0, 0 ); // rt, fwd, up
 
-			if( game->isVR )
+			if( vrSystem->IsActive() )
 			{
 				baseAdjustPos.x = vr_flashlightBodyPosX.GetFloat();
 				baseAdjustPos.y = vr_flashlightBodyPosY.GetFloat();
@@ -16703,7 +16703,7 @@ void idPlayer::GetViewPos( idVec3& origin, idMat3& axis ) const
 {
 	idAngles angles;
 
-	if( game->isVR )
+	if( vrSystem->IsActive() )
 	{
 		GetViewPosVR( origin, axis );
 		return;
@@ -16712,7 +16712,7 @@ void idPlayer::GetViewPos( idVec3& origin, idMat3& axis ) const
 	// if dead, fix the angle and don't add any kick
 	if( health <= 0 )
 	{
-		if( game->isVR )  // Koz
+		if( vrSystem->IsActive() )  // Koz
 		{
 			angles = viewAngles;
 		}
@@ -17124,7 +17124,7 @@ void idPlayer::CalculateRenderView()
 		gameLocal.Printf( "%s : %s\n", renderView->vieworg.ToString(), renderView->viewaxis.ToAngles().ToString() );
 	}
 
-	if( game->isVR )
+	if( vrSystem->IsActive() )
 	{
 		// Koz headtracker does not modify the model rotations
 		// offsets to body rotation added here
@@ -18360,7 +18360,7 @@ void idPlayer::ClientThink( const int curTime, const float fraction, const bool 
 		if( headRenderEnt )
 		{
 			// Koz begin
-			if( game->isVR )
+			if( vrSystem->IsActive() )
 			{
 				headRenderEnt->suppressShadowInViewID = 0; //Carl:Draw the head's shadow when showing the body
 			}
@@ -18424,7 +18424,7 @@ void idPlayer::ClientThink( const int curTime, const float fraction, const bool 
 	UpdateLaserSight();
 	UpdateTeleportAim();
 
-	if( game->isVR )
+	if( vrSystem->IsActive() )
 	{
 		UpdateHeadingBeam();    // Koz
 	}

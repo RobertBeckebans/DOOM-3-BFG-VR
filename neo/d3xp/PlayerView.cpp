@@ -269,7 +269,7 @@ void idPlayerView::DamageImpulse( idVec3 localKickDir, const idDict* damageDef )
 		return;
 	}
 
-	if( !game->isVR || ( game->isVR && vr_headKick.GetBool() ) ) // consider doublevision a headkick and skip if disabled in VR
+	if( !vrSystem->IsActive() || ( vrSystem->IsActive() && vr_headKick.GetBool() ) ) // consider doublevision a headkick and skip if disabled in VR
 	{
 		float dvTime = damageDef->GetFloat( "dv_time" );
 		if( dvTime )
@@ -358,7 +358,7 @@ Called when a weapon fires, generates head twitches, etc
 */
 void idPlayerView::WeaponFireFeedback( const idDict* weaponDef )
 {
-	if( game->isVR && !vr_headKick.GetBool() )
+	if( vrSystem->IsActive() && !vr_headKick.GetBool() )
 	{
 		return;    // Koz skip head kick from weapon recoil in vr
 	}
@@ -392,7 +392,7 @@ void idPlayerView::CalculateShake()
 	//
 
 	// Koz
-	if( game->isVR )
+	if( vrSystem->IsActive() )
 	{
 		shakeVolume *= vr_shakeAmplitude.GetFloat();
 	}
@@ -469,7 +469,7 @@ void idPlayerView::SingleView( const renderView_t* view, idMenuHandler_HUD* hudM
 	gameSoundWorld->PlaceListener( view->vieworg, view->viewaxis, player->entityNumber + 1 );
 
 
-	if( !game->isVR )
+	if( !vrSystem->IsActive() )
 	{
 		// Koz dont do this check in VR
 		// if the objective system is up, don't do normal drawing
@@ -507,7 +507,7 @@ void idPlayerView::SingleView( const renderView_t* view, idMenuHandler_HUD* hudM
 	}
 
 	// Koz begin
-	if( g_showHud.GetBool() && !game->isVR )  // vr hud was drawn elsewhere and copied to texture
+	if( g_showHud.GetBool() && !vrSystem->IsActive() )  // vr hud was drawn elsewhere and copied to texture
 	{
 		vrSystem->swfRenderMode = RENDERING_HUD;
 		player->DrawHUD( hudManager );
@@ -833,7 +833,7 @@ stereoDistances_t	CaclulateStereoDistances(
 
 	stereoDistances_t	dists = {};
 
-	if( convergenceWorldUnits == 0.0f || game->isVR ) // Koz
+	if( convergenceWorldUnits == 0.0f || vrSystem->IsActive() ) // Koz
 	{
 		// head mounted display mode
 		dists.worldSeparation = CentimetersToWorldUnits( interOcularCentimeters * 0.5 );
@@ -852,7 +852,7 @@ stereoDistances_t	CaclulateStereoDistances(
 
 float GetIPD()
 {
-	if( game->isVR && !vr_manualIPDEnable.GetInteger() && vr_useOculusProfile.GetInteger() )
+	if( vrSystem->IsActive() && !vr_manualIPDEnable.GetInteger() && vr_useOculusProfile.GetInteger() )
 	{
 #ifdef USE_OVR
 		if( vrSystem->hasOculusRift )
@@ -875,7 +875,7 @@ float	GetScreenSeparationForGuis()
 								  stereoRender_convergence.GetFloat(),
 								  80.0f /* fov */ );
 
-	if( game->isVR )
+	if( vrSystem->IsActive() )
 	{
 		extern idCVar vr_guiSeparation;
 		return vr_guiSeparation.GetFloat() * vr_scale.GetFloat();
@@ -916,7 +916,7 @@ void idPlayerView::EmitStereoEyeView( const int eye, idMenuHandler_HUD* hudManag
 	eyeView.stereoScreenSeparation = eye * dists.screenSeparation;
 
 	// Koz begin
-	if( game->isVR )
+	if( vrSystem->IsActive() )
 	{
 		vrSystem->lastViewOrigin = eyeView.vieworg;
 		vrSystem->lastViewAxis = eyeView.viewaxis;
@@ -961,7 +961,7 @@ void idPlayerView::RenderPlayerView( idMenuHandler_HUD* hudManager )
 		// Koz fixme pda, render the PDA here. it will be copied to intrinsic image _pdaImage,
 		// which is the new texture for the PDA viewmodel screen.
 
-		if( game->isVR )
+		if( vrSystem->IsActive() )
 		{
 			vrSystem->lastCenterEyeAxis = view->viewaxis;
 			vrSystem->lastCenterEyeOrigin = view->vieworg;
@@ -1577,7 +1577,7 @@ void FullscreenFX_Warp::HighQuality()
 	// draw the warps
 	center.x = renderSystem->GetVirtualWidth() / 2.0f;
 
-	if( game->isVR )
+	if( vrSystem->IsActive() )
 	{
 		center.x += vrSystem->VRScreenSeparation * tr.guiModel->GetEye() * 0.5f;
 	}

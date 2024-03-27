@@ -75,7 +75,7 @@ void idMenuScreen_Shell_Settings::Initialize( idMenuHandler* data )
 	menuOptions.Append( option );
 	option.Clear();
 
-	if( renderSystem->IsStereoScopicRenderingSupported() && !game->isVR ) // Koz - dont allow the user to modify 3d settings inside a VR game.
+	if( renderSystem->IsStereoScopicRenderingSupported() && !vrSystem->IsActive() ) // Koz - dont allow the user to modify 3d settings inside a VR game.
 	{
 		option.Append( "#str_swf_stereoscopics" );	// Stereoscopic Rendering
 		menuOptions.Append( option );

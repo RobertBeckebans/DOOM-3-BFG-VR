@@ -257,6 +257,8 @@ iVr::iVr()
 */
 iVr::iVr()
 {
+	isActive = false;
+
 	hasHMD = false;
 	hasOculusRift = false;
 	VR_GAME_PAUSED = false;
@@ -754,7 +756,7 @@ iVr::HMDInit
 void iVr::HMDInit()
 {
 	hasHMD = false;
-	game->isVR = false;
+	isActive = false;
 
 	if( !OculusInit() && !OpenVRInit() )
 	{
@@ -763,7 +765,7 @@ void iVr::HMDInit()
 	}
 	common->Printf( "\n\n HMD Initialized\n" );
 	hasHMD = true;
-	game->isVR = true;
+	isActive = true;
 	common->Printf( "VR_USE_MOTION_CONTROLS Final = %d\n", VR_USE_MOTION_CONTROLS );
 
 }
@@ -811,7 +813,7 @@ void iVr::HMDInitializeDistortion()
 #endif
 		( !m_pHMD || !hasHMD || !vr_enable.GetBool() ) )
 	{
-		game->isVR = false;
+		isActive = false;
 		return;
 	}
 
@@ -843,7 +845,7 @@ void iVr::HMDInitializeDistortion()
 
 	}
 
-	game->isVR = true;
+	isActive = true;
 	common->Printf( "VR Mode ENABLED.\n" );
 
 	if( !glConfig.framebufferObjectAvailable )
@@ -1140,7 +1142,7 @@ void iVr::HMDInitializeDistortion()
 			ovr_GetLastErrorInfo( &errorInfo );
 			common->Warning( "OveErrorInfo: %d / %s", errorInfo.Result, errorInfo.ErrorString );
 			common->Error( " iVr::HMDInitializeDistortion unable to create OVR swap texture set.\n ovr_CreateTextureSwapChainGL failed.\n (If there are multiple video cards installed, make sure the rift is attached to the primary card. This is an issue with the oculus SDK.)" );
-			game->isVR = false;
+			isActive = false;
 
 		}
 

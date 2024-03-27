@@ -2524,7 +2524,7 @@ idRenderSystemLocal::GetStereo3DMode
 stereo3DMode_t idRenderSystemLocal::GetStereo3DMode() const
 {
 	// Koz begin
-	if( game->isVR )
+	if( vrSystem->IsActive() )
 	{
 		return STEREO3D_HMD;
 	}
@@ -2562,7 +2562,7 @@ idRenderSystemLocal::GetStereoScopicRenderingMode
 stereo3DMode_t idRenderSystemLocal::GetStereoScopicRenderingMode() const
 {
 	// Koz begin
-	if( game->isVR )
+	if( vrSystem->IsActive() )
 	{
 		return ( stereo3DMode_t )STEREO3D_HMD;
 	}

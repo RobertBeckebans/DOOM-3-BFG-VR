@@ -781,7 +781,7 @@ void idWeapon::Restore( idRestoreGame* savefile )
 	else
 	{
 		// Koz get jointhandles for hand attachers
-		if( game->isVR )
+		if( vrSystem->IsActive() )
 		{
 			weaponHandAttacher[0] = animator.GetJointHandle( "RhandAttacher" );
 			if( weaponHandAttacher[0] != INVALID_JOINT )
@@ -1108,7 +1108,7 @@ void idWeapon::InitWorldModel( const idDeclEntityDef* def )
 		if( worldModelRenderEntity )
 		{
 			// Koz begin
-			if( game->isVR && !strstr( def->dict.GetString( "model_world" ), "flashlight" ) )
+			if( vrSystem->IsActive() && !strstr( def->dict.GetString( "model_world" ), "flashlight" ) )
 			{
 				// Koz dont show the worldmodel if the player body is shown in vr.
 				worldModelRenderEntity->suppressSurfaceInViewID = 0;
@@ -1222,7 +1222,7 @@ void idWeapon::GetWeaponDef( const char* objectname, int ammoinclip )
 		// so check if PDA and resize the guilight accordingly
 
 		int lightRad = 3;
-		if( game->isVR )
+		if( vrSystem->IsActive() )
 		{
 			const char* weapName = weaponDef->dict.GetString( "inv_name" );
 			if( strstr( weapName, "PDA" ) )
@@ -1261,7 +1261,7 @@ void idWeapon::GetWeaponDef( const char* objectname, int ammoinclip )
 	// Koz get jointhandles for hand attachers
 
 
-	if( game->isVR )
+	if( vrSystem->IsActive() )
 	{
 		weaponHandAttacher[0] = animator.GetJointHandle( "RhandAttacher" );
 		if( weaponHandAttacher[0] != INVALID_JOINT )
@@ -1756,7 +1756,7 @@ idWeapon::UpdateGUI
 void idWeapon::UpdateGUI()
 {
 
-	if( game->isVR )
+	if( vrSystem->IsActive() )
 	{
 		UpdateVRGUI();
 	}
@@ -2157,7 +2157,7 @@ idWeapon::LowerWeapon
 void idWeapon::LowerWeapon()
 {
 
-	if( game->isVR && vrSystem->handInGui )
+	if( vrSystem->IsActive() && vrSystem->handInGui )
 	{
 		return;    // Koz never lower weapon if hand is in gui
 	}
@@ -3206,7 +3206,7 @@ void idWeapon::PresentWeaponOriginal( bool showViewModel )
 	// Koz begin
 	if( !isPlayerFlashlight )
 	{
-		if( game->isVR )
+		if( vrSystem->IsActive() )
 		{
 			//if ( !hide )	renderEntity.allowSurfaceInViewID = 0;
 		}
@@ -3530,7 +3530,7 @@ void idWeapon::PresentWeapon( bool showViewModel )
 
 	// in VR don't suppress drawing the player's body
 	// also show the viewmodel
-	if( game->isVR )
+	if( vrSystem->IsActive() )
 	{
 		if( ( hide && disabled ) ) // hide the weapon if in a cinematic
 		{
@@ -3558,7 +3558,7 @@ void idWeapon::PresentWeapon( bool showViewModel )
 	renderEntity_t *worldModelRenderEntity = ent->GetRenderEntity();
 	if ( worldModelRenderEntity )
 	{
-		if ( vr_showBody.GetBool() && game->isVR ) // Koz fixme only in vr
+		if ( vr_showBody.GetBool() && vrSystem->IsActive() ) // Koz fixme only in vr
 		{
 			//Carl: Don't suppress drawing the weapon's world model or it's shadow in 1st person, if they want to see it (in VR)
 			worldModelRenderEntity->suppressSurfaceInViewID = 0;
@@ -3588,7 +3588,7 @@ void idWeapon::PresentWeapon( bool showViewModel )
 	{
 		// deal with the third-person visible world model
 		// don't show shadows of the world model in first person
-		if( common->IsMultiplayer() || g_showPlayerShadow.GetBool() || pm_thirdPerson.GetBool() || game->isVR )  // Koz fixme only in vr
+		if( common->IsMultiplayer() || g_showPlayerShadow.GetBool() || pm_thirdPerson.GetBool() || vrSystem->IsActive() )  // Koz fixme only in vr
 		{
 			worldModel.GetEntity()->GetRenderEntity()->suppressShadowInViewID = 0;
 		}
@@ -4837,7 +4837,7 @@ idWeapon::GetProjectileLaunchOriginAndAxis
 void idWeapon::GetProjectileLaunchOriginAndAxis( idVec3& origin, idMat3& axis )
 {
 	assert( owner != NULL );
-	if( game->isVR )
+	if( vrSystem->IsActive() )
 	{
 		static weapon_t curWeap = WEAPON_NONE;
 
@@ -5090,7 +5090,7 @@ void idWeapon::Event_LaunchProjectiles( int num_projectiles, float spread, float
 			// make sure the projectile starts inside the bounding box of the owner
 			// Carl: unless it's a grenade, in which case we want to be able to drop it over a railing without inexplicably killing ourselves
 			// Npi for other weapons too, game compute if there is a mask_shot between player center and the gun muzzle : then shots was blocks, but in Vr player's center is too low and strange : Carl's start compute is much clever
-			if( game->isVR && vrSystem->VR_USE_MOTION_CONTROLS && i == 0 )
+			if( vrSystem->IsActive() && vrSystem->VR_USE_MOTION_CONTROLS && i == 0 )
 			{
 				muzzle_pos = muzzleOrigin + muzzleAxis[ 0 ] * 2.0f;
 				// Carl: check that there's a grenade-sized gap at hand height from the center of our chest to our grenade,
@@ -5504,7 +5504,7 @@ void idWeapon::Event_Melee()
 		idVec3 meleeOrigin;
 		idMat3 meleeAxis;
 
-		if( game->isVR )
+		if( vrSystem->IsActive() )
 		{
 			GetMuzzlePositionWithHacks( meleeOrigin, meleeAxis );
 			//meleeAxis = viewWeaponAxis;
@@ -5722,7 +5722,7 @@ void idWeapon::Event_EjectBrass()
 	debris->Launch();
 
 	// Koz begin
-	if( game->isVR && vrSystem->VR_USE_MOTION_CONTROLS )
+	if( vrSystem->IsActive() && vrSystem->VR_USE_MOTION_CONTROLS )
 	{
 		idAngles vwa = viewWeaponAxis.ToAngles();
 		vwa.yaw += 30.0f;
@@ -5751,7 +5751,7 @@ idWeapon::Event_GetWeaponSkin
 */
 void idWeapon::Event_GetWeaponSkin()
 {
-	if( !owner || !game->isVR )
+	if( !owner || !vrSystem->IsActive() )
 	{
 		idThread::ReturnString( "" );
 		return;
@@ -5792,10 +5792,10 @@ void idWeapon::Event_IsMotionControlled()
 {
 	static int isMC;
 
-	isMC = ( game->isVR && vrSystem->VR_USE_MOTION_CONTROLS ) ? 1 : 0;
+	isMC = ( vrSystem->IsActive() && vrSystem->VR_USE_MOTION_CONTROLS ) ? 1 : 0;
 
 	// Koz debug common->Printf( "Event_IsMotionControlled returning %d\n", isMC );
-	//	idThread::ReturnInt( ( game->isVR && vrSystem->VR_USE_MOTION_CONTROLS ) ? 1 : 0 );
+	//	idThread::ReturnInt( ( vrSystem->IsActive() && vrSystem->VR_USE_MOTION_CONTROLS ) ? 1 : 0 );
 
 	idThread::ReturnInt( isMC );
 }

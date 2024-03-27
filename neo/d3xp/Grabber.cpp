@@ -199,7 +199,7 @@ void idGrabber::Initialize()
 			args.SetBool( "start_off", true );
 
 			// Koz begin
-			if( game->isVR )
+			if( vrSystem->IsActive() )
 			{
 				args.Set( "width", vr_grabberBeamWidth.GetString() );
 			}
@@ -340,7 +340,7 @@ void idGrabber::StartDrag( idEntity* grabEnt, int id )
 
 	// start the screen warp
 
-	if( !game->isVR )  // Koz don't warp in VR.  This needs a new shader if
+	if( !vrSystem->IsActive() )  // Koz don't warp in VR.  This needs a new shader if
 	{
 		warpId = thePlayer->playerView.AddWarp( phys->GetOrigin(), SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, 160, 2000 );
 	}
@@ -423,7 +423,7 @@ void idGrabber::StopDrag( bool dropOnly )
 		{
 			// Shoot the object forward
 			// Koz begin : in vr launch the object in the direction the grabber is pointing
-			if( game->isVR )
+			if( vrSystem->IsActive() )
 			{
 				static idVec3 launchOrigin = vec3_zero;
 				static idMat3 launchAxis = mat3_identity;
@@ -515,7 +515,7 @@ int idGrabber::Update( idPlayer* player, bool hide )
 		dragOrigin = player->firstPersonViewOrigin;
 		dragAxis = player->firstPersonViewAxis;
 
-		if( game->isVR )
+		if( vrSystem->IsActive() )
 		{
 			if( player->weapon != NULL )
 			{

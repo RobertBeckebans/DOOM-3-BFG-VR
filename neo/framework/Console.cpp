@@ -698,7 +698,7 @@ void idConsoleLocal::Init()
 	keyCatching = false;
 
 	// Koz begin - in vr move the console in.
-	if( game->isVR )
+	if( vrSystem->IsActive() )
 	{
 		LOCALSAFE_LEFT = 180;
 		LOCALSAFE_TOP = 150;

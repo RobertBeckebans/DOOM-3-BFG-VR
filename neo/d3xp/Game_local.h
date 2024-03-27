@@ -589,11 +589,9 @@ public:
 	virtual bool				InhibitControls();
 	virtual bool				IsPDAOpen() const;
 
-	// Koz begin
-	// VR State
-	bool						isVR;
-	// Koz end
+	// Carl begin
 	bool						loadScriptFailed;
+	// Koz end
 
 	virtual bool				IsPlayerChatting() const;
 

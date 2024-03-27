@@ -169,7 +169,7 @@ void idGuiModel::EmitSurfaces( float modelMatrix[16], float modelViewMatrix[16],
 			shader->EvaluateRegisters( regs, shaderParms, tr.viewDef->renderView.shaderParms, tr.viewDef->renderView.time[1] * 0.001f, NULL );
 		}
 		R_LinkDrawSurfToView( drawSurf, tr.viewDef );
-		if( allowFullScreenStereoDepth || game->isVR )
+		if( allowFullScreenStereoDepth || vrSystem->IsActive() )
 		{
 			// override sort with the stereoDepth
 			// drawSurf->sort = stereoDepth;
@@ -180,7 +180,7 @@ void idGuiModel::EmitSurfaces( float modelMatrix[16], float modelViewMatrix[16],
 			// ideally could define depth per surface in gui definition, but would be really time consuming,
 			// maybe should at least add a depth parm to the gui materials that could be referenced here?
 
-			if( game->isVR && drawSurf->sort == SS_GUI && vr_3dgui.GetBool() && !drawSurf->material->HasSubview() )
+			if( vrSystem->IsActive() && drawSurf->sort == SS_GUI && vr_3dgui.GetBool() && !drawSurf->material->HasSubview() )
 			{
 
 				if( strstr( guiSurf.material->GetName(), "bg" ) || strstr( guiSurf.material->GetName(), "spin" ) || strstr( guiSurf.material->GetName(), "glasscrack2" ) )    // bg is normally a background image. spinny things are also normally background images.

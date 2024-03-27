@@ -872,7 +872,7 @@ last fullscreen texture then force a buffer swap.
 
 void iVr::HMDTrackStatic( bool is3D )
 {
-	if( game->isVR )
+	if( vrSystem->IsActive() )
 	{
 		//common->Printf( "HmdTrackStatic called idFrame #%d\n", idLib::frameNumber);
 		if( hmdCurrentRender[0] == NULL || hmdCurrentRender[1] == NULL )

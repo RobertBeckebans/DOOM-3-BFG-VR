@@ -307,7 +307,7 @@ void idMenuScreen_HUD::UpdateHealthArmor( idPlayer* player )
 
 	// Koz begin
 	// Hud fade
-	if( game->isVR && playerInfo->GetSprite() != NULL )
+	if( vrSystem->IsActive() && playerInfo->GetSprite() != NULL )
 	{
 		float alpha;
 		alpha = vr_hudHealth.GetBool() == true ? GetHudAlpha() : 0.0f;
@@ -400,7 +400,7 @@ void idMenuScreen_HUD::UpdateStamina( idPlayer* player )
 		return;
 	}
 
-	if( game->isVR && stamina->GetSprite() != NULL )
+	if( vrSystem->IsActive() && stamina->GetSprite() != NULL )
 	{
 		float alpha;
 		alpha = vr_hudStamina.GetBool() == true ? GetHudAlpha() : 0.0f;
@@ -448,7 +448,7 @@ void idMenuScreen_HUD::UpdateWeaponInfo( idPlayer* player )
 
 	// Koz begin
 	// Hud fade
-	if( game->isVR && ammoInfo != NULL )
+	if( vrSystem->IsActive() && ammoInfo != NULL )
 	{
 		float alpha;
 		alpha = vr_hudAmmo.GetBool() == true ? GetHudAlpha() : 0.0f;
@@ -711,7 +711,7 @@ void idMenuScreen_HUD::UpdatePickupInfo( int index, const idStr& name )
 		txtItem->SetText( name );
 		txtItem->SetStrokeInfo( true, 0.6f, 2.0f );
 
-		if( game->isVR )
+		if( vrSystem->IsActive() )
 		{
 			// Set the fade
 			float alpha;
@@ -753,7 +753,7 @@ void idMenuScreen_HUD::ShowPickups()
 {
 	// Koz begin
 	// Let the player hide pickups in VR
-	if( game->isVR && !vr_hudPickUps.GetBool() )
+	if( vrSystem->IsActive() && !vr_hudPickUps.GetBool() )
 	{
 		return;
 	}
@@ -1089,7 +1089,7 @@ void idMenuScreen_HUD::UpdateCursorState()
 		}
 
 		// Koz begin
-		if( talkCursor && game->isVR )
+		if( talkCursor && vrSystem->IsActive() )
 		{
 			// move the talk cursor so it's normally above the target.
 
@@ -1454,7 +1454,7 @@ void idMenuScreen_HUD::UpdateLocation( idPlayer* player )
 
 	// Koz begin
 	// Hud fade
-	if( game->isVR && locationName != NULL )
+	if( vrSystem->IsActive() && locationName != NULL )
 	{
 		// Set the fade
 		float alpha;
@@ -1474,7 +1474,7 @@ void idMenuScreen_HUD::ShowTip( const char* title, const char* tip )
 {
 	// Koz begin
 	// Let the player hide tips in VR
-	if( game->isVR && !vr_hudTips.GetBool() )
+	if( vrSystem->IsActive() && !vr_hudTips.GetBool() )
 	{
 		return;
 	}
@@ -1492,7 +1492,7 @@ void idMenuScreen_HUD::ShowTip( const char* title, const char* tip )
 		return;
 	}
 
-	if( game->isVR )
+	if( vrSystem->IsActive() )
 	{
 		tipSprite->SetAlpha( vr_hudTransparency.GetFloat() );
 	}
@@ -1621,7 +1621,7 @@ void idMenuScreen_HUD::UpdatedSecurity()
 {
 	// Koz begin
 	// Hud fade
-	if( game->isVR && security != NULL )
+	if( vrSystem->IsActive() && security != NULL )
 	{
 		security->SetAlpha( GetHudAlpha() );
 	}
@@ -1793,7 +1793,7 @@ void  idMenuScreen_HUD::UpdateCommunication( bool show, idPlayer* player )
 
 	// Koz begin
 	// Hud fade
-	if( game->isVR && communication != NULL )
+	if( vrSystem->IsActive() && communication != NULL )
 	{
 		float alpha;
 		alpha = vr_hudComs.GetBool() == true ? GetHudAlpha() : 0.0f;
@@ -1945,7 +1945,7 @@ void  idMenuScreen_HUD::UpdateOxygen( bool show, int val )
 
 	// Koz begin
 	// Hud fade
-	if( game->isVR && oxygen )
+	if( vrSystem->IsActive() && oxygen )
 	{
 		oxygen->SetAlpha( GetHudAlpha() );
 	}
@@ -1985,7 +1985,7 @@ void idMenuScreen_HUD::ShowObjective( bool complete )
 {
 	// Koz begin
 	// Let the player hide onjectives in vr
-	if( game->isVR )
+	if( vrSystem->IsActive() )
 	{
 		if( !vr_hudObjective.GetBool() )
 		{
@@ -2400,7 +2400,7 @@ void idMenuScreen_HUD::ShowNewItem( const char* name, const char* icon )
 
 	// Koz begin
 	// Let the player hide new item notifications in VR
-	if( game->isVR && !vr_hudNewItems.GetBool() )
+	if( vrSystem->IsActive() && !vr_hudNewItems.GetBool() )
 	{
 		return;
 	}
@@ -2455,7 +2455,7 @@ void idMenuScreen_HUD::UpdateFlashlight( idPlayer* player )
 
 	// Koz begin
 	// Hud fade
-	if( game->isVR && flashlight )
+	if( vrSystem->IsActive() && flashlight )
 	{
 		float alpha;
 		alpha = vr_hudFlashlight.GetBool() == true ? GetHudAlpha() : 0.0f;

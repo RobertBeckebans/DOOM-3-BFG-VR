@@ -3298,7 +3298,7 @@ void idGameLocal::CalcFov( float base_fov, float& fov_x, float& fov_y ) const
 	const int width = renderSystem->GetWidth();
 	const int height = renderSystem->GetHeight();
 
-	if( game->isVR )
+	if( vrSystem->IsActive() )
 	{
 		fov_x = vrSystem->hmdFovX;
 		fov_y = vrSystem->hmdFovY;
@@ -6064,7 +6064,7 @@ bool idGameLocal::Shell_IsActive() const
 {
 	if( shellHandler != NULL )
 	{
-		if( game->isVR )
+		if( vrSystem->IsActive() )
 		{
 			if( common->Dialog().IsDialogActive() || shellHandler->IsActive() )
 			{
