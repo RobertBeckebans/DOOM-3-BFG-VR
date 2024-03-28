@@ -10115,7 +10115,6 @@ void idPlayer::OrientHMDBody()
 	vrSystem->bodyYawOffset = 0;
 	vrSystem->lastHMDYaw = 0;
 	vrSystem->HMDResetTrackingOriginOffset();
-	vrSystem->MotionControlSetOffset();
 	vrSystem->bodyMoveAng = 0.0f;
 }
 

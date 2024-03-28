@@ -109,14 +109,12 @@ public:
 		return isActive;
 	}
 
-	bool				OculusInit();
 	bool				OpenVRInit();
 
 	void				HMDInit();
 	void				HMDShutdown();
 	void				HMDInitializeDistortion();
 	void				HMDGetOrientation( idAngles& hmdAngles, idVec3& headPositionDelta, idVec3& bodyPositionDelta, idVec3& absolutePosition, bool resetTrackingOffset );
-	void				HMDGetOrientationAbsolute( idAngles& hmdAngles, idVec3& positoin );
 	void				HMDRender( idImage* leftCurrent, idImage* rightCurrent );
 	bool				HMDRenderQuad( idImage* leftCurrent, idImage* rightCurrent );
 	void				HMDTrackStatic( bool is3D );
@@ -128,14 +126,11 @@ public:
 	//void				OpenVrGetRight( idVec3& position, idQuat& rotation );
 	//void				OpenVrGetLeft( idVec3& position, idQuat& rotation );
 
-	void				MotionControlSetRotationOffset();
-	void				MotionControlSetOffset();
 	void				MotionControlGetHand( int hand, idVec3& position, idQuat& rotation );
 	void				MotionControlGetLeftHand( idVec3& position, idQuat& rotation );
 	void				MotionControlGetRightHand( idVec3& position, idQuat& rotation );
 	void				MotionControlGetOpenVrController( vr::TrackedDeviceIndex_t deviceNum, idVec3& position, idQuat& rotation );
 	void				MotionControlGetTouchController( int hand, idVec3& position, idQuat& rotation );
-	void				MotionControllerSetHapticOculus( float low, float hi );
 	void				MotionControllerSetHapticOpenVR( int hand, unsigned short value );
 
 	void				CalcAimMove( float& yawDelta, float& pitchDelta );
@@ -143,7 +138,6 @@ public:
 	int					GetCurrentFlashMode();
 	void				NextFlashMode();
 
-	bool				ShouldQuit();
 	void				ForceChaperone( int which, bool force );
 
 	void				SwapWeaponHand();
@@ -175,7 +169,7 @@ public:
 
 	bool				forceRun;
 
-	bool				forceLeftStick;
+	bool				forceLeftStick;				// navigate through PDA menus only with the left controller and motions
 
 	int					currentFlashlightPosition;
 
@@ -286,40 +280,11 @@ public:
 	float				manualIPD;
 	float				manualHeight;
 
-	idImage*			hmdEyeImage[2];
+	idImage*			hmdEyeImage[2];			// TODO REMOVE duplicate of stereoImages in render backend
 	idImage*			hmdCurrentRender[2];
-
-#ifdef USE_OVR
-	ovrPosef			EyeRenderPose[2];
-
-	ovrPosef			handPose[2];
-
-	ovrSession			hmdSession;
-	ovrGraphicsLuid		ovrLuid;
-
-	ovrHmdDesc			hmdDesc;
-
-	ovrTextureSwapChain oculusSwapChain[2];
-
-	GLuint				oculusFboId;
-	GLuint				ocululsDepthTexID;
-
-	ovrMirrorTexture	oculusMirrorTexture;
-	GLuint				mirrorTexId;
-	GLuint				oculusMirrorFboId;
-
-	ovrLayerEyeFov		oculusLayer;
-	ovrViewScaleDesc	oculusViewScaleDesc;
-
-	GUID				oculusGuid;
-	WCHAR				oculusGuidStr[OVR_AUDIO_MAX_DEVICE_STR_SIZE];
-
-	ovrTrackingState	hmdTrackingState;
-#endif
 
 	int					mirrorW;
 	int					mirrorH;
-
 
 	idImage*			primaryFBOimage;
 	idImage*			resolveFBOimage;

@@ -754,18 +754,7 @@ int Sys_PollMouseInputEvents( int mouseEvents[MAX_MOUSE_EVENTS][2] )
 
 void Sys_SetRumble( int device, int low, int hi )
 {
-	if( vrSystem->hasOculusRift )
-	{
-		// Koz begin
-		if( vrSystem->VR_USE_MOTION_CONTROLS && vr_rumbleEnable.GetBool() )
-		{
-			vrSystem->MotionControllerSetHapticOculus( low, hi );
-			return;
-		}
-		// Koz end
-	}
-
-	else if( vrSystem->motionControlType == MOTION_STEAMVR && vr_rumbleEnable.GetBool() )
+	if( vrSystem->motionControlType == MOTION_STEAMVR && vr_rumbleEnable.GetBool() )
 	{
 
 		static int currentFrame = 0;
@@ -810,11 +799,10 @@ void Sys_SetRumble( int device, int low, int hi )
 		{
 			currentFrame = 0;
 		}
-		return;
 	}
 	else
 	{
-		return win32.g_Joystick.SetRumble( device, low, hi );
+		win32.g_Joystick.SetRumble( device, low, hi );
 	}
 }
 
@@ -1361,7 +1349,6 @@ int idJoystickWin32::PollInputEvents( int inputDeviceNum )
 			// left steam controller
 			if( lGood )
 			{
-
 				for( uint32 axis = 0; axis < vr::k_unControllerStateAxisCount; axis++ )
 				{
 					uint32 axisNum = vr::Prop_Axis0Type_Int32 + axis;
@@ -1846,170 +1833,6 @@ int idJoystickWin32::PollInputEvents( int inputDeviceNum )
 			}
 		}
 
-		//=================================================
-		// Koz begin add touch controls
-		// Carl: There's never any reason not to recognise button presses or joysticks from Touch controllers.
-		// Touch controllers will turn themselves off if not in use, and send no buttons.
-		// And Touch controllers were cleverly designed so if you place them on a flat surface, no buttons are bumped.
-#ifdef USE_OVR
-		if( vrSystem->hasOculusRift )  // was ( vrSystem->VR_USE_MOTION_CONTROLS && vrSystem->motionControlType == MOTION_OCULUS )
-		{
-
-			static ovrInputState oldInputState;
-			ovrInputState    inputState;
-
-			if( OVR_SUCCESS( ovr_GetInputState( vrSystem->hmdSession, ovrControllerType_Touch, &inputState ) ) )
-			{
-				// Carl: Update VR_USE_MOTION_CONTROLS if we've just started using Touch
-				if( !vrSystem->VR_USE_MOTION_CONTROLS  && vr_autoSwitchControllers.GetBool() && !vr_controllerStandard.GetInteger() && (
-							inputState.Buttons || inputState.HandTrigger[0] > 0.25f || inputState.HandTrigger[1] > 0.25f || inputState.IndexTrigger[0] > 0.25f || inputState.IndexTrigger[1] > 0.25f
-							|| ( fabs( inputState.Thumbstick[0].x ) + fabs( inputState.Thumbstick[0].y ) > 0.5f ) || ( fabs( inputState.Thumbstick[1].x ) + fabs( inputState.Thumbstick[1].y ) > 0.5f )
-							|| ( inputState.Touches & ( ovrTouch_LButtonMask | ovrTouch_RButtonMask ) ) ) )
-				{
-					unsigned int ctrlrs = ovr_GetConnectedControllerTypes( vrSystem->hmdSession );
-					if( ( ctrlrs & ovrControllerType_Touch ) != 0 )
-					{
-						vrSystem->VR_USE_MOTION_CONTROLS = true;
-						vrSystem->motionControlType = MOTION_OCULUS;
-					}
-				}
-
-				if( ( inputState.Buttons & ovrButton_A ) != ( oldInputState.Buttons & ovrButton_A ) )
-				{
-					//common->Printf( "Posting input event for r_touch_a val : %d\n", (inputState.Buttons & ovrButton_A)  );
-					PostInputEvent( inputDeviceNum, J_RT_A, ( inputState.Buttons & ovrButton_A ) );
-				}
-
-				if( ( inputState.Buttons & ovrButton_B ) != ( oldInputState.Buttons & ovrButton_B ) )
-				{
-					PostInputEvent( inputDeviceNum, J_RT_B, ( inputState.Buttons & ovrButton_B ) );
-				}
-
-				if( ( inputState.Buttons & ovrButton_Home ) != ( oldInputState.Buttons & ovrButton_Home ) )
-				{
-					PostInputEvent( inputDeviceNum, J_RT_OCULUS, ( inputState.Buttons & ovrButton_Home ) );
-				}
-
-				if( ( inputState.Buttons & ovrButton_RThumb ) != ( oldInputState.Buttons & ovrButton_RThumb ) )
-				{
-					PostInputEvent( inputDeviceNum, J_RT_STICK, ( inputState.Buttons & ovrButton_RThumb ) );
-				}
-
-				if( ( inputState.Touches & ovrTouch_RThumbRest ) != ( oldInputState.Touches & ovrTouch_RThumbRest ) )
-				{
-					PostInputEvent( inputDeviceNum, J_RT_REST, ( inputState.Touches & ovrTouch_RThumbRest ) );
-				}
-
-				// left touch
-				if( ( inputState.Buttons & ovrButton_X ) != ( oldInputState.Buttons & ovrButton_X ) )
-				{
-					PostInputEvent( inputDeviceNum, J_LT_X, ( inputState.Buttons & ovrButton_X ) );
-				}
-
-				if( ( inputState.Buttons & ovrButton_Y ) != ( oldInputState.Buttons & ovrButton_Y ) )
-				{
-					PostInputEvent( inputDeviceNum, J_LT_Y, ( inputState.Buttons & ovrButton_Y ) );
-				}
-
-				if( ( inputState.Buttons & ovrButton_Enter ) != ( oldInputState.Buttons & ovrButton_Enter ) )
-				{
-					PostInputEvent( inputDeviceNum, J_LT_MENU, ( inputState.Buttons & ovrButton_Enter ) );
-				}
-
-				if( ( inputState.Buttons & ovrButton_LThumb ) != ( oldInputState.Buttons & ovrButton_LThumb ) )
-				{
-					PostInputEvent( inputDeviceNum, J_LT_STICK, ( inputState.Buttons & ovrButton_LThumb ) );
-				}
-
-				if( ( inputState.Touches & ovrTouch_LThumbRest ) != ( oldInputState.Touches & ovrTouch_LThumbRest ) )
-				{
-					PostInputEvent( inputDeviceNum, J_LT_REST, ( inputState.Touches & ovrTouch_LThumbRest ) );
-				}
-
-				if( ( inputState.HandTrigger[ovrHand_Left] > 0.9f ) != ( oldInputState.HandTrigger[ovrHand_Left] > 0.9f ) )
-				{
-					PostInputEvent( inputDeviceNum, J_LT_GRIP, inputState.HandTrigger[ovrHand_Left] > 0.9f );
-				}
-
-				if( ( inputState.IndexTrigger[ovrHand_Left] > 0.25f ) != ( oldInputState.IndexTrigger[ovrHand_Left] > 0.25f ) )
-				{
-					PostInputEvent( inputDeviceNum, J_LT_TRIGGER, inputState.IndexTrigger[ovrHand_Left] > 0.25f );
-				}
-
-				if( ( inputState.HandTrigger[ovrHand_Right] > 0.9f ) != ( oldInputState.HandTrigger[ovrHand_Right] > 0.9f ) )
-				{
-					PostInputEvent( inputDeviceNum, J_RT_GRIP, inputState.HandTrigger[ovrHand_Right] > 0.9f );
-				}
-
-				if( ( inputState.IndexTrigger[ovrHand_Right] > 0.25f ) != ( oldInputState.IndexTrigger[ovrHand_Right] > 0.25f ) )
-				{
-					PostInputEvent( inputDeviceNum, J_RT_TRIGGER, inputState.IndexTrigger[ovrHand_Right] > 0.25f );
-				}
-
-				PostInputEvent( inputDeviceNum, J_AXIS_LEFT_TOUCH_X, inputState.Thumbstick[ovrHand_Left].x * 32767.0f );
-				PostInputEvent( inputDeviceNum, J_AXIS_LEFT_TOUCH_Y, -inputState.Thumbstick[ovrHand_Left].y * 32767.0f );
-
-				PostInputEvent( inputDeviceNum, J_AXIS_RIGHT_TOUCH_X, inputState.Thumbstick[ovrHand_Right].x * 32767.0f );
-				PostInputEvent( inputDeviceNum, J_AXIS_RIGHT_TOUCH_Y, -inputState.Thumbstick[ovrHand_Right].y * 32767.0f );
-
-				oldInputState = inputState;
-
-				// add finger poses
-
-				int fingerPose = POSE_FINGER;
-
-				// left hand
-				//if ( inputState.Touches & ovrTouch_LThumb ) fingerPose |= POSE_THUMB;
-				if( inputState.Touches & ovrTouch_LThumbRest )
-				{
-					fingerPose |= POSE_THUMB;
-				}
-				if( inputState.Touches & ovrTouch_X )
-				{
-					fingerPose |= POSE_THUMB;
-				}
-				if( inputState.Touches & ovrTouch_Y )
-				{
-					fingerPose |= POSE_THUMB;
-				}
-				if( inputState.Touches & ovrTouch_LIndexTrigger )
-				{
-					fingerPose |= POSE_INDEX;
-				}
-				if( inputState.HandTrigger[ovrHand_Left] > 0.015f )
-				{
-					fingerPose |= POSE_GRIP;
-				}
-				vrSystem->fingerPose[HAND_LEFT] = fingerPose;
-
-				//right hand
-				fingerPose = POSE_FINGER;
-				//if ( inputState.Touches & ovrTouch_RThumb ) fingerPose |= POSE_THUMB;
-				if( inputState.Touches & ovrTouch_RThumbRest )
-				{
-					fingerPose |= POSE_THUMB;
-				}
-				if( inputState.Touches & ovrTouch_A )
-				{
-					fingerPose |= POSE_THUMB;
-				}
-				if( inputState.Touches & ovrTouch_B )
-				{
-					fingerPose |= POSE_THUMB;
-				}
-				if( inputState.Touches & ovrTouch_RIndexTrigger )
-				{
-					fingerPose |= POSE_INDEX;
-				}
-				if( inputState.HandTrigger[ovrHand_Right] > 0.015f )
-				{
-					fingerPose |= POSE_GRIP;
-				}
-				vrSystem->fingerPose[HAND_RIGHT] = fingerPose;
-
-			}
-		}
-#endif
 	} // end if inputdeviceno == 0
 
 	return numEvents;

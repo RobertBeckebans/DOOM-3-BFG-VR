@@ -44,39 +44,10 @@ If you have questions concerning this license or the applicable additional terms
 #endif
 
 
-void GLimp_SwapBuffers();
-void GL_BlockingSwapBuffers();
-
 #ifdef _WIN32
 	extern PFNWGLSWAPINTERVALEXTPROC				wglSwapIntervalEXT;
 #endif
 
-
-void VR_PerspectiveScale( eyeScaleOffset_t eye, GLfloat zNear, GLfloat zFar, float ( &out )[4][4] )
-{
-	GLfloat nf = 1.0f / ( zNear - zFar );
-
-	out[0][0] = eye.x.scale;
-	out[0][1] = 0;
-	out[0][2] = 0;
-	out[0][3] = 0;
-
-	out[1][0] = 0;
-	out[1][1] = eye.y.scale;
-	out[1][2] = 0;
-	out[1][3] = 0;
-
-	out[2][0] = -eye.x.offset;
-	out[2][1] = eye.y.offset;
-	out[2][2] = ( zFar + zNear ) * nf;
-	out[2][3] = -1;
-
-	out[3][0] = 0;
-	out[3][1] = 0;
-	out[3][2] = ( 2.0f * zFar * zNear ) * nf;
-	out[3][3] = 0;
-
-}
 
 void VR_TranslationMatrix( float x, float y, float z, float ( &out )[4][4] )
 {
@@ -89,36 +60,8 @@ void VR_TranslationMatrix( float x, float y, float z, float ( &out )[4][4] )
 	out[3][3] = 1;
 }
 
-void RotationMatrix( float angle, float x, float y, float z, float ( &out )[4][4] )
-{
-	float phi = DEG2RAD( angle );
-	float c = cosf( phi ); // cosine
-	float s = sinf( phi ); // sine
-	float xx = x * x;
-	float xy = x * y;
-	float xz = x * z;
-	float yy = y * y;
-	float yz = y * z;
-	float zz = z * z;
-	// build rotation matrix
-	out[0][0] = xx * ( 1 - c ) + c;
-	out[1][0] = xy * ( 1 - c ) - z * s;
-	out[2][0] = xz * ( 1 - c ) + y * s;
-	out[3][0] = 0;
-	out[0][1] = xy * ( 1 - c ) + z * s;
-	out[1][1] = yy * ( 1 - c ) + c;
-	out[2][1] = yz * ( 1 - c ) - x * s;
-	out[3][1] = 0;
-	out[0][2] = xz * ( 1 - c ) - y * s;
-	out[1][2] = yz * ( 1 - c ) + x * s;
-	out[2][2] = zz * ( 1 - c ) + c;
-	out[3][2] = out[0][3] = out[1][3] = out[2][3] = 0;
-	out[3][3] = 1;
-}
-
 void VR_MatrixMultiply( float in1[4][4], float in2[4][4], float ( &out )[4][4] )
 {
-
 	float result[4][4];
 
 	result[0][0] = in1[0][0] * in2[0][0] + in1[0][1] * in2[1][0] + in1[0][2] * in2[2][0] + in1[0][3] * in2[3][0];
@@ -192,7 +135,6 @@ Does not perform hmd distortion correction.
 
 void iVr::HUDRender( idImage* image0, idImage* image1 )
 {
-	//static idAngles imuAngles = { 0.0, 0.0, 0.0 };
 	static idQuat imuRotation = { 0.0, 0.0, 0.0, 0.0 };
 	static idQuat imuRotationGL = { 0.0, 0.0, 0.0, 0.0 };
 	static idVec3 absolutePosition = vec3_zero;
@@ -599,6 +541,7 @@ void iVr::HMDRender( idImage* leftCurrent, idImage* rightCurrent )
 	{
 		vr::Texture_t leftEyeTexture = { ( void* )( size_t )leftCurrent->GetTexNum(), vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
 		vr::VRCompositor()->Submit( vr::Eye_Left, &leftEyeTexture );
+
 		vr::Texture_t rightEyeTexture = { ( void* )( size_t )rightCurrent->GetTexNum(), vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
 		vr::VRCompositor()->Submit( vr::Eye_Right, &rightEyeTexture );
 
@@ -898,8 +841,7 @@ void iVr::HMDTrackStatic( bool is3D )
 		{
 			HUDRender( hmdCurrentRender[0], hmdCurrentRender[0] ); // if not 3d just use left eye twice.
 		}
+
 		HMDRender( hmdEyeImage[0], hmdEyeImage[1] );
-
-
 	}
 }

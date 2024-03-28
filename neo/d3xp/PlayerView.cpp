@@ -854,15 +854,9 @@ float GetIPD()
 {
 	if( vrSystem->IsActive() && !vr_manualIPDEnable.GetInteger() && vr_useOculusProfile.GetInteger() )
 	{
-#ifdef USE_OVR
-		if( vrSystem->hasOculusRift )
-		{
-			return ( fabs( vrSystem->hmdEye[0].viewOffset.x )  + fabs( vrSystem->hmdEye[1].viewOffset.x ) ) * 100.0f;    // ipd in cm
-		}
-		else
-#endif
-			return vrSystem-> m_pHMD->GetFloatTrackedDeviceProperty( vr::k_unTrackedDeviceIndex_Hmd, vr::Prop_UserIpdMeters_Float ) * 100;
+		return vrSystem-> m_pHMD->GetFloatTrackedDeviceProperty( vr::k_unTrackedDeviceIndex_Hmd, vr::Prop_UserIpdMeters_Float ) * 100;
 	}
+
 	return vr_manualIPD.GetFloat() / 10;
 }
 

@@ -41,9 +41,7 @@ If you have questions concerning this license or the applicable additional terms
 	#include "sys\win32\win_local.h"
 #endif
 #include "d3xp/physics/Clip.h"
-#ifdef USE_OVR
-	#include "../libs/LibOVR/Include/OVR_CAPI_GL.h"
-#endif
+
 #include "../renderer/Framebuffer.h"
 
 // *** Oculus HMD Variables
@@ -51,7 +49,7 @@ If you have questions concerning this license or the applicable additional terms
 idCVar vr_pixelDensity( "vr_pixelDensity", "1.25", CVAR_FLOAT | CVAR_ARCHIVE | CVAR_GAME, "" );
 idCVar vr_enable( "vr_enable", "1", CVAR_INTEGER | CVAR_ARCHIVE | CVAR_GAME, "Enable VR mode. 0 = Disabled 1 = Enabled." );
 idCVar vr_scale( "vr_scale", "1.0", CVAR_FLOAT | CVAR_ARCHIVE | CVAR_GAME, "World scale. Everything virtual is this times as big." );
-idCVar vr_useOculusProfile( "vr_useOculusProfile", "1", CVAR_INTEGER | CVAR_ARCHIVE | CVAR_GAME, "Use official profile values. 0 = use user defined profile, 1 = use official profile." );
+idCVar vr_useOculusProfile( "vr_useOculusProfile", "1", CVAR_INTEGER | CVAR_ARCHIVE | CVAR_GAME, "TODO REMOVE, Use official profile values. 0 = use user defined profile, 1 = use official profile." );
 idCVar vr_manualIPDEnable( "vr_manualIPDEnable", "0", CVAR_INTEGER | CVAR_ARCHIVE | CVAR_GAME, " Override the HMD provided IPD value with value in vr_manualIPD 0 = disable 1= use manual iPD\n" );
 idCVar vr_manualIPD( "vr_manualIPD", "64", CVAR_FLOAT | CVAR_ARCHIVE | CVAR_GAME, "User defined IPD value in MM" );
 idCVar vr_manualHeight( "vr_manualHeight", "70", CVAR_FLOAT | CVAR_ARCHIVE | CVAR_GAME, "Unused. User defined player height in inches" );
@@ -209,8 +207,6 @@ idCVar vr_frameCheck( "vr_frameCheck", "0", CVAR_INTEGER | CVAR_ARCHIVE, "0 = by
 idCVar vr_forceOculusAudio( "vr_forceOculusAudio", "1", CVAR_BOOL | CVAR_ARCHIVE, "Request openAL to search for Rift headphones instead of default device\nFails to default device if rift not found." );
 idCVar vr_stereoMirror( "vr_stereoMirror", "1", CVAR_BOOL | CVAR_ARCHIVE, "Render mirror window with stereo views. 0 = Mono , 1 = Stereo Warped" );
 
-idCVar vr_APISelect( "vr_APISelect", "0", CVAR_INTEGER | CVAR_ARCHIVE, "VR API Select:\n 0 = Autodetect ( Oculus Native then OpenVR ) ,\n 1 = Oculus Native Only\n 2 = OpenVR only\n" );
-
 idCVar vr_teleportSkipHandrails( "vr_teleportSkipHandrails", "0", CVAR_INTEGER | CVAR_ARCHIVE, "Teleport aim ingnores handrails. 1 = true" );
 idCVar vr_teleportShowAimAssist( "vr_teleportShowAimAssist", "0", CVAR_INTEGER | CVAR_ARCHIVE, "Move telepad target to reflect aim assist. 1 = true" );
 idCVar vr_teleportButtonMode( "vr_teleportButtonMode", "0", CVAR_BOOL | CVAR_ARCHIVE, "0 = Press aim, release teleport.\n1 = 1st press aim, 2nd press teleport" );
@@ -365,22 +361,6 @@ iVr::iVr()
 	hmdPixelScale = 1.0f;
 	hmdAspect = 1.0f;
 
-#ifdef USE_OVR
-	hmdSession = nullptr;
-	ovrLuid.Reserved[0] = { 0 };
-
-	oculusSwapChain[0] = nullptr;
-	oculusSwapChain[1] = nullptr;
-	oculusFboId = 0;
-	ocululsDepthTexID = 0;
-	oculusMirrorFboId = 0;
-	oculusMirrorTexture = 0;
-	mirrorTexId = 0;
-	mirrorW = 0;
-	mirrorH = 0;
-#endif
-
-
 	hmdEyeImage[0] = 0;
 	hmdEyeImage[1] = 0;
 	hmdCurrentRender[0] = 0;
@@ -508,134 +488,11 @@ idMat4 GetHMDMatrixPoseEye( vr::Hmd_Eye nEye )
 
 /*
 ==============
-iVr::OculusInit
-==============
-*/
-
-bool iVr::OculusInit()
-{
-#ifndef USE_OVR
-	hasOculusRift = false;
-	return false;
-#else
-
-	if( vr_APISelect.GetInteger() == 2 )  // only use OpenVr;
-	{
-		common->Printf( "OculusInit: vr_vrAPISelect set to only use OpenVR API. Returning false." );
-		hasOculusRift = false;
-		return false;
-	}
-
-
-	hasOculusRift = false;
-	// Oculus HMD Initialization
-	ovrResult result = ovr_Initialize( nullptr );
-
-	if( OVR_FAILURE( result ) )
-	{
-		common->Printf( "\nOculus Rift not detected.\n" );
-		return false;
-	}
-
-
-	common->Printf( "ovr_Initialize was successful.\n" );
-
-	ovr_IdentifyClient( "EngineName: id Tech 4\n"
-						"EngineVersion: 1.0.3\n"
-						"EngineEditor: false" );
-
-	result = ovr_Create( &hmdSession, &ovrLuid );
-
-	if( OVR_FAILURE( result ) )
-	{
-		common->Printf( "\nFailed to initialize Oculus Rift.\n" );
-		ovr_Shutdown();
-		return false;
-	}
-
-	hmdDesc = ovr_GetHmdDesc( hmdSession );
-
-	//ovrSizei resoultion = hmdDesc.Resolution;
-
-	common->Printf( "\n\nOculus Rift HMD Initialized\n" );
-	//ovr_RecenterPose( hmdSession ); // lets start looking forward.
-
-	if( vr_useFloorHeight.GetInteger() >= 3 )
-	{
-		ovr_SetTrackingOriginType( hmdSession, ovrTrackingOrigin_FloorLevel );
-	}
-	else
-	{
-		ovr_SetTrackingOriginType( hmdSession, ovrTrackingOrigin_EyeLevel );
-	}
-
-	ovr_RecenterTrackingOrigin( hmdSession );
-	hmdWidth = hmdDesc.Resolution.w;
-	hmdHeight = hmdDesc.Resolution.h;
-	hmdHz = hmdDesc.DisplayRefreshRate + 0.5f; // Carl: This was 89 because we were rounding down when converting to int
-	com_engineHz.SetInteger( hmdHz );
-	common->Printf( "Hmd: %s .\n", hmdDesc.ProductName );
-	common->Printf( "Hmd HZ %d, width %d, height %d\n", hmdHz, hmdWidth, hmdHeight );
-
-	ovr_GetAudioDeviceOutGuid( &oculusGuid );
-	ovr_GetAudioDeviceOutGuidStr( oculusGuidStr );
-
-	common->Printf( "Oculus sound guid " );
-	for( int c = 0; c < 128; c++ )
-	{
-		common->Printf( "%c", oculusGuidStr[c] );
-	}
-	common->Printf( "Oculus sound guid\n" );
-	/*
-	vr::TrackedDeviceIndex_t deviceLeft,deviceRight;
-
-	deviceLeft = vr::VRSystem()->GetTrackedDeviceIndexForControllerRole( vr::TrackedControllerRole_LeftHand );
-	deviceRight = vr::VRSystem()->GetTrackedDeviceIndexForControllerRole( vr::TrackedControllerRole_RightHand );
-
-	common->Printf( "Left Controller %d right Controller %d\n", deviceLeft, deviceRight );
-
-	if ( deviceLeft != -1 || deviceRight != -1  )
-	{
-	common->Printf( "Tracked controllers detected. MOTION CONTROLS ENABLED\n" );
-	VR_USE_MOTION_CONTROLS = true;
-	}
-	else
-	{
-	VR_USE_MOTION_CONTROLS = false;
-	}
-	*/
-
-	VR_USE_MOTION_CONTROLS = false;
-
-	unsigned int ctrlrs = ovr_GetConnectedControllerTypes( hmdSession );
-	if( ( ctrlrs & ovrControllerType_Touch ) != 0 )
-	{
-		VR_USE_MOTION_CONTROLS = true;
-		motionControlType = MOTION_OCULUS;
-	}
-
-	// Carl: TODO
-	VRScreenSeparation = 0.0f;
-
-	hasOculusRift = true;
-	return true;
-#endif
-}
-
-/*
-==============
 iVr::OpenVRInit
 ==============
 */
-
 bool iVr::OpenVRInit()
 {
-	if( vr_APISelect.GetInteger() == 1 )  // Only use Oculus API
-	{
-		common->Printf( "OpenVRInit: vr_vrAPISelect set to only use Oculus API. Returning false." );
-		return false;
-	}
-
 	if( !vr::VR_IsHmdPresent() )
 	{
 		common->Printf( "No OpenVR HMD detected.\n" );
@@ -752,22 +609,22 @@ bool iVr::OpenVRInit()
 iVr::HMDInit
 ==============
 */
-
 void iVr::HMDInit()
 {
 	hasHMD = false;
 	isActive = false;
 
-	if( !OculusInit() && !OpenVRInit() )
+	if( !OpenVRInit() )
 	{
 		common->Printf( "No HMD detected.\n VR Disabled\n" );
 		return;
 	}
 	common->Printf( "\n\n HMD Initialized\n" );
+
 	hasHMD = true;
 	isActive = true;
-	common->Printf( "VR_USE_MOTION_CONTROLS Final = %d\n", VR_USE_MOTION_CONTROLS );
 
+	common->Printf( "VR_USE_MOTION_CONTROLS Final = %d\n", VR_USE_MOTION_CONTROLS );
 }
 
 
@@ -776,26 +633,10 @@ void iVr::HMDInit()
 iVr::HMDShutdown
 ==============
 */
-
 void iVr::HMDShutdown()
 {
-#ifdef USE_OVR
-	if( hasOculusRift )
-	{
-		ovr_DestroyTextureSwapChain( hmdSession, oculusSwapChain[0] );
-		ovr_DestroyTextureSwapChain( hmdSession, oculusSwapChain[1] );
-
-		ovr_Destroy( hmdSession );
-		ovr_Shutdown();
-		hmdSession = NULL;
-	}
-	else
-#endif
-	{
-		vr::VR_Shutdown();
-	}
+	vr::VR_Shutdown();
 	m_pHMD = NULL;
-	return;
 }
 
 /*
@@ -803,20 +644,13 @@ void iVr::HMDShutdown()
 iVr::HMDInitializeDistortion
 ==============
 */
-
 void iVr::HMDInitializeDistortion()
 {
-	if(
-#ifdef USE_OVR
-		( !hmdSession || !hasOculusRift || !vr_enable.GetBool() )
-		&&
-#endif
-		( !m_pHMD || !hasHMD || !vr_enable.GetBool() ) )
+	if( !m_pHMD || !hasHMD || !vr_enable.GetBool() )
 	{
 		isActive = false;
 		return;
 	}
-
 
 	if( !hasOculusRift )
 	{
@@ -856,60 +690,12 @@ void iVr::HMDInitializeDistortion()
 	bool fboCreated = false;
 
 	ovrSizei rendertarget;
-#ifdef USE_OVR
-	ovrRecti viewport = { 0, 0, 0, 0 };
-	if( hasOculusRift )
-	{
-		for( int eye = 0; eye < 2; eye++ )
-		{
 
-			hmdEye[eye].eyeFov = hmdDesc.DefaultEyeFov[eye];
-			hmdEye[eye].eyeRenderDesc = ovr_GetRenderDesc( hmdSession, ( ovrEyeType )eye, hmdEye[eye].eyeFov );
+	primaryFBOWidth = hmdEye[0].renderTargetRes.x;
+	primaryFBOHeight = hmdEye[0].renderTargetRes.y;
 
-			common->Printf( "Eye[%d] viewOffset %s\n", eye, hmdEye[eye].viewOffset.ToString() );
-			common->Printf( "Eye[%d] uvOffset[0] x = %f y = %f\n", eye, hmdEye[eye].UVScaleoffset[0].x, hmdEye[eye].UVScaleoffset[0].y );
-			common->Printf( "Eye[%d] uvOffset[1] x = %f y = %f\n", eye, hmdEye[eye].UVScaleoffset[1].x, hmdEye[eye].UVScaleoffset[1].y );
-
-			common->Printf( "Eye[%d] fovLeftTan = %f\n", eye, hmdEye[eye].eyeFov.LeftTan );
-			common->Printf( "Eye[%d] fovRightTan = %f\n", eye, hmdEye[eye].eyeFov.RightTan );
-			common->Printf( "Eye[%d] fovUpTan = %f\n", eye, hmdEye[eye].eyeFov.UpTan );
-			common->Printf( "Eye[%d] fovDownTan = %f\n", eye, hmdEye[eye].eyeFov.DownTan );
-
-			ovrMatrix4f pEye = ovrMatrix4f_Projection( hmdEye[eye].eyeRenderDesc.Fov, 1.0f, -0.9999999999f, true );
-			int x, y;
-			for( x = 0; x < 4; x++ )
-			{
-				for( y = 0; y < 4; y++ )
-				{
-					hmdEye[eye].projectionHmd[y * 4 + x] = pEye.M[x][y];
-				}
-			}
-			hmdEye[eye].viewOffset.x = hmdEye[eye].eyeRenderDesc.HmdToEyePose.Position.x;
-			hmdEye[eye].viewOffset.y = hmdEye[eye].eyeRenderDesc.HmdToEyePose.Position.y;
-			hmdEye[eye].viewOffset.z = hmdEye[eye].eyeRenderDesc.HmdToEyePose.Position.z;
-			common->Printf( "EYE %d HmdToEyeOffset x %f y %f z %f\n", eye, hmdEye[eye].eyeRenderDesc.HmdToEyePose.Position.x, hmdEye[eye].eyeRenderDesc.HmdToEyePose.Position.y, hmdEye[eye].eyeRenderDesc.HmdToEyePose.Position.z );
-
-			rendertarget = ovr_GetFovTextureSize( hmdSession, ( ovrEyeType )eye, hmdEye[eye].eyeFov, vr_pixelDensity.GetFloat() ); // make sure both eyes render to the same size target
-			hmdEye[eye].renderTarget.h = rendertarget.h; // Koz was height?
-			hmdEye[eye].renderTarget.w = rendertarget.w;
-			common->Printf( "Eye %d Rendertaget Width x Height = %d x %d\n", eye, rendertarget.w, rendertarget.h );
-		}
-	}
-
-	if( hasOculusRift )
-	{
-		primaryFBOWidth = rendertarget.w;
-		primaryFBOHeight = rendertarget.h;
-	}
-	else
-#endif
-	{
-		primaryFBOWidth = hmdEye[0].renderTargetRes.x;
-		primaryFBOHeight = hmdEye[0].renderTargetRes.y;
-	}
 	fboWidth = primaryFBOWidth;
 	fboHeight = primaryFBOHeight;
-
 
 	if( !fboCreated )
 	{
@@ -958,16 +744,6 @@ void iVr::HMDInitializeDistortion()
 
 			status = globalFramebuffers.resolveFBO->Check();
 			globalFramebuffers.resolveFBO->Error( status );
-#ifdef USE_OVR
-			if( hasOculusRift )
-			{
-				fboWidth = globalFramebuffers.primaryFBO->GetWidth();// rendertarget.w;
-				fboHeight = globalFramebuffers.primaryFBO->GetHeight();
-				common->Printf( "Globalframebuffer w x h  = %d x %d\n", fboWidth, fboHeight );
-				rendertarget.w = fboWidth;
-				rendertarget.h = fboHeight;
-			}
-#endif
 
 			if( status = GL_FRAMEBUFFER_COMPLETE )
 			{
@@ -985,28 +761,17 @@ void iVr::HMDInitializeDistortion()
 		if( !fboCreated )
 		{
 			// either AA disabled or AA buffer creation failed. Try creating unaliased FBOs.
-
-
 			common->Printf( "Creating framebuffer\n" );
 			globalFramebuffers.primaryFBO = new Framebuffer( "_primaryFBO", primaryFBOWidth, primaryFBOHeight, false ); // Koz
+
 			common->Printf( "Adding Depth/Stencil attachments to framebuffer\n" );
 			globalFramebuffers.primaryFBO->AddDepthStencilBuffer( GL_DEPTH24_STENCIL8 );
+
 			common->Printf( "Adding color attachment to framebuffer\n" );
 			globalFramebuffers.primaryFBO->AddColorBuffer( GL_RGBA8, 0 );
 
 			int status = globalFramebuffers.primaryFBO->Check();
 			globalFramebuffers.primaryFBO->Error( status );
-
-#ifdef USE_OVR
-			if( hasOculusRift )
-			{
-				fboWidth = globalFramebuffers.primaryFBO->GetWidth();// rendertarget.w;
-				fboHeight = globalFramebuffers.primaryFBO->GetHeight();
-				common->Printf( "Globalframebuffer w x h  = %d x %d\n", fboWidth, fboHeight );
-				rendertarget.w = fboWidth;
-				rendertarget.h = fboHeight;
-			}
-#endif
 
 			if( status = GL_FRAMEBUFFER_COMPLETE )
 			{
@@ -1033,81 +798,20 @@ void iVr::HMDInitializeDistortion()
 		{
 			hmdEye[eye].renderTargetRes.x = primaryFBOWidth;
 			hmdEye[eye].renderTargetRes.y = primaryFBOHeight;
-#ifdef USE_OVR
-			//TODO LINUX
-			hmdEye[eye].renderTarget = rendertarget;
-#endif
 		}
 
 	}
 
-#ifdef USE_OVR
-	if( hasOculusRift )
-	{
-		viewport.Size.w = rendertarget.w;
-		viewport.Size.h = rendertarget.h;
-
-		globalImages->hudImage->Resize( rendertarget.w, rendertarget.h );
-		globalImages->pdaImage->Resize( rendertarget.w, rendertarget.h );
-		globalImages->currentRenderImage->Resize( rendertarget.w, rendertarget.h );
-		globalImages->currentDepthImage->Resize( rendertarget.w, rendertarget.h );
-	}
-	else
-#endif
-	{
-		globalImages->hudImage->Resize( primaryFBOWidth, primaryFBOHeight );
-		globalImages->pdaImage->Resize( primaryFBOWidth, primaryFBOHeight );
-		//globalImages->skyBoxFront->Resize( primaryFBOWidth, primaryFBOHeight );
-		//globalImages->skyBoxSides->Resize( primaryFBOWidth, primaryFBOHeight );
-		globalImages->currentRenderImage->Resize( primaryFBOWidth, primaryFBOHeight );
-		globalImages->currentDepthImage->Resize( primaryFBOWidth, primaryFBOHeight );
-	}
+	globalImages->hudImage->Resize( primaryFBOWidth, primaryFBOHeight );
+	globalImages->pdaImage->Resize( primaryFBOWidth, primaryFBOHeight );
+	//globalImages->skyBoxFront->Resize( primaryFBOWidth, primaryFBOHeight );
+	//globalImages->skyBoxSides->Resize( primaryFBOWidth, primaryFBOHeight );
+	globalImages->currentRenderImage->Resize( primaryFBOWidth, primaryFBOHeight );
+	globalImages->currentDepthImage->Resize( primaryFBOWidth, primaryFBOHeight );
 
 	common->Printf( "pdaImage size %d %d\n", globalImages->pdaImage->GetUploadWidth(), globalImages->pdaImage->GetUploadHeight() );
 	common->Printf( "Hudimage size %d %d\n", globalImages->hudImage->GetUploadWidth(), globalImages->hudImage->GetUploadHeight() );
 
-	if( hasOculusRift )
-	{
-#ifdef USE_OVR
-		// total IPD in mm
-		officialIPD = ( fabs( hmdEye[0].viewOffset.x ) + fabs( hmdEye[1].viewOffset.x ) ) * 1000.0f;
-		common->Printf( "Oculus IPD : %f\n", officialIPD );
-
-		VRScreenSeparation = 0.5f * ( hmdEye[1].eyeFov.RightTan + -hmdEye[1].eyeFov.LeftTan )
-							 / ( hmdEye[1].eyeFov.RightTan - -hmdEye[1].eyeFov.LeftTan )
-							 - 0.5f * ( hmdEye[0].eyeFov.RightTan + -hmdEye[0].eyeFov.LeftTan )
-							 / ( hmdEye[0].eyeFov.RightTan - -hmdEye[0].eyeFov.LeftTan );
-
-		VRScreenSeparation /= 2.0f;
-
-
-		VRScreenSeparation = ( fabs( hmdEye[0].eyeFov.LeftTan ) - fabs( hmdEye[1].eyeFov.LeftTan ) ) / ( fabs( hmdEye[0].eyeFov.LeftTan ) + fabs( hmdEye[1].eyeFov.LeftTan ) );
-		VRScreenSeparation *= 0.5f;
-
-		common->Printf( "Oculus HMD Screen separation = %f\n", VRScreenSeparation );
-
-		// calculate fov for engine
-
-		float combinedTanHalfFovHorizontal = std::max( std::max( hmdEye[0].eyeFov.LeftTan, hmdEye[0].eyeFov.RightTan ), std::max( hmdEye[1].eyeFov.LeftTan, hmdEye[1].eyeFov.RightTan ) );
-		float combinedTanHalfFovVertical = std::max( std::max( hmdEye[0].eyeFov.UpTan, hmdEye[0].eyeFov.DownTan ), std::max( hmdEye[1].eyeFov.UpTan, hmdEye[1].eyeFov.DownTan ) );
-		float horizontalFullFovInRadians = 2.0f * atanf( combinedTanHalfFovHorizontal );
-
-		hmdFovX = RAD2DEG( horizontalFullFovInRadians );
-		hmdFovY = RAD2DEG( 2.0 * atanf( combinedTanHalfFovVertical ) );
-		hmdAspect = combinedTanHalfFovHorizontal / combinedTanHalfFovVertical;
-		hmdPixelScale = 1;//ovrScale * vid.width / (float) hmd->Resolution.w;
-
-		hmdEye[0].renderTarget.w = globalFramebuffers.primaryFBO->GetWidth();
-		hmdEye[0].renderTarget.h = globalFramebuffers.primaryFBO->GetHeight();
-
-
-		hmdEye[1].renderTarget = hmdEye[0].renderTarget;
-
-		common->Printf( "Init Hmd FOV x,y = %f , %f. Aspect = %f, PixelScale = %f\n", hmdFovX, hmdFovY, hmdAspect, hmdPixelScale );
-		common->Printf( "Creating oculus texture set width = %d height = %d.\n", hmdEye[0].renderTarget.w, hmdEye[0].renderTarget.h );
-#endif
-	}
-	else
 	{
 		float combinedTanHalfFovHorizontal = std::max( std::max( hmdEye[0].projectionOpenVR.projLeft, hmdEye[0].projectionOpenVR.projRight ), std::max( hmdEye[1].projectionOpenVR.projLeft, hmdEye[1].projectionOpenVR.projRight ) );
 		float combinedTanHalfFovVertical = std::max( std::max( hmdEye[0].projectionOpenVR.projUp, hmdEye[0].projectionOpenVR.projDown ), std::max( hmdEye[1].projectionOpenVR.projUp, hmdEye[1].projectionOpenVR.projDown ) );
@@ -1120,109 +824,6 @@ void iVr::HMDInitializeDistortion()
 		common->Printf( "Init Hmd FOV x,y = %f , %f. Aspect = %f\n", hmdFovX, hmdFovY, hmdAspect );
 	}
 
-#ifdef USE_OVR
-	if( hasOculusRift )
-	{
-		ovrTextureSwapChainDesc desc = {};
-		desc.Type = ovrTexture_2D;
-		desc.ArraySize = 1;
-		desc.Width = hmdEye[0].renderTarget.w;
-		desc.Height = hmdEye[0].renderTarget.h;
-		desc.MipLevels = 1;
-		desc.Format = OVR_FORMAT_R8G8B8A8_UNORM_SRGB;
-		desc.SampleCount = 1;
-		desc.StaticImage = ovrFalse;
-
-
-		// create the swap texture sets
-		if( ovr_CreateTextureSwapChainGL( hmdSession, &desc, &oculusSwapChain[0] ) != ovrSuccess ||
-				ovr_CreateTextureSwapChainGL( hmdSession, &desc, &oculusSwapChain[1] ) != ovrSuccess )
-		{
-			ovrErrorInfo errorInfo;
-			ovr_GetLastErrorInfo( &errorInfo );
-			common->Warning( "OveErrorInfo: %d / %s", errorInfo.Result, errorInfo.ErrorString );
-			common->Error( " iVr::HMDInitializeDistortion unable to create OVR swap texture set.\n ovr_CreateTextureSwapChainGL failed.\n (If there are multiple video cards installed, make sure the rift is attached to the primary card. This is an issue with the oculus SDK.)" );
-			isActive = false;
-
-		}
-
-		unsigned int texId = 0;
-		int length = 0;
-
-		for( int j = 0; j < 2; j++ )
-		{
-			ovr_GetTextureSwapChainLength( hmdSession, oculusSwapChain[j], &length );
-			for( int i = 0; i < length; ++i )
-			{
-				ovr_GetTextureSwapChainBufferGL( hmdSession, oculusSwapChain[j], 0, &texId );
-				//oculusSwapChainTexId[j] = texId;
-
-				glBindTexture( GL_TEXTURE_2D, texId );
-				glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
-				glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-				glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
-				glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
-			}
-		}
-
-		ovr_CommitTextureSwapChain( hmdSession, oculusSwapChain[0] );
-		ovr_CommitTextureSwapChain( hmdSession, oculusSwapChain[1] );
-
-		glGenFramebuffers( 1, &oculusFboId );
-		glGenTextures( 1, &ocululsDepthTexID );
-
-		glBindTexture( GL_TEXTURE_2D, ocululsDepthTexID );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
-
-		glTexImage2D( GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, hmdEye[0].renderTarget.w, hmdEye[0].renderTarget.h, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, NULL );
-
-
-		//int ww = glConfig.nativeScreenWidth / 2;
-		//int wh = glConfig.nativeScreenHeight / 2;
-
-		int ww = hmdDesc.Resolution.w / 2;
-		int wh = hmdDesc.Resolution.h / 2;
-
-		ovrMirrorTextureDesc mirrorDesc;
-		memset( &mirrorDesc, 0, sizeof( mirrorDesc ) );
-		mirrorDesc.Width = ww;
-		mirrorDesc.Height = wh;
-		mirrorDesc.Format = OVR_FORMAT_R8G8B8A8_UNORM_SRGB;
-		mirrorW = ww;
-		mirrorH = wh;
-
-		common->Printf( "Creating oculus mirror texture %d x %d\n", ww, wh );
-		ovr_CreateMirrorTextureGL( hmdSession, &mirrorDesc, &oculusMirrorTexture );
-		ovr_GetMirrorTextureBufferGL( hmdSession, oculusMirrorTexture, &mirrorTexId );
-		glGenFramebuffers( 1, &oculusMirrorFboId );
-		glBindFramebuffer( GL_READ_FRAMEBUFFER, oculusMirrorFboId );
-		glFramebufferTexture2D( GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, mirrorTexId, 0 );
-		glFramebufferRenderbuffer( GL_READ_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, 0 );
-		glBindFramebuffer( GL_READ_FRAMEBUFFER, 0 );
-
-		wglSwapIntervalEXT( 0 );
-
-		oculusLayer.Header.Type = ovrLayerType_EyeFov;
-		oculusLayer.Header.Flags = ovrLayerFlag_TextureOriginAtBottomLeft;
-		oculusLayer.ColorTexture[0] = oculusSwapChain[0];
-		oculusLayer.ColorTexture[1] = oculusSwapChain[1];
-		oculusLayer.Fov[0] = hmdEye[0].eyeRenderDesc.Fov;
-		oculusLayer.Fov[1] = hmdEye[1].eyeRenderDesc.Fov;
-		oculusLayer.Viewport[0].Pos.x = 0;
-		oculusLayer.Viewport[0].Pos.y = 0;
-		oculusLayer.Viewport[0].Size.h = hmdEye[0].renderTarget.h;
-		oculusLayer.Viewport[0].Size.w = hmdEye[0].renderTarget.w;
-
-		oculusLayer.Viewport[1].Pos.x = 0;
-		oculusLayer.Viewport[1].Pos.y = 0;
-		oculusLayer.Viewport[1].Size.h = hmdEye[1].renderTarget.h;
-		oculusLayer.Viewport[1].Size.w = hmdEye[1].renderTarget.w;
-	}
-#endif
-	if( !hasOculusRift )
 	{
 		// override the default steam skybox, initially just set to black.  UpdateScreen can copy static images to skyBoxFront during level loads/saves
 
@@ -1299,7 +900,6 @@ void iVr::HMDInitializeDistortion()
 iVr::HMDGetOrientation
 ==============
 */
-
 void iVr::HMDGetOrientation( idAngles& hmdAngles, idVec3& headPositionDelta, idVec3& bodyPositionDelta, idVec3& absolutePosition, bool resetTrackingOffset )
 {
 	static int lastFrame = -1;
@@ -1402,48 +1002,6 @@ void iVr::HMDGetOrientation( idAngles& hmdAngles, idVec3& headPositionDelta, idV
 
 	lastFrame = idLib::frameNumber;
 
-
-
-#ifdef USE_OVR
-	static ovrPosef translationPose;
-	static ovrPosef	orientationPose;
-	static ovrPosef cameraPose;
-	static ovrPosef lastTrackedPoseOculus = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
-
-	if( hasOculusRift )
-	{
-		hmdFrameTime = ovr_GetPredictedDisplayTime( hmdSession, lastFrame );
-
-		//common->Printf( "HMDGetOrientation lastframe idLib::framenumber = %d\n", lastFrame );
-
-		time = hmdFrameTime;
-
-		hmdTrackingState = ovr_GetTrackingState( hmdSession, time, false );
-
-		currentlyTracked = hmdTrackingState.StatusFlags & ( ovrStatus_PositionTracked );
-
-		if( currentlyTracked )
-		{
-			translationPose = hmdTrackingState.HeadPose.ThePose;
-			lastTrackedPoseOculus = translationPose;
-		}
-		else
-		{
-			translationPose = lastTrackedPoseOculus;
-		}
-
-		handPose[1] = hmdTrackingState.HandPoses[ovrHand_Left].ThePose;
-		handPose[0] = hmdTrackingState.HandPoses[ovrHand_Right].ThePose;
-
-		for( int i = 0; i < 2; i++ )
-		{
-			MotionControlGetHand( i, poseHandPos[i], poseHandRotationQuat[i] );
-			poseHandRotationMat3[i] = poseHandRotationQuat[i].ToMat3();
-			poseHandRotationAngles[i] = poseHandRotationQuat[i].ToAngles();
-		}
-	}
-	else
-#endif
 	{
 		if( !m_rTrackedDevicePose[vr::k_unTrackedDeviceIndex_Hmd].bPoseIsValid )
 		{
@@ -1460,18 +1018,10 @@ void iVr::HMDGetOrientation( idAngles& hmdAngles, idVec3& headPositionDelta, idV
 		//common->Printf( "Pose acquired %d\n", gameLocal.GetTime() );
 	}
 
-#ifdef USE_OVR
-	if( hasOculusRift )
-	{
-		hmdPosition.x = -translationPose.Position.z * ( 100.0f / 2.54f ) / vr_scale.GetFloat(); // Koz convert position (in meters) to inch (1 id unit = 1 inch).
-		hmdPosition.y = -translationPose.Position.x * ( 100.0f / 2.54f ) / vr_scale.GetFloat();
-		hmdPosition.z = translationPose.Position.y * ( 100.0f / 2.54f ) / vr_scale.GetFloat();
-	}
-	else
-#endif
 	{
 		m_rmat4DevicePose[vr::k_unTrackedDeviceIndex_Hmd] = ConvertSteamVRMatrixToidMat4( m_rTrackedDevicePose[vr::k_unTrackedDeviceIndex_Hmd].mDeviceToAbsoluteTracking );
 
+		// Koz convert position (in meters) to inch (1 id unit = 1 inch).
 		hmdPosition.x = -m_rmat4DevicePose[vr::k_unTrackedDeviceIndex_Hmd][3][2] * ( 100.0f / 2.54f ) / vr_scale.GetFloat();
 		hmdPosition.y = -m_rmat4DevicePose[vr::k_unTrackedDeviceIndex_Hmd][3][0] * ( 100.0f / 2.54f ) / vr_scale.GetFloat(); // meters to inches
 		hmdPosition.z = m_rmat4DevicePose[vr::k_unTrackedDeviceIndex_Hmd][3][1] * ( 100.0f / 2.54f ) / vr_scale.GetFloat();
@@ -1482,19 +1032,6 @@ void iVr::HMDGetOrientation( idAngles& hmdAngles, idVec3& headPositionDelta, idV
 	static idQuat poseRot;// = idQuat_zero;
 	static idAngles poseAngles = ang_zero;
 
-#ifdef USE_OVR
-	if( hasOculusRift )
-	{
-		static ovrPosef	orientationPose;
-		orientationPose = hmdTrackingState.HeadPose.ThePose;
-
-		poseRot.x = orientationPose.Orientation.z;	// x;
-		poseRot.y = orientationPose.Orientation.x;	// y;
-		poseRot.z = -orientationPose.Orientation.y;	// z;
-		poseRot.w = orientationPose.Orientation.w;
-	}
-	else
-#endif
 	{
 		static idQuat orientationPose;
 		orientationPose = m_rmat4DevicePose[vr::k_unTrackedDeviceIndex_Hmd].ToMat3().ToQuat();
@@ -1657,17 +1194,6 @@ void iVr::HMDGetOrientation( idAngles& hmdAngles, idVec3& headPositionDelta, idV
 
 /*
 ==============
-iVr::HMDGetOrientation
-==============
-*/
-
-void iVr::HMDGetOrientationAbsolute( idAngles& hmdAngles, idVec3& position )
-{
-
-}
-
-/*
-==============
 iVr::HMDResetTrackingOriginOffset
 ==============
 */
@@ -1683,42 +1209,6 @@ void iVr::HMDResetTrackingOriginOffset()
 	HMDGetOrientation( rot, head, body, absPos, true );
 
 	common->Printf( "New Yaw offset = %f\n", trackingOriginYawOffset );
-}
-
-/*
-==============
-iVr::MotionControllSetRotationOffset;
-==============
-*/
-void iVr::MotionControlSetRotationOffset()
-{
-
-	/*
-	switch ( motionControlType )
-	{
-
-	default:
-		break;
-	}
-	*/
-}
-
-/*
-==============
-iVr::MotionControllSetOffset;
-==============
-*/
-void iVr::MotionControlSetOffset()
-{
-	/*
-	switch ( motionControlType )
-	{
-
-		default:
-			break;
-	}
-	*/
-	return;
 }
 
 /*
@@ -1764,42 +1254,9 @@ void iVr::MotionControlGetOpenVrController( vr::TrackedDeviceIndex_t deviceNum, 
 
 void iVr::MotionControlGetTouchController( int hand, idVec3& motionPosition, idQuat& motionRotation )
 {
-
-#ifdef USE_OVR //TODO: ovr only?
-
-	static idQuat poseRot;
-	static idAngles poseAngles = ang_zero;
-	static idAngles angTemp = ang_zero;
-
-	motionPosition.x = -handPose[hand].Position.z * ( 100.0f / 2.54f ) / vr_scale.GetFloat(); // Koz convert position (in meters) to inch (1 id unit = 1 inch).
-
-	motionPosition.y = -handPose[hand].Position.x * ( 100.0f / 2.54f ) / vr_scale.GetFloat();
-
-	motionPosition.z = handPose[hand].Position.y * ( 100.0f / 2.54f ) / vr_scale.GetFloat();
-
-	motionPosition -= trackingOriginOffset;
-
-	motionPosition *= idAngles( 0.0f, ( -trackingOriginYawOffset ), 0.0f ).ToMat3();
-
-	poseRot.x = handPose[hand].Orientation.z;	// x;
-	poseRot.y = handPose[hand].Orientation.x;	// y;
-	poseRot.z = -handPose[hand].Orientation.y;	// z;
-	poseRot.w = handPose[hand].Orientation.w;
-
-	poseAngles = poseRot.ToAngles();
-
-	angTemp.yaw = poseAngles.yaw;
-	angTemp.roll = poseAngles.roll;
-	angTemp.pitch = poseAngles.pitch;
-
-	motionPosition -= hmdBodyTranslation;
-
-	angTemp.yaw -= trackingOriginYawOffset;// + bodyYawOffset;
-	angTemp.Normalize360();
-
-	motionRotation = angTemp.ToQuat();
-#endif
+	//TODO: ovr only?
 }
+
 /*
 ==============
 iVr::MotionControllGetHand;
@@ -1842,7 +1299,6 @@ void iVr::MotionControlGetLeftHand( idVec3& motionPosition, idQuat& motionRotati
 	static idAngles angles = ang_zero;
 	switch( motionControlType )
 	{
-
 		case MOTION_STEAMVR:
 		{
 			//vr::TrackedDeviceIndex_t deviceNo = vr::VRSystem()->GetTrackedDeviceIndexForControllerRole( vr::TrackedControllerRole_LeftHand );
@@ -1856,7 +1312,6 @@ void iVr::MotionControlGetLeftHand( idVec3& motionPosition, idQuat& motionRotati
 
 		case MOTION_OCULUS:
 		{
-
 			MotionControlGetTouchController( 1, motionPosition, motionRotation );
 			break;
 		}
@@ -1876,7 +1331,6 @@ void iVr::MotionControlGetRightHand( idVec3& motionPosition, idQuat& motionRotat
 	static idAngles angles = ang_zero;
 	switch( motionControlType )
 	{
-
 		case MOTION_STEAMVR:
 		{
 			//vr::TrackedDeviceIndex_t deviceNo = vr::VRSystem()->GetTrackedDeviceIndexForControllerRole( vr::TrackedControllerRole_RightHand );
@@ -1889,7 +1343,6 @@ void iVr::MotionControlGetRightHand( idVec3& motionPosition, idQuat& motionRotat
 
 		case MOTION_OCULUS:
 		{
-
 			MotionControlGetTouchController( 0, motionPosition, motionRotation );
 			break;
 		}
@@ -1897,35 +1350,6 @@ void iVr::MotionControlGetRightHand( idVec3& motionPosition, idQuat& motionRotat
 		default:
 			break;
 	}
-}
-
-/*
-==============
-iVr::MotionControllSetHaptic
-==============
-*/
-void iVr::MotionControllerSetHapticOculus( float low, float hi )
-{
-
-	float beat;
-	float enable;
-
-	beat = fabs( low - hi ) / 65535;
-
-	enable = ( beat > 0.0f ) ? 1.0f : 0.0f;
-
-#ifdef USE_OVR
-	if( vr_weaponHand.GetInteger() == HAND_RIGHT )
-	{
-		ovr_SetControllerVibration( hmdSession, ovrControllerType_RTouch, beat, enable );
-	}
-	else
-	{
-		ovr_SetControllerVibration( hmdSession, ovrControllerType_LTouch, beat, enable );
-	}
-#endif
-
-	return;
 }
 
 /*
@@ -1947,7 +1371,6 @@ void iVr::MotionControllerSetHapticOpenVR( int hand, unsigned short value )
 	}
 
 	m_pHMD->TriggerHapticPulse( deviceNo, 0, value );
-	return;
 }
 
 /*
@@ -1959,7 +1382,6 @@ and the correct yaw & pitch movement values will
 be returned based on the current user aim mode.
 ==============
 */
-
 void iVr::CalcAimMove( float& yawDelta, float& pitchDelta )
 {
 	if( VR_USE_MOTION_CONTROLS )
@@ -2093,44 +1515,16 @@ void iVr::NextFlashMode()
 	}
 }
 
-bool iVr::ShouldQuit()
-{
-#ifdef USE_OVR
-	if( hasOculusRift )
-	{
-		ovrSessionStatus ss;
-		ovrResult result = ovr_GetSessionStatus( hmdSession, &ss );
-		if( ss.ShouldQuit )
-		{
-			return true;
-		}
-		if( ss.ShouldRecenter )
-		{
-			shouldRecenter = true;
-		}
-	}
-#endif
-	return false;
-}
-
 void iVr::ForceChaperone( int which, bool force )
 {
 	static bool chaperones[2] = {};
 	chaperones[which] = force;
 	force = chaperones[0] || chaperones[1];
 
-#ifdef USE_OVR
-	if( hasOculusRift )
+	if( hasHMD )
 	{
-		ovr_RequestBoundaryVisible( hmdSession, force );
+		vr::VRChaperone()->ForceBoundsVisible( force );
 	}
-	else
-#endif
-
-		if( hasHMD )
-		{
-			vr::VRChaperone()->ForceBoundsVisible( force );
-		}
 }
 
 void iVr::SwapBinding( int Old, int New )

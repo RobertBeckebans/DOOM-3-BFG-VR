@@ -254,24 +254,8 @@ static void R_CheckCvars()
 	// Koz
 	if( vrSystem->IsActive() )
 	{
-
 		if( vr_useFloorHeight.IsModified() || ( vr_normalViewHeight.IsModified() && vr_useFloorHeight.GetInteger() == 0 ) || vr_scale.IsModified() || vrSystem->shouldRecenter )
 		{
-#ifdef USE_OVR
-			if( vrSystem->hasOculusRift )
-			{
-				if( vr_useFloorHeight.GetInteger() >= 3 )
-				{
-					ovr_SetTrackingOriginType( vrSystem->hmdSession, ovrTrackingOrigin_FloorLevel );
-				}
-				else
-				{
-					ovr_SetTrackingOriginType( vrSystem->hmdSession, ovrTrackingOrigin_EyeLevel );
-				}
-				ovr_RecenterTrackingOrigin( vrSystem->hmdSession );
-				vrSystem->HMDResetTrackingOriginOffset();
-			}
-#endif
 			vr_useFloorHeight.ClearModified();
 			vr_normalViewHeight.ClearModified();
 			vr_scale.ClearModified();

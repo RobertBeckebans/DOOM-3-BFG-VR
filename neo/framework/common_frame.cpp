@@ -248,11 +248,6 @@ idCommonLocal::Draw
 */
 void idCommonLocal::Draw()
 {
-	if( vrSystem->ShouldQuit() )
-	{
-		Quit();
-	}
-
 	// debugging tool to test frame dropping behavior
 	if( com_sleepDraw.GetInteger() )
 	{
