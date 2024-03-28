@@ -123,7 +123,7 @@ idMenuHandler::GetPlatform
 int idMenuHandler::GetPlatform( bool realPlatform )
 {
 
-	if( platform == 2 && ( in_useJoystick.GetBool() || vrSystem->hasHMD ) && !realPlatform )
+	if( platform == 2 && ( in_useJoystick.GetBool() || vrSystem->HasHMD() ) && !realPlatform )
 	{
 		return 0;
 	}

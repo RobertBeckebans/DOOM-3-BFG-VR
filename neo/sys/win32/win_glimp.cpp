@@ -1763,7 +1763,7 @@ void GLimp_SwapBuffers()
 
 		int interval = 0;
 
-		if( !vrSystem->hasHMD )
+		if( !vrSystem->HasHMD() )
 		{
 			if( r_swapInterval.GetInteger() == 1 )
 			{

@@ -1288,7 +1288,7 @@ void idCommonLocal::Init( int argc, const char* const* argv, const char* cmdline
 		cmdSystem->BufferCommandText( CMD_EXEC_APPEND, "exec default.cfg\n" );
 
 		// Koz begin
-		if( vrSystem->hasHMD )
+		if( vrSystem->HasHMD() )
 		{
 			cmdSystem->BufferCommandText( CMD_EXEC_APPEND, "exec vr_openvr_default.cfg\n" );
 		}
@@ -1296,7 +1296,7 @@ void idCommonLocal::Init( int argc, const char* const* argv, const char* cmdline
 		// skip the config file if "safe" is on the command line
 		if( !SafeMode() && !g_demoMode.GetBool() )
 		{
-			if( vrSystem->hasHMD )
+			if( vrSystem->HasHMD() )
 			{
 				cmdSystem->BufferCommandText( CMD_EXEC_APPEND, "exec vr_openvr.cfg\n" );
 			}
@@ -1332,7 +1332,7 @@ void idCommonLocal::Init( int argc, const char* const* argv, const char* cmdline
 		renderSystem->Init();
 
 		// Koz begin
-		if( vrSystem->hasHMD )
+		if( vrSystem->HasHMD() )
 		{
 			vrSystem->HMDInitializeDistortion();
 		}
@@ -1527,7 +1527,7 @@ void idCommonLocal::Init( int argc, const char* const* argv, const char* cmdline
 		{
 			if( vrSystem->IsActive() )
 			{
-				if( vrSystem->hasHMD )
+				if( vrSystem->HasHMD() )
 				{
 					idLib::frameNumber++;
 					vrSystem->FrameStart();
@@ -1552,7 +1552,7 @@ void idCommonLocal::Init( int argc, const char* const* argv, const char* cmdline
 		{
 			while( centered == 0 )
 			{
-				if( vrSystem->hasHMD )
+				if( vrSystem->HasHMD() )
 				{
 					idLib::frameNumber++;
 					vrSystem->FrameStart();

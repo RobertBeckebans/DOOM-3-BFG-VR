@@ -449,12 +449,12 @@ void idPlayerProfile::ExecConfig( bool save, bool forceDefault )
 
 	if( vrSystem->IsActive() )
 	{
-		if( vrSystem->hasHMD )
+		if( vrSystem->HasHMD() )
 		{
 			cmdSystem->AppendCommandText( "exec vr_openvr_default.cfg\n" );
 		}
 
-		if( vrSystem->hasHMD )
+		if( vrSystem->HasHMD() )
 		{
 			cmdSystem->AppendCommandText( "exec vr_openvr.cfg\n" );
 		}

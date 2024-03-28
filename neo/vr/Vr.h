@@ -102,6 +102,11 @@ public:
 		return isActive;
 	}
 
+	bool				HasHMD() const
+	{
+		return ( m_pHMD != nullptr );
+	}
+
 	bool				OpenVRInit();
 
 	void				HMDInit();
@@ -135,9 +140,32 @@ public:
 	void				SwapWeaponHand();
 
 private:
+	idMat4				GetHMDMatrixProjectionEye( vr::Hmd_Eye nEye );
+	idMat4				GetHMDMatrixPoseEye( vr::Hmd_Eye nEye );
+
 	void				SwapBinding( int Old, int New );
 
 	bool				isActive;
+
+	vr::IVRSystem*			m_pHMD;
+	vr::IVRCompositor*		m_pCompositor;
+	vr::IVRChaperone*		m_pChaperone;
+	vr::IVRRenderModels*		m_pRenderModels;
+	vr::TrackedDevicePose_t	m_rTrackedDevicePose[vr::k_unMaxTrackedDeviceCount];
+	vr::TrackedDevicePose_t	m1_rTrackedDevicePose[vr::k_unMaxTrackedDeviceCount];
+
+	idStr				m_strDriver;
+	idStr				m_strDisplay;
+
+	char				m_rDevClassChar[vr::k_unMaxTrackedDeviceCount];
+	idMat4				m_rmat4DevicePose[vr::k_unMaxTrackedDeviceCount];
+	bool				m_rbShowTrackedDevice[vr::k_unMaxTrackedDeviceCount];
+
+
+	idMat4				m_mat4ProjectionLeft;
+	idMat4				m_mat4ProjectionRight;
+	idMat4				m_mat4eyePosLeft;
+	idMat4				m_mat4eyePosRight;
 public:
 
 	//------------------
@@ -220,33 +248,13 @@ public:
 	int					VR_USE_MOTION_CONTROLS;
 	int					weaponHand;
 
-	bool				hasHMD;
-
-	vr::IVRSystem*			m_pHMD;
-	vr::IVRCompositor*		m_pCompositor;
-	vr::IVRChaperone*		m_pChaperone;
-	vr::IVRRenderModels*		m_pRenderModels;
-	vr::TrackedDevicePose_t	m_rTrackedDevicePose[vr::k_unMaxTrackedDeviceCount];
-	vr::TrackedDevicePose_t	m1_rTrackedDevicePose[vr::k_unMaxTrackedDeviceCount];
-
 	vr::VRControllerState_t pControllerStateL;
 	vr::VRControllerState_t pControllerStateR;
 
 	vr::TrackedDeviceIndex_t leftControllerDeviceNo;
 	vr::TrackedDeviceIndex_t rightControllerDeviceNo;
 
-	idStr				m_strDriver;
-	idStr				m_strDisplay;
 
-	char				m_rDevClassChar[vr::k_unMaxTrackedDeviceCount];
-	idMat4				m_rmat4DevicePose[vr::k_unMaxTrackedDeviceCount];
-	bool				m_rbShowTrackedDevice[vr::k_unMaxTrackedDeviceCount];
-
-
-	idMat4				m_mat4ProjectionLeft;
-	idMat4				m_mat4ProjectionRight;
-	idMat4				m_mat4eyePosLeft;
-	idMat4				m_mat4eyePosRight;
 
 	float				singleEyeIPD;
 	float				hmdForwardOffset;

@@ -6104,7 +6104,7 @@ void idPlayer::GiveItem( const char* itemname )
 
 bool idPlayer::OtherHandImpulseSlot()
 {
-	if( !vrSystem->hasHMD )
+	if( !vrSystem->HasHMD() )
 	{
 		return false;
 	}
@@ -6227,7 +6227,7 @@ bool idPlayer::OtherHandImpulseSlot()
 
 bool idPlayer::WeaponHandImpulseSlot()
 {
-	if( !vrSystem->hasHMD )
+	if( !vrSystem->HasHMD() )
 	{
 		return false;
 	}
@@ -14415,7 +14415,7 @@ void idPlayer::ControllerShakeFromDamage( int damage, const idVec3& dir )
 		float highMag = ( Max( damage, 100 ) / 100.0f ) * maxMagScale;
 		int highDuration = idMath::Ftoi( ( Max( damage, 100 ) / 100.0f ) * maxDurScale );
 
-		if( vrSystem->hasHMD )
+		if( vrSystem->HasHMD() )
 		{
 			SetControllerShake( highMag, highDuration, dir );
 		}
@@ -16826,7 +16826,7 @@ void idPlayer::CalculateFirstPersonView()
 		firstPersonViewAxis = firstPersonViewAxis * playerView.ShakeAxis();
 #endif
 	}
-	if( vrSystem->hasHMD )
+	if( vrSystem->HasHMD() )
 	{
 		CalculateLeftHand();
 		CalculateRightHand();
@@ -16882,7 +16882,7 @@ void idPlayer::CalculateLeftHand()
 		oldSlot = weaponHandSlot;
 	}
 	slotIndex_t slot = SLOT_NONE;
-	if( vrSystem->hasHMD )
+	if( vrSystem->HasHMD() )
 	{
 		// remove pitch
 		idMat3 axis = firstPersonViewAxis;
@@ -16941,7 +16941,7 @@ void idPlayer::CalculateRightHand()
 		oldSlot = otherHandSlot;
 	}
 	slotIndex_t slot = SLOT_NONE;
-	if( vrSystem->hasHMD )
+	if( vrSystem->HasHMD() )
 	{
 		// remove pitch
 		idMat3 axis = firstPersonViewAxis;

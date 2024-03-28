@@ -255,7 +255,6 @@ iVr::iVr()
 {
 	isActive = false;
 
-	hasHMD = false;
 	VR_GAME_PAUSED = false;
 	PDAforcetoggle = false;
 	PDAforced = false;
@@ -439,52 +438,6 @@ idStr GetTrackedDeviceString( vr::IVRSystem* pHmd, vr::TrackedDeviceIndex_t unDe
 	return sResult;
 }
 
-//==============
-// Purpose:
-//==============
-
-idMat4 GetHMDMatrixProjectionEye( vr::Hmd_Eye nEye )
-{
-	if( !vrSystem->m_pHMD )
-	{
-		return mat4_default;
-	}
-
-	float m_fNearClip = 0.1f;
-	float m_fFarClip = 30.0f;
-
-	vr::HmdMatrix44_t mat = vrSystem->m_pHMD->GetProjectionMatrix( nEye, m_fNearClip, m_fFarClip ); // , vr::API_OpenGL );
-
-	return idMat4(
-			   mat.m[0][0], mat.m[1][0], mat.m[2][0], mat.m[3][0],
-			   mat.m[0][1], mat.m[1][1], mat.m[2][1], mat.m[3][1],
-			   mat.m[0][2], mat.m[1][2], mat.m[2][2], mat.m[3][2],
-			   mat.m[0][3], mat.m[1][3], mat.m[2][3], mat.m[3][3]
-		   );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-idMat4 GetHMDMatrixPoseEye( vr::Hmd_Eye nEye )
-{
-	if( !vrSystem->m_pHMD )
-	{
-		return  mat4_default;
-	}
-
-	vr::HmdMatrix34_t matEyeRight = vrSystem->m_pHMD->GetEyeToHeadTransform( nEye );
-	idMat4 matrixObj(
-		matEyeRight.m[0][0], matEyeRight.m[1][0], matEyeRight.m[2][0], 0.0,
-		matEyeRight.m[0][1], matEyeRight.m[1][1], matEyeRight.m[2][1], 0.0,
-		matEyeRight.m[0][2], matEyeRight.m[1][2], matEyeRight.m[2][2], 0.0,
-		matEyeRight.m[0][3], matEyeRight.m[1][3], matEyeRight.m[2][3], 1.0f
-	);
-
-	return matrixObj.Inverse();
-}
-
-
 /*
 ==============
 iVr::OpenVRInit
@@ -610,7 +563,6 @@ iVr::HMDInit
 */
 void iVr::HMDInit()
 {
-	hasHMD = false;
 	isActive = false;
 
 	if( !OpenVRInit() )
@@ -620,7 +572,6 @@ void iVr::HMDInit()
 	}
 	common->Printf( "\n\n HMD Initialized\n" );
 
-	hasHMD = true;
 	isActive = true;
 
 	common->Printf( "VR_USE_MOTION_CONTROLS Final = %d\n", VR_USE_MOTION_CONTROLS );
@@ -638,6 +589,44 @@ void iVr::HMDShutdown()
 	m_pHMD = NULL;
 }
 
+idMat4 iVr::GetHMDMatrixProjectionEye( vr::Hmd_Eye nEye )
+{
+	if( !vrSystem->m_pHMD )
+	{
+		return mat4_default;
+	}
+
+	float m_fNearClip = 0.1f;
+	float m_fFarClip = 30.0f;
+
+	vr::HmdMatrix44_t mat = vrSystem->m_pHMD->GetProjectionMatrix( nEye, m_fNearClip, m_fFarClip ); // , vr::API_OpenGL );
+
+	return idMat4(
+			   mat.m[0][0], mat.m[1][0], mat.m[2][0], mat.m[3][0],
+			   mat.m[0][1], mat.m[1][1], mat.m[2][1], mat.m[3][1],
+			   mat.m[0][2], mat.m[1][2], mat.m[2][2], mat.m[3][2],
+			   mat.m[0][3], mat.m[1][3], mat.m[2][3], mat.m[3][3]
+		   );
+}
+
+idMat4 iVr::GetHMDMatrixPoseEye( vr::Hmd_Eye nEye )
+{
+	if( !vrSystem->m_pHMD )
+	{
+		return  mat4_default;
+	}
+
+	vr::HmdMatrix34_t matEyeRight = vrSystem->m_pHMD->GetEyeToHeadTransform( nEye );
+	idMat4 matrixObj(
+		matEyeRight.m[0][0], matEyeRight.m[1][0], matEyeRight.m[2][0], 0.0,
+		matEyeRight.m[0][1], matEyeRight.m[1][1], matEyeRight.m[2][1], 0.0,
+		matEyeRight.m[0][2], matEyeRight.m[1][2], matEyeRight.m[2][2], 0.0,
+		matEyeRight.m[0][3], matEyeRight.m[1][3], matEyeRight.m[2][3], 1.0f
+	);
+
+	return matrixObj.Inverse();
+}
+
 /*
 ==============
 iVr::HMDInitializeDistortion
@@ -645,7 +634,7 @@ iVr::HMDInitializeDistortion
 */
 void iVr::HMDInitializeDistortion()
 {
-	if( !m_pHMD || !hasHMD || !vr_enable.GetBool() )
+	if( !m_pHMD || !vr_enable.GetBool() )
 	{
 		isActive = false;
 		return;
@@ -914,7 +903,7 @@ void iVr::HMDGetOrientation( idAngles& hmdAngles, idVec3& headPositionDelta, idV
 
 	static vr::TrackedDevicePose_t lastTrackedPoseOpenVR = { 0.0f };
 
-	if( !hasHMD )
+	if( !m_pHMD )
 	{
 		hmdAngles.roll = 0.0f;
 		hmdAngles.pitch = 0.0f;
@@ -1491,7 +1480,7 @@ void iVr::ForceChaperone( int which, bool force )
 	chaperones[which] = force;
 	force = chaperones[0] || chaperones[1];
 
-	if( hasHMD )
+	if( m_pHMD )
 	{
 		vr::VRChaperone()->ForceBoundsVisible( force );
 	}

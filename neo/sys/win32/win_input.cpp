@@ -1304,7 +1304,7 @@ int idJoystickWin32::PollInputEvents( int inputDeviceNum )
 		//=============================
 		// Koz begin add SteamVR controllers
 
-		if( vrSystem->hasHMD )  // was  vrSystem->VR_USE_MOTION_CONTROLS && vrSystem->motionControlType == MOTION_STEAMVR
+		if( vrSystem->HasHMD() )  // was  vrSystem->VR_USE_MOTION_CONTROLS && vrSystem->motionControlType == MOTION_STEAMVR
 		{
 			int dupeThreshold = vr_openVrStuckPadAxisFixThresh.GetInteger();
 			bool defaultX = false;
@@ -1340,10 +1340,10 @@ int idJoystickWin32::PollInputEvents( int inputDeviceNum )
 			bool rGood = false;
 
 			vr::VRControllerState_t& currentStateL = vrSystem->pControllerStateL;
-			lGood = vrSystem->m_pHMD->GetControllerState( vrSystem->leftControllerDeviceNo, &currentStateL, sizeof( currentStateL ) );
+			lGood = vr::VRSystem()->GetControllerState( vrSystem->leftControllerDeviceNo, &currentStateL, sizeof( currentStateL ) );
 
 			vr::VRControllerState_t& currentStateR = vrSystem->pControllerStateR;
-			rGood = vrSystem->m_pHMD->GetControllerState( vrSystem->rightControllerDeviceNo, &currentStateR, sizeof( currentStateR ) );
+			rGood = vr::VRSystem()->GetControllerState( vrSystem->rightControllerDeviceNo, &currentStateR, sizeof( currentStateR ) );
 
 
 			// left steam controller

@@ -284,7 +284,7 @@ void idMenuScreen_Shell_Bindings::UpdateBindingString()
 
 			idStr bindings;
 
-			if( !bind.gamepad.IsEmpty() && ( in_useJoystick.GetBool() || vrSystem->hasHMD ) )
+			if( !bind.gamepad.IsEmpty() && ( in_useJoystick.GetBool() || vrSystem->HasHMD() ) )
 			{
 				idStrList joyBinds;
 				int start = 0;
@@ -446,7 +446,7 @@ void idMenuScreen_Shell_Bindings::UpdateBindingDisplay()
 
 			idStr bindings;
 
-			if( !bind.gamepad.IsEmpty() && ( in_useJoystick.GetBool() || vrSystem->hasHMD ) )
+			if( !bind.gamepad.IsEmpty() && ( in_useJoystick.GetBool() || vrSystem->HasHMD() ) )
 			{
 				idStrList joyBinds;
 				int start = 0;

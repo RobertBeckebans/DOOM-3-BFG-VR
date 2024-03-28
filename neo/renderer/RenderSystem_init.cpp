@@ -322,7 +322,7 @@ void R_SetNewMode( const bool fullInit )
 		// Koz
 		// Create a window for the Oculus mirror texture
 
-		if( vrSystem->hasHMD && vr_enable.GetBool() )
+		if( vrSystem->HasHMD() && vr_enable.GetBool() )
 		{
 			r_fullscreen.SetInteger( 0 ); // force a windowed mode
 
@@ -396,7 +396,7 @@ void R_SetNewMode( const bool fullInit )
 
 		parms.multiSamples = r_multiSamples.GetInteger();
 		common->Printf( "R_SetNewMode r_multisamples = %d\n", parms.multiSamples );// Koz fixme
-		if( i == 0 && !vrSystem->hasHMD )
+		if( i == 0 && !vrSystem->HasHMD() )
 		{
 			parms.stereo = ( stereoRender_enable.GetInteger() == STEREO3D_QUAD_BUFFER );
 		}
