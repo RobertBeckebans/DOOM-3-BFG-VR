@@ -63,7 +63,6 @@ int idAutoRender::Run()
 		RenderFrame();
 	}
 
-
 	return 0;
 }
 
@@ -72,10 +71,8 @@ int idAutoRender::Run()
 idAutoRender::StartBackgroundAutoSwaps
 ============================
 */
-void idAutoRender::StartBackgroundAutoSwaps( )
+void idAutoRender::StartBackgroundAutoSwaps()
 {
-
-
 	if( IsRunning() )
 	{
 		EndBackgroundAutoSwaps();
@@ -111,7 +108,6 @@ void idAutoRender::EndBackgroundAutoSwaps()
 	idLib::Printf( "End Background AutoSwaps\n" );
 	StopThread();
 	vrSystem->updateScreen = false;
-
 }
 
 /*
@@ -121,14 +117,12 @@ idAutoRender::RenderFrame
 */
 void idAutoRender::RenderFrame()
 {
-
 	vrSystem->currentRead = Sys_Milliseconds();
 	if( vrSystem->currentRead - vrSystem->lastRead >= 5 )
 	{
 		vrSystem->updateScreen = true;
 		vrSystem->lastRead = vrSystem->currentRead;
 	}
-
 }
 
 

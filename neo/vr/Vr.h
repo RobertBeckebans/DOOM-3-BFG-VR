@@ -166,6 +166,8 @@ private:
 	idMat4				m_mat4ProjectionRight;
 	idMat4				m_mat4eyePosLeft;
 	idMat4				m_mat4eyePosRight;
+
+	bool				hmdPositionTracked;
 public:
 
 	//------------------
@@ -177,19 +179,19 @@ public:
 	bool				PDAforcetoggle;
 	bool				PDAforced;
 	bool				PDArising;
+	bool				forceLeftStick;				// navigate through PDA menus only with the left controller and motions
+	bool				scanningPDA;
+
 	bool				gameSavingLoading;
 	bool				showingIntroVideo;
 
 	int					swfRenderMode;
-	bool				PDAclipModelSet;
 	int					pdaToggleTime;
 	int					lastSaveTime;
 	bool				wasSaved;
 	bool				wasLoaded;
 
 	bool				forceRun;
-
-	bool				forceLeftStick;				// navigate through PDA menus only with the left controller and motions
 
 	int					currentFlashlightPosition;
 
@@ -204,8 +206,6 @@ public:
 
 	int					frameCount;
 
-	double				sensorSampleTime;
-
 	int					fingerPose[2];
 
 	idVec3				lastViewOrigin;
@@ -216,7 +216,6 @@ public:
 
 	float				handRoll[2];
 
-
 	float				bodyYawOffset;
 	float				lastHMDYaw;
 	float				lastHMDPitch;
@@ -226,12 +225,10 @@ public:
 	idVec3				uncrouchedHMDViewOrigin;
 	float				headHeightDiff;
 
-	bool				isWalking;
 	bool				thirdPersonMovement;
 	float				thirdPersonDelta;
 	idVec3				thirdPersonHudPos;
 	idMat3				thirdPersonHudAxis;
-
 
 	float				angles[3];
 
@@ -246,15 +243,12 @@ public:
 	int					VR_AAmode;
 
 	int					VR_USE_MOTION_CONTROLS;
-	int					weaponHand;
 
 	vr::VRControllerState_t pControllerStateL;
 	vr::VRControllerState_t pControllerStateR;
 
 	vr::TrackedDeviceIndex_t leftControllerDeviceNo;
 	vr::TrackedDeviceIndex_t rightControllerDeviceNo;
-
-
 
 	float				singleEyeIPD;
 	float				hmdForwardOffset;
@@ -265,7 +259,7 @@ public:
 	float				hmdAspect;
 	hmdEye_t			hmdEye[2];
 
-	float				VRScreenSeparation; // for Reduce FOV motion sickness fix
+	float				VRScreenSeparation;		// for Reduce FOV motion sickness fix
 
 	float				officialIPD;
 	float				officialHeight;
@@ -274,18 +268,7 @@ public:
 	float				manualHeight;
 
 	idImage*			hmdEyeImage[2];			// TODO REMOVE duplicate of stereoImages in render backend
-	idImage*			hmdCurrentRender[2];
-
-	int					mirrorW;
-	int					mirrorH;
-
-	idImage*			primaryFBOimage;
-	idImage*			resolveFBOimage;
-	idImage*			fullscreenFBOimage;
-
-	double				hmdFrameTime;
-	bool				hmdPositionTracked;
-	int					currentEye;
+	idImage*			hmdCurrentRender[2];	// these point to idRenderBackend::stereoRenderImages
 
 	idVec3				trackingOriginOffset;
 	float				trackingOriginYawOffset;
@@ -317,8 +300,6 @@ public:
 	int					lastRead;
 	int					currentRead;
 	bool				updateScreen;
-
-	bool				scanningPDA;
 
 	float				bodyMoveAng;
 
@@ -381,8 +362,6 @@ private:
 
 };
 
-#endif
-
 extern idCVar vr_scale;
 extern idCVar vr_normalViewHeight;
 extern idCVar vr_useOculusProfile;
@@ -391,7 +370,6 @@ extern idCVar vr_manualIPD;
 extern idCVar vr_manualHeight;
 extern idCVar vr_useFloorHeight;
 
-//extern idCV vr_viewModelArms;
 extern idCVar vr_wristStatMon;
 extern idCVar vr_disableWeaponAnimation;
 extern idCVar vr_headKick;
@@ -470,8 +448,6 @@ extern idCVar vr_deadzonePitch;
 extern idCVar vr_deadzoneYaw;
 extern idCVar vr_comfortDelta;
 extern idCVar vr_comfortJetStrafeDelta;
-
-//extern idCV vr_interactiveCinematic;
 
 extern idCVar vr_headingBeamMode;
 
@@ -558,3 +534,4 @@ extern idCVar vr_headshotMultiplier;
 extern iVr* vrSystem;
 extern iVoice* vrVoice;
 
+#endif

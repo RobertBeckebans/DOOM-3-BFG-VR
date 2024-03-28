@@ -349,7 +349,6 @@ idMenuScreen_Shell_VR_Profile_Options::idMenuDataSource_Shell_VR_Profile_Options
 */
 void idMenuScreen_Shell_VR_Profile_Options::idMenuDataSource_Shell_VR_Profile_Options::LoadData()
 {
-
 	originalUseOculusProfile = vr_useOculusProfile.GetInteger();
 	originalIPD = vr_manualIPD.GetFloat();
 	originalHeight = vr_manualHeight.GetFloat();

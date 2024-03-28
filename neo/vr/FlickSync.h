@@ -32,7 +32,7 @@ If you have questions concerning this license or the applicable additional terms
 #ifndef __Flicksync_H__
 #define __Flicksync_H__
 
-typedef enum
+enum
 {
 	FLICK_NONE = 0,
 	FLICK_BETRUGER = 1,	 // Dr. Malcom Betruger
@@ -54,7 +54,7 @@ typedef enum
 	FLICK_PLAYER = 17,   // POV or our silent protagonist, even though we have no lines
 };
 
-typedef enum
+enum t_cutscene
 {
 	// Mars City 1
 	CUTSCENE_NONE = 0,
@@ -154,9 +154,9 @@ typedef enum
 
 	CUTSCENE_FLICKSYNC_COMPLETE,
 	CUTSCENE_FLICKSYNC_GAMEOVER
-} t_cutscene;
+};
 
-typedef enum
+enum
 {
 	SCENES_ALL = 0,
 	SCENES_CHAPTER = 1,

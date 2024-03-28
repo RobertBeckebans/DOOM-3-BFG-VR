@@ -129,7 +129,6 @@ idCVar vr_wristStatMon( "vr_wristStatMon", "1", CVAR_INTEGER | CVAR_ARCHIVE, "Us
 // Koz display windows monitor name in the resolution selection menu, helpful to ID which is the rift if using extended mode
 idCVar vr_listMonitorName( "vr_listMonitorName", "0", CVAR_BOOL | CVAR_ARCHIVE | CVAR_GAME, "List monitor name with resolution." );
 
-//idCVar vr_viewModelArms( "vr_viewModelArms", "1", CVAR_BOOL | CVAR_GAME | CVAR_ARCHIVE, " Dont change this, will be removed. Display arms on view models in VR" );
 idCVar vr_disableWeaponAnimation( "vr_disableWeaponAnimation", "1", CVAR_BOOL | CVAR_ARCHIVE | CVAR_GAME, "Disable weapon animations in VR. ( 1 = disabled )" );
 idCVar vr_headKick( "vr_headKick", "0", CVAR_BOOL | CVAR_ARCHIVE | CVAR_GAME, "Damage can 'kick' the players view. 0 = Disabled in VR." );
 //idCVar vr_showBody( "vr_showBody", "1", CVAR_BOOL | CVAR_ARCHIVE | CVAR_GAME, "Dont change this! Will be removed shortly, modifying will cause the player to have extra hands." );
@@ -140,8 +139,6 @@ idCVar vr_deadzonePitch( "vr_deadzonePitch", "90", CVAR_FLOAT | CVAR_GAME | CVAR
 idCVar vr_deadzoneYaw( "vr_deadzoneYaw", "30", CVAR_FLOAT | CVAR_GAME | CVAR_ARCHIVE, "Horizontal Aim Deadzone", 0, 180 );
 idCVar vr_comfortDelta( "vr_comfortDelta", "10", CVAR_FLOAT | CVAR_GAME | CVAR_ARCHIVE, "Comfort Mode turning angle ", 0, 180 );
 idCVar vr_comfortJetStrafeDelta( "vr_comfortJetStrafeDelta", "90", CVAR_FLOAT | CVAR_GAME | CVAR_ARCHIVE, "Comfort Mode jetStrafe angle ", 0, 90 );
-
-//idCVar vr_interactiveCinematic( "vr_interactiveCinematic", "1", CVAR_BOOL | CVAR_GAME | CVAR_ARCHIVE, "Interactive cinematics in VR ( no camera )" );
 
 idCVar vr_headingBeamMode( "vr_headingBeamMode", "3", CVAR_INTEGER | CVAR_GAME | CVAR_ARCHIVE, "0 = disabled, 1 = solid, 2 = arrows, 3 = scrolling arrows" );
 
@@ -268,7 +265,6 @@ iVr::iVr()
 	wasLoaded = false;
 	shouldRecenter = false;
 
-	PDAclipModelSet = false;
 	useFBO = false;
 	VR_USE_MOTION_CONTROLS = 0;
 
@@ -333,8 +329,6 @@ iVr::iVr()
 
 	swfRenderMode = RENDERING_NORMAL;
 
-	isWalking = false;
-
 	forceRun = false;
 
 	hmdBodyTranslation = vec3_zero;
@@ -377,8 +371,6 @@ iVr::iVr()
 	wipAvgPeriod = 0.0f;
 	wipTotalDeltaAvg = 0.0f;
 
-	hmdFrameTime = 0;
-
 	lastRead = 0;
 	currentRead = 0;
 	updateScreen = false;
@@ -387,7 +379,6 @@ iVr::iVr()
 
 	bodyMoveAng = 0.0f;
 	teleportButtonCount = 0;
-
 
 	currentFlashMode = vr_flashlightMode.GetInteger();
 	renderingSplash = true;
@@ -402,9 +393,6 @@ iVr::iVr()
 
 	currentHandWorldPosition[0] = vec3_zero;
 	currentHandWorldPosition[1] = vec3_zero;
-
-
-
 }
 
 idMat4 ConvertSteamVRMatrixToidMat4( const vr::HmdMatrix34_t& matPose )

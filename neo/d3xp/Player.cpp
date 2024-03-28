@@ -8428,8 +8428,7 @@ void idPlayer::UpdateFocus()
 			}
 		}
 
-		if( ( !ent->GetRenderEntity() || !ent->GetRenderEntity()->gui[0] || !ent->GetRenderEntity()->gui[0]->IsInteractive() ) && ( !game->IsPDAOpen() /* && !vrSystem->PDAclipModelSet */ ) ) // Koz don't bail if the PDA is open and clipmodel is set.
-
+		if( ( !ent->GetRenderEntity() || !ent->GetRenderEntity()->gui[0] || !ent->GetRenderEntity()->gui[0]->IsInteractive() ) && ( !game->IsPDAOpen() ) )
 		{
 			continue;
 		}
@@ -13569,7 +13568,6 @@ void idPlayer::Think()
 	}
 
 	static int lastFlashMode = vrSystem->GetCurrentFlashMode();
-	//static bool lastViewArms = vr_viewModelArms.GetBool();
 	static bool lastFists = false;
 	static bool lastHandInGui = false;
 

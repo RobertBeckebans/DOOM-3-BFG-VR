@@ -319,9 +319,6 @@ eye textures: idImage leftCurrent, rightCurrent
 
 void iVr::HMDRender( idImage* leftCurrent, idImage* rightCurrent )
 {
-	static int FBOW;
-	static int FBOH;
-
 	{
 		// make sure vsync is off.
 		wglSwapIntervalEXT( 0 );
