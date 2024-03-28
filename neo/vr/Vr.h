@@ -30,18 +30,11 @@ If you have questions concerning this license or the applicable additional terms
 #include "precompiled.h"
 #pragma hdrstop
 
-#ifdef USE_OVR
-	#include "../libs/LibOVR/Include/OVR_CAPI.h"
-	#include "../libs/LibOVR/Include/OVR_CAPI_GL.h"
-#endif
-
 #include "vr_hmd.h"
 #include "Voice.h"
 #include "FlickSync.h"
 #include "../renderer/Framebuffer.h"
-#ifdef USE_OVR
-	#include "../libs/LibOVR/Include/OVR_CAPI_Audio.h"
-#endif
+
 #include "../libs/openvr/headers/openvr.h"
 
 
@@ -116,7 +109,6 @@ public:
 	void				HMDInitializeDistortion();
 	void				HMDGetOrientation( idAngles& hmdAngles, idVec3& headPositionDelta, idVec3& bodyPositionDelta, idVec3& absolutePosition, bool resetTrackingOffset );
 	void				HMDRender( idImage* leftCurrent, idImage* rightCurrent );
-	bool				HMDRenderQuad( idImage* leftCurrent, idImage* rightCurrent );
 	void				HMDTrackStatic( bool is3D );
 	void				HUDRender( idImage* image0, idImage* image1 );
 	void				HMDResetTrackingOriginOffset();
@@ -229,13 +221,6 @@ public:
 	int					weaponHand;
 
 	bool				hasHMD;
-	bool				hasOculusRift;
-
-	bool				m_bDebugOpenGL;
-	bool				m_bVerbose;
-	bool				m_bPerf;
-	bool				m_bVblank;
-	bool				m_bGlFinishHack;
 
 	vr::IVRSystem*			m_pHMD;
 	vr::IVRCompositor*		m_pCompositor;

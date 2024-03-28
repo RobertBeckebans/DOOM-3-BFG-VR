@@ -424,7 +424,6 @@ idPlayerProfile::ExecConfig
 */
 void idPlayerProfile::ExecConfig( bool save, bool forceDefault )
 {
-
 	int flags = 0;
 	if( !save )
 	{
@@ -450,23 +449,12 @@ void idPlayerProfile::ExecConfig( bool save, bool forceDefault )
 
 	if( vrSystem->IsActive() )
 	{
-		//cmdSystem->AppendCommandText( "exec vr_default.cfg\n" );
-		//cmdSystem->AppendCommandText( "exec vr.cfg\n" );
-
-		if( vrSystem->hasOculusRift )
-		{
-			cmdSystem->AppendCommandText( "exec vr_oculus_default.cfg\n" );
-		}
-		else if( vrSystem->hasHMD )
+		if( vrSystem->hasHMD )
 		{
 			cmdSystem->AppendCommandText( "exec vr_openvr_default.cfg\n" );
 		}
 
-		if( vrSystem->hasOculusRift )
-		{
-			cmdSystem->AppendCommandText( "exec vr_oculus.cfg\n" );
-		}
-		else if( vrSystem->hasHMD )
+		if( vrSystem->hasHMD )
 		{
 			cmdSystem->AppendCommandText( "exec vr_openvr.cfg\n" );
 		}

@@ -256,7 +256,6 @@ iVr::iVr()
 	isActive = false;
 
 	hasHMD = false;
-	hasOculusRift = false;
 	VR_GAME_PAUSED = false;
 	PDAforcetoggle = false;
 	PDAforced = false;
@@ -652,7 +651,6 @@ void iVr::HMDInitializeDistortion()
 		return;
 	}
 
-	if( !hasOculusRift )
 	{
 		m_mat4ProjectionLeft = GetHMDMatrixProjectionEye( vr::Eye_Left );
 		m_mat4ProjectionRight = GetHMDMatrixProjectionEye( vr::Eye_Right );
@@ -675,8 +673,6 @@ void iVr::HMDInitializeDistortion()
 
 		hmdForwardOffset = -EyeToHeadTransform.m[2][3];
 		singleEyeIPD = EyeToHeadTransform.m[0][3];
-
-
 	}
 
 	isActive = true;
@@ -849,37 +845,18 @@ void iVr::HMDInitializeDistortion()
 		common->Printf( "Finished setting skybox\n" );
 	}
 
-#ifdef _WIN32
-	if( !hasOculusRift )
-	{
-		wglSwapIntervalEXT( 0 );
-	}
-#endif
-
 	globalFramebuffers.primaryFBO->Bind();
 
-	if( !hasOculusRift )
+
 	{
-#ifdef _WIN32
-		wglSwapIntervalEXT( 0 );// make sure vsync is off.
-#endif
+		// make sure vsync is off.
+		wglSwapIntervalEXT( 0 );
+		r_swapInterval.SetInteger( 0 );
 		r_swapInterval.SetModified();
 	}
 
 	GL_CheckErrors();
 
-	// call this once now so the oculus layer has valid values to start with
-	// when rendering the intro bink and splash screen.
-	if( hasOculusRift )
-	{
-		idAngles angTemp = ang_zero;
-		idVec3 headPosTemp = vec3_zero;
-		idVec3 bodyPosTemp = vec3_zero;
-		idVec3 absTemp = vec3_zero;
-
-		HMDGetOrientation( angTemp, headPosTemp, bodyPosTemp, absTemp, false );
-	}
-	else
 	{
 		do
 		{
@@ -1441,13 +1418,6 @@ iVr::FrameStart
 void iVr::FrameStart()
 {
 	//common->Printf( "Framestart called from frame %d\n", idLib::frameNumber );
-
-	if( hasOculusRift )
-	{
-		HMDGetOrientation( poseHmdAngles, poseHmdHeadPositionDelta, poseHmdBodyPositionDelta, poseHmdAbsolutePosition, false );
-		remainingMoveHmdBodyPositionDelta = poseHmdBodyPositionDelta;
-		return;
-	}
 
 	static int lastFrame = -1;
 

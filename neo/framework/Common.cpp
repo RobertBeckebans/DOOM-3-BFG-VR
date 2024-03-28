@@ -449,14 +449,7 @@ void idCommonLocal::WriteConfiguration()
 	// Koz begin
 	if( vrSystem->IsActive() )
 	{
-		if( vrSystem->hasOculusRift )
-		{
-			WriteConfigToFile( "vr_oculus.cfg" );
-		}
-		else
-		{
-			WriteConfigToFile( "vr_openvr.cfg" );
-		}
+		WriteConfigToFile( "vr_openvr.cfg" );
 	}
 	else
 	{
@@ -1288,48 +1281,33 @@ void idCommonLocal::Init( int argc, const char* const* argv, const char* cmdline
 
 		// Carl: init the Virtual Reality head tracking, detect any connected HMDs, and read display parameters
 		// this needs to happen before the cfg files are loaded.
-
-		// Koz
-		vrSystem->HMDInit(); // Koz init the HMD.
+		vrSystem->HMDInit();
 		vrSystem->showingIntroVideo = true;
 
 		// exec the startup scripts
 		cmdSystem->BufferCommandText( CMD_EXEC_APPEND, "exec default.cfg\n" );
 
-#ifdef CONFIG_FILE
+		// Koz begin
+		if( vrSystem->hasHMD )
+		{
+			cmdSystem->BufferCommandText( CMD_EXEC_APPEND, "exec vr_openvr_default.cfg\n" );
+		}
+
 		// skip the config file if "safe" is on the command line
 		if( !SafeMode() && !g_demoMode.GetBool() )
 		{
-			cmdSystem->BufferCommandText( CMD_EXEC_APPEND, "exec " CONFIG_FILE "\n" );
+			if( vrSystem->hasHMD )
+			{
+				cmdSystem->BufferCommandText( CMD_EXEC_APPEND, "exec vr_openvr.cfg\n" );
+			}
+			else
+			{
+				cmdSystem->BufferCommandText( CMD_EXEC_APPEND, "exec " CONFIG_FILE "\n" );
+			}
 		}
-#endif
+		// Koz end
 
 		cmdSystem->BufferCommandText( CMD_EXEC_APPEND, "exec autoexec.cfg\n" );
-
-		// Koz begin
-		if( vrSystem->hasOculusRift )
-		{
-			cmdSystem->AppendCommandText( "exec vr_oculus_default.cfg\n" );
-		}
-		else if( vrSystem->hasHMD )
-		{
-			cmdSystem->AppendCommandText( "exec vr_openvr_default.cfg\n" );
-		}
-
-
-		if( !SafeMode() && !g_demoMode.GetBool() )
-		{
-			if( vrSystem->hasOculusRift )
-			{
-				cmdSystem->AppendCommandText( "exec vr_oculus.cfg\n" );
-			}
-			else if( vrSystem->hasHMD )
-			{
-				cmdSystem->AppendCommandText( "exec vr_openvr.cfg\n" );
-			}
-		}
-		cmdSystem->ExecuteCommandBuffer();
-		// Koz end
 
 		// run cfg execution
 		cmdSystem->ExecuteCommandBuffer();
@@ -1354,7 +1332,6 @@ void idCommonLocal::Init( int argc, const char* const* argv, const char* cmdline
 		renderSystem->Init();
 
 		// Koz begin
-		// initialize the HMD
 		if( vrSystem->hasHMD )
 		{
 			vrSystem->HMDInitializeDistortion();

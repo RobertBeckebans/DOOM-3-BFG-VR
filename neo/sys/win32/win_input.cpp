@@ -1304,7 +1304,7 @@ int idJoystickWin32::PollInputEvents( int inputDeviceNum )
 		//=============================
 		// Koz begin add SteamVR controllers
 
-		if( vrSystem->hasHMD && !vrSystem->hasOculusRift )  // was  vrSystem->VR_USE_MOTION_CONTROLS && vrSystem->motionControlType == MOTION_STEAMVR
+		if( vrSystem->hasHMD )  // was  vrSystem->VR_USE_MOTION_CONTROLS && vrSystem->motionControlType == MOTION_STEAMVR
 		{
 			int dupeThreshold = vr_openVrStuckPadAxisFixThresh.GetInteger();
 			bool defaultX = false;

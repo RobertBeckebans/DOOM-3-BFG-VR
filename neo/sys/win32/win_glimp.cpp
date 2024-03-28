@@ -1762,13 +1762,17 @@ void GLimp_SwapBuffers()
 		r_swapInterval.ClearModified();
 
 		int interval = 0;
-		if( r_swapInterval.GetInteger() == 1 )
+
+		if( !vrSystem->hasHMD )
 		{
-			interval = ( glConfig.swapControlTearAvailable ) ? -1 : 1;
-		}
-		else if( r_swapInterval.GetInteger() == 2 )
-		{
-			interval = 1;
+			if( r_swapInterval.GetInteger() == 1 )
+			{
+				interval = ( glConfig.swapControlTearAvailable ) ? -1 : 1;
+			}
+			else if( r_swapInterval.GetInteger() == 2 )
+			{
+				interval = 1;
+			}
 		}
 
 		if( WGLEW_EXT_swap_control )

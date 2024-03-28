@@ -798,7 +798,7 @@ void idRenderBackend::GL_BlockingSwapBuffers()
 	glState.frameCounter++;
 	glState.frameParity = glState.frameCounter % NUM_FRAME_DATA;
 
-	if( vrSystem->IsActive() && !vrSystem->hasOculusRift )
+	if( vrSystem->IsActive() )
 	{
 		vrSystem->FrameStart();
 	}

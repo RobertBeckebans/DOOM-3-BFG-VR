@@ -10127,8 +10127,8 @@ idPlayer::EvaluateControls
 */
 void idPlayer::EvaluateControls()
 {
-	static float strafeHiThresh = vrSystem->hasOculusRift ? 0.3f : 0.4f;
-	static float strafeLoThresh = vrSystem->hasOculusRift ? 0.25f : 0.25f;
+	const float strafeHiThresh = 0.4f;
+	const float strafeLoThresh = 0.25f;
 
 	static bool lastJetStrafe = false;
 	static bool currentJetStrafe = false;

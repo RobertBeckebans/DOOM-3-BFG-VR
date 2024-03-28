@@ -555,12 +555,6 @@ void idCommonLocal::Frame()
 		// This is the only place this is incremented
 		idLib::frameNumber++;
 
-		if( vrSystem->IsActive() && vrSystem->hasOculusRift )
-		{
-			vrSystem->FrameStart();
-		}
-		//common->Printf( "Common::Frame calling FrameStart when idLib::frameNumber++ = %d\n", idLib::frameNumber );
-
 		// allow changing SIMD usage on the fly
 		if( com_forceGenericSIMD.IsModified() )
 		{
