@@ -756,7 +756,6 @@ void Sys_SetRumble( int device, int low, int hi )
 {
 	if( vrSystem->motionControlType == MOTION_STEAMVR && vr_rumbleEnable.GetBool() )
 	{
-
 		static int currentFrame = 0;
 		static int val = 0;
 

@@ -152,9 +152,9 @@ idCVar vr_nodalX( "vr_nodalX", "-3", CVAR_FLOAT | CVAR_ARCHIVE, "Forward offset 
 idCVar vr_nodalZ( "vr_nodalZ", "-6", CVAR_FLOAT | CVAR_ARCHIVE, "Vertical offset from neck to eye height" );
 
 
-idCVar vr_vcx( "vr_vcx", "-3.5", CVAR_FLOAT | CVAR_ARCHIVE, "Controller X offset to handle center" ); // these values work for steam
-idCVar vr_vcy( "vr_vcy", "0", CVAR_FLOAT | CVAR_ARCHIVE, "Controller Y offset to handle center" );
-idCVar vr_vcz( "vr_vcz", "-.5", CVAR_FLOAT | CVAR_ARCHIVE, "Controller Z offset to handle center" );
+idCVar vr_controllerOffsetX( "vr_controllerOffsetX", "-3.5", CVAR_FLOAT | CVAR_ARCHIVE, "Controller X offset to handle center" ); // these values work for steam
+idCVar vr_controllerOffsetY( "vr_controllerOffsetY", "0", CVAR_FLOAT | CVAR_ARCHIVE, "Controller Y offset to handle center" );
+idCVar vr_controllerOffsetZ( "vr_controllerOffsetZ", "-.5", CVAR_FLOAT | CVAR_ARCHIVE, "Controller Z offset to handle center" );
 
 idCVar vr_mountx( "vr_mountx", "0", CVAR_FLOAT | CVAR_ARCHIVE, "If motion controller mounted on object, X offset from controller to object handle.\n (Eg controller mounted on Topshot)" );
 idCVar vr_mounty( "vr_mounty", "0", CVAR_FLOAT | CVAR_ARCHIVE, "If motion controller mounted on object, Y offset from controller to object handle.\n (Eg controller mounted on Topshot)" );
@@ -233,8 +233,7 @@ idCVar vr_headshotMultiplier( "vr_headshotMultiplier", "2.5", CVAR_FLOAT | CVAR_
 
 //===================================================================
 
-int fboWidth;
-int fboHeight;
+
 
 iVr vrCom;
 iVr* vrSystem = &vrCom;
@@ -666,9 +665,6 @@ void iVr::HMDInitializeDistortion()
 
 	primaryFBOWidth = hmdEye[0].renderTargetRes.x;
 	primaryFBOHeight = hmdEye[0].renderTargetRes.y;
-
-	fboWidth = primaryFBOWidth;
-	fboHeight = primaryFBOHeight;
 
 	if( !fboCreated )
 	{
@@ -1232,13 +1228,13 @@ void iVr::MotionControlGetHand( int hand, idVec3& motionPosition, idQuat& motion
 	if( hand == vr_weaponHand.GetInteger() && vr_mountedWeaponController.GetBool() )
 	{
 		idVec3 controlToHand = idVec3( vr_mountx.GetFloat() / vr_scale.GetFloat(), vr_mounty.GetFloat() / vr_scale.GetFloat(), vr_mountz.GetFloat()  / vr_scale.GetFloat() );
-		idVec3 controlCenter = idVec3( vr_vcx.GetFloat() / vr_scale.GetFloat(), vr_vcy.GetFloat() / vr_scale.GetFloat(), vr_vcz.GetFloat()  / vr_scale.GetFloat() );
+		idVec3 controlCenter = idVec3( vr_controllerOffsetX.GetFloat() / vr_scale.GetFloat(), vr_controllerOffsetY.GetFloat() / vr_scale.GetFloat(), vr_controllerOffsetZ.GetFloat()  / vr_scale.GetFloat() );
 
 		motionPosition += ( controlToHand - controlCenter ) * motionRotation; // pivot around the new point
 	}
 	else
 	{
-		motionPosition += idVec3( vr_vcx.GetFloat()  / vr_scale.GetFloat(), vr_vcy.GetFloat() / vr_scale.GetFloat(), vr_vcz.GetFloat() / vr_scale.GetFloat() ) * motionRotation;
+		motionPosition += idVec3( vr_controllerOffsetX.GetFloat()  / vr_scale.GetFloat(), vr_controllerOffsetY.GetFloat() / vr_scale.GetFloat(), vr_controllerOffsetZ.GetFloat() / vr_scale.GetFloat() ) * motionRotation;
 	}
 }
 
@@ -1250,7 +1246,6 @@ iVr::MotionControllGetLeftHand;
 */
 void iVr::MotionControlGetLeftHand( idVec3& motionPosition, idQuat& motionRotation )
 {
-	static idAngles angles = ang_zero;
 	switch( motionControlType )
 	{
 		case MOTION_STEAMVR:
@@ -1259,7 +1254,7 @@ void iVr::MotionControlGetLeftHand( idVec3& motionPosition, idQuat& motionRotati
 			//MotionControlGetOpenVrController( deviceNo, motionPosition, motionRotation );
 			MotionControlGetOpenVrController( leftControllerDeviceNo, motionPosition, motionRotation );
 
-			//motionPosition += idVec3( vr_vcx.GetFloat(), vr_vcy.GetFloat(), vr_vcz.GetFloat() ) * motionRotation;
+			//motionPosition += idVec3( vr_controllerOffsetX.GetFloat(), vr_controllerOffsetY.GetFloat(), vr_controllerOffsetZ.GetFloat() ) * motionRotation;
 
 			break;
 		}
@@ -1282,7 +1277,6 @@ iVr::MotionControllGetRightHand;
 */
 void iVr::MotionControlGetRightHand( idVec3& motionPosition, idQuat& motionRotation )
 {
-	static idAngles angles = ang_zero;
 	switch( motionControlType )
 	{
 		case MOTION_STEAMVR:
@@ -1291,7 +1285,7 @@ void iVr::MotionControlGetRightHand( idVec3& motionPosition, idQuat& motionRotat
 			//MotionControlGetOpenVrController( deviceNo, motionPosition, motionRotation );
 			MotionControlGetOpenVrController( rightControllerDeviceNo, motionPosition, motionRotation );
 
-			//motionPosition += idVec3( vr_vcx.GetFloat(), vr_vcy.GetFloat(), vr_vcz.GetFloat() ) * motionRotation;
+			//motionPosition += idVec3( vr_controllerOffsetX.GetFloat(), vr_controllerOffsetY.GetFloat(), vr_controllerOffsetZ.GetFloat() ) * motionRotation;
 			break;
 		}
 
