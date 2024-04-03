@@ -1414,52 +1414,27 @@ bool idGameLocal::InitFromSaveGame( const char* mapName, idRenderWorld* renderWo
 	// Create the list of all objects in the game
 	savegame.CreateObjects();
 
-	loadScriptFailed = false;
-
-	int i_skill;
-	idStr first_decl_string;
-	idStr second_decl_string;
-
 	// Load the idProgram, also checking to make sure scripting hasn't changed since the savegame
-	if( program.Restore( &savegame, i_skill, first_decl_string, second_decl_string ) == false )
+	if( program.Restore( &savegame ) == false )
 	{
-		// Carl: Keep loading even if the scripts have changed since we saved.
-		loadScriptFailed = true;
-		common->Warning( "Game was saved with different scripts (a different mod). All scripts will be reset." );
-		// if we can't use the script, then all the thread objects need to be destroyed and replaced
-		for( i = 1; i < savegame.objects.Num(); i++ )
-		{
-			if( savegame.objects[i]->IsType( idThread::Type ) )
-			{
-				delete( idThread* )( savegame.objects[i] );
-				savegame.objects[i] = NULL;
-			}
-		}
-		program.Startup( SCRIPT_DEFAULT );
-		program.Restart();
-#if 0
+
 		// Abort the load process, and let the session know so that it can restart the level
 		// with the player persistent data.
 		savegame.DeleteObjects();
 		program.Restart();
 		return false;
-#endif
 	}
-	if( i_skill < 0 || i_skill > 4 )
-	{
-		Error( "Critical error while loading save game.", num );
-	}
-	g_skill.SetInteger( i_skill );
+
+	savegame.ReadInt( i );
+	g_skill.SetInteger( i );
 
 	// precache any media specified in the map
-	savegame.ReadDecls( first_decl_string, second_decl_string );
+	savegame.ReadDecls();
 
 	savegame.ReadDict( &si );
 	SetServerInfo( si );
 
-	//int start = savegame.file->Tell();
 	savegame.ReadInt( numClients );
-	//common->Printf("idGameLocal::InitFromSaveGame() Read Clients start, num=%d, %d\n", numClients, start); //Carl debug
 	for( i = 0; i < numClients; i++ )
 	{
 		//savegame.ReadUsercmd( usercmds[ i ] );
@@ -1470,8 +1445,6 @@ bool idGameLocal::InitFromSaveGame( const char* mapName, idRenderWorld* renderWo
 		savegame.ReadDict( &persistentPlayerInfo[ i ] );
 	}
 
-	//start = savegame.file->Tell();
-	//common->Printf("idGameLocal::InitFromSaveGame() Read GENTITIES start, num=%d, %d\n", MAX_GENTITIES, start); //Carl debug
 	for( i = 0; i < MAX_GENTITIES; i++ )
 	{
 		savegame.ReadObject( reinterpret_cast<idClass*&>( entities[ i ] ) );
@@ -1506,29 +1479,18 @@ bool idGameLocal::InitFromSaveGame( const char* mapName, idRenderWorld* renderWo
 
 	savegame.ReadObject( reinterpret_cast<idClass*&>( world ) );
 
-	//start = savegame.file->Tell();
 	savegame.ReadInt( num );
-	//common->Printf("idGameLocal::InitFromSaveGame() Read Spawned Entities start, num=%d, %d\n", num, start); //Carl debug
 	for( i = 0; i < num; i++ )
 	{
-		bool wasntNull = savegame.ReadObject( reinterpret_cast<idClass*&>( ent ) );
-		//assert( ent );
+		savegame.ReadObject( reinterpret_cast<idClass*&>( ent ) );
+		assert( ent );
 		if( ent )
 		{
 			ent->spawnNode.AddToEnd( spawnedEntities );
 		}
-		//else if ( wasntNull )
-		//{
-		//	// was originally an idThread entity
-		//	ent = new idEntity();
-		//	ent->SetName( va("ThreadDummyEntity%d", i) );
-		//	ent->spawnNode.AddToEnd( spawnedEntities );
-		//}
 	}
 
-	//start = savegame.file->Tell();
 	savegame.ReadInt( num );
-	//common->Printf("idGameLocal::InitFromSaveGame() Read Active Entities start, num=%d, %d\n", num, start); //Carl debug
 	for( i = 0; i < num; i++ )
 	{
 		savegame.ReadObject( reinterpret_cast<idClass*&>( ent ) );
@@ -1552,16 +1514,7 @@ bool idGameLocal::InitFromSaveGame( const char* mapName, idRenderWorld* renderWo
 	savegame.ReadInt( i );
 	random.SetSeed( i );
 
-	if( loadScriptFailed )
-	{
-		idThread* temp = NULL;
-		savegame.ReadObject( reinterpret_cast<idClass*&>( temp ) );
-		InitScriptForMap();
-	}
-	else
-	{
-		savegame.ReadObject( reinterpret_cast<idClass*&>( frameCommandThread ) );
-	}
+	savegame.ReadObject( reinterpret_cast<idClass*&>( frameCommandThread ) );
 
 	// clip
 	// push
@@ -1610,8 +1563,6 @@ bool idGameLocal::InitFromSaveGame( const char* mapName, idRenderWorld* renderWo
 	savegame.ReadBool( isNewFrame );
 	savegame.ReadFloat( clientSmoothing );
 
-	//start = savegame.file->Tell();
-	//common->Printf("idGameLocal::InitFromSaveGame() Read PortalSkyEnt start, %d\n", start); //Carl debug
 	portalSkyEnt.Restore( &savegame );
 	savegame.ReadBool( portalSkyActive );
 
@@ -1635,9 +1586,7 @@ bool idGameLocal::InitFromSaveGame( const char* mapName, idRenderWorld* renderWo
 	savegame.ReadBool( mapCycleLoaded );
 	savegame.ReadInt( spawnCount );
 
-	//start = savegame.file->Tell();
 	savegame.ReadInt( num );
-	//common->Printf("idGameLocal::InitFromSaveGame() Read Areas start, num=%d, %d\n", num, start); //Carl debug
 	if( num )
 	{
 		if( num != gameRenderWorld->NumAreas() )
@@ -1659,8 +1608,6 @@ bool idGameLocal::InitFromSaveGame( const char* mapName, idRenderWorld* renderWo
 	lastAIAlertEntity.Restore( &savegame );
 	savegame.ReadInt( lastAIAlertTime );
 
-	//start = savegame.file->Tell();
-	//common->Printf("idGameLocal::InitFromSaveGame() Read spawnArgs, %d\n", start); //Carl debug
 	savegame.ReadDict( &spawnArgs );
 
 	savegame.ReadInt( playerPVS.i );
@@ -1686,63 +1633,6 @@ bool idGameLocal::InitFromSaveGame( const char* mapName, idRenderWorld* renderWo
 	idEvent::Restore( &savegame );
 
 	savegame.RestoreObjects();
-	// now everything has been loaded from the file
-
-	// loop through and delete any objects spawned by constructors before they will be created again by calling constructors again
-	if( loadScriptFailed )
-	{
-		for( idEntity* parent = spawnedEntities.Next(); parent != NULL; parent = parent->spawnNode.Next() )
-		{
-			const char* s;
-			if( parent->IsType( idAI::Type ) && ( s = parent->scriptObject.GetTypeName() ) )
-			{
-				if( idStr::Cmp( s, "char_sentry" ) == 0 || idStr::Cmp( s, "monster_boss_guardian" ) == 0 || idStr::Cmp( s, "monster_boss_guardian2" ) == 0
-						|| idStr::Cmp( s, "monster_boss_guardian_spawner" ) == 0 || idStr::Cmp( s, "monster_boss_guardian2_spawner_obj" ) == 0 || idStr::Cmp( s, "monster_boss_guardian_seeker" ) == 0
-						|| idStr::Cmp( s, "monster_demon_sentry" ) == 0 || idStr::Cmp( s, "monster_flying_forgotten" ) == 0 || idStr::Cmp( s, "monster_turret" ) == 0 )
-				{
-					idEntity* ent;
-					if( ent = FindEntity( parent->name + "_light" ) )
-					{
-						ent->PostEventMS( &EV_Remove, 0 );
-					}
-					if( ent = FindEntity( parent->name + "_light1" ) )
-					{
-						ent->PostEventMS( &EV_Remove, 0 );
-					}
-					if( ent = FindEntity( parent->name + "_light2" ) )
-					{
-						ent->PostEventMS( &EV_Remove, 0 );
-					}
-					if( ent = FindEntity( parent->name + "_lightbeam" ) )
-					{
-						ent->PostEventMS( &EV_Remove, 0 );
-					}
-					if( ent = FindEntity( parent->name + "light" ) )
-					{
-						ent->PostEventMS( &EV_Remove, 0 );
-					}
-					if( ent = FindEntity( parent->name + "beam" ) )
-					{
-						ent->PostEventMS( &EV_Remove, 0 );
-					}
-					if( ent = FindEntity( parent->name + "beam_target" ) )
-					{
-						ent->PostEventMS( &EV_Remove, 0 );
-					}
-					if( ent = FindEntity( parent->name + "_lightning" ) )
-					{
-						ent->PostEventMS( &EV_Remove, 0 );
-					}
-					if( ent = FindEntity( parent->name + "_spawn" ) )
-					{
-						ent->PostEventMS( &EV_Remove, 0 );
-					}
-				}
-			}
-		}
-
-	}
-
 
 	mpGame.Reset();
 	mpGame.Precache();

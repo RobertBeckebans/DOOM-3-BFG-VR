@@ -99,7 +99,7 @@ static void WIN_EnableAltTab()
 
 void WIN_Sizing( WORD side, RECT* rect )
 {
-	if( !tr.IsInitialized() || renderSystem->GetWidth() <= 0 || renderSystem->GetHeight() <= 0 )
+	if( !renderSystem->IsInitialized() || renderSystem->GetWidth() <= 0 || renderSystem->GetHeight() <= 0 )
 	{
 		return;
 	}
@@ -181,7 +181,7 @@ LONG WINAPI MainWndProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
 			vrVoice->Event( wParam, lParam );
 			break;
 		case WM_WINDOWPOSCHANGED:
-			if( tr.IsInitialized() )
+			if( renderSystem->IsInitialized() )
 			{
 				RECT rect;
 				if( ::GetClientRect( win32.hWnd, &rect ) )
@@ -198,6 +198,9 @@ LONG WINAPI MainWndProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
 							r_windowWidth.SetInteger( glConfig.nativeScreenWidth );
 							r_windowHeight.SetInteger( glConfig.nativeScreenHeight );
 						}
+
+						// DG: ImGui must know about the changed window size
+						ImGuiHook::NotifyDisplaySizeChanged( glConfig.nativeScreenWidth, glConfig.nativeScreenHeight );
 					}
 					// Koz
 					if( vr_mouseCapture.GetInteger() == 1 )

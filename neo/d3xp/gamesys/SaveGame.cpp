@@ -968,44 +968,22 @@ idRestoreGame::~idRestoreGame()
 ================
 idRestoreGame::ReadDecls
 ================
-Carl: We already read the first declName in the list while reading the script variables.
 */
-void idRestoreGame::ReadDecls( idStr& first_decl_string, idStr& second_decl_string )
+void idRestoreGame::ReadDecls()
 {
 	idStr declName;
-	bool first = true;
-	bool second = false;
-	//int start = file->Tell() - 4;
-	//common->Printf("idRestoreGame::ReadDecls() start, num=%d, %d\n", declManager->GetNumDeclTypes(), start); //Carl debug
 	for( int t = 0; t < declManager->GetNumDeclTypes(); t++ )
 	{
 		while( true )
 		{
-			if( first )
-			{
-				declName = first_decl_string;
-				first = false;
-				second = true;
-			}
-			else if( second )
-			{
-				declName = second_decl_string;
-				second = false;
-			}
-			else
-			{
-				ReadString( declName );
-			}
+			ReadString( declName );
 			if( declName.IsEmpty() )
 			{
-				//common->Printf("ReadDecls Empty, breaking.\n");
 				break;
 			}
-			//common->Printf("ReadDecls # %d name %s\n", t, declName.c_str());
 			declManager->FindType( ( declType_t )t, declName );
 		}
 	}
-	//common->Printf("idRestoreGame::ReadDecls() %d bytes, @%d\n", file->Tell() - start, start); //Carl debug
 }
 
 /*
@@ -1019,9 +997,7 @@ void idRestoreGame::CreateObjects()
 	idStr classname;
 	idTypeInfo* type;
 
-	//int start = file->Tell(); //Carl debug
 	ReadInt( num );
-	//common->Printf("idRestoreGame::CreateObjects() start num=%d, %d\n", num, start); //Carl debug
 
 	// create all the objects
 	objects.SetNum( num + 1 );
@@ -1042,7 +1018,6 @@ void idRestoreGame::CreateObjects()
 		InitTypeVariables( objects[i], type->classname, 0xce );
 #endif
 	}
-	//common->Printf("idRestoreGame::CreateObjects(), num=%d, %d bytes, %d\n",  num, file->Tell()-start, start); //Carl debug
 }
 
 /*
@@ -1052,114 +1027,17 @@ void idRestoreGame::RestoreObjects
 */
 void idRestoreGame::RestoreObjects()
 {
-	int i = 0;
+	int i;
 
-	//int start = file->Tell(); //Carl debug
-	//common->Printf("%d: ReadSoundCommands() start, %d\n", i, start); //Carl debug
 	ReadSoundCommands();
-	//int end = file->Tell(); //Carl debug
-	//common->Printf("%d: ReadSoundCommands() %d bytes, %d\n", i, end - start, start); //Carl debug
 
 	// read trace models
-	//start = end; //Carl debug
-	//common->Printf("%d: idClipModel::RestoreTraceModels() start, %d\n", i, start); //Carl debug
 	idClipModel::RestoreTraceModels( this );
-	//common->Printf("%d: idClipModel::RestoreTraceModels() %d bytes, %d\n", i, file->Tell() - start, start); //Carl debug
 
 	// restore all the objects
 	for( i = 1; i < objects.Num(); i++ )
 	{
-		//start = file->Tell(); //Carl debug
-		if( objects[i] )
-		{
-			//common->Printf("%d: %s::Restore() start, %d\n", i, objects[i]->GetType()->classname, start); //Carl debug
-			CallRestore_r( objects[ i ]->GetType(), objects[ i ] );
-			//end = file->Tell(); //Carl debug
-			//common->Printf("%d: %s::Restore() %d bytes, %d\n", i, objects[i]->GetType()->classname, end - start, start); //Carl debug
-		}
-		else
-		{
-			// Carl: If the object was a thread that we had to delete due to loading old savegame with bad scripts, read the dummy information manually
-			// copied from idScript::Restore
-			//common->Warning("objects[%d] is NULL\n", i);
-			//common->Printf("%d: Dummy idThread::Restore(NULL) start, %d\n", i, start); //Carl debug
-
-			int threadNum, waitingFor, waitingUntil, lastExecuteTime, creationTime;
-			idClass* waitingForThread;
-			idInterpreter interpreter;
-			idDict spawnArgs;
-			idStr threadName;
-			bool manualControl;
-
-
-			ReadInt( threadNum );
-
-			ReadObject( reinterpret_cast<idClass*&>( waitingForThread ) );
-			ReadInt( waitingFor );
-			ReadInt( waitingUntil );
-
-			// interpreter.Restore(this);
-			prstack_t			callStack[MAX_STACK_DEPTH];
-			int 				callStackDepth;
-			int 				maxStackDepth;
-			idStr funcname;
-			int func_index;
-			byte				localstack[LOCALSTACK_SIZE];
-			int 				localstackUsed;
-			int 				localstackBase;
-			int 				maxLocalstackUsed;
-			int 				instructionPointer;
-			int					popParms;
-			idClass*			eventEntity;
-			idClass*			thread;
-			bool				doneProcessing;
-			bool				threadDying;
-			bool				terminateOnExit;
-			bool				debug;
-
-			ReadInt( callStackDepth );
-			for( int j = 0; j < callStackDepth; j++ )
-			{
-				ReadInt( callStack[j].s );
-
-				ReadInt( func_index );
-
-				ReadInt( callStack[j].stackbase );
-			}
-			ReadInt( maxStackDepth );
-
-			ReadInt( localstackUsed );
-			Read( &localstack, localstackUsed );
-
-			ReadInt( localstackBase );
-			ReadInt( maxLocalstackUsed );
-
-			ReadInt( func_index );
-			ReadInt( instructionPointer );
-
-			ReadInt( popParms );
-
-			ReadString( funcname );
-
-			ReadObject( reinterpret_cast<idClass*&>( eventEntity ) );
-			ReadObject( reinterpret_cast<idClass*&>( thread ) );
-
-			ReadBool( doneProcessing );
-			ReadBool( threadDying );
-			ReadBool( terminateOnExit );
-			ReadBool( debug );
-			// end interpreter.Restore(this);
-
-			ReadDict( &spawnArgs );
-			ReadString( threadName );
-
-			ReadInt( lastExecuteTime );
-			ReadInt( creationTime );
-
-			ReadBool( manualControl );
-			//end = file->Tell(); //Carl debug
-			//common->Printf("%d: Dummy idThread::Restore(NULL) %d bytes, %d\n", i, end - start, start); //Carl debug
-		}
+		CallRestore_r( objects[ i ]->GetType(), objects[ i ] );
 	}
 
 	// regenerate render entities and render lights because are not saved
@@ -1430,9 +1308,8 @@ void idRestoreGame::ReadAngles( idAngles& angles )
 idRestoreGame::ReadObject
 ================
 */
-bool idRestoreGame::ReadObject( idClass*& obj )
+void idRestoreGame::ReadObject( idClass*& obj )
 {
-	//int start = file->Tell(); //Carl debug
 	int index;
 
 	ReadInt( index );
@@ -1441,11 +1318,6 @@ bool idRestoreGame::ReadObject( idClass*& obj )
 		Error( "idRestoreGame::ReadObject: invalid object index" );
 	}
 	obj = objects[ index ];
-	//if (obj)
-	//	common->Printf("  ReadObject(%s) 4 bytes, %d\n", obj->GetClassname(), start); //Carl debug
-	//else
-	//	common->Printf("  ReadObject(NULL) 4 bytes, %d\n", start); //Carl debug
-	return index > 0;
 }
 
 /*
@@ -1465,14 +1337,12 @@ idRestoreGame::ReadDict
 */
 void idRestoreGame::ReadDict( idDict* dict )
 {
-	int start = file->Tell(); //Carl debug
 	int num;
 	int i;
 	idStr key;
 	idStr value;
 
 	ReadInt( num );
-	//common->Printf("idRestoreGame::ReadDict() num=%d @%d\n", num, start); //Npi debug
 
 	if( num < 0 )
 	{
@@ -1488,16 +1358,11 @@ void idRestoreGame::ReadDict( idDict* dict )
 		dict->Clear();
 		for( i = 0; i < num; i++ )
 		{
-			int posi = file->Tell(); //Carl debug
 			ReadString( key );
 			ReadString( value );
 			dict->Set( key, value );
-			//common->Printf("idRestoreGame::ReadDict() %s = %s @%d\n", key, value, posi); //Npi debug
 		}
 	}
-	//int end = file->Tell();
-	//common->Printf("idRestoreGame::ReadDict() %d bytes, @%d\n", end-start, start); //Carl debug
-	//dict->Print();
 }
 
 /*

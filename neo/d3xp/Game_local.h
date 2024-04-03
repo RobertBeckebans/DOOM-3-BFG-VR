@@ -588,11 +588,6 @@ public:
 
 	virtual bool				InhibitControls();
 	virtual bool				IsPDAOpen() const;
-
-	// Carl begin
-	bool						loadScriptFailed;
-	// Koz end
-
 	virtual bool				IsPlayerChatting() const;
 
 	// Creates leaderboards for each map/mode defined.

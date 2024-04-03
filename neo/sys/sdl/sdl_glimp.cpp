@@ -30,6 +30,7 @@ If you have questions concerning this license or the applicable additional terms
 */
 
 #include "../../idlib/precompiled.h"
+#include <GL/glew.h>
 
 // DG: SDL.h somehow needs the following functions, so #undef those silly
 //     "don't use" #defines from Str.h
@@ -40,7 +41,7 @@ If you have questions concerning this license or the applicable additional terms
 
 #include <SDL.h>
 
-#include "renderer/tr_local.h"
+#include "renderer/RenderCommon.h"
 #include "sdl_local.h"
 
 idCVar in_nograb( "in_nograb", "0", CVAR_SYSTEM | CVAR_NOCHEAT, "prevents input grabbing" );
@@ -361,6 +362,11 @@ bool GLimp_Init( glimpParms_t parms )
 	{
 		common->Printf( "Using GLEW %s\n", glewGetString( GLEW_VERSION ) );
 	}
+
+#if defined(__APPLE__) && SDL_VERSION_ATLEAST(2, 0, 2)
+	// SRS - On OSX enable SDL2 relative mouse mode warping to capture mouse properly if outside of window
+	SDL_SetHintWithPriority( SDL_HINT_MOUSE_RELATIVE_MODE_WARP, "1", SDL_HINT_OVERRIDE );
+#endif
 
 	// DG: disable cursor, we have two cursors in menu (because mouse isn't grabbed in menu)
 	SDL_ShowCursor( SDL_DISABLE );

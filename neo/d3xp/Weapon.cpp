@@ -769,7 +769,7 @@ void idWeapon::Restore( idRestoreGame* savefile )
 	}
 
 	// Koz begin
-	if( savefile->version >= BUILD_NUMBER_FULLY_POSSESSED )
+	if( savefile->GetBuildNumber() >= BUILD_NUMBER_FULLY_POSSESSED )
 	{
 		for( int i = 0; i < 2; i++ )
 		{

@@ -256,7 +256,6 @@ idCommonLocal::LoadLoadingGui
 */
 void idCommonLocal::LoadLoadingGui( const char* mapName, bool& hellMap )
 {
-
 	defaultLoadscreen = false;
 	loadGUI = new idSWF( "loading/default", NULL );
 
@@ -578,7 +577,6 @@ void idCommonLocal::ExecuteMapChange()
 	}
 	else
 	{
-		gameLocal.loadScriptFailed = false;
 		if( !IsMultiplayer() )
 		{
 			assert( game->GetLocalClientNum() == 0 );
@@ -784,43 +782,8 @@ void idCommonLocal::ExecuteMapChange()
 		player->RecreateCopyJoints();
 	}
 
-	// Koz end
-
 	vrSystem->isLoading = false;
-
-	// Carl: Warning message
-	if( gameLocal.loadScriptFailed )
-	{
-		class idSWFScriptFunction_LoadNeedsRestart : public idSWFScriptFunction_RefCounted
-		{
-		public:
-			idSWFScriptFunction_LoadNeedsRestart( gameDialogMessages_t _msg, bool _accept )
-			{
-				msg = _msg;
-				accept = _accept;
-			}
-			idSWFScriptVar Call( idSWFScriptObject* thisObject, const idSWFParmList& parms )
-			{
-				common->Dialog().ClearDialog( msg );
-				if( accept )
-				{
-					cmdSystem->AppendCommandText( "restartMap\n" );
-				}
-				return idSWFScriptVar();
-			}
-		private:
-			gameDialogMessages_t msg;
-			bool accept;
-		};
-
-		idStaticList< idSWFScriptFunction*, 4 > callbacks;
-		callbacks.Append( new( TAG_SWF )idSWFScriptFunction_LoadNeedsRestart( GDM_RESTORE_CORRUPT_SAVEGAME, true ) );
-		callbacks.Append( new( TAG_SWF )idSWFScriptFunction_LoadNeedsRestart( GDM_RESTORE_CORRUPT_SAVEGAME, false ) );
-		idStaticList< idStrId, 4 > optionText;
-		optionText.Append( idStrId( "#str_04271" ) ); // Restart Map
-		optionText.Append( idStrId( "#str_00100113" ) ); // Continue
-		common->Dialog().AddDynamicDialog( GDM_RESTORE_CORRUPT_SAVEGAME, callbacks, optionText, true, "Warning: This game was loaded from a different mod. Would you like to restart this map (preserving your inventory) to prevent glitches? If you continue but get stuck due to glitches, use restartMap or endLevel console commands." );
-	}
+	// Koz end
 }
 
 /*
@@ -909,10 +872,12 @@ void idCommonLocal::UpdateLevelLoadPacifier()
 			}
 			txtVal->SetStrokeInfo( true, 1.75f, 0.75f );
 		}
+
 		if( !vrSystem->IsActive() )
 		{
-			UpdateScreen( false );    // Koz
+			UpdateScreen( false );
 		}
+
 		if( autoswapsRunning )
 		{
 			renderSystem->BeginAutomaticBackgroundSwaps( icon );
@@ -1131,7 +1096,6 @@ bool idCommonLocal::SaveGame( const char* saveName )
 	gameDetails.descriptors.Set( SAVEGAME_DETAIL_FIELD_LANGUAGE, sys_lang.GetString() );
 	gameDetails.descriptors.SetInt( SAVEGAME_DETAIL_FIELD_CHECKSUM, ( int )gameDetails.descriptors.Checksum() );
 
-	gameDetails.isRBDoom = 0; // Carl: Fully Possessed
 	gameDetails.slotName = saveName;
 	ScrubSaveGameFileName( gameDetails.slotName );
 
@@ -1148,11 +1112,8 @@ bool idCommonLocal::SaveGame( const char* saveName )
 
 	syncNextGameFrame = true;
 
-
-
 	// Koz close the saving dialog before returning or my crappy code to determine when to raise the pda for pause activities gets confused
 	Dialog().ShowSaveIndicator( false );
-
 
 	// Here make sure we pump the gui enough times to clear the 'saving' dialog
 	const bool captureToImage = false;
@@ -1184,7 +1145,7 @@ bool idCommonLocal::SaveGame( const char* saveName )
 idCommonLocal::LoadGame
 ===============
 */
-bool idCommonLocal::LoadGame( const char* saveName, uint8 isRBDoom )
+bool idCommonLocal::LoadGame( const char* saveName )
 {
 	// Koz begin
 	// Koz fixme do this right.
@@ -1228,7 +1189,7 @@ bool idCommonLocal::LoadGame( const char* saveName, uint8 isRBDoom )
 	const saveGameDetailsList_t& sgdl = session->GetSaveGameManager().GetEnumeratedSavegames();
 	for( int i = 0; i < sgdl.Num(); i++ )
 	{
-		if( sgdl[i].slotName == saveName && sgdl[i].isRBDoom == isRBDoom )
+		if( sgdl[i].slotName == saveName )
 		{
 			if( false && sgdl[i].GetLanguage() != sys_lang.GetString() ) // Carl: try to load games saved in other languages
 			{
@@ -1271,7 +1232,7 @@ bool idCommonLocal::LoadGame( const char* saveName, uint8 isRBDoom )
 	saveFile.Clear( false );
 	stringsFile.Clear( false );
 
-	saveGameHandle_t loadGameHandle = session->LoadGameSync( slotName, files, isRBDoom );
+	saveGameHandle_t loadGameHandle = session->LoadGameSync( slotName, files );
 	if( loadGameHandle != 0 )
 	{
 		return true;
@@ -1415,17 +1376,7 @@ void idCommonLocal::OnLoadFilesCompleted( idSaveLoadParms& parms )
 		mapSpawnData.savegameFile->ReadString( gamename );
 		mapSpawnData.savegameFile->ReadString( mapname );
 
-		// Carl: Hack to change the savegame version internally if it's our mod.
-		if( mapSpawnData.savegameVersion == BUILD_NUMBER_SAVE_VERSION_CHANGE && ( gamename == "DOOM 3: BFG VR Edition" || gamename == "DOOM 3 BFG VR: Fully Possessed" ) )
-		{
-			mapSpawnData.savegameVersion = BUILD_NUMBER_FULLY_POSSESSED;
-		}
-
-		if( gamename != GAME_NAME )
-		{
-			common->Warning( "Loading from \"%s\" instead of \"%s\".", gamename.c_str(), GAME_NAME );
-		}
-		if( ( mapname.IsEmpty() ) || ( parms.description.GetSaveVersion() > BUILD_NUMBER_FULLY_POSSESSED ) )
+		if( ( gamename != GAME_NAME ) || ( mapname.IsEmpty() ) || ( parms.description.GetSaveVersion() > BUILD_NUMBER ) )
 		{
 			// if this isn't a savegame for the correct game, abort loadgame
 			common->Warning( "Attempted to load an invalid savegame" );
@@ -1511,12 +1462,7 @@ LoadGame_f
 CONSOLE_COMMAND_SHIP( loadGame, "loads a game", idCmdSystem::ArgCompletion_SaveGame )
 {
 	console->Close();
-	uint8 isRBDoom = 0; // Default to loading game from Fully Possessed
-	if( args.Argc() > 2 )
-	{
-		isRBDoom = ( uint8 )atoi( args.Argv( 2 ) );
-	}
-	commonLocal.LoadGame( ( args.Argc() > 1 ) ? args.Argv( 1 ) : "quick", isRBDoom );
+	commonLocal.LoadGame( ( args.Argc() > 1 ) ? args.Argv( 1 ) : "quick" );
 
 	// Koz
 	vr_headingBeamMode.SetModified();

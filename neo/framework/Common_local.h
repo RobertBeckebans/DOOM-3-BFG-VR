@@ -201,7 +201,7 @@ public:
 
 	virtual bool				ProcessEvent( const sysEvent_t* event );
 
-	virtual bool				LoadGame( const char* saveName, uint8 RBDoom );
+	virtual bool				LoadGame( const char* saveName );
 	virtual bool				SaveGame( const char* saveName );
 
 	virtual int					ButtonState( int key );
@@ -616,11 +616,6 @@ private:
 
 	void	StartMenu( bool playIntro = false );
 	void	GuiFrameEvents();
-
-	void	BeginAVICapture( const char* name );
-	void	EndAVICapture();
-
-	void	AdvanceRenderDemo( bool singleFrameOnly );
 
 	void	ProcessGameReturn( const gameReturn_t& ret );
 

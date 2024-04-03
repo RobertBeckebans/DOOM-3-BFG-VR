@@ -106,11 +106,10 @@ public:
 	{
 		return file->Length();
 	}
-public:
-	idFile* 				file;
-	idFile* 				stringFile;
 
 private:
+	idFile* 				file;
+	idFile* 				stringFile;
 	idCompressor* 			compressor;
 
 	idList<const idClass*>	objects;
@@ -136,7 +135,7 @@ public:
 	idRestoreGame( idFile* savefile, idFile* stringTableFile, int saveVersion );
 	~idRestoreGame();
 
-	void					ReadDecls( idStr& first_decl_string, idStr& second_decl_string );
+	void					ReadDecls();
 
 	void					CreateObjects();
 	void					RestoreObjects();
@@ -161,7 +160,7 @@ public:
 	void					ReadBounds( idBounds& bounds );
 	void					ReadMat3( idMat3& mat );
 	void					ReadAngles( idAngles& angles );
-	bool					ReadObject( idClass*& obj );
+	void					ReadObject( idClass*& obj );
 	void					ReadStaticObject( idClass& obj );
 	void					ReadDict( idDict* dict );
 	void					ReadMaterial( const idMaterial*& material );
@@ -190,10 +189,9 @@ public:
 		return version;
 	}
 
-public: //Carl debug
+private:
 	idFile* 		file;
 	idFile* 		stringFile;
-public:
 	idList<idClass*, TAG_SAVEGAMES>		objects;
 	int						version;
 	int						stringTableOffset;

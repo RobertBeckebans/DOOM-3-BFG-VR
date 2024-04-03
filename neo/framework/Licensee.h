@@ -45,7 +45,7 @@ If you have questions concerning this license or the applicable additional terms
 // RB end
 
 // jmarshall
-#define ENGINE_BRANCH					"master"
+#define ENGINE_BRANCH					"Koz VR"
 // jmarshall end
 
 #define	BASE_GAMEDIR					"base"

@@ -4126,7 +4126,7 @@ void idAnimator::Restore( idRestoreGame* savefile )
 
 	// Carl: Koz
 	int numChannels; // ANIM_NumAnimChannels is different in this mod
-	if( savefile->version >= BUILD_NUMBER_FULLY_POSSESSED )
+	if( savefile->GetBuildNumber() >= BUILD_NUMBER_FULLY_POSSESSED )
 	{
 		numChannels = 7;
 	}
@@ -4154,7 +4154,7 @@ void idAnimator::Restore( idRestoreGame* savefile )
 
 	// Carl: if this is from RBDoom, then everything we just restored is bullshit, except perhaps the model name
 	// Try clearing it all and loading the model again.
-	if( savefile->version < BUILD_NUMBER_FULLY_POSSESSED )
+	if( savefile->GetBuildNumber() < BUILD_NUMBER_FULLY_POSSESSED )
 	{
 		idStr modelName = "";
 		if( modelDef )

@@ -259,9 +259,6 @@ bool idAnimState::AnimDone( int blendFrames ) const
 	int animDoneTime;
 
 	animDoneTime = animator->CurrentAnim( channel )->GetEndTime();
-
-	// Koz deleteme was debugging	if ( channel == ANIMCHANNEL_LEFTHAND || channel == ANIMCHANNEL_RIGHTHAND ) common->Printf( "Anim endtime = %d\n", animDoneTime );
-
 	if( animDoneTime < 0 )
 	{
 		// playing a cycle
@@ -669,15 +666,21 @@ void idActor::Spawn()
 			}
 
 			jointName = kv->GetKey();
-			if( jointName.StripLeadingOnce( "copy_joint_world " ) )
+
+			// RB: TrenchBroom interop use copy_joint_world.<name> instead so we can build this up using the FGD files
+			if( jointName.StripLeadingOnce( "copy_joint_world " ) || jointName.StripLeadingOnce( "copy_joint_world." ) )
 			{
 				copyJoint.mod = JOINTMOD_WORLD_OVERRIDE;
 			}
 			else
 			{
-				jointName.StripLeadingOnce( "copy_joint " );
+				if( !jointName.StripLeadingOnce( "copy_joint " ) )
+				{
+					jointName.StripLeadingOnce( "copy_joint." );
+				}
 				copyJoint.mod = JOINTMOD_LOCAL_OVERRIDE;
 			}
+			// RB end
 
 			copyJoint.from = animator.GetJointHandle( jointName );
 			if( copyJoint.from == INVALID_JOINT )
@@ -833,7 +836,6 @@ void idActor::SetupHead()
 		headEnt->BindToJoint( this, joint, true );
 	}
 }
-
 
 /*
 ================
@@ -1077,111 +1079,21 @@ void idActor::Restore( idRestoreGame* savefile )
 	head.Restore( savefile );
 
 	savefile->ReadInt( num );
-	if( true || savefile->version >= BUILD_NUMBER_FULLY_POSSESSED )
+	copyJoints.SetNum( num );
+	for( i = 0; i < num; i++ )
 	{
-		copyJoints.SetNum( num );
-		for( i = 0; i < num; i++ )
-		{
-			int val;
-			savefile->ReadInt( val );
-			copyJoints[i].mod = static_cast<jointModTransform_t>( val );
-			savefile->ReadJoint( copyJoints[i].from );
-			savefile->ReadJoint( copyJoints[i].to );
-		}
+		int val;
+		savefile->ReadInt( val );
+		copyJoints[i].mod = static_cast<jointModTransform_t>( val );
+		savefile->ReadJoint( copyJoints[i].from );
+		savefile->ReadJoint( copyJoints[i].to );
 	}
-	else
-	{
-		// If we're loading from RBDoom, the restored copyjoints are wrong.
-		// So create the copyjoints the same way we do when spawning
-		idStr			jointName;
-		copyJoints_t	copyJoint;
-		const idKeyValue* kv;
-		copyJoints.Clear();
 
-		for( i = 0; i < num; i++ )
-		{
-			int val;
-			savefile->ReadInt( val );
-			savefile->ReadJoint( copyJoint.from );
-			savefile->ReadJoint( copyJoint.to );
-		}
-		idEntity* headEnt = head.GetEntity();
-		idAnimator* headAnimator;
-		if( headEnt )
-		{
-			headAnimator = headEnt->GetAnimator();
-		}
-		else
-		{
-			headAnimator = &animator;
-		}
-
-		if( headEnt )
-		{
-			// set up the list of joints to copy to the head
-			for( kv = spawnArgs.MatchPrefix( "copy_joint", NULL ); kv != NULL; kv = spawnArgs.MatchPrefix( "copy_joint", kv ) )
-			{
-				if( kv->GetValue() == "" )
-				{
-					// probably clearing out inherited key, so skip it
-					continue;
-				}
-
-				jointName = kv->GetKey();
-				if( jointName.StripLeadingOnce( "copy_joint_world " ) )
-				{
-					copyJoint.mod = JOINTMOD_WORLD_OVERRIDE;
-				}
-				else
-				{
-					jointName.StripLeadingOnce( "copy_joint " );
-					copyJoint.mod = JOINTMOD_LOCAL_OVERRIDE;
-				}
-
-				copyJoint.from = animator.GetJointHandle( jointName );
-				if( copyJoint.from == INVALID_JOINT )
-				{
-					gameLocal.Warning( "Unknown copy_joint '%s' on entity %s", jointName.c_str(), name.c_str() );
-					continue;
-				}
-
-				jointName = kv->GetValue();
-				copyJoint.to = headAnimator->GetJointHandle( jointName );
-				if( copyJoint.to == INVALID_JOINT )
-				{
-					gameLocal.Warning( "Unknown copy_joint '%s' on head of entity %s", jointName.c_str(), name.c_str() );
-					continue;
-				}
-
-				copyJoints.Append( copyJoint );
-			}
-		}
-		SetupHead();
-	}
 	savefile->ReadJoint( leftEyeJoint );
 	savefile->ReadJoint( rightEyeJoint );
 	savefile->ReadJoint( soundJoint );
 
 	walkIK.Restore( savefile );
-
-	if( savefile->version < BUILD_NUMBER_FULLY_POSSESSED )
-	{
-		// Koz begin
-		armIK.Init( this, IK_ANIM, modelOffset );
-
-		if( armIK.IsInitialized() )
-		{
-			common->Printf( "ArmIK initialized for %s.\n", name.c_str() );
-		}
-
-		// Koz end
-
-		// the animation used to be set to the IK_ANIM at this point, but that was fixed, resulting in
-		// attachments not binding correctly, so we're stuck setting the IK_ANIM before attaching things.
-		animator.ClearAllAnims( gameLocal.time, 0 );
-		animator.SetFrame( ANIMCHANNEL_ALL, animator.GetAnim( IK_ANIM ), 0, 0, 0 );
-
-	}
 
 	savefile->ReadString( animPrefix );
 	savefile->ReadString( painAnim );
@@ -1193,46 +1105,6 @@ void idActor::Restore( idRestoreGame* savefile )
 
 	savefile->ReadObject( reinterpret_cast<idClass*&>( scriptThread ) );
 
-	// Carl: When loading saved games from versions with different scripts, the threads will all be null, and need to be created like on spawn
-#if 1
-	if( !scriptThread || !scriptObject.wasRestored || savefile->version < BUILD_NUMBER_FULLY_POSSESSED )
-	{
-		const char*	scriptObjectName;
-
-		// setup script object
-		if( spawnArgs.GetString( "scriptobject", NULL, &scriptObjectName ) )
-		{
-			if( !scriptObject.SetType( scriptObjectName ) )
-			{
-				gameLocal.Error( "Script object '%s' not found on entity '%s'.", scriptObjectName, name.c_str() );
-			}
-
-			ConstructScriptObject();
-		}
-	}
-#else
-	// This technique didn't work. NPCs wouldn't talk
-	if( !scriptThread )
-	{
-		// create script thread
-		scriptThread = new idThread();
-		scriptThread->ManualDelete();
-		scriptThread->ManualControl();
-		scriptThread->SetThreadName( name.c_str() );
-	}
-	if( !scriptObject.constructed || savefile->version < BUILD_NUMBER_FULLY_POSSESSED )
-	{
-		// call script object's constructor
-		const function_t* constructor = scriptObject.GetConstructor();
-		if( !constructor )
-		{
-			gameLocal.Error( "Missing constructor on '%s' for entity '%s'", scriptObject.GetTypeName(), name.c_str() );
-		}
-		// just set the current function on the script.  we'll execute in the subclasses.
-		scriptThread->CallFunction( this, constructor, true );
-	}
-#endif
-
 	savefile->ReadString( waitState );
 
 	headAnim.Restore( savefile );
@@ -1240,7 +1112,7 @@ void idActor::Restore( idRestoreGame* savefile )
 	legsAnim.Restore( savefile );
 
 	// Koz begin
-	if( savefile->version >= BUILD_NUMBER_FULLY_POSSESSED )
+	if( savefile->GetBuildNumber() >= BUILD_NUMBER_FULLY_POSSESSED )
 	{
 		leftHandAnim.Restore( savefile );
 		rightHandAnim.Restore( savefile );
@@ -1266,13 +1138,6 @@ void idActor::Restore( idRestoreGame* savefile )
 	}
 
 	savefile->ReadBool( finalBoss );
-
-	// Carl: When loading from RBDoom, we need to call this or all monsters
-	// will be stuck in a T-Pose.
-	if( savefile->version < BUILD_NUMBER_FULLY_POSSESSED )
-	{
-		animator.ClearAllAnims( gameLocal.time, 0 );
-	}
 
 	idStr statename;
 
@@ -2106,7 +1971,6 @@ idActor::UpdateAnimationControllers
 */
 bool idActor::UpdateAnimationControllers()
 {
-
 	bool success = false;
 
 	if( af.IsActive() )
@@ -3089,7 +2953,15 @@ void idActor::SetupDamageGroups()
 	while( arg )
 	{
 		groupname = arg->GetKey();
-		groupname.Strip( "damage_zone " );
+
+		// RB: TrenchBroom interop use damage_zone.<name> instead so we can build this up using the FGD files
+		//groupname.Strip( "damage_zone " );
+		if( !groupname.StripLeadingOnce( "damage_zone " ) )
+		{
+			groupname.StripLeadingOnce( "damage_zone." );
+		}
+		// RB end
+
 		animator.GetJointList( arg->GetValue(), jointList );
 		for( i = 0; i < jointList.Num(); i++ )
 		{
@@ -3113,7 +2985,15 @@ void idActor::SetupDamageGroups()
 	{
 		scale = atof( arg->GetValue() );
 		groupname = arg->GetKey();
-		groupname.Strip( "damage_scale " );
+
+		// RB: TrenchBroom interop use damage_scale.<name> instead so we can build this up using the FGD files
+		//groupname.Strip( "damage_scale " );
+		if( !groupname.StripLeadingOnce( "damage_scale " ) )
+		{
+			groupname.StripLeadingOnce( "damage_scale." );
+		}
+		// RB end
+
 		for( i = 0; i < damageScale.Num(); i++ )
 		{
 			if( damageGroups[ i ] == groupname )
@@ -3883,7 +3763,7 @@ void idActor::Event_SetSyncedAnimWeight( int channel, int anim, float weight )
 
 
 		default:
-			gameLocal.Error( "Event_SetSyncedAnimWeight Unknown anim group" );
+			gameLocal.Error( "Event_SetSyncedAnimWeight: Unknown anim group" );
 	}
 }
 
@@ -3934,7 +3814,7 @@ void idActor::Event_OverrideAnim( int channel )
 		// Koz end
 
 		default:
-			gameLocal.Error( "Event_OverrideAnim Unknown anim group" );
+			gameLocal.Error( "Event_OverrideAnim: Unknown anim group" );
 			break;
 	}
 }
@@ -3972,7 +3852,7 @@ void idActor::Event_EnableAnim( int channel, int blendFrames )
 		// Koz end
 
 		default:
-			gameLocal.Error( "Event_EnableAnim Unknown anim group" );
+			gameLocal.Error( "Event_EnableAnim: Unknown anim group" );
 			break;
 	}
 }
@@ -4015,7 +3895,7 @@ void idActor::Event_SetBlendFrames( int channel, int blendFrames )
 		// Koz end
 
 		default:
-			gameLocal.Error( "Event_SetBlendFrames Unknown anim group" );
+			gameLocal.Error( "Event_SetBlendFrames: Unknown anim group" );
 			break;
 	}
 }
@@ -4053,7 +3933,7 @@ void idActor::Event_GetBlendFrames( int channel )
 		// Koz end
 
 		default:
-			gameLocal.Error( "Event_GetBlendFrames Unknown anim group" );
+			gameLocal.Error( "Event_GetBlendFrames: Unknown anim group" );
 			break;
 	}
 }
@@ -4147,7 +4027,7 @@ void idActor::Event_AnimDone( int channel, int blendFrames )
 		// Koz end
 
 		default:
-			gameLocal.Error( "Event_AnimDone Unknown anim group" );
+			gameLocal.Error( "Event_AnimDone: Unknown anim group" );
 	}
 }
 

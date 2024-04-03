@@ -3177,7 +3177,7 @@ void idPlayer::Restore( idRestoreGame* savefile )
 	savefile->ReadInt( weapon_bloodstone_active3 );
 
 	// Koz
-	if( savefile->version >= BUILD_NUMBER_FULLY_POSSESSED )
+	if( savefile->GetBuildNumber() >= BUILD_NUMBER_FULLY_POSSESSED )
 	{
 		savefile->ReadInt( weapon_pistol );
 		savefile->ReadInt( weapon_shotgun );
@@ -3272,7 +3272,7 @@ void idPlayer::Restore( idRestoreGame* savefile )
 	savefile->ReadJoint( headJoint );
 
 	// Koz begin - update - will leave this here, but the player bone joints will all be re-initialized to help with cross version save compatability
-	if( savefile->version >= BUILD_NUMBER_FULLY_POSSESSED )
+	if( savefile->GetBuildNumber() >= BUILD_NUMBER_FULLY_POSSESSED )
 	{
 		savefile->ReadJoint( neckJoint );
 		savefile->ReadJoint( chestPivotJoint );
@@ -3547,7 +3547,7 @@ void idPlayer::Restore( idRestoreGame* savefile )
 
 	// re-init the player render model if we're loading this savegame from a different mod
 
-	if( 1 || savefile->version < BUILD_NUMBER_FULLY_POSSESSED )
+	if( 1 || savefile->GetBuildNumber() < BUILD_NUMBER_FULLY_POSSESSED )
 	{
 		memset( &renderEntity, 0, sizeof( renderEntity ) );
 		renderEntity.numJoints = animator.NumJoints();
@@ -3612,7 +3612,7 @@ void idPlayer::Restore( idRestoreGame* savefile )
 
 	const idDeclSkin* blag;
 	// Koz begin
-	if( savefile->version >= BUILD_NUMBER_FULLY_POSSESSED )
+	if( savefile->GetBuildNumber() >= BUILD_NUMBER_FULLY_POSSESSED )
 	{
 		savefile->ReadBool( laserSightActive );
 		savefile->ReadBool( headingBeamActive );
@@ -3749,7 +3749,7 @@ void idPlayer::Restore( idRestoreGame* savefile )
 
 	armIK.Init( this, IK_ANIM, modelOffset );
 
-	if( savefile->version < BUILD_NUMBER_FULLY_POSSESSED )
+	if( savefile->GetBuildNumber() < BUILD_NUMBER_FULLY_POSSESSED )
 	{
 		NextWeapon();
 	}

@@ -947,7 +947,7 @@ void idEntity::Restore( idRestoreGame* savefile )
 
 	// setup script object
 	const char*			scriptObjectName;
-	if( !scriptObject.wasRestored && ShouldConstructScriptObjectAtSpawn() && spawnArgs.GetString( "scriptobject", NULL, &scriptObjectName ) )
+	if( ShouldConstructScriptObjectAtSpawn() && spawnArgs.GetString( "scriptobject", NULL, &scriptObjectName ) )
 	{
 		if( !scriptObject.SetType( scriptObjectName ) )
 		{
@@ -6337,39 +6337,6 @@ unarchives object from save game file
 */
 void idAnimatedEntity::Restore( idRestoreGame* savefile )
 {
-	// If it's from RBDoom, then the spawnArgs are missing values that we need.
-	// So add the values from our mod that are missing in the restored spawnArgs
-	if( savefile->version < BUILD_NUMBER_FULLY_POSSESSED && IsType( idPlayer::Type ) )
-	{
-		//common->Printf("Player GetEntityDefName = %s\n", GetEntityDefName());
-		const idDict* modSpawnArgs = gameLocal.FindEntityDefDict( "player_doommarine" );
-		if( modSpawnArgs )
-		{
-			idDict newSpawnArgs;
-			newSpawnArgs = *modSpawnArgs;
-			newSpawnArgs.Copy( spawnArgs );
-			spawnArgs = newSpawnArgs;
-			const idKeyValue* kv;
-			const char* ourkeys[] =
-			{
-				"weapon0_cycle", "pm_walkspeed",
-				"bone_neck", "bone_chest_pivot",
-				"ik_numArms", "ik_wrist1", "ik_wrist2", "ik_hand1", "ik_hand2", "ik_elbowDir1", "ik_elbowDir2",
-				"skin_player_1", "skin_player_2", "skin_player_3", "skin_player_4", "skin_player_5", "skin_player_6", "skin_player_7", "skin_player_8", "skin_player_9",
-				"skinHeadingSolid", "skinHeadingArrows", "skinHeadingArrowsScroll",
-				"skinCrosshairDot", "skinCrosshairCircleDot", "skinCrosshairCross",
-				"skinpadcrouch",
-			};
-			for( int i = 0; i < sizeof( ourkeys ) / sizeof( *ourkeys ); i++ )
-			{
-				if( kv = modSpawnArgs->FindKey( ourkeys[i] ) )
-				{
-					spawnArgs.Set( kv->GetKey(), kv->GetValue() );
-				}
-			}
-		}
-	}
-
 	animator.Restore( savefile );
 
 	// check if the entity has an MD5 model
