@@ -4499,7 +4499,7 @@ void idPlayer::DrawHUD( idMenuHandler_HUD* _hudManager )
 {
 	SCOPED_PROFILE_EVENT( "idPlayer::DrawHUD" );
 	// Koz begin
-	if( vrSystem->IsActive() && vr_hudType.GetInteger() == VR_HUD_NONE && !vr_flicksyncCharacter.GetInteger() )
+	if( vrSystem->IsActive() && vr_hudType.GetInteger() == VR_HUD_NONE )
 	{
 		return;
 	}
@@ -4510,7 +4510,7 @@ void idPlayer::DrawHUD( idMenuHandler_HUD* _hudManager )
 		return;
 	}
 
-	if( ( !weapon.GetEntity() || influenceActive != INFLUENCE_NONE || privateCameraView || gameLocal.GetCamera() || !g_showHud.GetBool() ) && !vr_flicksyncCharacter.GetInteger() )
+	if( ( !weapon.GetEntity() || influenceActive != INFLUENCE_NONE || privateCameraView || gameLocal.GetCamera() || !g_showHud.GetBool() ) )
 	{
 		return;
 	}
@@ -4628,7 +4628,7 @@ void idPlayer::DrawHUDVR( idMenuHandler_HUD* _hudManager )
 		return;
 	}
 
-	if( ( influenceActive != INFLUENCE_NONE || privateCameraView || gameLocal.GetCamera() || vr_hudType.GetInteger() == VR_HUD_NONE ) && !vr_flicksyncCharacter.GetInteger() )
+	if( ( influenceActive != INFLUENCE_NONE || privateCameraView || gameLocal.GetCamera() || vr_hudType.GetInteger() == VR_HUD_NONE ) )
 	{
 		return;
 	}
@@ -4681,7 +4681,7 @@ void idPlayer::EnterCinematic()
 	StopSound( SND_CHANNEL_PDA_AUDIO, false );
 	StopSound( SND_CHANNEL_PDA_VIDEO, false );
 
-	if( hudManager && !vr_flicksyncCharacter.GetInteger() )
+	if( hudManager )
 	{
 		hudManager->SetRadioMessage( false );
 	}
@@ -4719,26 +4719,6 @@ void idPlayer::EnterCinematic()
 	AI_TELEPORT		= false;
 	AI_TURN_LEFT	= false;
 	AI_TURN_RIGHT	= false;
-
-	if( vr_flicksyncCharacter.GetInteger() )
-	{
-		HideTip();
-		if( hud )
-		{
-			if( objectiveUp )
-			{
-				hud->HideObjective( false );
-				objectiveUp = false;
-			}
-			hud->SetCursorState( this, CURSOR_TALK, 0 );
-			hud->SetCursorState( this, CURSOR_IN_COMBAT, 0 );
-			hud->SetCursorState( this, CURSOR_ITEM, 0 );
-			hud->SetCursorState( this, CURSOR_GRABBER, 0 );
-			hud->SetCursorState( this, CURSOR_NONE, 0 );
-			hud->UpdateCursorState();
-		}
-		Flicksync_StartCutscene();
-	}
 }
 
 /*
@@ -5669,7 +5649,7 @@ void idPlayer::UpdatePowerUps()
 			healthPulse = true;
 		}
 	}
-	if( !gameLocal.inCinematic && !Flicksync_InCutscene && influenceActive == 0 && g_skill.GetInteger() == 3 && gameLocal.time > nextHealthTake && !AI_DEAD && health > g_healthTakeLimit.GetInteger() )
+	if( !gameLocal.inCinematic && influenceActive == 0 && g_skill.GetInteger() == 3 && gameLocal.time > nextHealthTake && !AI_DEAD && health > g_healthTakeLimit.GetInteger() )
 	{
 		assert( !common->IsClient() );	// healthPool never be set on client
 
@@ -5962,10 +5942,8 @@ void idPlayer::GivePDA( const idDeclPDA* pda, const char* securityItem, bool tog
 
 	// This is kind of a hack, but it works nicely
 	// We don't want to display the 'you got a new pda' message during a map load
-	// or if we're about to skip to another cutscene
-	if( gameLocal.GetFrameNum() > 10 && vr_cutscenesOnly.GetInteger() != 1 && Flicksync_skipToCutscene == CUTSCENE_NONE )
+	if( gameLocal.GetFrameNum() > 10 )
 	{
-
 		const char* sec = pda->GetSecurity();
 		if( hud && inventory.pdas.Num() != 1 )  // Koz dont show the pda loading indicator for the initial PDA.
 		{
@@ -6367,7 +6345,7 @@ idPlayer::Reload
 */
 void idPlayer::Reload()
 {
-	if( spectating || gameLocal.inCinematic || Flicksync_InCutscene || influenceActive || vrSystem->handInGui || weapon->hideOffset != 0.0f ) // Koz don't reload when in gui
+	if( spectating || gameLocal.inCinematic || influenceActive || vrSystem->handInGui || weapon->hideOffset != 0.0f ) // Koz don't reload when in gui
 	{
 		return;
 	}
@@ -6438,7 +6416,7 @@ idPlayer::NextWeapon
 void idPlayer::NextWeapon()
 {
 	// Koz dont change weapon if in gui
-	if( vrSystem->handInGui || !weaponEnabled || spectating || hiddenWeapon || gameLocal.inCinematic || Flicksync_InCutscene || gameLocal.world->spawnArgs.GetBool( "no_Weapons" ) || health < 0 )
+	if( vrSystem->handInGui || !weaponEnabled || spectating || hiddenWeapon || gameLocal.inCinematic || gameLocal.world->spawnArgs.GetBool( "no_Weapons" ) || health < 0 )
 	{
 		return;
 	}
@@ -6502,7 +6480,7 @@ idPlayer::PrevWeapon
 void idPlayer::PrevWeapon()
 {
 	// Koz dont change weapon if in gui
-	if( vrSystem->handInGui || !weaponEnabled || spectating || hiddenWeapon || gameLocal.inCinematic || Flicksync_InCutscene || gameLocal.world->spawnArgs.GetBool( "no_Weapons" ) || health < 0 )
+	if( vrSystem->handInGui || !weaponEnabled || spectating || hiddenWeapon || gameLocal.inCinematic || gameLocal.world->spawnArgs.GetBool( "no_Weapons" ) || health < 0 )
 	{
 		return;
 	}
@@ -6566,7 +6544,7 @@ void idPlayer::SelectWeapon( int num, bool force, bool specific )
 {
 	const char* weap;
 
-	if( !weaponEnabled || spectating || gameLocal.inCinematic || Flicksync_InCutscene || health < 0 || vrSystem->handInGui ) // Koz don't let the player change weapons if hand is currently in a gui
+	if( !weaponEnabled || spectating || gameLocal.inCinematic || health < 0 || vrSystem->handInGui ) // Koz don't let the player change weapons if hand is currently in a gui
 	{
 		return;
 	}
@@ -6867,7 +6845,7 @@ idPlayer::Weapon_Combat
 */
 void idPlayer::Weapon_Combat()
 {
-	if( influenceActive || !weaponEnabled || gameLocal.inCinematic || Flicksync_InCutscene || privateCameraView )
+	if( influenceActive || !weaponEnabled || gameLocal.inCinematic || privateCameraView )
 	{
 		vrSystem->ForceChaperone( 0, false );
 		return;
@@ -6986,7 +6964,7 @@ void idPlayer::Weapon_Combat()
 
 	int c = vr_chaperone.GetInteger();
 	bool force;
-	if( !weaponEnabled || spectating || Flicksync_InCutscene || gameLocal.inCinematic || health < 0 || hiddenWeapon || currentWeapon < 0 )
+	if( !weaponEnabled || spectating || gameLocal.inCinematic || health < 0 || hiddenWeapon || currentWeapon < 0 )
 	{
 		force = c >= 4;
 	}
@@ -7430,7 +7408,7 @@ void idPlayer::FlashlightOn()
 	{
 		return;
 	}
-	if( gameLocal.inCinematic || Flicksync_InCutscene )
+	if( gameLocal.inCinematic )
 	{
 		return;
 	}
@@ -8219,7 +8197,7 @@ void idPlayer::UpdateFocus()
 
 	scanRange = 50.0f;
 
-	if( Flicksync_InCutscene || gameLocal.inCinematic || vrSystem->thirdPersonMovement )
+	if( gameLocal.inCinematic || vrSystem->thirdPersonMovement )
 	{
 		return;
 	}
@@ -10021,7 +9999,7 @@ void idPlayer::PerformImpulse( int impulse )
 		// Carl:
 		case IMPULSE_PAUSE:
 		{
-			if( gameLocal.inCinematic || Flicksync_InCutscene )
+			if( gameLocal.inCinematic )
 			{
 
 			}
@@ -10038,7 +10016,7 @@ void idPlayer::PerformImpulse( int impulse )
 		}
 		case IMPULSE_RESUME:
 		{
-			if( gameLocal.inCinematic || Flicksync_InCutscene )
+			if( gameLocal.inCinematic )
 			{
 
 			}
@@ -10924,7 +10902,7 @@ void idPlayer::Move_Interpolated( float fraction )
 		physicsObj.SetContents( CONTENTS_CORPSE | CONTENTS_MONSTERCLIP );
 		physicsObj.SetMovementType( PM_DEAD );
 	}
-	else if( gameLocal.inCinematic || Flicksync_InCutscene || gameLocal.GetCamera() || privateCameraView || ( influenceActive == INFLUENCE_LEVEL2 ) )
+	else if( gameLocal.inCinematic || gameLocal.GetCamera() || privateCameraView || ( influenceActive == INFLUENCE_LEVEL2 ) )
 	{
 		physicsObj.SetContents( CONTENTS_BODY );
 		physicsObj.SetMovementType( PM_FREEZE );
@@ -11089,7 +11067,7 @@ void idPlayer::Move()
 		physicsObj.SetContents( CONTENTS_CORPSE | CONTENTS_MONSTERCLIP );
 		physicsObj.SetMovementType( PM_DEAD );
 	}
-	else if( gameLocal.inCinematic || Flicksync_InCutscene || gameLocal.GetCamera() || privateCameraView || ( influenceActive == INFLUENCE_LEVEL2 ) )
+	else if( gameLocal.inCinematic || gameLocal.GetCamera() || privateCameraView || ( influenceActive == INFLUENCE_LEVEL2 ) )
 	{
 		physicsObj.SetContents( CONTENTS_BODY );
 		physicsObj.SetMovementType( PM_FREEZE );
@@ -11326,7 +11304,7 @@ void idPlayer::Move()
 		}
 	}
 
-	if( noclip || gameLocal.inCinematic || Flicksync_InCutscene || ( influenceActive == INFLUENCE_LEVEL2 ) )
+	if( noclip || gameLocal.inCinematic || ( influenceActive == INFLUENCE_LEVEL2 ) )
 	{
 		AI_CROUCH	= false;
 		AI_ONGROUND	= ( influenceActive == INFLUENCE_LEVEL2 );
@@ -11408,7 +11386,7 @@ void idPlayer::Move()
 	}
 	const int comfortMode = vr_motionSickness.GetInteger();
 	//"	0 off | 2 = tunnel | 5 = tunnel + chaperone | 6 slow mo | 7 slow mo + chaperone | 8 tunnel + slow mo | 9 = tunnel + slow mo + chaperone
-	if( comfortMode < 2 || Flicksync_InCutscene || game->CheckInCinematic() )
+	if( comfortMode < 2 || game->CheckInCinematic() )
 	{
 		this->playerView.EnableVrComfortVision( false );
 		vrSystem->thirdPersonMovement = false;
@@ -12241,7 +12219,7 @@ void idPlayer::UpdateLaserSight()
 	// Carl: teleport
 	static bool oldTeleport = false;
 	bool showTeleport = vr_teleport.GetInteger() == 1 && vrSystem->VR_USE_MOTION_CONTROLS; // only show the teleport gun cursor if we're teleporting using the gun aim mode
-	showTeleport = showTeleport && !AI_DEAD && !gameLocal.inCinematic && !Flicksync_InCutscene && !game->IsPDAOpen();
+	showTeleport = showTeleport && !AI_DEAD && !gameLocal.inCinematic && !game->IsPDAOpen();
 
 	// check if lasersight should be hidden
 	if( !IsGameStereoRendered() ||
@@ -12518,7 +12496,7 @@ bool idPlayer::GetTeleportBeamOrigin( idVec3& beamOrigin, idMat3& beamAxis ) // 
 	//const idVec3 beamOff[2] = { idVec3( 2.5f, 0.0f, 1.0f ), idVec3( 2.5f, 0.0f, 1.5f ) };
 	const idVec3 beamOff[2] = { idVec3( 4.5f, 0.0f, 1.0f ), idVec3( 4.5f, 0.0f, 1.5f ) };
 
-	if( gameLocal.inCinematic || Flicksync_InCutscene || AI_DEAD || game->IsPDAOpen() )
+	if( gameLocal.inCinematic || AI_DEAD || game->IsPDAOpen() )
 	{
 		return false;
 	}
@@ -13182,15 +13160,7 @@ void idPlayer::UpdateVrHud()
 	}
 	else
 	{
-		// always show HUD if in flicksync
-		if( vr_flicksyncCharacter.GetInteger() )
-		{
-			hudEntity.allowSurfaceInViewID = 0;
-		}
-		else
-		{
-			hudEntity.allowSurfaceInViewID = entityNumber + 1;
-		}
+		hudEntity.allowSurfaceInViewID = entityNumber + 1;
 
 		if( vr_hudPosLock.GetInteger() == 1 && !vrSystem->thirdPersonMovement )  // hud in fixed position in space, except if running in third person, then attach to face.
 		{
@@ -13370,7 +13340,7 @@ void idPlayer::Think()
 		usercmd.buttons &= ~( BUTTON_JUMP | BUTTON_CROUCH );
 	}
 
-	if( objectiveSystemOpen || gameLocal.inCinematic || Flicksync_InCutscene || influenceActive )
+	if( objectiveSystemOpen || gameLocal.inCinematic || influenceActive )
 	{
 		if( objectiveSystemOpen && AI_PAIN )
 		{
@@ -14592,7 +14562,7 @@ void idPlayer::Damage( idEntity* inflictor, idEntity* attacker, const idVec3& di
 
 	SetTimeState ts( timeGroup );
 
-	if( !fl.takedamage || noclip || spectating || gameLocal.inCinematic || Flicksync_InCutscene )
+	if( !fl.takedamage || noclip || spectating || gameLocal.inCinematic )
 	{
 		return;
 	}
@@ -17200,7 +17170,7 @@ void idPlayer::CalculateRenderView()
 
 				playerView.Flash( colorWhite, 300 );
 
-				if( vr_cinematics.GetInteger() == 2 && vr_flicksyncCharacter.GetInteger() == 0 )
+				if( vr_cinematics.GetInteger() == 2 )
 				{
 					cinematicOffset = vec3_zero;
 				}
@@ -17210,7 +17180,7 @@ void idPlayer::CalculateRenderView()
 				}
 			}
 
-			if( vr_cinematics.GetInteger() == 2 && vr_flicksyncCharacter.GetInteger() == 0 )
+			if( vr_cinematics.GetInteger() == 2 )
 			{
 				headPositionDelta = bodyPositionDelta = vec3_zero;
 			}
@@ -17227,7 +17197,7 @@ void idPlayer::CalculateRenderView()
 		}
 
 
-		if( !( gameLocal.inCinematic && vr_cinematics.GetInteger() == 2 && vr_flicksyncCharacter.GetInteger() == 0 ) )
+		if( !( gameLocal.inCinematic && vr_cinematics.GetInteger() == 2 ) )
 		{
 
 			//move the head in relation to the body.
@@ -18304,7 +18274,7 @@ void idPlayer::ClientThink( const int curTime, const float fraction, const bool 
 	// this may use firstPersonView, or a thirdPerson / camera view
 	CalculateRenderView();
 
-	if( !gameLocal.inCinematic && !Flicksync_InCutscene && weapon.GetEntity() && ( health > 0 ) && !( common->IsMultiplayer() && spectating ) )
+	if( !gameLocal.inCinematic && weapon.GetEntity() && ( health > 0 ) && !( common->IsMultiplayer() && spectating ) )
 	{
 		UpdateWeapon();
 	}
@@ -19458,7 +19428,7 @@ idPlayer::GetControllerShake
 */
 void idPlayer::GetControllerShake( int& highMagnitude, int& lowMagnitude ) const
 {
-	if( Flicksync_InCutscene || gameLocal.inCinematic )
+	if( gameLocal.inCinematic )
 	{
 		// no controller shake during cinematics
 		highMagnitude = 0;

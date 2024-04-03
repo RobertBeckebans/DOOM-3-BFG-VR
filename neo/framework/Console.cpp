@@ -109,7 +109,6 @@ private:
 	float				DrawVRWip( float y );
 	void				DrawVRBinding();
 	// Koz end
-	void				DrawFlicksync( float& leftY, float& centerY );
 
 	void				DrawOverlayText( float& leftY, float& rightY, float& centerY );
 	void				DrawDebugGraphs();
@@ -330,184 +329,6 @@ idConsoleLocal::DrawMemoryUsage
 float idConsoleLocal::DrawMemoryUsage( float y )
 {
 	return y;
-}
-
-
-/*
-==================
-idConsoleLocal::DrawFlicksync
-==================
-*/
-void idConsoleLocal::DrawFlicksync( float& leftY, float& centerY )
-{
-	if( ( gameLocal.inCinematic || Flicksync_InCutscene ) && !vr_hudPosLock.GetInteger() )
-	{
-		centerY += BIGCHAR_HEIGHT * 3;
-	}
-	if( leftY < centerY )
-	{
-		leftY = centerY;
-	}
-
-	bool inFlicksync = gameLocal.inCinematic || Flicksync_InCutscene || Flicksync_complete || Flicksync_GameOver;
-	if( inFlicksync )
-	{
-		const char* s = va( "SCORE: %i", Flicksync_Score );
-		int w = strlen( s ) * BIGCHAR_WIDTH;
-		renderSystem->DrawBigStringExt( LOCALSAFE_LEFT + ( LOCALSAFE_WIDTH - w + 4 ) * 0.5f, idMath::Ftoi( centerY ) + 2, s, colorWhite, true );
-		centerY += BIGCHAR_HEIGHT + 4;
-	}
-	else
-	{
-		// Make score less intrusive during normal play between cutscenes
-		idVec4 color = idVec4( 0.5f, 0.5f, 0.5f, 0.5f );
-		const char* s = va( "%i", Flicksync_Score );
-		int w = strlen( s ) * SMALLCHAR_WIDTH;
-		renderSystem->DrawSmallStringExt( LOCALSAFE_LEFT + ( LOCALSAFE_WIDTH - w + 4 ) * 0.5f, idMath::Ftoi( centerY ) + 2, s, colorWhite, true );
-		centerY += SMALLCHAR_HEIGHT + 4;
-	}
-
-	if( Flicksync_CueCards > 0 && inFlicksync )
-	{
-		renderSystem->DrawSmallStringExt( LOCALSAFE_LEFT, idMath::Ftoi( leftY ) + 2, va( "Cue cards: %i", Flicksync_CueCards ), colorWhite, true );
-		leftY += SMALLCHAR_HEIGHT + 4;
-	}
-
-	if( Flicksync_complete )
-	{
-		const char* s = "FLICKSYNC COMPLETE";
-		int w = strlen( s ) * BIGCHAR_WIDTH;
-		renderSystem->DrawBigStringExt( LOCALSAFE_LEFT + ( LOCALSAFE_WIDTH - w + 4 ) * 0.5f, idMath::Ftoi( centerY ) + 2, s, colorGreen, true );
-		centerY += BIGCHAR_HEIGHT + 4;
-	}
-	else if( Flicksync_GameOver )
-	{
-		const char* s = "GAME OVER";
-		int w = strlen( s ) * BIGCHAR_WIDTH;
-		renderSystem->DrawBigStringExt( LOCALSAFE_LEFT + ( LOCALSAFE_WIDTH - w + 4 ) * 0.5f, idMath::Ftoi( centerY ) + 2, s, colorRed, true );
-		centerY += BIGCHAR_HEIGHT + 4;
-	}
-
-	if( Flicksync_complete || Flicksync_GameOver || ( !gameLocal.inCinematic && !Flicksync_InCutscene ) )
-	{
-		return;
-	}
-
-	if( Flicksync_CorrectInARow > 0 )
-	{
-		renderSystem->DrawSmallStringExt( LOCALSAFE_LEFT, idMath::Ftoi( leftY ) + 2, va( "Correct in a row: %i", Flicksync_CorrectInARow ), colorWhite, true );
-		leftY += SMALLCHAR_HEIGHT + 4;
-	}
-	else
-	{
-		idVec4 color;
-		if( Flicksync_FailsInARow > 0 || Flicksync_GameOver )
-		{
-			color = colorRed;
-		}
-		else
-		{
-			color = colorWhite;
-		}
-		if( Flicksync_FailsInARow == 2 )
-		{
-			const char* s = "FINAL WARNING";
-			int w = strlen( s ) * BIGCHAR_WIDTH;
-			renderSystem->DrawBigStringExt( LOCALSAFE_LEFT + ( LOCALSAFE_WIDTH - w + 4 ) * 0.5f, idMath::Ftoi( centerY ) + 2, s, color, true );
-			centerY += BIGCHAR_HEIGHT + 4;
-		}
-		else
-		{
-			renderSystem->DrawSmallStringExt( LOCALSAFE_LEFT, idMath::Ftoi( leftY ) + 2, va( "Lives: %i", 3 - Flicksync_FailsInARow ), color, true );
-			leftY += SMALLCHAR_HEIGHT + 4;
-		}
-	}
-
-	if( Flicksync_CueCardActive )
-	{
-		if( leftY < centerY )
-		{
-			leftY = centerY;
-		}
-		//renderSystem->DrawSmallStringExt(LOCALSAFE_LEFT, idMath::Ftoi(leftY) + 2, Flicksync_CueCardText.c_str(), colorWhite, true);
-		renderSystem->SetColor( colorWhite );
-
-		const char* text_p = Flicksync_CueCardText.c_str();
-		if( *text_p == '\0' )
-		{
-			text_p = "( Wait )";
-		}
-		const char* end_p = text_p + idStr::Length( text_p );
-
-		while( text_p != end_p )
-		{
-			for( int x = 0; x < LINE_WIDTH && text_p != end_p; x++, text_p++ )
-			{
-				if( *text_p == ' ' )
-				{
-					continue;
-				}
-				if( *text_p == '\n' )
-				{
-					text_p++;
-					break;
-				}
-				renderSystem->DrawSmallChar( LOCALSAFE_LEFT + ( x + 1 )*SMALLCHAR_WIDTH, idMath::Ftoi( leftY ), *text_p );
-			}
-			leftY += SMALLCHAR_HEIGHT + 4;
-		}
-	}
-	// Subtitles for the cue spoken by the other character that we must respond to
-	if( Flicksync_CueActive )
-	{
-		float y = LOCALSAFE_BOTTOM - 10 * ( BIGCHAR_HEIGHT + 4 );
-		if( y < leftY )
-		{
-			y = leftY;
-		}
-		if( y < centerY )
-		{
-			y = centerY;
-		}
-		const idVec4 colorSubtitle = idVec4( 0.96f, 0.96f, 0.25f, 1.0f );
-		renderSystem->SetColor( colorSubtitle );
-
-		const char* text_p = Flicksync_CueText.c_str();
-		const char* end_p = text_p + idStr::Length( text_p );
-
-		while( text_p != end_p )
-		{
-			for( int x = 0; x < LINE_WIDTH && text_p != end_p; x++, text_p++ )
-			{
-				if( *text_p == ' ' )
-				{
-					continue;
-				}
-				if( *text_p == '\n' )
-				{
-					text_p++;
-					break;
-				}
-				renderSystem->DrawSmallChar( LOCALSAFE_LEFT + ( x + 1 )*SMALLCHAR_WIDTH, idMath::Ftoi( y ), *text_p );
-			}
-			y += SMALLCHAR_HEIGHT + 4;
-		}
-		{
-			const char* s = "FINAL DIALOGUE WARNING!";
-			int w = strlen( s ) * SMALLCHAR_WIDTH;
-			static int flash = 0;
-			flash++;
-			if( flash > 20 )
-			{
-				flash = 0;
-			}
-			if( flash < 10 )
-			{
-				renderSystem->DrawSmallStringExt( LOCALSAFE_LEFT + ( LOCALSAFE_WIDTH - w + 4 ) * 0.5f, idMath::Ftoi( y ) + 2, s, colorRed, true );
-			}
-			y += SMALLCHAR_HEIGHT + 4;
-		}
-	}
 }
 
 /*
@@ -1680,10 +1501,6 @@ void idConsoleLocal::Draw( bool forceFullScreen )
 		righty = DrawVRWip( righty );
 	}
 	// Koz end
-	if( vr_flicksyncCharacter.GetInteger() )
-	{
-		DrawFlicksync( lefty, centery );
-	}
 
 	DrawOverlayText( lefty, righty, centery );
 	DrawDebugGraphs();

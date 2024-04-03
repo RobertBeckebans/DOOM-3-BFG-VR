@@ -881,7 +881,6 @@ void idCommonLocal::Frame()
 			ExecuteMapChange();
 			mapSpawnData.savegameFile = NULL;
 			mapSpawnData.persistentPlayerInfo.Clear();
-			Flicksync_NewMap();
 			return;
 		}
 		else if( session->GetState() != idSession::INGAME && mapSpawned )

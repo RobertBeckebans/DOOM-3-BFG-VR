@@ -310,10 +310,7 @@ void idSound::DoSound( bool play )
 			playingUntilTime = 0;
 			return;
 		}
-		if( Flicksync_Speaker( name.c_str(), refSound.shader->base->GetName(), refSound.shader->GetLength() * 10000 ) )
-		{
-			StartSoundShader( refSound.shader, SND_CHANNEL_ANY, refSound.parms.soundShaderFlags, true, &playingUntilTime );
-		}
+		StartSoundShader( refSound.shader, SND_CHANNEL_ANY, refSound.parms.soundShaderFlags, true, &playingUntilTime );
 		playingUntilTime += gameLocal.time;
 	}
 	else

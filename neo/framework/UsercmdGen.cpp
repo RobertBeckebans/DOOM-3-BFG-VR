@@ -1812,7 +1812,7 @@ void idUsercmdGenLocal::EvaluateVRMoveMode()
 
 	int buttonCurrentlyClicked = ButtonState( UB_IMPULSE41 );
 
-	if( game->CheckInCinematic() == true || Flicksync_InCutscene )
+	if( game->CheckInCinematic() )
 	{
 		return;    // do nothing in cinematics
 	}

@@ -1578,7 +1578,6 @@ void idAnimated::Event_SetAnimation( const char* animName )
 	//BSM Nerve: Need to add some error checking so we don't change the animation
 	//in the middle of the existing animation
 	anim = animator.GetAnim( animName );
-	common->Printf( "Setting animation %s\n", animName );
 	if( !anim )
 	{
 		gameLocal.Error( "idAnimated '%s' at (%s): cannot find anim '%s'", name.c_str(), GetPhysics()->GetOrigin().ToString( 0 ), animName );
@@ -1610,7 +1609,7 @@ void idAnimated::Event_GetAnimationLength()
 
 	Some static entities may be optimized into inline geometry by dmap
 
-	func_static
+	func_static or misc_model
 ===============================================================================
 */
 
@@ -3518,11 +3517,7 @@ void idFuncRadioChatter::Event_Activate( idEntity* activator )
 	{
 		const idSoundShader* shader = declManager->FindSound( sound );
 		int length = 0;
-
-		if( Flicksync_Radio( name.c_str(), shader->base->GetName(), shader->GetLength() * 10000 ) )
-		{
-			player->StartSoundShader( shader, SND_CHANNEL_RADIO, SSF_GLOBAL, false, &length );
-		}
+		player->StartSoundShader( shader, SND_CHANNEL_RADIO, SSF_GLOBAL, false, &length );
 		time = MS2SEC( length + 150 );
 	}
 	// we still put the hud up because this is used with no sound on
@@ -3756,7 +3751,7 @@ void idPhantomObjects::Think()
 	}
 
 	targetEnt = target.GetEntity();
-	if( targetEnt == NULL || ( targetEnt->health <= 0 ) || ( end_time && ( gameLocal.time > end_time ) ) || gameLocal.inCinematic || Flicksync_InCutscene )
+	if( targetEnt == NULL || ( targetEnt->health <= 0 ) || ( end_time && ( gameLocal.time > end_time ) ) || gameLocal.inCinematic )
 	{
 		BecomeInactive( TH_THINK );
 		return;

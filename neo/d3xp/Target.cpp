@@ -199,7 +199,7 @@ idTarget_EndLevel::Event_Activate
 void idTarget_EndLevel::Event_Activate( idEntity* activator )
 {
 	extern idCVar g_demoMode;
-	if( g_demoMode.GetInteger() > 0 || Flicksync_complete || Flicksync_GameOver )
+	if( g_demoMode.GetInteger() > 0 )
 	{
 		gameLocal.sessionCommand = "disconnect";
 		return;
@@ -2045,7 +2045,7 @@ idTarget_Checkpoint::Event_Activate
 void idTarget_Checkpoint::Event_Activate( idEntity* activator )
 {
 	extern idCVar g_demoMode; // no saving in demo mode
-	if( g_checkpoints.GetBool() && !g_demoMode.GetBool() && vr_cutscenesOnly.GetInteger() != 1 )
+	if( g_checkpoints.GetBool() && !g_demoMode.GetBool() )
 	{
 		cmdSystem->AppendCommandText( "savegame autosave\n" );
 	}

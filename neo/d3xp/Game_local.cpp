@@ -2681,9 +2681,6 @@ void idGameLocal::RunFrame( idUserCmdMgr& cmdMgr, gameReturn_t& ret )
 
 	player = GetLocalPlayer();
 
-	static bool wasInCinematic = false;
-	static bool cutsceneEnded = false;
-
 	if( !common->IsMultiplayer() && g_stopTime.GetBool() || vrSystem->VR_GAME_PAUSED )  // Koz vr pause
 	{
 		// clear any debug lines from a previous frame
@@ -2871,13 +2868,6 @@ void idGameLocal::RunFrame( idUserCmdMgr& cmdMgr, gameReturn_t& ret )
 				mpGame.Run();
 			}
 
-			// Carl: We have to do it this way, or we get begin/end events for every camera change in a cutscene
-			if( wasInCinematic && !inCinematic )
-			{
-				cutsceneEnded = Flicksync_EndCutscene() || cutsceneEnded;
-			}
-			wasInCinematic = inCinematic;
-
 			// display how long it took to calculate the current game frame
 			if( g_frametime.GetBool() )
 			{
@@ -2915,13 +2905,6 @@ void idGameLocal::RunFrame( idUserCmdMgr& cmdMgr, gameReturn_t& ret )
 		soundSystem->SetMute( false );
 		skipCinematic = false;
 	}
-
-	// Skip to next cutscene if needed
-	if( cutsceneEnded )
-	{
-		Flicksync_NextCutscene();
-	}
-	cutsceneEnded = false;
 
 	// show any debug info for this frame
 	RunDebugInfo();
@@ -4980,14 +4963,7 @@ void idGameLocal::SetCamera( idCamera* cam )
 		}
 
 		// set r_znear so that transitioning into/out of the player's head doesn't clip through the view
-		if( vr_flicksyncCharacter.GetInteger() )
-		{
-			cvarSystem->SetCVarFloat( "r_znear", 3.0f );
-		}
-		else
-		{
-			cvarSystem->SetCVarFloat( "r_znear", 1.0f );
-		}
+		cvarSystem->SetCVarFloat( "r_znear", 1.0f );
 
 		// hide all the player models
 		for( i = 0; i < numClients; i++ )

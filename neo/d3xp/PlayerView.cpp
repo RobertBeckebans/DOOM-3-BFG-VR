@@ -609,7 +609,7 @@ void idPlayerView::SingleView( const renderView_t* view, idMenuHandler_HUD* hudM
 		// so the screen wont be offset twice when the bordered image is rendered in Vr_Gl.cpp HUDRender with the
 		// headset correct matrix.
 
-		if( vrComfortVision || ( gameLocal.inCinematic && vr_cinematics.GetInteger() != 0 && vr_flicksyncCharacter.GetInteger() == 0 ) )
+		if( vrComfortVision || ( gameLocal.inCinematic && vr_cinematics.GetInteger() != 0 ) )
 		{
 			renderSystem->SetColor4( 0, 0, 0, 255 );
 
@@ -749,8 +749,8 @@ idPlayerView::ScreenFade
 */
 void idPlayerView::ScreenFade()
 {
-	// Carl: Don't cover screen when we need to read the Flicksync HUD or PDA or see what's happening
-	if( !fadeTime || g_stopTime.GetBool() || player->objectiveSystemOpen || vrSystem->PDAforced || vrSystem->PDAforcetoggle || ( Flicksync_InCutscene && ( Flicksync_CueActive || Flicksync_CueCardActive ) ) )
+	// Carl: Don't cover screen when we need to read the PDA or see what's happening
+	if( !fadeTime || g_stopTime.GetBool() || player->objectiveSystemOpen || vrSystem->PDAforced || vrSystem->PDAforcetoggle )
 	{
 		return;
 	}
@@ -996,7 +996,7 @@ void idPlayerView::RenderPlayerView( idMenuHandler_HUD* hudManager )
 	// Carl: Motion sickness aids for artificial locomotion
 	// 0 = None, 1 = Chaperone, 2 = Reduce FOV, 3 = Black Screen, 4 = Black & Chaperone, 5 = Reduce FOV & Chaperone, 6 = Slow Mo, 7 = Slow Mo & Chaperone, 8 = Slow Mo & Reduce FOV, 9 = Slow Mo, Chaperone, Reduce FOV, 10 = Third Person, 11 = Particles, 12 = Particles & Chaperone
 	int fix = vr_motionSickness.GetInteger();
-	if( gameLocal.inCinematic || Flicksync_InCutscene )
+	if( gameLocal.inCinematic )
 	{
 		fix = 0;
 	}
@@ -1241,8 +1241,7 @@ FullscreenFX_Helltime::Active
 */
 bool FullscreenFX_Helltime::Active()
 {
-
-	if( Flicksync_InCutscene || gameLocal.inCinematic || common->IsMultiplayer() )
+	if( gameLocal.inCinematic || common->IsMultiplayer() )
 	{
 		return false;
 	}
@@ -1270,7 +1269,6 @@ FullscreenFX_Helltime::AccumPass
 */
 void FullscreenFX_Helltime::AccumPass( const renderView_t* view )
 {
-
 	int level = DetermineLevel();
 
 	// for testing

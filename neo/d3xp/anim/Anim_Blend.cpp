@@ -1007,36 +1007,15 @@ void idAnim::CallFrameCommands( idEntity* ent, int from, int to ) const
 				{
 					if( !command.soundShader )
 					{
-						const idSoundShader* soundShader = NULL;
-						const char* sound = NULL;
-						uint32 length = 0;
-						if( ent->spawnArgs.GetString( command.string->c_str(), "", &sound ) && sound[0] != '\0' )
+						if( !ent->StartSound( command.string->c_str(), SND_CHANNEL_VOICE, 0, false, NULL ) )
 						{
-							soundShader = declManager->FindSound( sound );
-						}
-						if( soundShader )
-						{
-							length = soundShader->GetLength() * 10000;
-						}
-						else
-						{
-							sound = command.string->c_str();
-						}
-						if( Flicksync_Voice( ent->name.c_str(), FullName(), sound, SND_CHANNEL_VOICE, length ) )
-						{
-							if( !ent->StartSound( command.string->c_str(), SND_CHANNEL_VOICE, 0, false, NULL ) )
-							{
-								gameLocal.Warning( "Framecommand 'sound_voice' on entity '%s', anim '%s', frame %d: Could not find sound '%s'",
-												   ent->name.c_str(), FullName(), frame + 1, command.string->c_str() );
-							}
+							gameLocal.Warning( "Framecommand 'sound_voice' on entity '%s', anim '%s', frame %d: Could not find sound '%s'",
+											   ent->name.c_str(), FullName(), frame + 1, command.string->c_str() );
 						}
 					}
 					else
 					{
-						if( Flicksync_Voice( ent->name.c_str(), FullName(), command.soundShader->base->GetName(), SND_CHANNEL_VOICE, command.soundShader->GetLength() * 10000 ) )
-						{
-							ent->StartSoundShader( command.soundShader, SND_CHANNEL_VOICE, 0, false, NULL );
-						}
+						ent->StartSoundShader( command.soundShader, SND_CHANNEL_VOICE, 0, false, NULL );
 					}
 					break;
 				}
@@ -1044,36 +1023,15 @@ void idAnim::CallFrameCommands( idEntity* ent, int from, int to ) const
 				{
 					if( !command.soundShader )
 					{
-						const idSoundShader* soundShader = NULL;
-						const char* sound = NULL;
-						uint32 length = 0;
-						if( ent->spawnArgs.GetString( command.string->c_str(), "", &sound ) && sound[0] != '\0' )
+						if( !ent->StartSound( command.string->c_str(), SND_CHANNEL_VOICE2, 0, false, NULL ) )
 						{
-							soundShader = declManager->FindSound( sound );
-						}
-						if( soundShader )
-						{
-							length = soundShader->GetLength() * 10000;
-						}
-						else
-						{
-							sound = command.string->c_str();
-						}
-						if( Flicksync_Voice( ent->name.c_str(), FullName(), sound, SND_CHANNEL_VOICE2, length ) )
-						{
-							if( !ent->StartSound( command.string->c_str(), SND_CHANNEL_VOICE2, 0, false, NULL ) )
-							{
-								gameLocal.Warning( "Framecommand 'sound_voice2' on entity '%s', anim '%s', frame %d: Could not find sound '%s'",
-												   ent->name.c_str(), FullName(), frame + 1, command.string->c_str() );
-							}
+							gameLocal.Warning( "Framecommand 'sound_voice2' on entity '%s', anim '%s', frame %d: Could not find sound '%s'",
+											   ent->name.c_str(), FullName(), frame + 1, command.string->c_str() );
 						}
 					}
 					else
 					{
-						if( Flicksync_Voice( ent->name.c_str(), FullName(), command.soundShader->base->GetName(), SND_CHANNEL_VOICE2, command.soundShader->GetLength() * 10000 ) )
-						{
-							ent->StartSoundShader( command.soundShader, SND_CHANNEL_VOICE2, 0, false, NULL );
-						}
+						ent->StartSoundShader( command.soundShader, SND_CHANNEL_VOICE2, 0, false, NULL );
 					}
 					break;
 				}
@@ -1081,36 +1039,15 @@ void idAnim::CallFrameCommands( idEntity* ent, int from, int to ) const
 				{
 					if( !command.soundShader )
 					{
-						const idSoundShader* soundShader = NULL;
-						const char* sound = NULL;
-						uint32 length = 0;
-						if( ent->spawnArgs.GetString( command.string->c_str(), "", &sound ) && sound[0] != '\0' )
+						if( !ent->StartSound( command.string->c_str(), SND_CHANNEL_BODY, 0, false, NULL ) )
 						{
-							soundShader = declManager->FindSound( sound );
-						}
-						if( soundShader )
-						{
-							length = soundShader->GetLength() * 10000;
-						}
-						else
-						{
-							sound = command.string->c_str();
-						}
-						if( Flicksync_Voice( ent->name.c_str(), FullName(), sound, SND_CHANNEL_BODY, length ) )
-						{
-							if( !ent->StartSound( command.string->c_str(), SND_CHANNEL_BODY, 0, false, NULL ) )
-							{
-								gameLocal.Warning( "Framecommand 'sound_body' on entity '%s', anim '%s', frame %d: Could not find sound '%s'",
-												   ent->name.c_str(), FullName(), frame + 1, command.string->c_str() );
-							}
+							gameLocal.Warning( "Framecommand 'sound_body' on entity '%s', anim '%s', frame %d: Could not find sound '%s'",
+											   ent->name.c_str(), FullName(), frame + 1, command.string->c_str() );
 						}
 					}
 					else
 					{
-						if( Flicksync_Voice( ent->name.c_str(), FullName(), command.soundShader->base->GetName(), SND_CHANNEL_BODY, command.soundShader->GetLength() * 10000 ) )
-						{
-							ent->StartSoundShader( command.soundShader, SND_CHANNEL_BODY, 0, false, NULL );
-						}
+						ent->StartSoundShader( command.soundShader, SND_CHANNEL_BODY, 0, false, NULL );
 					}
 					break;
 				}
@@ -1126,10 +1063,7 @@ void idAnim::CallFrameCommands( idEntity* ent, int from, int to ) const
 					}
 					else
 					{
-						if( Flicksync_Voice( ent->name.c_str(), FullName(), command.soundShader->base->GetName(), SND_CHANNEL_BODY2, command.soundShader->GetLength() * 10000 ) )
-						{
-							ent->StartSoundShader( command.soundShader, SND_CHANNEL_BODY2, 0, false, NULL );
-						}
+						ent->StartSoundShader( command.soundShader, SND_CHANNEL_BODY2, 0, false, NULL );
 					}
 					break;
 				}
@@ -1145,10 +1079,7 @@ void idAnim::CallFrameCommands( idEntity* ent, int from, int to ) const
 					}
 					else
 					{
-						if( Flicksync_Voice( ent->name.c_str(), FullName(), command.soundShader->base->GetName(), SND_CHANNEL_BODY3, command.soundShader->GetLength() * 10000 ) )
-						{
-							ent->StartSoundShader( command.soundShader, SND_CHANNEL_BODY3, 0, false, NULL );
-						}
+						ent->StartSoundShader( command.soundShader, SND_CHANNEL_BODY3, 0, false, NULL );
 					}
 					break;
 				}
@@ -1172,25 +1103,6 @@ void idAnim::CallFrameCommands( idEntity* ent, int from, int to ) const
 				{
 					if( !command.soundShader )
 					{
-						const idSoundShader* soundShader = NULL;
-						const char* sound = NULL;
-						uint32 length = 0;
-						if( ent->spawnArgs.GetString( command.string->c_str(), "", &sound ) && sound[0] != '\0' )
-						{
-							soundShader = declManager->FindSound( sound );
-						}
-						if( soundShader )
-						{
-							length = soundShader->GetLength() * 10000;
-						}
-						else
-						{
-							sound = command.string->c_str();
-						}
-						if( g_debugCinematic.GetBool() )
-						{
-							common->Printf( "\t//Global %s: %s:\n\t{ \"%s\", \"\" },\n", ent->name.c_str(), FullName(), sound );
-						}
 						if( !ent->StartSound( command.string->c_str(), SND_CHANNEL_ANY, SSF_GLOBAL, false, NULL ) )
 						{
 							gameLocal.Warning( "Framecommand 'sound_global' on entity '%s', anim '%s', frame %d: Could not find sound '%s'",
@@ -1199,10 +1111,6 @@ void idAnim::CallFrameCommands( idEntity* ent, int from, int to ) const
 					}
 					else
 					{
-						if( g_debugCinematic.GetBool() )
-						{
-							common->Printf( "\t//Global %s: %s:\n\t{ \"%s\", \"\" },\n", ent->name.c_str(), FullName(), command.soundShader->base->GetName() );
-						}
 						ent->StartSoundShader( command.soundShader, SND_CHANNEL_ANY, SSF_GLOBAL, false, NULL );
 					}
 					break;
@@ -1229,25 +1137,6 @@ void idAnim::CallFrameCommands( idEntity* ent, int from, int to ) const
 					{
 						if( !command.soundShader )
 						{
-							const idSoundShader* soundShader = NULL;
-							const char* sound = NULL;
-							uint32 length = 0;
-							if( ent->spawnArgs.GetString( command.string->c_str(), "", &sound ) && sound[0] != '\0' )
-							{
-								soundShader = declManager->FindSound( sound );
-							}
-							if( soundShader )
-							{
-								length = soundShader->GetLength() * 10000;
-							}
-							else
-							{
-								sound = command.string->c_str();
-							}
-							if( g_debugCinematic.GetBool() )
-							{
-								common->Printf( "\t//Chatter %s: %s:\n\t{ \"%s\", \"\" },\n", ent->name.c_str(), FullName(), sound );
-							}
 							if( !ent->StartSound( command.string->c_str(), SND_CHANNEL_VOICE, 0, false, NULL ) )
 							{
 								gameLocal.Warning( "Framecommand 'sound_chatter' on entity '%s', anim '%s', frame %d: Could not find sound '%s'",
@@ -1256,10 +1145,6 @@ void idAnim::CallFrameCommands( idEntity* ent, int from, int to ) const
 						}
 						else
 						{
-							if( g_debugCinematic.GetBool() )
-							{
-								common->Printf( "\t//Chatter %s: %s:\n\t{ \"%s\", \"\" },\n", ent->name.c_str(), FullName(), command.soundShader->base->GetName() );
-							}
 							ent->StartSoundShader( command.soundShader, SND_CHANNEL_VOICE, 0, false, NULL );
 						}
 					}

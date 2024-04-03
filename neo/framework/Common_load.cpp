@@ -505,8 +505,6 @@ void idCommonLocal::ExecuteMapChange()
 	bool hellMap = false;
 	LoadLoadingGui( currentMapName, hellMap );
 
-	// Koz
-
 	// Stop rendering the wipe
 	ClearWipe();
 
@@ -664,11 +662,7 @@ void idCommonLocal::ExecuteMapChange()
 
 		if( 1 /*!vrSystem->IsActive()*/ )
 		{
-			// don't autosave if were only viewing cutscenes
-			if( vr_cutscenesOnly.GetInteger() != 1 )
-			{
-				SaveGame( "autosave" );
-			}
+			SaveGame( "autosave" );
 		}
 		else
 		{

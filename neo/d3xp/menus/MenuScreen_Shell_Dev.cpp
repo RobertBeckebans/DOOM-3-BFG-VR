@@ -299,9 +299,7 @@ bool idMenuScreen_Shell_Dev::HandleAction( idWidgetAction& action, const idWidge
 			int mapIndex = options->GetViewIndex();
 			if( ( mapIndex < devOptions.Num() ) && ( devOptions[ mapIndex ].map != NULL ) )
 			{
-				// New game, but don't disable Flicksync if they chose it.
-				Flicksync_NewGame( false );
-				cmdSystem->AppendCommandText( va( "devmap %s\n", devOptions[mapIndex].map ) );
+				cmdSystem->AppendCommandText( va( "devmap %s\n", devOptions[ mapIndex ].map ) );
 			}
 
 			return true;

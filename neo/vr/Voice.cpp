@@ -157,7 +157,7 @@ void MadeASound()
 void StartedTalking()
 {
 	idPlayer* player = gameLocal.GetLocalPlayer();
-	if( player != NULL && player->hudManager && ( vr_flicksyncCharacter.GetInteger() || vr_voiceCommands.GetInteger() || vr_talkMode.GetInteger() ) )
+	if( player != NULL && player->hudManager && ( vr_voiceCommands.GetInteger() || vr_talkMode.GetInteger() ) )
 	{
 		player->hudManager->SetRadioMessage( true );
 	}
@@ -168,11 +168,10 @@ void StoppedTalking()
 	spoke = true;
 
 	idPlayer* player = gameLocal.GetLocalPlayer();
-	if( player != NULL && player->hudManager && ( vr_flicksyncCharacter.GetInteger() || vr_voiceCommands.GetInteger() || vr_talkMode.GetInteger() ) )
+	if( player != NULL && player->hudManager && ( vr_voiceCommands.GetInteger() || vr_talkMode.GetInteger() ) )
 	{
 		player->hudManager->SetRadioMessage( false );
 	}
-	Flicksync_StoppedTalking();
 }
 
 bool iVoice::GetTalkButton()
@@ -244,7 +243,6 @@ void iVoice::ListVoiceCmds_f( const idCmdArgs& args )
 
 void iVoice::HearWord( const char* w, int confidence )
 {
-
 	int index = voiceCommandStrings.FindIndex( w );
 	if( index == -1 )
 	{
@@ -397,12 +395,14 @@ void iVoice::Event( WPARAM wParam, LPARAM lParam )
 				in_phrase = false;
 				common->Printf( "$ End SR Stream\n" );
 				break;
+
 			case SPEI_SOUND_START:
 				in_phrase = false;
 				maxVolume = currentVolume;
 				MadeASound();
 				//common->Printf("$ Sound start\n");
 				break;
+
 			case SPEI_SOUND_END:
 				if( in_phrase )
 				{
@@ -412,6 +412,7 @@ void iVoice::Event( WPARAM wParam, LPARAM lParam )
 				in_phrase = false;
 				currentVolume = 0;
 				break;
+
 			case SPEI_PHRASE_START:
 
 				if( !vr_voicePushToTalk.GetInteger() || common->ButtonState( UB_IMPULSE30 ) )
@@ -421,6 +422,7 @@ void iVoice::Event( WPARAM wParam, LPARAM lParam )
 					//common->Printf("$ phrase start\n");
 				}
 				break;
+
 			case SPEI_RECOGNITION:
 				//common->Printf("$ Recognition\n");
 				if( !vr_voicePushToTalk.GetInteger() || common->ButtonState( UB_IMPULSE30 ) )
@@ -444,26 +446,18 @@ void iVoice::Event( WPARAM wParam, LPARAM lParam )
 						}
 						const char* confidences[3] = { "low", "medium", "high" };
 						hr = recoResult->GetText( SP_GETWHOLEPHRASE, SP_GETWHOLEPHRASE, FALSE, &text, NULL );
+
 						if( vr_voiceRepeat.GetBool() )
 						{
 							Say( "%s %d: %S.", confidences[confidence + 1], ( int )( maxVolume * 100 ), text );
 						}
-						if( isLine )
-						{
-							if( vr_flicksyncCharacter.GetInteger() )
-							{
-								char buffer[1024];
-								WideCharToMultiByte( CP_ACP, 0, text, -1, buffer, sizeof( buffer ) / sizeof( buffer[0] ), "'", NULL );
-								Flicksync_HearLine( buffer, confidence, startTime, length );
-							}
-						}
-						else
+
+						if( !isLine )
 						{
 							if( maxVolume * 100 >= vr_voiceMinVolume.GetInteger() )
 							{
 								HearWord( text, confidence );
 							}
-							Flicksync_StoppedTalking();
 						}
 						CoTaskMemFree( text );
 						CoTaskMemFree( pPhrase );
@@ -471,6 +465,7 @@ void iVoice::Event( WPARAM wParam, LPARAM lParam )
 					in_phrase = false;
 				}
 				break;
+
 			case SPEI_HYPOTHESIS:
 
 				if( !vr_voicePushToTalk.GetInteger() || common->ButtonState( UB_IMPULSE30 ) )
@@ -509,15 +504,19 @@ void iVoice::Event( WPARAM wParam, LPARAM lParam )
 					}
 				}
 				break;
+
 			case SPEI_SR_BOOKMARK:
 				common->Printf( "$ Bookmark\n" );
 				break;
+
 			case SPEI_PROPERTY_NUM_CHANGE:
 				common->Printf( "$ Num change\n" );
 				break;
+
 			case SPEI_PROPERTY_STRING_CHANGE:
 				common->Printf( "$ property string change\n" );
 				break;
+
 			case SPEI_FALSE_RECOGNITION:
 				//common->Printf("$ False Recognition\n");
 				recoResult = reinterpret_cast<ISpRecoResult*>( event.lParam );
@@ -530,28 +529,35 @@ void iVoice::Event( WPARAM wParam, LPARAM lParam )
 				}
 				in_phrase = false;
 				break;
+
 			case SPEI_INTERFERENCE:
 				//common->Printf("$ Interference\n");
 				break;
+
 			case SPEI_REQUEST_UI:
 				common->Printf( "$ Request UI\n" );
 				break;
+
 			case SPEI_RECO_STATE_CHANGE:
 				in_phrase = false;
 				common->Printf( "$ Reco State Change\n" );
 				break;
+
 			case SPEI_ADAPTATION:
 				common->Printf( "$ Adaptation\n" );
 				break;
+
 			case SPEI_START_SR_STREAM:
 				in_phrase = false;
 				currentVolume = 0;
 				common->Printf( "$ Start SR Stream\n" );
 				break;
+
 			case SPEI_RECO_OTHER_CONTEXT:
 				//common->Printf("$ Reco Other Context\n");
 				in_phrase = false;
 				break;
+
 			case SPEI_SR_AUDIO_LEVEL:
 				currentVolume = event.wParam / 100.0f;
 				if( currentVolume > maxVolume )
@@ -560,12 +566,15 @@ void iVoice::Event( WPARAM wParam, LPARAM lParam )
 				}
 				//common->Printf("$ SR Audio Level: %3d / 100\n", event.wParam);
 				break;
+
 			case SPEI_SR_RETAINEDAUDIO:
 				common->Printf( "$ SR Retained Audio\n" );
 				break;
+
 			case SPEI_SR_PRIVATE:
 				common->Printf( "$ SR Private\n" );
 				break;
+
 			case SPEI_ACTIVE_CATEGORY_CHANGED:
 				common->Printf( "$ Active Category changed\n" );
 				break;
@@ -753,9 +762,7 @@ void iVoice::VoiceInit()
 				//Say("Grammar created.");
 				pGrammar->GetRule( L"word", 0, SPRAF_TopLevel | SPRAF_Active, true, &rule );
 
-
 				// Koz begin
-
 				for( int i = 0; i < voiceCommandStrings.Num(); i++ )
 				{
 					AddWord( voiceCommandStrings[i].c_str() );
@@ -763,7 +770,6 @@ void iVoice::VoiceInit()
 				// Koz end
 
 				pGrammar->GetRule( L"line", 1, SPRAF_TopLevel | SPRAF_Active, true, &flicksyncRule );
-				Flicksync_AddVoiceLines();
 
 				hr = pGrammar->Commit( NULL );
 				//if (SUCCEEDED(hr))

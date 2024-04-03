@@ -32,7 +32,6 @@ If you have questions concerning this license or the applicable additional terms
 
 #include "vr_hmd.h"
 #include "Voice.h"
-#include "FlickSync.h"
 #include "../renderer/Framebuffer.h"
 
 #include "../libs/openvr/headers/openvr.h"

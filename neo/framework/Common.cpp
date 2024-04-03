@@ -2002,7 +2002,7 @@ bool idCommonLocal::ProcessEvent( const sysEvent_t* event )
 	if( vrSystem->IsActive() )
 	{
 		static bool send1 = false;
-		if( ( Flicksync_InCutscene || game->CheckInCinematic() == true ) && !send1 )
+		if( game->CheckInCinematic() && !send1 )
 		{
 			if( ButtonState( UB_IMPULSE19 ) )
 			{
@@ -2017,43 +2017,20 @@ bool idCommonLocal::ProcessEvent( const sysEvent_t* event )
 		{
 			send1 = false;
 		}
-		if( ( Flicksync_InCutscene || game->CheckInCinematic() ) && ButtonState( UB_ATTACK ) )
-		{
-			Flicksync_UseCueCard();
-		}
 	}
 
 	if( game && game->IsInGame() )
 	{
-		if( vr_cutscenesOnly.GetInteger() == 2 && ( Flicksync_InCutscene || game->CheckInCinematic() == true ) )
-		{
-			if( vr_flicksyncCharacter.GetInteger() )
-			{
-				Flicksync_GiveUp();
-			}
-			else
-			{
-				game->SkipCinematicScene();
-			}
-		}
 		if( event->evType == SE_KEY && event->evValue2 == 1 && ( event->evValue == K_ESCAPE || event->evValue == K_JOY9 || event->evValue == K_SAY_CANCEL || event->evValue == K_SAY_RESUME ) )
 		{
-			if( Flicksync_InCutscene || game->CheckInCinematic() == true )
+			if( game->CheckInCinematic() )
 			{
-				if( vr_flicksyncCharacter.GetInteger() )
-				{
-					Flicksync_GiveUp();
-				}
-				else
-				{
-					game->SkipCinematicScene();
-				}
+				game->SkipCinematicScene();
 			}
 			else
 			{
 				if( !game->Shell_IsActive() && event->evValue != K_SAY_CANCEL && event->evValue != K_SAY_RESUME )
 				{
-
 					// menus / etc
 					if( MenuEvent( event ) )
 					{
