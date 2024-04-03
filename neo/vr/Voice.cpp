@@ -53,7 +53,6 @@ If you have questions concerning this license or the applicable additional terms
 	ISpRecoContext* pReco = NULL;
 	ISpRecoGrammar* pGrammar = NULL;
 	SPSTATEHANDLE rule = NULL;
-	SPSTATEHANDLE flicksyncRule = NULL;
 
 #endif
 
@@ -330,15 +329,10 @@ void iVoice::HearWord( const char* w, int confidence )
 				Say( buildCmdString( J_SAY_BFG ) );
 				Say( buildCmdString( J_SAY_SOUL_CUBE ) );
 				Say( buildCmdString( J_SAY_ARTIFACT ) );
-
-
 			}
-
 		}
 	}
-
 	else if( action == J_SAY_LISTENSTART )
-
 	{
 		if( !listening )
 		{
@@ -348,7 +342,6 @@ void iVoice::HearWord( const char* w, int confidence )
 			//Say( "Started listening." );
 		}
 	}
-
 	else if( listening
 #ifdef _WIN32
 			 && confidence >= SP_NORMAL_CONFIDENCE
@@ -414,7 +407,6 @@ void iVoice::Event( WPARAM wParam, LPARAM lParam )
 				break;
 
 			case SPEI_PHRASE_START:
-
 				if( !vr_voicePushToTalk.GetInteger() || common->ButtonState( UB_IMPULSE30 ) )
 				{
 					in_phrase = true;
@@ -599,22 +591,6 @@ void iVoice::AddWord( const wchar_t* word )
 #endif
 }
 
-void iVoice::AddFlicksyncLine( const char* line )
-{
-#ifdef _WIN32
-	wchar_t wbuffer[1024];
-	MultiByteToWideChar( CP_ACP, MB_PRECOMPOSED, line, -1, wbuffer, sizeof( wbuffer ) / sizeof( wbuffer[0] ) );
-	pGrammar->AddWordTransition( flicksyncRule, NULL, wbuffer, L" ", SPWT_LEXICAL, 1.0f, NULL );
-#endif
-}
-
-void iVoice::AddFlicksyncLine( const wchar_t* line )
-{
-#ifdef _WIN32
-	pGrammar->AddWordTransition( flicksyncRule, NULL, line, L" ", SPWT_LEXICAL, 1.0f, NULL );
-#endif
-}
-
 
 /*
 ==============
@@ -705,7 +681,7 @@ bool iVoice::InitVoiceDictionary()
 		parser.ExpectTokenString( "}" );
 	}
 
-	cmdSystem->AddCommand( "vr_listVoiceCommands", ListVoiceCmds_f, CMD_FL_SYSTEM, "lists voice activated commands" );
+	cmdSystem->AddCommand( "listVoiceCommands", ListVoiceCmds_f, CMD_FL_SYSTEM, "lists voice activated commands" );
 
 	return true;
 }
@@ -769,8 +745,6 @@ void iVoice::VoiceInit()
 				}
 				// Koz end
 
-				pGrammar->GetRule( L"line", 1, SPRAF_TopLevel | SPRAF_Active, true, &flicksyncRule );
-
 				hr = pGrammar->Commit( NULL );
 				//if (SUCCEEDED(hr))
 				//	Say("Compiled.");
@@ -786,13 +760,16 @@ void iVoice::VoiceInit()
 				//	Say("Interested.");
 
 				hr = pGrammar->SetRuleState( L"word", NULL, SPRS_ACTIVE );
-				hr = pGrammar->SetRuleState( L"line", NULL, SPRS_ACTIVE );
+				//hr = pGrammar->SetRuleState( L"line", NULL, SPRS_ACTIVE );
 				//if (SUCCEEDED(hr))
 				//	Say("Listening.");
 
 				hr = pReco->Resume( 0 );
 				//if (SUCCEEDED(hr))
 				//	Say("Resumed.");
+
+				Speed( 0 );
+				//Say( startListen.c_str() );
 			}
 		}
 	}
