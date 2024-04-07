@@ -875,7 +875,7 @@ set(WIN32_SOURCES
 	sys/win32/win_syscon.cpp
 	sys/win32/win_taskkeyhook.cpp
 	sys/win32/win_wndproc.cpp)
-	
+
 if(MSVC)
 	list(APPEND WIN32_SOURCES sys/win32/win_cpu.cpp)
 endif()

@@ -95,7 +95,7 @@ enum joystickAxis_t
 	AXIS_LEFT_TRIG,
 	AXIS_RIGHT_TRIG,
 
-	// Koz begin touch joystic axissessessssssss
+	// Koz begin touch joystick axis
 	AXIS_LEFT_TOUCH_X,
 	AXIS_LEFT_TOUCH_Y,
 	AXIS_RIGHT_TOUCH_X,
@@ -103,7 +103,7 @@ enum joystickAxis_t
 	AXIS_LEFT_TOUCH_TRIG,
 	AXIS_RIGHT_TOUCH_TRIG,
 
-	// Koz SteamVR axissessessssssssesseessssssssssssssssssssssssssss
+	// Koz SteamVR axis
 	AXIS_LEFT_STEAMVR_X,
 	AXIS_LEFT_STEAMVR_Y,
 	AXIS_RIGHT_STEAMVR_X,
@@ -277,7 +277,7 @@ enum sys_jEvents
 	J_AXIS_LEFT_TOUCH_TRIG = J_AXIS_MIN + AXIS_LEFT_TOUCH_TRIG,
 	J_AXIS_RIGHT_TOUCH_TRIG = J_AXIS_MIN + AXIS_RIGHT_TOUCH_TRIG,
 
-	// Begin SteamVR left and right controllers
+	// SteamVR left and right controllers
 	J_AXIS_LEFT_STEAMVR_X = J_AXIS_MIN + AXIS_LEFT_STEAMVR_X,
 	J_AXIS_LEFT_STEAMVR_Y = J_AXIS_MIN + AXIS_LEFT_STEAMVR_Y,
 	J_AXIS_RIGHT_STEAMVR_X = J_AXIS_MIN + AXIS_RIGHT_STEAMVR_X,
@@ -529,8 +529,7 @@ enum keyNum_t
 	K_JOY29,
 	K_JOY30,
 
-	// openVR controller buttons
-	// openVR left controller
+	// OpenVR left controller
 	K_JOY31,	// left openvr Sys
 	K_JOY32,	// left openvr ApplicationMenu
 	K_JOY33,	// left openvr Grip
@@ -550,7 +549,7 @@ enum keyNum_t
 	K_JOY47,	// left openvr 14
 	K_JOY48,	// left openvr 15
 
-	//openVR right controller
+	// OpenVR right controller
 	K_JOY49,	// right openvr Sys
 	K_JOY50,	// right openvr ApplicationMenu
 	K_JOY51,	// right openvr Grip
@@ -598,7 +597,7 @@ enum keyNum_t
 	K_L_TOUCHTRIG,
 	K_R_TOUCHTRIG,
 
-	//  SteamVR
+	// SteamVR
 	K_STEAMVR_LEFT_PAD_UP,
 	K_STEAMVR_LEFT_PAD_DOWN,
 	K_STEAMVR_LEFT_PAD_LEFT,
