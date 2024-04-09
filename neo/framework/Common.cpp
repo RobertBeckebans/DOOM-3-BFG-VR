@@ -218,7 +218,6 @@ idCommonLocal::Quit
 */
 void idCommonLocal::Quit()
 {
-
 	// don't try to shutdown if we are in a recursive error
 	if( !com_errorEntered )
 	{
@@ -858,16 +857,6 @@ CONSOLE_COMMAND( reloadLanguage, "reload language dict", NULL )
 
 /*
 =================
-Com_StartBuild_f
-=================
-*/
-CONSOLE_COMMAND( startBuild, "prepares to make a build", NULL )
-{
-	//globalImages->StartBuild();
-}
-
-/*
-=================
 Com_FinishBuild_f
 =================
 */
@@ -877,7 +866,6 @@ CONSOLE_COMMAND( finishBuild, "finishes the build process", NULL )
 	{
 		game->CacheDictionaryMedia( NULL );
 	}
-	//globalImages->FinishBuild( ( args.Argc() > 1 ) );
 }
 
 /*
@@ -998,10 +986,8 @@ void idCommonLocal::RenderBink( const char* path )
 			}
 		}
 
-
 		for( int eachJ = 0; eachJ < MAX_INPUT_DEVICES; eachJ ++ )
 		{
-
 			int numJoystickEvents = Sys_PollJoystickInputEvents( eachJ );
 			if( numJoystickEvents > 0 )
 			{
@@ -1026,6 +1012,7 @@ void idCommonLocal::RenderBink( const char* path )
 				Sys_EndJoystickInputEvents();
 			}
 		}
+
 		if( escapeEvent )
 		{
 			break;
@@ -1343,16 +1330,61 @@ void idCommonLocal::Init( int argc, const char* const* argv, const char* cmdline
 		vrVoice->VoiceInit();
 #endif
 
+		whiteMaterial = declManager->FindMaterial( "_white" );
+
+		if( idStr::Icmp( sys_lang.GetString(), ID_LANG_FRENCH ) == 0 )
+		{
+			// If the user specified french, we show french no matter what SKU
+			splashScreen = declManager->FindMaterial( "guis/assets/splash/legal_french" );
+		}
+		else if( idStr::Icmp( defaultLang, ID_LANG_FRENCH ) == 0 )
+		{
+			// If the lead sku is french (ie: europe), display figs
+			splashScreen = declManager->FindMaterial( "guis/assets/splash/legal_figs" );
+		}
+		else
+		{
+			// Otherwise show it in english
+			splashScreen = declManager->FindMaterial( "guis/assets/splash/legal_english" );
+		}
+
+		const int legalMinTime = 4000;
+		const bool showVideo = ( !com_skipIntroVideos.GetBool() && fileSystem->UsingResourceFiles() );
+		const bool showSplash = true;
+
 		if( vrSystem->IsActive() )
 		{
-
 			if( vr_controllerStandard.GetInteger() == 1 )
 			{
 				common->Printf( "vr_controllerStandard has disabled motion controls\n" );
 				vrSystem->VR_USE_MOTION_CONTROLS = false;
 			}
+
+			vrSystem->HMDResetTrackingOriginOffset();
+			vrSystem->FrameStart();
 		}
 
+		vrSystem->renderingSplash = true;
+
+		if( showVideo )
+		{
+			RenderBink( "video\\loadvideo.bik" );
+			RenderSplash();
+			RenderSplash();
+			RenderSplash(); // Koz kick it off.
+		}
+		else if( showSplash )
+		{
+			idLib::Printf( "Skipping Intro Videos!\n" );
+			// display the legal splash screen
+			// No clue why we have to render this twice to show up...
+			RenderSplash();
+			// SRS - OSX needs this for some OpenGL drivers, otherwise renders leftover image before splash
+			RenderSplash();
+			RenderSplash(); // Koz kick it off faster in VR. But really, no idea why 3rd time is the charm.
+		}
+
+		int legalStartTime = Sys_Milliseconds();
 		declManager->Init2();
 
 		// initialize string database so we can use it for loading messages
@@ -1467,60 +1499,13 @@ void idCommonLocal::Init( int argc, const char* const* argv, const char* cmdline
 		if( found == FIND_NO )
 		{
 			common->Printf( "Found file = %d\n", found );
-			common->Error( "Unable to locate mod files in 'Fully Possessed' mod directory.\nThe 'Fully Possessed' directory should exist in same directory as the Doom 3 executable.\n" );
+			common->Error( "Unable to locate mod files in 'Fully Possessed' mod directory.\nThe 'mod_fully_possessed' directory should exist in same directory as the Doom 3 executable.\n" );
 		}
 
 
 		StartMenu( true );
 
-		whiteMaterial = declManager->FindMaterial( "_white" );
 
-		if( idStr::Icmp( sys_lang.GetString(), ID_LANG_FRENCH ) == 0 )
-		{
-			// If the user specified french, we show french no matter what SKU
-			splashScreen = declManager->FindMaterial( "guis/assets/splash/legal_french" );
-		}
-		else if( idStr::Icmp( defaultLang, ID_LANG_FRENCH ) == 0 )
-		{
-			// If the lead sku is french (ie: europe), display figs
-			splashScreen = declManager->FindMaterial( "guis/assets/splash/legal_figs" );
-		}
-		else
-		{
-			// Otherwise show it in english
-			splashScreen = declManager->FindMaterial( "guis/assets/splash/legal_english" );
-		}
-
-		const int legalMinTime = 5000; //Carl: Don't force them to wait more than a second
-		const bool showVideo = ( !com_skipIntroVideos.GetBool() && fileSystem->UsingResourceFiles() );
-
-		if( vrSystem->IsActive() )
-		{
-			vrSystem->HMDResetTrackingOriginOffset();
-			vrSystem->FrameStart();
-		}
-
-		vrSystem->renderingSplash = true;
-
-		if( showVideo )
-		{
-			RenderBink( "video\\loadvideo.bik" );
-			RenderSplash();
-			RenderSplash();
-			RenderSplash(); // Koz kick it off.
-		}
-		else
-		{
-			idLib::Printf( "Skipping Intro Videos!\n" );
-			// display the legal splash screen
-			// Carl - No clue why we have to render this twice to show up...
-			RenderSplash();
-			RenderSplash();
-			RenderSplash(); // Koz kick it off faster in VR. But really, no idea why 3rd time is the charm.
-		}
-
-
-		int legalStartTime = Sys_Milliseconds();
 // SRS - changed ifndef to ifdef since legalMinTime should apply to retail builds, not dev builds
 #if 1 //def ID_RETAIL
 		while( Sys_Milliseconds() - legalStartTime < legalMinTime )
@@ -1546,10 +1531,10 @@ void idCommonLocal::Init( int argc, const char* const* argv, const char* cmdline
 
 		splashScreen = declManager->FindMaterial( "guis/lookforward" );
 
-		int centered = 0;
-
 		if( vrSystem->IsActive() )
 		{
+			int centered = 0;
+
 			while( centered == 0 )
 			{
 				if( vrSystem->HasHMD() )
@@ -1574,7 +1559,6 @@ void idCommonLocal::Init( int argc, const char* const* argv, const char* cmdline
 
 				for( int eachJ = 0; eachJ < MAX_INPUT_DEVICES; eachJ++ )
 				{
-
 					int numJoystickEvents = Sys_PollJoystickInputEvents( eachJ );
 					if( numJoystickEvents > 0 )
 					{
@@ -1670,30 +1654,6 @@ void idCommonLocal::Init( int argc, const char* const* argv, const char* cmdline
 	{
 		Sys_Error( "Error during initialization" );
 	}
-
-	extern idCVar vr_asw;
-	// Koz
-	if( vrSystem->IsActive() ) // Koz override these for VR
-	{
-		cvarSystem->SetCVarString( "r_swapInterval", "0" );
-		cvarSystem->SetCVarInteger( "com_engineHz", vrSystem->hmdHz );
-		com_engineHz_denominator = 100LL * vrSystem->hmdHz;
-		com_engineHz_latched = vrSystem->hmdHz;
-
-		if( vr_asw.GetInteger() != 0 )
-		{
-			vr_asw.SetModified();
-		}
-		else
-		{
-			vr_asw.ClearModified();
-		}
-	}
-	else
-	{
-		vr_asw.ClearModified();
-	}
-
 }
 
 /*
@@ -1780,15 +1740,15 @@ void idCommonLocal::Shutdown()
 	printf( "declManager->Shutdown();\n" );
 	declManager->Shutdown();
 
+	// shut down the renderSystem
+	printf( "renderSystem->Shutdown();\n" );
+	renderSystem->Shutdown();
+
 	// shut down the sound system
 	// SRS - Shut down sound system after decl manager so cinematic audio voices are destroyed first
 	// Important for XAudio2 where the mastering voice cannot be destroyed if any other voices exist
 	printf( "soundSystem->Shutdown();\n" );
 	soundSystem->Shutdown();
-
-	// shut down the renderSystem
-	printf( "renderSystem->Shutdown();\n" );
-	renderSystem->Shutdown();
 
 	printf( "commonDialog.Shutdown();\n" );
 	commonDialog.Shutdown();
@@ -1972,20 +1932,17 @@ idCommonLocal::LeaveGame
 */
 void idCommonLocal::LeaveGame()
 {
-
 	const bool captureToImage = false;
+
 	UpdateScreen( captureToImage );
 
 	ResetNetworkingState();
-
 
 	Stop( false );
 
 	CreateMainMenu();
 
 	StartMenu();
-
-
 }
 
 /*
@@ -1997,8 +1954,8 @@ bool idCommonLocal::ProcessEvent( const sysEvent_t* event )
 {
 	// hitting escape anywhere brings up the menu
 
-	// hack this  up
-	// not enough buttons on the steamvr controller and still want to be able to bail out of cinematics, so the PDA button will nuke a cinematic
+	// Koz HACK
+	// not enough buttons on the SteamVR controller and still want to be able to bail out of cinematics, so the PDA button will nuke a cinematic
 	if( vrSystem->IsActive() )
 	{
 		static bool send1 = false;

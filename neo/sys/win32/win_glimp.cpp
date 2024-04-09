@@ -1211,63 +1211,6 @@ bool R_GetModeListForDisplay( const int requestedDisplayNum, idList<vidMode_t>& 
 
 /*
 ====================
-R_GetDisplayNumForDeviceName
-Koz get the display number for a device name
-Useful for autoselecting HMD as primary display.
-Update: no longer useful with removal of extended modes in the newer oculus SDK,
-left here to see if may be useful later.
-
-====================
-*/
-bool R_GetDisplayNumForDeviceName( idStr requestedDeviceName, int& foundDisplayNum )
-{
-
-	for( int displayNum = 0;; displayNum++ )
-	{
-		DISPLAY_DEVICE	device;
-		device.cb = sizeof( device );
-		if( !EnumDisplayDevices(
-					0,			// lpDevice
-					displayNum,
-					&device,
-					0 /* dwFlags */ ) )
-		{
-			foundDisplayNum = -1;
-			return false;
-		}
-
-		// get the monitor for this display
-		if( !( device.StateFlags & DISPLAY_DEVICE_ATTACHED_TO_DESKTOP ) )
-		{
-			continue;
-		}
-
-		DISPLAY_DEVICE	monitor;
-		monitor.cb = sizeof( monitor );
-		if( !EnumDisplayDevices(
-					device.DeviceName,
-					0,
-					&monitor,
-					0 /* dwFlags */ ) )
-		{
-			continue;
-		}
-
-		if( strstr( monitor.DeviceName, requestedDeviceName.c_str() ) )
-		{
-			common->Printf( "Oculus HMD identified on display %d\n", displayNum );
-			foundDisplayNum = displayNum;
-			return true;
-		}
-	}
-
-	foundDisplayNum = -1;
-	return false;
-}
-
-
-/*
-====================
 GLW_GetWindowDimensions
 ====================
 */
