@@ -1383,10 +1383,10 @@ void iVr::CalcAimMove( float& yawDelta, float& pitchDelta )
 
 /*
 ==============
-iVr::FrameStart
+iVr::StartFrame
 ==============
 */
-void iVr::FrameStart()
+void iVr::StartFrame()
 {
 	//common->Printf( "Framestart called from frame %d\n", idLib::frameNumber );
 

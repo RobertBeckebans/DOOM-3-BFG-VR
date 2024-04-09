@@ -800,7 +800,7 @@ void idRenderBackend::GL_BlockingSwapBuffers()
 
 	if( vrSystem->IsActive() )
 	{
-		vrSystem->FrameStart();
+		vrSystem->StartFrame();
 	}
 
 	const int beforeFence = Sys_Milliseconds();

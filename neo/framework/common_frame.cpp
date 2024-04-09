@@ -370,6 +370,7 @@ void idCommonLocal::Draw()
 	else if( mapSpawned )
 	{
 		bool gameDraw = false;
+
 		// normal drawing for both single and multi player
 		if( !com_skipGameDraw.GetBool() && Game()->GetLocalClientNum() >= 0 )
 		{
@@ -430,7 +431,7 @@ This is an out-of-sequence screen update, not the normal game rendering
 // DG: added possibility to *not* release mouse in UpdateScreen(), it fucks up the view angle for screenshots
 void idCommonLocal::UpdateScreen( bool captureToImage, bool releaseMouse )
 {
-	if( insideUpdateScreen )
+	if( insideUpdateScreen || com_shuttingDown )
 	{
 		return;
 	}
@@ -684,181 +685,164 @@ void idCommonLocal::Frame()
 		// How many game frames to run
 		int numGameFrames = 0;
 
-		for( ;; )
 		{
-			const int thisFrameTime = Sys_Milliseconds();
-			static int lastFrameTime = thisFrameTime;	// initialized only the first time
-			const int deltaMilliseconds = thisFrameTime - lastFrameTime;
-			lastFrameTime = thisFrameTime;
+			//OPTICK_CATEGORY( "Wait for Frame", Optick::Category::Wait );
 
-			// if there was a large gap in time since the last frame, or the frame
-			// rate is very very low, limit the number of frames we will run
-			const int clampedDeltaMilliseconds = Min( deltaMilliseconds, com_deltaTimeClamp.GetInteger() );
-
-			gameTimeResidual += clampedDeltaMilliseconds * timescale.GetFloat();
-
-			// don't run any frames when paused
-			// Koz begin
-			// Koz fixme pause - In VR, we still want head movement while the game is paused.
-			// so we still need to run game frames. The pause menu will be rendered
-			// to the PDA screen, so force a pda toggle if needed. Actual gametime
-			// will be stopped just as if the g_stoptime cvar was set.
-
-			bool ingame = false;
-
-			// warning: this may be the worst code written since the dawn of humanity.
-			if( game )
-			{
-				ingame = game->IsInGame();
-			}
-
-			if( vrSystem->IsActive() )
-			{
-				static bool ing, shellact, vrpause, pauseG, forcet, pdaf, savlo, playerd, wasl = false;
-
-				if( playerd != vrSystem->playerDead || wasl != vrSystem->wasLoaded || ingame != ing || shellact != game->Shell_IsActive() || vrpause != vrSystem->VR_GAME_PAUSED || pauseG != pauseGame || forcet != vrSystem->PDAforcetoggle || pdaf != vrSystem->PDAforced || savlo != vrSystem->gameSavingLoading )
-				{
-					ing = ingame;
-					shellact = game->Shell_IsActive();
-					vrpause = vrSystem->VR_GAME_PAUSED;
-					pauseG = pauseGame;
-					forcet = vrSystem->PDAforcetoggle;
-					pdaf = vrSystem->PDAforced;
-					savlo = vrSystem->gameSavingLoading;
-					playerd = vrSystem->playerDead;
-					wasl = vrSystem->wasLoaded;
-
-					//common->Printf( "Pause diag: ingame = %d, VR_GAME_PAUSED = %d, pausegame = %d, game->isShellactive = %d playerdead = %d\n", ingame, vrSystem->VR_GAME_PAUSED, pauseGame, game->Shell_IsActive(), vrSystem->playerDead );
-					//common->Printf( "Pause diag: PDAforcetoggle = %d, PDAforced = %d, savingLoading = %d, wasloaded = %d\n", vrSystem->PDAforcetoggle, vrSystem->PDAforced, vrSystem->gameSavingLoading, vrSystem->wasLoaded );
-				}
-
-				if( ( vrSystem->VR_GAME_PAUSED || vrSystem->PDAforced ) && !common->Dialog().IsDialogActive() && !game->Shell_IsActive() )
-				{
-					// the pda has been forced up, but there is no active shell or dialog.
-					// force everything closed.
-					//common->Printf( "Pause 1 setting forcetoggle\n" );
-					vrSystem->PDAforcetoggle = true; // tell the pda check code to force it down.
-					vrSystem->VR_GAME_PAUSED = false;
-				}
-				else if( ( ingame && pauseGame && ( game->Shell_IsActive() /* || Dialog().IsDialogActive() */ ) )  && ( !vrSystem->PDAforced && !vrSystem->gameSavingLoading ) )
-				{
-					if( vrSystem->playerDead && vrSystem->wasLoaded )
-					{
-						game->Shell_Show( false );
-
-						if( !game->Shell_IsActive() )
-						{
-							vrSystem->playerDead = false;
-							vrSystem->wasLoaded = false;
-							vrSystem->PDAforced = false;
-							vrSystem->PDAforcetoggle = false;
-							vrSystem->VR_GAME_PAUSED = false;
-						}
-					}
-					else
-					{
-						if( !vrSystem->playerDead )
-						{
-							//common->Printf( "Pause 2 setting forcetoggle\n" );
-							vrSystem->PDAforcetoggle = true;
-						}
-					}
-
-				}
-				else if( ( ingame && pauseGame && ( game->Shell_IsActive() /* || Dialog().IsDialogActive() */ ) ) && ( vrSystem->PDAforced && !vrSystem->VR_GAME_PAUSED ) )
-				{
-					vrSystem->VR_GAME_PAUSED = true;
-				}
-
-
-			}
-
-			// Koz end
-
-			if( pauseGame && !ingame )  // Koz added !ingame
-			{
-				gameFrame++;
-				gameTimeResidual = 0;
-				break;
-			}
-
-			// debug cvar to force multiple game tics
-			if( com_fixedTic.GetInteger() > 0 && timescale.GetFloat() == 1.0f ) // Carl: Don't fix tics if we're in slow motion mode
-			{
-				numGameFrames = com_fixedTic.GetInteger();
-				gameFrame += numGameFrames;
-				gameTimeResidual = 0;
-				break;
-			}
-
-			if( syncNextGameFrame )
-			{
-				// don't sleep at all
-				syncNextGameFrame = false;
-				gameFrame++;
-				numGameFrames++;
-				gameTimeResidual = 0;
-				break;
-			}
-
-			// How much time to wait before running the next frame,
-			// based on com_engineHz
-			const int frameDelay = FRAME_TO_MSEC( gameFrame + 1 ) - FRAME_TO_MSEC( gameFrame );
 			for( ;; )
 			{
-				if( gameTimeResidual < frameDelay )
+				const int thisFrameTime = Sys_Milliseconds();
+				static int lastFrameTime = thisFrameTime;	// initialized only the first time
+				const int deltaMilliseconds = thisFrameTime - lastFrameTime;
+				lastFrameTime = thisFrameTime;
+
+				// if there was a large gap in time since the last frame, or the frame
+				// rate is very very low, limit the number of frames we will run
+				const int clampedDeltaMilliseconds = Min( deltaMilliseconds, com_deltaTimeClamp.GetInteger() );
+
+				gameTimeResidual += clampedDeltaMilliseconds * timescale.GetFloat();
+
+				// don't run any frames when paused
+				// Koz begin
+				// Koz fixme pause - In VR, we still want head movement while the game is paused.
+				// so we still need to run game frames. The pause menu will be rendered
+				// to the PDA screen, so force a pda toggle if needed. Actual gametime
+				// will be stopped just as if the g_stoptime cvar was set.
+
+				bool ingame = false;
+
+				// warning: this may be the worst code written since the dawn of humanity.
+				if( game )
 				{
+					ingame = game->IsInGame();
+				}
+
+				if( vrSystem->IsActive() )
+				{
+					static bool ing, shellact, vrpause, pauseG, forcet, pdaf, savlo, playerd, wasl = false;
+
+					if( playerd != vrSystem->playerDead || wasl != vrSystem->wasLoaded || ingame != ing || shellact != game->Shell_IsActive() || vrpause != vrSystem->VR_GAME_PAUSED || pauseG != pauseGame || forcet != vrSystem->PDAforcetoggle || pdaf != vrSystem->PDAforced || savlo != vrSystem->gameSavingLoading )
+					{
+						ing = ingame;
+						shellact = game->Shell_IsActive();
+						vrpause = vrSystem->VR_GAME_PAUSED;
+						pauseG = pauseGame;
+						forcet = vrSystem->PDAforcetoggle;
+						pdaf = vrSystem->PDAforced;
+						savlo = vrSystem->gameSavingLoading;
+						playerd = vrSystem->playerDead;
+						wasl = vrSystem->wasLoaded;
+
+						//common->Printf( "Pause diag: ingame = %d, VR_GAME_PAUSED = %d, pausegame = %d, game->isShellactive = %d playerdead = %d\n", ingame, vrSystem->VR_GAME_PAUSED, pauseGame, game->Shell_IsActive(), vrSystem->playerDead );
+						//common->Printf( "Pause diag: PDAforcetoggle = %d, PDAforced = %d, savingLoading = %d, wasloaded = %d\n", vrSystem->PDAforcetoggle, vrSystem->PDAforced, vrSystem->gameSavingLoading, vrSystem->wasLoaded );
+					}
+
+					if( ( vrSystem->VR_GAME_PAUSED || vrSystem->PDAforced ) && !common->Dialog().IsDialogActive() && !game->Shell_IsActive() )
+					{
+						// the pda has been forced up, but there is no active shell or dialog.
+						// force everything closed.
+						//common->Printf( "Pause 1 setting forcetoggle\n" );
+						vrSystem->PDAforcetoggle = true; // tell the pda check code to force it down.
+						vrSystem->VR_GAME_PAUSED = false;
+					}
+					else if( ( ingame && pauseGame && ( game->Shell_IsActive() /* || Dialog().IsDialogActive() */ ) )  && ( !vrSystem->PDAforced && !vrSystem->gameSavingLoading ) )
+					{
+						if( vrSystem->playerDead && vrSystem->wasLoaded )
+						{
+							game->Shell_Show( false );
+
+							if( !game->Shell_IsActive() )
+							{
+								vrSystem->playerDead = false;
+								vrSystem->wasLoaded = false;
+								vrSystem->PDAforced = false;
+								vrSystem->PDAforcetoggle = false;
+								vrSystem->VR_GAME_PAUSED = false;
+							}
+						}
+						else
+						{
+							if( !vrSystem->playerDead )
+							{
+								//common->Printf( "Pause 2 setting forcetoggle\n" );
+								vrSystem->PDAforcetoggle = true;
+							}
+						}
+
+					}
+					else if( ( ingame && pauseGame && ( game->Shell_IsActive() /* || Dialog().IsDialogActive() */ ) ) && ( vrSystem->PDAforced && !vrSystem->VR_GAME_PAUSED ) )
+					{
+						vrSystem->VR_GAME_PAUSED = true;
+					}
+
+
+				}
+
+				// Koz end
+
+				if( pauseGame && !ingame )  // Koz added !ingame
+				{
+					gameFrame++;
+					gameTimeResidual = 0;
 					break;
 				}
-				gameTimeResidual -= frameDelay;
-				gameFrame++;
-				numGameFrames++;
-				// if there is enough residual left, we may run additional frames
-			}
 
-			if( numGameFrames > 0 )
-			{
-				// Leyland's debt forgiveness code. For me, it just makes things worse.
-#if 0
-				// debt forgiveness
-				if( gameTimeResidual < frameDelay / 4.0f )
+				// debug cvar to force multiple game tics
+				if( com_fixedTic.GetInteger() > 0 && timescale.GetFloat() == 1.0f ) // Carl: Don't fix tics if we're in slow motion mode
 				{
+					numGameFrames = com_fixedTic.GetInteger();
+					gameFrame += numGameFrames;
 					gameTimeResidual = 0;
+					break;
 				}
-#endif
 
-				// ready to actually run them
-				break;
+				if( syncNextGameFrame )
+				{
+					// don't sleep at all
+					syncNextGameFrame = false;
+					gameFrame++;
+					numGameFrames++;
+					gameTimeResidual = 0;
+					break;
+				}
+
+				// How much time to wait before running the next frame,
+				// based on com_engineHz
+				const int frameDelay = FRAME_TO_MSEC( gameFrame + 1 ) - FRAME_TO_MSEC( gameFrame );
+				for( ;; )
+				{
+					if( gameTimeResidual < frameDelay )
+					{
+						break;
+					}
+					gameTimeResidual -= frameDelay;
+					gameFrame++;
+					numGameFrames++;
+					// if there is enough residual left, we may run additional frames
+				}
+
+				if( numGameFrames > 0 )
+				{
+					// ready to actually run them
+					break;
+				}
+
+				// if we are vsyncing, we always want to run at least one game
+				// frame and never sleep, which might happen due to scheduling issues
+				// if we were just looking at real time.
+				// Carl: Unless we're in slow-motion mode (timescale).
+				if( com_noSleep.GetBool()  && timescale.GetFloat() == 1.0f )
+				{
+					numGameFrames = 1;
+					gameFrame += numGameFrames;
+					gameTimeResidual = 0;
+					break;
+				}
+
+				// not enough time has passed to run a frame, as might happen if
+				// we don't have vsync on, or the monitor is running at 120hz while
+				// com_engineHz is 60, so sleep a bit and check again
+				Sys_Sleep( 0 );
 			}
-
-			// if we are vsyncing, we always want to run at least one game
-			// frame and never sleep, which might happen due to scheduling issues
-			// if we were just looking at real time.
-			// Carl: Unless we're in slow-motion mode (timescale).
-			if( com_noSleep.GetBool()  && timescale.GetFloat() == 1.0f )
-			{
-				numGameFrames = 1;
-				gameFrame += numGameFrames;
-				gameTimeResidual = 0;
-				break;
-			}
-
-			// Carl: if we're in slow motion mode (timescale)
-			// always run at least one drawing frame even if there's no game frame
-			// Unfortunately, these frames have bad headtracking, so I disabled it.
-#if 0
-			if( com_noSleep.GetBool() && timescale.GetFloat() < 1.0f )
-			{
-				numGameFrames = 0;
-				gameFrame++;
-				break;
-			}
-#endif
-
-			// not enough time has passed to run a frame, as might happen if
-			// we don't have vsync on, or the monitor is running at 120hz while
-			// com_engineHz is 60, so sleep a bit and check again
-			Sys_Sleep( 0 );
 		}
 
 		//--------------------------------------------
@@ -933,12 +917,6 @@ void idCommonLocal::Frame()
 
 		if( pauseGame )
 		{
-			extern idCVar timescale;
-			int comfortMode = vr_motionSickness.GetInteger();
-			if( ( comfortMode == 6 ) || ( comfortMode == 7 ) || ( comfortMode == 8 ) || ( comfortMode == 9 ) )
-			{
-				timescale.SetFloat( 1 );
-			}
 			usercmdGen->Clear();
 		}
 
@@ -947,7 +925,7 @@ void idCommonLocal::Frame()
 		// Store server game time - don't let time go past last SS time in case we are extrapolating
 		if( IsClient() )
 		{
-			newCmd.serverGameMilliseconds = std::min( Game()->GetServerGameTimeMs(), Game()->GetSSEndTime() );
+			newCmd.serverGameMilliseconds = Min( Game()->GetServerGameTimeMs(), Game()->GetSSEndTime() );
 		}
 		else
 		{

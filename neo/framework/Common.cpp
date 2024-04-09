@@ -79,8 +79,6 @@ idCVar com_speeds( "com_speeds", "0", CVAR_BOOL | CVAR_SYSTEM | CVAR_NOCHEAT, "s
 idCVar com_showFPS( "com_showFPS", "0", CVAR_INTEGER | CVAR_SYSTEM | CVAR_ARCHIVE | CVAR_NOCHEAT, "show frames rendered per second. 0: off 1: default bfg values, 2: only show FPS (classic view)" );
 // DG end
 
-idCVar vr_showWIP( "vr_showWIP", "0", CVAR_BOOL | CVAR_SYSTEM | CVAR_ARCHIVE, "show VR walk in place data\n" );
-
 idCVar com_showMemoryUsage( "com_showMemoryUsage", "0", CVAR_BOOL | CVAR_SYSTEM | CVAR_NOCHEAT, "show total and per frame memory usage" );
 idCVar com_updateLoadSize( "com_updateLoadSize", "0", CVAR_BOOL | CVAR_SYSTEM | CVAR_NOCHEAT, "update the load size after loading a map" );
 
@@ -1361,7 +1359,7 @@ void idCommonLocal::Init( int argc, const char* const* argv, const char* cmdline
 			}
 
 			vrSystem->HMDResetTrackingOriginOffset();
-			vrSystem->FrameStart();
+			vrSystem->StartFrame();
 		}
 
 		vrSystem->renderingSplash = true;
@@ -1515,7 +1513,7 @@ void idCommonLocal::Init( int argc, const char* const* argv, const char* cmdline
 				if( vrSystem->HasHMD() )
 				{
 					idLib::frameNumber++;
-					vrSystem->FrameStart();
+					vrSystem->StartFrame();
 				}
 			}
 			else
@@ -1540,7 +1538,7 @@ void idCommonLocal::Init( int argc, const char* const* argv, const char* cmdline
 				if( vrSystem->HasHMD() )
 				{
 					idLib::frameNumber++;
-					vrSystem->FrameStart();
+					vrSystem->StartFrame();
 				}
 				RenderSplash();
 				Sys_GenerateEvents();

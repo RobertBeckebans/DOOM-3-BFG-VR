@@ -117,7 +117,7 @@ public:
 	void				HUDRender( idImage* image0, idImage* image1 );
 	void				HMDResetTrackingOriginOffset();
 
-	void				FrameStart();
+	void				StartFrame();
 
 	//void				OpenVrGetRight( idVec3& position, idQuat& rotation );
 	//void				OpenVrGetLeft( idVec3& position, idQuat& rotation );

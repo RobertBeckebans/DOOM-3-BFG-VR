@@ -144,11 +144,6 @@ extern idCVar		com_updateLoadSize;
 extern idCVar		com_productionMode;
 
 extern int			com_editors;			// currently opened editor(s)
-
-// Koz
-extern idCVar		vr_showWIP;
-
-
 struct MemInfo_t
 {
 	idStr			filebase;
