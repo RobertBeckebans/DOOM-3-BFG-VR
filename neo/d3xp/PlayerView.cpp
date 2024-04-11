@@ -597,7 +597,7 @@ void idPlayerView::SingleView( const renderView_t* view, idMenuHandler_HUD* hudM
 
 		if( bfgVision )
 		{
-			float extend = -0.5f * vrSystem->VRScreenSeparation * renderSystem->GetVirtualWidth();
+			float extend = -0.5f * vrSystem->GetScreenSeparation() * renderSystem->GetVirtualWidth();
 			float offset = -extend * view->viewEyeBuffer;
 
 			renderSystem->SetColor4( 1.0f, 1.0f, 1.0f, 1.0f );
@@ -619,7 +619,7 @@ void idPlayerView::SingleView( const renderView_t* view, idMenuHandler_HUD* hudM
 			int blockWidth = gameLocal.inCinematic ? width / 8 : width / 4;
 			int blockHeight = height / 4;
 
-			float offsetSize = vrSystem->VRScreenSeparation * width;
+			float offsetSize = vrSystem->GetScreenSeparation() * width;
 			float offset = ( gameLocal.inCinematic && vr_cinematics.GetInteger() == 2 ) ? 0 : offsetSize / vrSystem->hmdAspect;
 
 			int start, barWidth;
@@ -838,7 +838,6 @@ stereoDistances_t	CaclulateStereoDistances(
 		// head mounted display mode
 		dists.worldSeparation = CentimetersToWorldUnits( interOcularCentimeters * 0.5 );
 		dists.screenSeparation = 0.0f;
-		//dists.screenSeparation = vrSystem->VRScreenSeparation;
 		return dists;
 	}
 
@@ -1569,7 +1568,7 @@ void FullscreenFX_Warp::HighQuality()
 
 	if( vrSystem->IsActive() )
 	{
-		center.x += vrSystem->VRScreenSeparation * tr.guiModel->GetEye() * 0.5f;
+		center.x += vrSystem->GetScreenSeparation() * tr.guiModel->GetEye() * 0.5f;
 	}
 
 	center.y = renderSystem->GetVirtualHeight() / 2.0f;

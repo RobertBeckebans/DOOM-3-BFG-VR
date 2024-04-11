@@ -96,16 +96,6 @@ class iVr
 public:
 	iVr();
 
-	bool				IsActive() const
-	{
-		return isActive;
-	}
-
-	bool				HasHMD() const
-	{
-		return ( m_pHMD != nullptr );
-	}
-
 	bool				OpenVRInit();
 
 	void				HMDInit();
@@ -139,10 +129,30 @@ public:
 
 	void				SwapWeaponHand();
 
+	bool				IsActive() const
+	{
+		return isActive;
+	}
 
-public:
+	bool				HasHMD() const
+	{
+		return ( m_pHMD != nullptr );
+	}
 
-	//------------------
+	int					GetHz() const
+	{
+		return hmdHz;
+	}
+
+	float				GetScreenSeparation() const
+	{
+		return screenSeparation;
+	}
+
+	//---------------------------
+	// client VR code shared with the game code
+
+	// TODO delete as many vars as possible and separate blocks in vars that are accessed by the game thread and main thread
 
 	int					currentFlashMode;
 
@@ -230,8 +240,6 @@ public:
 	float				hmdPixelScale;
 	float				hmdAspect;
 	hmdEye_t			hmdEye[2];
-
-	float				VRScreenSeparation;		// for Reduce FOV motion sickness fix
 
 	float				officialIPD;
 	float				officialHeight;
@@ -327,7 +335,7 @@ public:
 	idClipModel*		bodyClip;
 	idClipModel*		headClip;
 
-	//---------------------------
+
 private:
 	idMat4				GetHMDMatrixProjectionEye( vr::Hmd_Eye nEye );
 	idMat4				GetHMDMatrixPoseEye( vr::Hmd_Eye nEye );
@@ -358,8 +366,7 @@ private:
 
 	bool				hmdPositionTracked;
 
-
-
+	float				screenSeparation;		// for Reduce FOV motion sickness fix
 };
 
 extern idCVar vr_scale;

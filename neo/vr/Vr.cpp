@@ -271,7 +271,7 @@ iVr::iVr()
 
 	vrIsBackgroundSaving = false;
 
-	VRScreenSeparation = 0.0f;
+	screenSeparation = 0.0f;
 
 	officialIPD = 64.0f;
 	officialHeight = 72.0f;
@@ -515,13 +515,13 @@ bool iVr::OpenVRInit()
 							  &openVRfovEye[0][0], &openVRfovEye[0][1],
 							  &openVRfovEye[0][2], &openVRfovEye[0][3] );
 
-	VRScreenSeparation =
+	screenSeparation =
 		0.5f * ( openVRfovEye[1][1] + openVRfovEye[1][0] )
 		/ ( openVRfovEye[1][1] - openVRfovEye[1][0] )
 		- 0.5f * ( openVRfovEye[0][1] + openVRfovEye[0][0] )
 		/ ( openVRfovEye[0][1] - openVRfovEye[0][0] );
 
-	VRScreenSeparation = fabs( VRScreenSeparation ) / 2.0f ;
+	screenSeparation = fabs( screenSeparation ) / 2.0f ;
 	com_engineHz.SetInteger( hmdHz );
 
 	common->Printf( "Hmd Driver: %s .\n", m_strDriver.c_str() );
@@ -538,7 +538,7 @@ bool iVr::OpenVRInit()
 	common->Printf( "HMD Right Eye rightTan %f\n", openVRfovEye[0][1] );
 	common->Printf( "HMD Right Eye upTan %f\n", openVRfovEye[0][2] );
 	common->Printf( "HMD Right Eye downTan %f\n", openVRfovEye[0][3] );
-	common->Printf( "OpenVR HMD Screen separation = %f\n", VRScreenSeparation );
+	common->Printf( "OpenVR HMD Screen separation = %f\n", screenSeparation );
 
 	return true;
 }
@@ -552,7 +552,7 @@ void iVr::HMDInit()
 {
 	isActive = false;
 
-	if( !OpenVRInit() )
+	if( !vr_enable.GetBool() || !OpenVRInit() )
 	{
 		common->Printf( "No HMD detected.\n VR Disabled\n" );
 		return;
