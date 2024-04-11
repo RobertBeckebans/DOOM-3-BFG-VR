@@ -2022,31 +2022,7 @@ void idUsercmdGenLocal::MakeCurrent()
 	impulseSequence = cmd.impulseSequence;
 	impulse = cmd.impulse;
 
-	if( vr_motionSickness.GetInteger() == MOSICK_THIRD_PERSON )
-	{
-		if( abs( cmd.forwardmove ) >= MOVE_DEAD_ZONE || abs( cmd.rightmove ) >= MOVE_DEAD_ZONE )
-		{
-			vrSystem->thirdPersonMovement = true;
-			thirdPersonTime = Sys_Milliseconds();
-			// third person movement is switched off again in player.cpp
-			// once the speed hits zero and forwardmove and rightmove are 0
-		}
-		else
-		{
-			// in case the player has jumped on something moving in third person,
-			// put a timeout here so the view will snap back if the controls haven't been touched
-			// in a bit.
-			if( vrSystem->thirdPersonMovement == true && ( Sys_Milliseconds() - thirdPersonTime ) > 300 )
-			{
-				vrSystem->thirdPersonMovement = false;
-			}
-
-		}
-	}
-	else
-	{
-		vrSystem->thirdPersonMovement = false;
-	}
+	vrSystem->thirdPersonMovement = false;
 }
 
 /*

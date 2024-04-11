@@ -11368,6 +11368,7 @@ void idPlayer::Move()
 	}
 
 	BobCycle( pushVelocity );
+
 	// Carl: Motion sickness detection
 	float distance = ( ( after - before ) - vrSystem->motionMoveDelta ).LengthSqr();
 	static float oldHeadHeightDiff = 0;
@@ -11375,6 +11376,7 @@ void idPlayer::Move()
 	oldHeadHeightDiff = vrSystem->headHeightDiff;
 	distance += crouchDistance * crouchDistance + viewBob.LengthSqr();
 	blink = ( distance > 0.005f );
+
 	CrashLand( oldOrigin, oldVelocity );
 
 	// Handling vr_comfortMode
@@ -11384,8 +11386,9 @@ void idPlayer::Move()
 		timescale.SetFloat( 1 );
 		vr_motionSickness.ClearModified();
 	}
-	const int comfortMode = vr_motionSickness.GetInteger();
+
 	//"	0 off | 2 = tunnel | 5 = tunnel + chaperone | 6 slow mo | 7 slow mo + chaperone | 8 tunnel + slow mo | 9 = tunnel + slow mo + chaperone
+	const int comfortMode = vr_motionSickness.GetInteger();
 	if( comfortMode < 2 || game->CheckInCinematic() )
 	{
 		this->playerView.EnableVrComfortVision( false );
@@ -11394,10 +11397,6 @@ void idPlayer::Move()
 	}
 
 	float speed = physicsObj.GetLinearVelocity().LengthFast();
-	if( comfortMode == MOSICK_THIRD_PERSON && speed == 0 && usercmd.forwardmove == 0 && usercmd.rightmove == 0 )
-	{
-		vrSystem->thirdPersonMovement = false;
-	}
 
 	if( ( comfortMode == 2 ) || ( comfortMode == 5 ) || ( comfortMode == 8 ) || ( comfortMode == 9 ) )
 	{

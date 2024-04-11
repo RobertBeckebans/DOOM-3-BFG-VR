@@ -87,7 +87,7 @@ typedef enum
 	FLASHLIGHT_MAX,
 } vr_flashlight_mode_t;
 
-// 0 = None, 1 = Chaperone, 2 = Reduce FOV, 3 = Black Screen, 4 = Black & Chaperone, 5 = Reduce FOV & Chaperone, 6 = Slow Mo, 7 = Slow Mo & Chaperone, 8 = Slow Mo & Reduce FOV, 9 = Slow Mo, Chaperone, Reduce FOV, 10 = Third Person, 11 = Particles, 12 = Particles & Chaperone
+// 0 = None, 1 = Chaperone, 2 = Reduce FOV, 3 = Black Screen, 4 = Black & Chaperone, 5 = Reduce FOV & Chaperone, 6 = Slow Mo, 7 = Slow Mo & Chaperone, 8 = Slow Mo & Reduce FOV, 9 = Slow Mo, Chaperone, Reduce FOV, 10 = Particles, 11 = Particles & Chaperone
 enum vr_motionSicknessMode_t
 {
 	MOSICK_NONE,
@@ -100,9 +100,6 @@ enum vr_motionSicknessMode_t
 	MOSICK_SLOMO_N_CHAPERONE,
 	MOSICK_SLOMO_N_REDUCE_FOV,
 	MOSICK_SLOMO_N_REDUCE_FOV_N_CHAPERONE,
-	MOSICK_THIRD_PERSON,
-	MOSICK_PARTICLES,
-	MOSICK_PARTICLES_N_CHAPERONE,
 };
 
 class idClipModel;
