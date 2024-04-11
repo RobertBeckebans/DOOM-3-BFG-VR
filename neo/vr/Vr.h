@@ -110,6 +110,7 @@ public:
 
 	void				HMDInit();
 	void				HMDShutdown();
+
 	void				HMDInitializeDistortion();
 	void				HMDGetOrientation( idAngles& hmdAngles, idVec3& headPositionDelta, idVec3& bodyPositionDelta, idVec3& absolutePosition, bool resetTrackingOffset );
 	void				HMDRender( idImage* leftCurrent, idImage* rightCurrent );
@@ -138,35 +139,7 @@ public:
 
 	void				SwapWeaponHand();
 
-private:
-	idMat4				GetHMDMatrixProjectionEye( vr::Hmd_Eye nEye );
-	idMat4				GetHMDMatrixPoseEye( vr::Hmd_Eye nEye );
 
-	void				SwapBinding( int Old, int New );
-
-	bool				isActive;
-
-	vr::IVRSystem*			m_pHMD;
-	vr::IVRCompositor*		m_pCompositor;
-	vr::IVRChaperone*		m_pChaperone;
-	vr::IVRRenderModels*		m_pRenderModels;
-	vr::TrackedDevicePose_t	m_rTrackedDevicePose[vr::k_unMaxTrackedDeviceCount];
-	vr::TrackedDevicePose_t	m1_rTrackedDevicePose[vr::k_unMaxTrackedDeviceCount];
-
-	idStr				m_strDriver;
-	idStr				m_strDisplay;
-
-	char				m_rDevClassChar[vr::k_unMaxTrackedDeviceCount];
-	idMat4				m_rmat4DevicePose[vr::k_unMaxTrackedDeviceCount];
-	bool				m_rbShowTrackedDevice[vr::k_unMaxTrackedDeviceCount];
-
-
-	idMat4				m_mat4ProjectionLeft;
-	idMat4				m_mat4ProjectionRight;
-	idMat4				m_mat4eyePosLeft;
-	idMat4				m_mat4eyePosRight;
-
-	bool				hmdPositionTracked;
 public:
 
 	//------------------
@@ -356,6 +329,34 @@ public:
 
 	//---------------------------
 private:
+	idMat4				GetHMDMatrixProjectionEye( vr::Hmd_Eye nEye );
+	idMat4				GetHMDMatrixPoseEye( vr::Hmd_Eye nEye );
+
+	void				SwapBinding( int Old, int New );
+
+	bool				isActive;
+
+	vr::IVRSystem*			m_pHMD = nullptr;
+	vr::IVRCompositor*		m_pCompositor;
+	vr::IVRChaperone*		m_pChaperone;
+	vr::IVRRenderModels*		m_pRenderModels;
+	vr::TrackedDevicePose_t	m_rTrackedDevicePose[vr::k_unMaxTrackedDeviceCount];
+	vr::TrackedDevicePose_t	m1_rTrackedDevicePose[vr::k_unMaxTrackedDeviceCount];
+
+	idStr				m_strDriver;
+	idStr				m_strDisplay;
+
+	char				m_rDevClassChar[vr::k_unMaxTrackedDeviceCount];
+	idMat4				m_rmat4DevicePose[vr::k_unMaxTrackedDeviceCount];
+	bool				m_rbShowTrackedDevice[vr::k_unMaxTrackedDeviceCount];
+
+
+	idMat4				m_mat4ProjectionLeft;
+	idMat4				m_mat4ProjectionRight;
+	idMat4				m_mat4eyePosLeft;
+	idMat4				m_mat4eyePosRight;
+
+	bool				hmdPositionTracked;
 
 
 

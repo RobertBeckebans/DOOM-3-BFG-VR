@@ -15335,13 +15335,7 @@ Fixed fov at intermissions, otherwise account for fov variable and zooms.
 float idPlayer::CalcFov( bool honorZoom )
 {
 	float fov;
-	/*
-		if ( vrSystem->IsActive() ) // Koz only use HMD fov in VR
-		{
-			return DefaultFov();
-		}
-		else
-		{ */
+
 	if( fxFov )
 	{
 		return DefaultFov() + 10.0f + cos( ( gameLocal.time + 2000 ) * 0.01 ) * 10.0f;
@@ -15357,7 +15351,7 @@ float idPlayer::CalcFov( bool honorZoom )
 	/*
 	if ( zoomFov.IsDone( gameLocal.time ) )
 	{
-		fov = (honorZoom && usercmd.buttons & BUTTON_ZOOM) && weapon.GetEntity() ? weapon.GetEntity()->GetZoomFov() : DefaultFov();
+		fov = ( honorZoom && usercmd.buttons & BUTTON_ZOOM ) && weapon.GetEntity() ? weapon.GetEntity()->GetZoomFov() : DefaultFov();
 	}
 	else
 	{
@@ -15376,7 +15370,7 @@ float idPlayer::CalcFov( bool honorZoom )
 	{
 		fov = 179;
 	}
-//	}
+
 	return fov;
 }
 

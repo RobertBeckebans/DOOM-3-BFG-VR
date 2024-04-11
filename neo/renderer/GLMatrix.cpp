@@ -631,7 +631,6 @@ void R_SetupUnprojection( viewDef_t* viewDef )
 	R_MatrixFullInverse( viewDef->projectionMatrix, viewDef->unprojectionToCameraMatrix );
 	idRenderMatrix::Transpose( *( idRenderMatrix* )viewDef->unprojectionToCameraMatrix, viewDef->unprojectionToCameraRenderMatrix );
 
-
 	R_MatrixMultiply( viewDef->worldSpace.modelViewMatrix, viewDef->projectionMatrix, viewDef->unprojectionToWorldMatrix );
 	R_MatrixFullInverse( viewDef->unprojectionToWorldMatrix, viewDef->unprojectionToWorldMatrix );
 
@@ -745,6 +744,7 @@ void R_ObliqueProjection( viewDef_t* parms )
 	idPlane pB = parms->clipPlanes[0];
 	idPlane cp; // camera space plane
 	R_MatrixTranspose( parms->worldSpace.modelViewMatrix, mvt );
+
 	// transform plane (which is set to the surface we're mirroring about's plane) to camera space
 	R_GlobalPlaneToLocal( mvt, pB, cp );
 

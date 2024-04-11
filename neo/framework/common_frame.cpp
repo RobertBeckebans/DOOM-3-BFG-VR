@@ -411,6 +411,7 @@ void idCommonLocal::Draw()
 			if( !vrSystem->PDAforced && !vrSystem->PDAforcetoggle )
 			{
 				Dialog().Render( loadGUI != NULL );
+
 				if( game->Shell_IsActive() )
 				{
 					console->Draw( false );
@@ -463,21 +464,6 @@ void idCommonLocal::UpdateScreen( bool captureToImage, bool releaseMouse )
 	frameTiming.startRenderTime = Sys_Microseconds();   // SRS - Added frame timing for out-of-sequence updates (e.g. used in timedemo "twice" mode)
 	renderSystem->RenderCommandBuffers( cmd );
 	frameTiming.finishRenderTime = Sys_Microseconds();  // SRS - Added frame timing for out-of-sequence updates (e.g. used in timedemo "twice" mode)
-
-	if( vrSystem->IsActive() )
-	{
-		//static int lastTrack = Sys_Milliseconds();
-		//if ( Sys_Milliseconds() - lastTrack >9 )
-		//	{
-		//	lastTrack = Sys_Milliseconds();
-		//  vrSystem->HMDTrackStatic(); // Koz fixme
-		//	}
-
-
-		// this will hopefully update the steamvr compositor white room
-		//renderSystem->CaptureRenderToImage( "_skyBoxSides", false );
-	}
-
 
 	insideUpdateScreen = false;
 }

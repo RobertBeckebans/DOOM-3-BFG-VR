@@ -46,8 +46,8 @@ If you have questions concerning this license or the applicable additional terms
 
 // *** Oculus HMD Variables
 
-idCVar vr_pixelDensity( "vr_pixelDensity", "1.25", CVAR_FLOAT | CVAR_ARCHIVE | CVAR_GAME, "" );
-idCVar vr_enable( "vr_enable", "1", CVAR_INTEGER | CVAR_ARCHIVE | CVAR_GAME, "Enable VR mode. 0 = Disabled 1 = Enabled." );
+idCVar vr_pixelDensity( "vr_pixelDensity", "1", CVAR_FLOAT | CVAR_GAME, "" );
+idCVar vr_enable( "vr_enable", "1", CVAR_INTEGER | CVAR_INIT | CVAR_GAME, "Enable VR mode. 0 = Disabled 1 = Enabled." );
 idCVar vr_scale( "vr_scale", "1.0", CVAR_FLOAT | CVAR_ARCHIVE | CVAR_GAME, "World scale. Everything virtual is this times as big." );
 idCVar vr_useOculusProfile( "vr_useOculusProfile", "1", CVAR_INTEGER | CVAR_ARCHIVE | CVAR_GAME, "TODO REMOVE, Use official profile values. 0 = use user defined profile, 1 = use official profile." );
 idCVar vr_manualIPDEnable( "vr_manualIPDEnable", "0", CVAR_INTEGER | CVAR_ARCHIVE | CVAR_GAME, " Override the HMD provided IPD value with value in vr_manualIPD 0 = disable 1= use manual iPD\n" );
@@ -1068,49 +1068,6 @@ void iVr::HMDGetOrientation( idAngles& hmdAngles, idVec3& headPositionDelta, idV
 
 	currentNeckPosition = hmdPosition + hmdAxis[0] * vr_nodalX.GetFloat() / vr_scale.GetFloat() /*+ hmdAxis[1] * 0.0f */ + hmdAxis[2] * vr_nodalZ.GetFloat() / vr_scale.GetFloat();
 
-//	currentNeckPosition.z = pm_normalviewheight.GetFloat() - (vr_nodalZ.GetFloat() + currentNeckPosition.z);
-
-	/*
-	if ( !chestInitialized )
-	{
-		if ( chestDefaultDefined )
-		{
-
-			neckToChestVec = currentNeckPosition - gameLocal.GetLocalPlayer()->chestPivotDefaultPos;
-			chestLength = neckToChestVec.Length();
-			chestInitialized = true;
-			common->Printf( "Chest Initialized, length %f\n", chestLength );
-			common->Printf( "Chest default position = %s\n", gameLocal.GetLocalPlayer()->chestPivotDefaultPos.ToString() );
-		}
-	}
-
-	if ( chestInitialized )
-	{
-		neckToChestVec = currentNeckPosition - gameLocal.GetLocalPlayer()->chestPivotDefaultPos;
-		neckToChestVec.Normalize();
-
-		idVec3 chesMove = chestLength * neckToChestVec;
-		currentChestPosition = currentNeckPosition - chesMove;
-
-		common->Printf( "Chest length %f angles roll %f pitch %f yaw %f \n", chestLength, neckToChestVec.ToAngles().roll, neckToChestVec.ToAngles().pitch, neckToChestVec.ToAngles().yaw );
-		common->Printf( "CurrentNeckPos = %s\n", currentNeckPosition.ToString() );
-		common->Printf( "CurrentChestPos = %s\n", currentChestPosition.ToString() );
-		common->Printf( "ChestMove = %s\n", chesMove.ToString() );
-
-		idAngles chestAngles = ang_zero;
-		chestAngles.roll = neckToChestVec.ToAngles().yaw + 90.0f;
-		chestAngles.pitch = 0;// neckToChestVec.ToAngles().yaw;            //chest angles.pitch rotates the chest.
-		chestAngles.yaw = 0;
-
-
-		//lastView = lastHMDViewAxis.ToAngles();
-		//headAngles.roll = lastView.pitch;
-		//headAngles.pitch = lastHMDYaw - bodyYawOffset;
-		//headAngles.yaw = lastView.roll;
-		//headAngles.Normalize360();
-		//gameLocal.GetLocalPlayer()->GetAnimator()->SetJointAxis( gameLocal.GetLocalPlayer()->chestPivotJoint, JOINTMOD_LOCAL, chestAngles.ToMat3() );
-	}
-	*/
 	if( !neckInitialized )
 	{
 		lastNeckPosition = currentNeckPosition;
@@ -1129,12 +1086,12 @@ void iVr::HMDGetOrientation( idAngles& hmdAngles, idVec3& headPositionDelta, idV
 	lastBodyPositionDelta = bodyPositionDelta;
 
 	lastNeckPosition = currentNeckPosition;
-	lastChestPosition = currentChestPosition;
 
 	headPositionDelta = hmdPosition - currentNeckPosition; // use this to base movement on neck model
 	//headPositionDelta = hmdPosition - currentChestPosition;
 	headPositionDelta.z = hmdPosition.z;
 	//bodyPositionDelta.z = 0;
+
 	// how many game units the user has physically ducked in real life from their calibrated position
 	userDuckingAmount = ( trackingOriginHeight - trackingOriginOffset.z ) - hmdPosition.z;
 

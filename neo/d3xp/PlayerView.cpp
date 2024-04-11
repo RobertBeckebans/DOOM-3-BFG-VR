@@ -893,13 +893,11 @@ void idPlayerView::EmitStereoEyeView( const int eye, idMenuHandler_HUD* hudManag
 
 	renderView_t eyeView = *view;
 
-
-	stereoDistances_t dists = CaclulateStereoDistances(
-								  //stereoRender_interOccularCentimeters.GetFloat(),
-								  GetIPD(),
-								  renderSystem->GetPhysicalScreenWidthInCentimeters(),
-								  stereoRender_convergence.GetFloat(),
-								  view->fov_x );
+	const stereoDistances_t dists = CaclulateStereoDistances(
+										GetIPD(),
+										renderSystem->GetPhysicalScreenWidthInCentimeters(),
+										stereoRender_convergence.GetFloat(),
+										view->fov_x );
 
 
 	float eyeOff = eye * dists.worldSeparation;

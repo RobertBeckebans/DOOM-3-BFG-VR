@@ -485,7 +485,7 @@ void idGameLocal::SaveGame( idFile* f, idFile* strings )
 
 	idSaveGame savegame( f, strings, BUILD_NUMBER );
 
-	if( g_flushSave.GetBool( ) == true )
+	if( g_flushSave.GetBool() == true )
 	{
 		// force flushing with each write... for tracking down
 		// save game bugs.
@@ -2630,7 +2630,7 @@ idCVar g_recordTrace( "g_recordTrace", "0", CVAR_BOOL, "" );
 idGameLocal::RunSharedThink
 ================
 */
-void idGameLocal::RunSharedThink( void )
+void idGameLocal::RunSharedThink()
 {
 	idEntity* ent;
 	for( ent = activeEntities.Next(); ent != NULL; ent = ent->activeNode.Next() )
@@ -2647,6 +2647,8 @@ idGameLocal::RunFrame
 */
 void idGameLocal::RunFrame( idUserCmdMgr& cmdMgr, gameReturn_t& ret )
 {
+	SCOPED_PROFILE_EVENT( "RunFrame" );
+
 	idEntity* 	ent;
 	int			num;
 	float		ms;
@@ -5055,7 +5057,7 @@ idCamera* idGameLocal::GetCamera() const
 idGameLocal::SkipCinematic
 =============
 */
-bool idGameLocal::SkipCinematic( void )
+bool idGameLocal::SkipCinematic()
 {
 	if( camera )
 	{
