@@ -17163,25 +17163,11 @@ void idPlayer::CalculateRenderView()
 
 				playerView.Flash( colorWhite, 300 );
 
-				if( vr_cinematics.GetInteger() == 2 )
-				{
-					cinematicOffset = vec3_zero;
-				}
-				else
-				{
-					cinematicOffset = absolutePosition;
-				}
+				cinematicOffset = absolutePosition;
 			}
 
-			if( vr_cinematics.GetInteger() == 2 )
-			{
-				headPositionDelta = bodyPositionDelta = vec3_zero;
-			}
-			else
-			{
-				headPositionDelta = absolutePosition - cinematicOffset;
-				bodyPositionDelta = vec3_zero;
-			}
+			headPositionDelta = absolutePosition - cinematicOffset;
+			bodyPositionDelta = vec3_zero;
 		}
 		else
 		{
@@ -17189,8 +17175,6 @@ void idPlayer::CalculateRenderView()
 			cineYawOffset = 0.0f;
 		}
 
-
-		if( !( gameLocal.inCinematic && vr_cinematics.GetInteger() == 2 ) )
 		{
 
 			//move the head in relation to the body.

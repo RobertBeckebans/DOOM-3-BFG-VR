@@ -609,7 +609,7 @@ void idPlayerView::SingleView( const renderView_t* view, idMenuHandler_HUD* hudM
 		// so the screen wont be offset twice when the bordered image is rendered in Vr_Gl.cpp HUDRender with the
 		// headset correct matrix.
 
-		if( vrComfortVision || ( gameLocal.inCinematic && vr_cinematics.GetInteger() != 0 ) )
+		if( vrComfortVision )
 		{
 			renderSystem->SetColor4( 0, 0, 0, 255 );
 
@@ -620,7 +620,7 @@ void idPlayerView::SingleView( const renderView_t* view, idMenuHandler_HUD* hudM
 			int blockHeight = height / 4;
 
 			float offsetSize = vrSystem->GetScreenSeparation() * width;
-			float offset = ( gameLocal.inCinematic && vr_cinematics.GetInteger() == 2 ) ? 0 : offsetSize / vrSystem->hmdAspect;
+			float offset = 0; //( gameLocal.inCinematic && vr_cinematics.GetInteger() == 2 ) ? 0 : offsetSize / vrSystem->hmdAspect;
 
 			int start, barWidth;
 

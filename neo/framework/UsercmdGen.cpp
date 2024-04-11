@@ -499,11 +499,11 @@ void idUsercmdGenLocal::AdjustAngles()
 		}
 
 		vrSystem->CalcAimMove( yawdelta, pitchdelta ); // update the independent weapon angles and return any movement changes.
-		
+
 		viewangles[YAW] += yawdelta;
 		viewangles[PITCH] += pitchdelta;
 	}
-	else 
+	else
 	{
 		viewangles[YAW] -= speed * in_yawSpeed.GetFloat() * ButtonState( UB_LOOKRIGHT );
 		viewangles[YAW] += speed * in_yawSpeed.GetFloat() * ButtonState( UB_LOOKLEFT );
@@ -1276,7 +1276,7 @@ void idUsercmdGenLocal::JoystickMove2()
 	{
 		mappedMove = vec2_zero;
 		mappedLook = vec2_zero;
-		
+
 		if( ButtonState( UB_IMPULSE34 ) )
 		{
 			comfortTurn = -vr_comfortDelta.GetFloat();
@@ -1285,19 +1285,19 @@ void idUsercmdGenLocal::JoystickMove2()
 		{
 			comfortTurn = vr_comfortDelta.GetFloat();
 		}
-	
+
 		comfortTurn += MapAxis( mappedMove, mappedLook, AXIS_LEFT_X ); // Koz remamp axis
 		comfortTurn += MapAxis( mappedMove, mappedLook, AXIS_LEFT_Y );
 		comfortTurn += MapAxis( mappedMove, mappedLook, AXIS_RIGHT_X );
 		comfortTurn += MapAxis( mappedMove, mappedLook, AXIS_RIGHT_Y );
-	
+
 		if( comfortTurn != 0.0 && ( Sys_Milliseconds() - lastComfortTime >= vr_comfortRepeat.GetInteger() ) )
 		{
 			viewangles[YAW] += comfortTurn;
-	
+
 			lastComfortTime = Sys_Milliseconds();
 		}
-	
+
 		// save for visualization
 		lastLookJoypad = mappedLook;
 	}
@@ -1305,7 +1305,7 @@ void idUsercmdGenLocal::JoystickMove2()
 	{
 		mappedMove = idVec2( joystickAxis[ AXIS_LEFT_X ], joystickAxis[ AXIS_LEFT_Y ] );
 		mappedLook = idVec2( joystickAxis[ AXIS_RIGHT_X ], joystickAxis[ AXIS_RIGHT_Y ] );
-	
+
 		// optional stick swap
 		if( idKeyInput::GetUsercmdAction( K_JOY_STICK1_LEFT ) == UB_LOOKLEFT )
 		{
@@ -1313,13 +1313,13 @@ void idUsercmdGenLocal::JoystickMove2()
 			mappedMove = mappedLook;
 			mappedLook = temp;
 		}
-	
+
 		// optional invert look by inverting the right Y axis
 		if( invertLook )
 		{
 			mappedLook.y = -mappedLook.y;
 		}
-	
+
 		// save for visualization
 		lastLookJoypad = mappedLook;
 	}
@@ -1441,9 +1441,9 @@ void idUsercmdGenLocal::CmdButtons()
 			{
 				cmd.buttons |= BUTTON_ATTACK;
 			}
-	
+
 		}
-	
+
 		teleportCanceled &= ButtonState( UB_ATTACK );
 	}
 	else

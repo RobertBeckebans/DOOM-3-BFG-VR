@@ -545,7 +545,6 @@ extern idCVar vr_handSwapsAnalogs;
 extern idCVar vr_autoSwitchControllers;
 
 extern idCVar vr_useHandPoses;
-extern idCVar vr_cinematics;
 
 extern idCVar vr_instantAccel;
 extern idCVar vr_shotgunChoke;

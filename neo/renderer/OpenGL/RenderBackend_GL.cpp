@@ -1970,7 +1970,7 @@ void idRenderBackend::StereoRenderExecuteBackEndCommands( const emptyCommand_t* 
 			if( vrSystem->IsActive() )
 			{
 				if( vrSystem->playerDead || ( game->Shell_IsActive() && !vrSystem->PDAforced && !vrSystem->PDAforcetoggle ) || ( !vrSystem->PDAforced && common->Dialog().IsDialogActive() )
-						|| vrSystem->isLoading || vrSystem->showingIntroVideo || session->GetState() == idSession::LOADING || ( gameLocal.inCinematic && vr_cinematics.GetInteger() == 2 ) )
+						|| vrSystem->isLoading || vrSystem->showingIntroVideo || session->GetState() == idSession::LOADING )
 				{
 					vrSystem->HMDTrackStatic( !vrSystem->isLoading && !vrSystem->showingIntroVideo && session->GetState() != idSession::LOADING );
 

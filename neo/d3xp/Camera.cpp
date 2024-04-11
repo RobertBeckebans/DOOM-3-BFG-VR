@@ -626,7 +626,7 @@ void idCameraAnim::GetViewParms( renderView_t* view )
 		cutFrame.q = camFrame2[0].q;
 		cutFrame.t = camFrame2[0].t;
 
-		if( vr_cinematics.GetInteger() == 0 )  // only use replacement positions/rotations if using immersive cinematics.
+		//if( vr_cinematics.GetInteger() == 0 )  // only use replacement positions/rotations if using immersive cinematics.
 		{
 			cutRotOverride = false;
 			if( cameraCuts[i].posOverride )
@@ -728,7 +728,7 @@ void idCameraAnim::GetViewParms( renderView_t* view )
 	}
 
 	// Koz begin
-	if( vrSystem->IsActive() && vr_cinematics.GetInteger() == 0 )
+	if( vrSystem->IsActive() )
 	{
 		// Clamp the camera origin to camera cut locations.
 		// This eliminates camera panning and smooth movements in cutscenes,
