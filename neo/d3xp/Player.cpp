@@ -11394,7 +11394,7 @@ void idPlayer::Move()
 	}
 
 	float speed = physicsObj.GetLinearVelocity().LengthFast();
-	if( comfortMode == 10 && speed == 0 && usercmd.forwardmove == 0 && usercmd.rightmove == 0 )
+	if( comfortMode == MOSICK_THIRD_PERSON && speed == 0 && usercmd.forwardmove == 0 && usercmd.rightmove == 0 )
 	{
 		vrSystem->thirdPersonMovement = false;
 	}

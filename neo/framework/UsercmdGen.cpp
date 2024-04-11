@@ -2022,7 +2022,7 @@ void idUsercmdGenLocal::MakeCurrent()
 	impulseSequence = cmd.impulseSequence;
 	impulse = cmd.impulse;
 
-	if( vr_motionSickness.GetInteger() == 10 )
+	if( vr_motionSickness.GetInteger() == MOSICK_THIRD_PERSON )
 	{
 		if( abs( cmd.forwardmove ) >= MOVE_DEAD_ZONE || abs( cmd.rightmove ) >= MOVE_DEAD_ZONE )
 		{
