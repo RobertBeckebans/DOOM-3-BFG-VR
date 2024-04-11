@@ -223,11 +223,6 @@ public:
 	idVec3				uncrouchedHMDViewOrigin;
 	float				headHeightDiff;
 
-	bool				thirdPersonMovement;
-	float				thirdPersonDelta;
-	idVec3				thirdPersonHudPos;
-	idMat3				thirdPersonHudAxis;
-
 	float				angles[3];
 
 	uint32_t			hmdWidth;

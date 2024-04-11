@@ -303,11 +303,6 @@ iVr::iVr()
 	leanBlank = false;
 	isLeaning = false;
 
-	thirdPersonMovement = false;
-	thirdPersonDelta = 0.0f;
-	thirdPersonHudAxis = mat3_identity;
-	thirdPersonHudPos = vec3_zero;
-
 	chestDefaultDefined = false;
 
 	currentFlashlightPosition = FLASHLIGHT_BODY;
@@ -1289,12 +1284,6 @@ void iVr::CalcAimMove( float& yawDelta, float& pitchDelta )
 		independentWeaponPitch = -pitchDeadzone;
 	}
 	pitchDelta = 0;
-
-	// if moving the character in third person, just turn immediately, no deadzones.
-	if( thirdPersonMovement )
-	{
-		return;
-	}
 
 	independentWeaponYaw += yawDelta;
 

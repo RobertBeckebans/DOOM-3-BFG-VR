@@ -2064,11 +2064,6 @@ void idPlayer::Init()
 
 	vrSystem->currentFlashMode = vr_flashlightMode.GetInteger();
 
-	vrSystem->thirdPersonMovement = false;
-	vrSystem->thirdPersonDelta = 0.0f;
-	vrSystem->thirdPersonHudPos = vec3_zero;
-	vrSystem->thirdPersonHudAxis = mat3_identity;
-
 	// Koz end
 
 	// initialize the script variables
@@ -4197,11 +4192,7 @@ void idPlayer::UpdateSkinSetup()
 			}
 		}
 
-		if( vrSystem->thirdPersonMovement )
-		{
-			skinN += body;
-		}
-		else if( vr_playerBodyMode.GetInteger() == 1 || ( vr_playerBodyMode.GetInteger() == 2 && ( currentWeapon == weapon_fists || vrSystem->handInGui ) ) )
+		if( vr_playerBodyMode.GetInteger() == 1 || ( vr_playerBodyMode.GetInteger() == 2 && ( currentWeapon == weapon_fists || vrSystem->handInGui ) ) )
 		{
 			skinN += handsOnly;
 		}
@@ -8197,7 +8188,7 @@ void idPlayer::UpdateFocus()
 
 	scanRange = 50.0f;
 
-	if( gameLocal.inCinematic || vrSystem->thirdPersonMovement )
+	if( gameLocal.inCinematic )
 	{
 		return;
 	}
@@ -11392,7 +11383,6 @@ void idPlayer::Move()
 	if( comfortMode < 2 || game->CheckInCinematic() )
 	{
 		this->playerView.EnableVrComfortVision( false );
-		vrSystem->thirdPersonMovement = false;
 		return;
 	}
 
@@ -13161,7 +13151,7 @@ void idPlayer::UpdateVrHud()
 	{
 		hudEntity.allowSurfaceInViewID = entityNumber + 1;
 
-		if( vr_hudPosLock.GetInteger() == 1 && !vrSystem->thirdPersonMovement )  // hud in fixed position in space, except if running in third person, then attach to face.
+		if( vr_hudPosLock.GetInteger() == 1 )  // hud in fixed position in space, except if running in third person, then attach to face.
 		{
 			hudPitch = vr_hudType.GetInteger() == VR_HUD_LOOK_DOWN ? vr_hudPosAngle.GetFloat() : 10.0f;
 
@@ -13184,20 +13174,12 @@ void idPlayer::UpdateVrHud()
 		}
 		else // hud locked to face
 		{
-			if( vrSystem->thirdPersonMovement )
-			{
-				hudAxis = vrSystem->thirdPersonHudAxis;
-				hudOrigin = vrSystem->thirdPersonHudPos;
-			}
-			else
-			{
-				hudAxis = vrSystem->lastHMDViewAxis;
-				hudOrigin = vrSystem->lastHMDViewOrigin;
-			}
+			hudAxis = vrSystem->lastHMDViewAxis;
+			hudOrigin = vrSystem->lastHMDViewOrigin;
+
 			hudOrigin += hudAxis[0] * vr_hudPosDis.GetFloat();
 			hudOrigin += hudAxis[1] * vr_hudPosHor.GetFloat();
 			hudOrigin += hudAxis[2] * vr_hudPosVer.GetFloat();
-
 		}
 
 		hudAxis *= vr_hudScale.GetFloat();
@@ -13205,7 +13187,6 @@ void idPlayer::UpdateVrHud()
 		hudEntity.axis = hudAxis;
 		hudEntity.origin = hudOrigin;
 		hudEntity.weaponDepthHack = vr_hudOcclusion.GetBool();
-
 	}
 
 	if( hudHandle == -1 )
@@ -13585,23 +13566,14 @@ void idPlayer::Think()
 			headRenderEnt->customSkin = NULL;
 		}
 
-		// Koz show the head if the player is using third person movement mode && the model has moved more than 8 inches.
-		if( vrSystem->thirdPersonMovement && vrSystem->thirdPersonDelta > 45.0f )
+		if( vr_playerBodyMode.GetInteger() != 0 )  // not showing the body
 		{
-			headRenderEnt->suppressSurfaceInViewID = 0; // show head
-			headRenderEnt->allowSurfaceInViewID = 0;
+			headRenderEnt->allowSurfaceInViewID = -1; // hide the head, even in mirror views.
 		}
 		else
 		{
-			if( vr_playerBodyMode.GetInteger() != 0 )  // not showing the body
-			{
-				headRenderEnt->allowSurfaceInViewID = -1; // hide the head, even in mirror views.
-			}
-			else
-			{
-				//headRenderEnt->suppressSurfaceInViewID = entityNumber + 1;
-				headRenderEnt->allowSurfaceInViewID = 0; // show the head.
-			}
+			//headRenderEnt->suppressSurfaceInViewID = entityNumber + 1;
+			headRenderEnt->allowSurfaceInViewID = 0; // show the head.
 		}
 	}
 
@@ -16374,14 +16346,8 @@ void idPlayer::CalculateViewFlashPos( idVec3& origin, idMat3& axis, idVec3 flash
 
 				flip = currentHand == 0 ? 1 : -1;
 
-				if( vrSystem->thirdPersonMovement ) // if running in third person, make sure the hand is somewhere sane.
-				{
-					origin += idVec3( 4.0f, -10.0f * flip, -20.0f );
-				}
-				else
-				{
-					origin += idVec3( vr_offHandPosX.GetFloat(), vr_offHandPosY.GetFloat() * flip, vr_offHandPosZ.GetFloat() ) * axis;
-				}
+				origin += idVec3( vr_offHandPosX.GetFloat(), vr_offHandPosY.GetFloat() * flip, vr_offHandPosZ.GetFloat() ) * axis;
+
 				idMat3 fr = flashRot.ToMat3() * axis;
 
 				SetHandIKPos( currentHand, origin, fr , flashRot, true );
@@ -16534,14 +16500,7 @@ void idPlayer::CalculateViewFlashPos( idVec3& origin, idMat3& axis, idVec3 flash
 
 		flip = currentHand == 0 ? 1 : -1;
 
-		if( vrSystem->thirdPersonMovement ) // if running in third person, make sure the hand is somewhere sane.
-		{
-			handLoc += idVec3( 4.0f, -10.0f * flip, -20.0f ) * handOrg;
-		}
-		else
-		{
-			handLoc += idVec3( vr_offHandPosX.GetFloat(), vr_offHandPosY.GetFloat() * flip, vr_offHandPosZ.GetFloat() ) * handOrg;
-		}
+		handLoc += idVec3( vr_offHandPosX.GetFloat(), vr_offHandPosY.GetFloat() * flip, vr_offHandPosZ.GetFloat() ) * handOrg;
 
 		idMat3 fr = flashRot.ToMat3() * handOrg;
 
@@ -16992,26 +16951,19 @@ void idPlayer::CalculateRenderView()
 	static idVec3 cinematicOffset = vec3_zero;
 	static float cineYawOffset = 0.0f;
 
-	static bool wasThirdPerson = false;
-	static idVec3 thirdPersonOffset = vec3_zero;
-	static idVec3 thirdPersonOrigin = vec3_zero;
-	static idMat3 thirdPersonAxis = mat3_identity;
-	static float thirdPersonBodyYawOffset = 0.0f;
-
-
 	int i;
 	float range;
 
 	if( !renderView )
 	{
-		renderView = new( TAG_ENTITY )renderView_t;
+		renderView = new( TAG_ENTITY ) renderView_t;
 	}
 	memset( renderView, 0, sizeof( *renderView ) );
 
 	// copy global shader parms
 	for( i = 0; i < MAX_GLOBAL_SHADER_PARMS; i++ )
 	{
-		renderView->shaderParms[i] = gameLocal.globalShaderParms[i];
+		renderView->shaderParms[ i ] = gameLocal.globalShaderParms[ i ];
 	}
 	renderView->globalMaterial = gameLocal.GetGlobalMaterial();
 
@@ -17023,20 +16975,15 @@ void idPlayer::CalculateRenderView()
 	// check if we should be drawing from a camera's POV
 	if( !noclip && ( gameLocal.GetCamera() || privateCameraView ) )
 	{
-
-
 		// get origin, axis, and fov
 		if( privateCameraView )
 		{
-
 			privateCameraView->GetViewParms( renderView );
 		}
 		else
 		{
-			// Koz fixme this was in tmeks renderView->viewaxis = firstPersonViewAxis; shouldnt be needed, verify.
 			gameLocal.GetCamera()->GetViewParms( renderView );
 		}
-
 	}
 	else
 	{
@@ -17208,54 +17155,8 @@ void idPlayer::CalculateRenderView()
 
 			vrSystem->uncrouchedHMDViewOrigin = origin;
 			vrSystem->uncrouchedHMDViewOrigin.z -= vrSystem->headHeightDiff;
-
-
-			if( vrSystem->thirdPersonMovement )
-			{
-				if( wasThirdPerson == false )
-				{
-					wasThirdPerson = true;
-					thirdPersonOffset = absolutePosition;
-					thirdPersonOrigin = vrSystem->lastHMDViewOrigin;//origin;
-					thirdPersonAxis = idAngles( 0.0f, vrSystem->lastHMDViewAxis.ToAngles().yaw, 0.0f ).ToMat3(); //axis;
-					thirdPersonBodyYawOffset = hmdAngles.yaw;// -yawOffset;
-
-				}
-				origin = thirdPersonOrigin;
-				axis = thirdPersonAxis;
-				yawOffset = thirdPersonBodyYawOffset;
-				angles = thirdPersonAxis.ToAngles();
-				headPositionDelta = absolutePosition - thirdPersonOffset;
-				bodyPositionDelta = vec3_zero;
-
-				idAngles bodyAng = thirdPersonAxis.ToAngles();
-				idMat3 bodyAx = idAngles( bodyAng.pitch, bodyAng.yaw - yawOffset, bodyAng.roll ).Normalize180().ToMat3();
-				origin = thirdPersonOrigin + bodyAx[0] * headPositionDelta.x + bodyAx[1] * headPositionDelta.y + bodyAx[2] * headPositionDelta.z;
-
-				origin += vrSystem->leanOffset;
-
-				angles.yaw += hmdAngles.yaw - thirdPersonBodyYawOffset;    // add the current hmd orientation
-				angles.pitch += hmdAngles.pitch;
-				angles.roll += hmdAngles.roll;
-				angles.Normalize180();
-				axis = angles.ToMat3();
-				vrSystem->thirdPersonHudAxis = axis;
-				vrSystem->thirdPersonHudPos = origin;
-
-				vrSystem->thirdPersonDelta = ( origin - firstPersonViewOrigin ).LengthSqr();
-
-			}
-			else
-			{
-				if( wasThirdPerson )
-				{
-					vrSystem->thirdPersonDelta = 0.0f;;
-					playerView.Flash( colorBlack, 140 );
-				}
-				wasThirdPerson = false;
-			}
-
 		}
+
 		renderView->vieworg = origin;
 		renderView->viewaxis = axis;
 
@@ -17271,7 +17172,6 @@ void idPlayer::CalculateRenderView()
 				vrSystem->leanBlank = true;
 				vrSystem->leanBlankOffset = vrSystem->leanOffset;
 				vrSystem->leanBlankOffsetLengthSqr = vrSystem->leanOffset.LengthSqr();
-
 			}
 
 			else
@@ -17280,11 +17180,7 @@ void idPlayer::CalculateRenderView()
 				vrSystem->leanBlankOffset = vec3_zero;
 				vrSystem->leanBlankOffsetLengthSqr = 0.0f;
 			}
-
 		}
-
-
-
 
 		// Koz fixme pause - handle the PDA model if game is paused
 		// really really need to move this somewhere else,
@@ -17300,7 +17196,6 @@ void idPlayer::CalculateRenderView()
 
 		if( vrSystem->PDAforcetoggle )
 		{
-
 			if( !vrSystem->PDAforced )
 			{
 				if( weapon->IdentifyWeapon() != WEAPON_PDA )
@@ -17317,7 +17212,6 @@ void idPlayer::CalculateRenderView()
 				}
 				else
 				{
-
 					if( weapon->status == WP_READY )
 					{
 						vrSystem->PDAforced = true;

@@ -1188,35 +1188,25 @@ float idUsercmdGenLocal::MapAxis( idVec2& mappedMove, idVec2& mappedLook, int ax
 
 		case UB_IMPULSE34: // comfort turn right
 
-			if( vrSystem->thirdPersonMovement )  // allow normal stick movement of character if in 3rd person mode
+		{
+			ct = fabs( jaxisValue );
+			if( ct > vr_padToButtonThreshold.GetFloat() )
 			{
-				mappedLook.x += jaxisValue;
+				rVal = -vr_comfortDelta.GetFloat();
 			}
-			else
-			{
-				ct = fabs( jaxisValue );
-				if( ct > vr_padToButtonThreshold.GetFloat() )
-				{
-					rVal = -vr_comfortDelta.GetFloat();
-				}
-			}
-			break;
+		}
+		break;
 
 		case UB_IMPULSE35: // comfort turn left
 
-			if( vrSystem->thirdPersonMovement )  // allow normal stick movement of character if in 3rd person mode
+		{
+			ct = fabs( jaxisValue );
+			if( ct > vr_padToButtonThreshold.GetFloat() )
 			{
-				mappedLook.x -= jaxisValue;
+				rVal = vr_comfortDelta.GetFloat();
 			}
-			else
-			{
-				ct = fabs( jaxisValue );
-				if( ct > vr_padToButtonThreshold.GetFloat() )
-				{
-					rVal = vr_comfortDelta.GetFloat();
-				}
-			}
-			break;
+		}
+		break;
 
 		default:
 
@@ -1550,7 +1540,7 @@ void idUsercmdGenLocal::CalcTorsoYawDelta()
 		}
 	}
 
-	if( influenceLevel == 0 && !gameLocal.inCinematic && vrSystem->VR_USE_MOTION_CONTROLS && !vrSystem->thirdPersonMovement && ( abs( cmd.forwardmove ) < MOVE_DEAD_ZONE || abs( cmd.rightmove ) < MOVE_DEAD_ZONE ) )
+	if( influenceLevel == 0 && !gameLocal.inCinematic && vrSystem->VR_USE_MOTION_CONTROLS && ( abs( cmd.forwardmove ) < MOVE_DEAD_ZONE || abs( cmd.rightmove ) < MOVE_DEAD_ZONE ) )
 	{
 		idVec3 rightHandPos;
 		idVec3 rightHandForwardVec;
@@ -1852,7 +1842,7 @@ void idUsercmdGenLocal::EvaluateVRMoveMode()
 
 
 
-	if( vrSystem->VR_USE_MOTION_CONTROLS && !vrSystem->thirdPersonMovement
+	if( vrSystem->VR_USE_MOTION_CONTROLS
 			&& ( vr_movePoint.GetInteger() == 1 || vr_movePoint.GetInteger() > 2 ) // move hands dependent
 			&& ( abs( cmd.forwardmove ) >= MOVE_DEAD_ZONE || abs( cmd.rightmove ) >= MOVE_DEAD_ZONE || vr_teleportMode.GetInteger() == 2 ) ) // body will follow motion from move vector
 	{
@@ -1962,8 +1952,6 @@ void idUsercmdGenLocal::MakeCurrent()
 
 	impulseSequence = cmd.impulseSequence;
 	impulse = cmd.impulse;
-
-	vrSystem->thirdPersonMovement = false;
 }
 
 /*
