@@ -53,7 +53,6 @@ typedef enum
 {
 	MOTION_NONE,
 	MOTION_STEAMVR,
-	MOTION_OCULUS
 } vr_motionControl_t;
 
 typedef enum
@@ -87,7 +86,7 @@ typedef enum
 	FLASHLIGHT_MAX,
 } vr_flashlight_mode_t;
 
-// 0 = None, 1 = Chaperone, 2 = Reduce FOV, 3 = Black Screen, 4 = Black & Chaperone, 5 = Reduce FOV & Chaperone, 6 = Slow Mo, 7 = Slow Mo & Chaperone, 8 = Slow Mo & Reduce FOV, 9 = Slow Mo, Chaperone, Reduce FOV, 10 = Particles, 11 = Particles & Chaperone
+// 0 = None, 1 = Chaperone, 2 = Reduce FOV, 3 = Black Screen, 4 = Black & Chaperone, 5 = Reduce FOV & Chaperone, 6 = Slow Mo, 7 = Slow Mo & Chaperone, 8 = Slow Mo & Reduce FOV, 9 = Slow Mo, Chaperone, Reduce FOV
 enum vr_motionSicknessMode_t
 {
 	MOSICK_NONE,
@@ -130,7 +129,6 @@ public:
 	void				MotionControlGetLeftHand( idVec3& position, idQuat& rotation );
 	void				MotionControlGetRightHand( idVec3& position, idQuat& rotation );
 	void				MotionControlGetOpenVrController( vr::TrackedDeviceIndex_t deviceNum, idVec3& position, idQuat& rotation );
-	void				MotionControlGetTouchController( int hand, idVec3& position, idQuat& rotation );
 	void				MotionControllerSetHapticOpenVR( int hand, unsigned short value );
 
 	void				CalcAimMove( float& yawDelta, float& pitchDelta );
@@ -160,6 +158,11 @@ public:
 	float				GetScreenSeparation() const
 	{
 		return screenSeparation;
+	}
+
+	float				GetUserDuckingAmount() const
+	{
+		return userDuckingAmount;
 	}
 
 	//---------------------------
@@ -319,7 +322,6 @@ public:
 	idVec3				poseHmdBodyPositionDelta;
 	idVec3				remainingMoveHmdBodyPositionDelta;
 	idVec3				poseHmdAbsolutePosition;
-	float					userDuckingAmount; // how many game units the user has physically ducked in real life from their calibrated position
 
 	idVec3				poseHandPos[2];
 	idQuat				poseHandRotationQuat[2];
@@ -380,6 +382,7 @@ private:
 	bool				hmdPositionTracked;
 
 	float				screenSeparation;		// for Reduce FOV motion sickness fix
+	float				userDuckingAmount;		// how many game units the user has physically ducked in real life from their calibrated position
 };
 
 extern idCVar vr_scale;

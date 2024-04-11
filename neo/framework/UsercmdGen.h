@@ -476,4 +476,3 @@ public:
 };
 
 #endif /* !__USERCMDGEN_H__ */
-

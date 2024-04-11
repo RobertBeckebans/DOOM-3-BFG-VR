@@ -326,8 +326,7 @@ void idMenuScreen_Shell_Bindings::UpdateBindingString()
 					for( int i = 0; i < joyBinds.Num(); i++ )
 					{
 						// only list bindings for motion controllers we are using due to limited space.
-						if( ( vrSystem->motionControlType == MOTION_OCULUS && ( joyBinds[i].Icmpn( "L_TOUCH", 7 ) == 0 || joyBinds[i].Icmpn( "R_TOUCH", 7 ) == 0 ) ) ||
-								( vrSystem->motionControlType == MOTION_STEAMVR && ( joyBinds[i].Icmpn( "L_STEAMVR", 9 ) == 0 || joyBinds[i].Icmpn( "R_STEAMVR", 9 ) == 0 ) ) )
+						if( ( vrSystem->motionControlType == MOTION_STEAMVR && ( joyBinds[i].Icmpn( "L_STEAMVR", 9 ) == 0 || joyBinds[i].Icmpn( "R_STEAMVR", 9 ) == 0 ) ) )
 						{
 							if( !bindings.IsEmpty() )
 							{
@@ -488,8 +487,7 @@ void idMenuScreen_Shell_Bindings::UpdateBindingDisplay()
 					for( int i = 0; i < joyBinds.Num(); i++ )
 					{
 						// only list bindings for motion controllers we are using due to limited space.
-						if( ( vrSystem->motionControlType == MOTION_OCULUS && ( joyBinds[i].Icmpn( "L_TOUCH", 7 ) == 0 || joyBinds[i].Icmpn( "R_TOUCH", 7 ) == 0 ) ) ||
-								( vrSystem->motionControlType == MOTION_STEAMVR && ( joyBinds[i].Icmpn( "L_STEAMVR", 9 ) == 0 || joyBinds[i].Icmpn( "R_STEAMVR", 9 ) == 0 ) ) )
+						if( ( vrSystem->motionControlType == MOTION_STEAMVR && ( joyBinds[i].Icmpn( "L_STEAMVR", 9 ) == 0 || joyBinds[i].Icmpn( "R_STEAMVR", 9 ) == 0 ) ) )
 						{
 							bool hasImage = false;
 							for( const char** b = buttonsWithImages; *b != 0; b++ )

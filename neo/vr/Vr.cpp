@@ -1157,11 +1157,6 @@ void iVr::MotionControlGetOpenVrController( vr::TrackedDeviceIndex_t deviceNum, 
 	motionRotation = angTemp.ToQuat();
 }
 
-void iVr::MotionControlGetTouchController( int hand, idVec3& motionPosition, idQuat& motionRotation )
-{
-	//TODO: ovr only?
-}
-
 /*
 ==============
 iVr::MotionControllGetHand;
@@ -1214,12 +1209,6 @@ void iVr::MotionControlGetLeftHand( idVec3& motionPosition, idQuat& motionRotati
 			break;
 		}
 
-		case MOTION_OCULUS:
-		{
-			MotionControlGetTouchController( 1, motionPosition, motionRotation );
-			break;
-		}
-
 		default:
 			break;
 	}
@@ -1241,12 +1230,6 @@ void iVr::MotionControlGetRightHand( idVec3& motionPosition, idQuat& motionRotat
 			MotionControlGetOpenVrController( rightControllerDeviceNo, motionPosition, motionRotation );
 
 			//motionPosition += idVec3( vr_controllerOffsetX.GetFloat(), vr_controllerOffsetY.GetFloat(), vr_controllerOffsetZ.GetFloat() ) * motionRotation;
-			break;
-		}
-
-		case MOTION_OCULUS:
-		{
-			MotionControlGetTouchController( 0, motionPosition, motionRotation );
 			break;
 		}
 

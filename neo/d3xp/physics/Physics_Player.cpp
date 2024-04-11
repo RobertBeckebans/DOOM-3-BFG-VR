@@ -1616,8 +1616,9 @@ void idPhysics_Player::CheckDuck()
 			maxZ = ( int )maxZ; // if this is not cast as an int, it crashes the savegame file!!!!!!! WTF?
 
 			current.movementFlags &= ~PMF_DUCKED;
+			
 			// If we're using floor height, it only counts as crouching if we're actually trying to duck, not simply sitting.
-			if( maxZ <= ( pm_crouchheight.GetFloat() + 2 ) && ( !vr_useFloorHeight.GetBool() || vrSystem->userDuckingAmount > vr_crouchTriggerDist.GetFloat() / vr_scale.GetFloat() ) )
+			if( maxZ <= ( pm_crouchheight.GetFloat() + 2 ) && ( !vr_useFloorHeight.GetBool() || vrSystem->GetUserDuckingAmount() > vr_crouchTriggerDist.GetFloat() / vr_scale.GetFloat() ) )
 			{
 				playerSpeed = crouchSpeed;
 				if( !ladder )

@@ -3,6 +3,8 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2013-2021 Samson Koz and contributors
+Copyright (C) 2024 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -38,7 +40,7 @@ idCVar joy_newCode( "joy_newCode", "1", CVAR_BOOL | CVAR_ARCHIVE, "Use the new c
 idCVar joy_triggerThreshold( "joy_triggerThreshold", "0.05", CVAR_FLOAT | CVAR_ARCHIVE, "how far the joystick triggers have to be pressed before they register as down" );
 idCVar joy_deadZone( "joy_deadZone", "0.2", CVAR_FLOAT | CVAR_ARCHIVE, "specifies how large the dead-zone is on the joystick" );
 idCVar joy_range( "joy_range", "1.0", CVAR_FLOAT | CVAR_ARCHIVE, "allow full range to be mapped to a smaller offset" );
-idCVar joy_gammaLook( "joy_gammaLook", "1", CVAR_INTEGER | CVAR_ARCHIVE, "use a log curve instead of a power curve for movement. If 0 use joy_powerscale val" );
+idCVar joy_gammaLook( "joy_gammaLook", "1", CVAR_INTEGER | CVAR_ARCHIVE, "use a log curve instead of a power curve for movement" );
 idCVar joy_powerScale( "joy_powerScale", "2", CVAR_FLOAT | CVAR_ARCHIVE, "Raise joystick values to this power" );
 
 //Carl: Allow analog stick pitch (and yaw) to be disabled
@@ -58,13 +60,6 @@ idCVar in_invertLook( "in_invertLook", "0", CVAR_ARCHIVE | CVAR_BOOL, "inverts t
 idCVar in_mouseInvertLook( "in_mouseInvertLook", "0", CVAR_ARCHIVE | CVAR_BOOL, "inverts the look controls so the forward looks up (flight controls) - the proper way to play games!" );
 
 idCVar vr_comfortRepeat( "vr_comfortRepeat", "100", CVAR_ARCHIVE | CVAR_INTEGER, "Delay in MS between repeating comfort snap turns." );
-
-idCVar vr_joyCurves( "vr_joyCurves", "0", CVAR_ARCHIVE | CVAR_INTEGER, "Joy powercurves. 0 = Doom default\n 1 = Mixed curve with vr_joyCurveSensitivity and vr_joyCurveLin\n" );
-idCVar vr_joyCurveSensitivity( "vr_joyCurveSensitivity", "9", CVAR_ARCHIVE | CVAR_FLOAT, "Sensitivity val 0 - 9\n" );
-idCVar vr_joyCurveLin( "vr_joyCurveLin", "4", CVAR_ARCHIVE | CVAR_FLOAT, "Linear point for joyCurves\n sens < lin = power curve\n, sens = lin = linear\n, sens > lin = frac power curve.\n" );
-
-
-
 /*
 ================
 usercmd_t::ByteSwap
@@ -286,8 +281,6 @@ public:
 private:
 	void			MakeCurrent();
 	void			InitCurrent();
-	void			EvaluateVRMoveMode();
-	void			CalcTorsoYawDelta();
 
 	bool			Inhibited();
 	void			AdjustAngles();
@@ -295,7 +288,11 @@ private:
 	void			CircleToSquare( float& axis_x, float& axis_y ) const;
 	void			HandleJoystickAxis( int keyNum, float unclampedValue, float threshold, bool positive );
 
+	// Koz begin
 	float			MapAxis( idVec2& mappedMove, idVec2& mappedLook, int axisNum ); // Koz remap joystic axis.
+	void			EvaluateVRMoveMode();
+	void			CalcTorsoYawDelta();
+	// Koz end
 
 	void			JoystickMove();
 	void			JoystickMove2();
@@ -475,15 +472,8 @@ void idUsercmdGenLocal::AdjustAngles()
 	}
 
 
-	if( !vrSystem->IsActive() )
-	{
-		viewangles[YAW] -= speed * in_yawSpeed.GetFloat() * ButtonState( UB_LOOKRIGHT );
-		viewangles[YAW] += speed * in_yawSpeed.GetFloat() * ButtonState( UB_LOOKLEFT );
-
-		viewangles[PITCH] -= speed * in_pitchSpeed.GetFloat() * ButtonState( UB_LOOKUP );
-		viewangles[PITCH] += speed * in_pitchSpeed.GetFloat() * ButtonState( UB_LOOKDOWN );
-	}
-	else // Koz add independent weapon aiming
+	// Koz add independent weapon aiming
+	if( vrSystem->IsActive() )
 	{
 		float yawdelta = 0.0f;
 		float pitchdelta = 0.0f;
@@ -509,9 +499,17 @@ void idUsercmdGenLocal::AdjustAngles()
 		}
 
 		vrSystem->CalcAimMove( yawdelta, pitchdelta ); // update the independent weapon angles and return any movement changes.
+		
 		viewangles[YAW] += yawdelta;
 		viewangles[PITCH] += pitchdelta;
+	}
+	else 
+	{
+		viewangles[YAW] -= speed * in_yawSpeed.GetFloat() * ButtonState( UB_LOOKRIGHT );
+		viewangles[YAW] += speed * in_yawSpeed.GetFloat() * ButtonState( UB_LOOKLEFT );
 
+		viewangles[PITCH] -= speed * in_pitchSpeed.GetFloat() * ButtonState( UB_LOOKUP );
+		viewangles[PITCH] += speed * in_pitchSpeed.GetFloat() * ButtonState( UB_LOOKDOWN );
 	}
 }
 
@@ -548,12 +546,6 @@ void idUsercmdGenLocal::MouseMove()
 	static int	history[8][2];
 	static int	historyCounter;
 	int			i;
-
-	// Koz begin
-	float yawdelta;
-	float pitchdelta;
-//	float yawmove;
-	// Koz end
 
 	history[historyCounter & 7][0] = mouseDx;
 	history[historyCounter & 7][1] = mouseDy;
@@ -597,11 +589,12 @@ void idUsercmdGenLocal::MouseMove()
 	mouseDx = 0;
 	mouseDy = 0;
 
-	yawdelta = -m_yaw.GetFloat() * mx * in_mouseSpeed.GetFloat();
-	pitchdelta = m_pitch.GetFloat() * in_mouseSpeed.GetFloat() * ( in_mouseInvertLook.GetBool() ? -my : my );
+	// Koz begin
+	float yawdelta = -m_yaw.GetFloat() * mx * in_mouseSpeed.GetFloat();
+	float pitchdelta = m_pitch.GetFloat() * in_mouseSpeed.GetFloat() * ( in_mouseInvertLook.GetBool() ? -my : my );
 
-	// Koz begin add mouse control here
-	if( vr_enable.GetBool() )
+	// add mouse control here
+	if( vrSystem->IsActive() )
 	{
 		// update the independent weapon angles and return any view changes based on current aim mode
 		vrSystem->CalcAimMove( yawdelta, pitchdelta );
@@ -609,7 +602,7 @@ void idUsercmdGenLocal::MouseMove()
 
 	viewangles[YAW] += yawdelta;
 	viewangles[PITCH] += pitchdelta;
-
+	// Koz end
 }
 
 /*
@@ -860,20 +853,6 @@ idVec2 JoypadFunction(
 	const transferFunction_t shape,
 	const bool	mergedThreshold )
 {
-
-	if( vrSystem->IsActive() && vr_joyCurves.GetInteger() != 0 )
-	{
-		// skip default joy curves.
-		float sens = vr_joyCurveSensitivity.GetFloat();
-		float lin = vr_joyCurveLin.GetFloat();
-		static idVec2 result;
-		common->Printf( "raw %s    :", raw.ToString() );
-		result.x = idMath::Pow( raw.x, ( 1 + ( ( lin - sens ) / 9 ) ) );
-		result.y = idMath::Pow( raw.y, ( 1 + ( ( lin - sens ) / 9 ) ) );
-		common->Printf( "curve %f   %f \n", result.x, result.y );
-		return result;
-
-	}
 
 	if( range <= threshold )
 	{
@@ -1276,15 +1255,13 @@ void idUsercmdGenLocal::JoystickMove2()
 	// Koz - joystick handling changed to allow all axes to be mapped to any movement/look control independently,
 	// including touch/openvr.  No need for stick swapping or inversion - just remap.
 
-	// Koz const bool invertLook =			in_invertLook.GetBool(); dont need anymore remap instead.
-
-	// Koz fixme these were const changed for easier testing
-	float threshold = joy_deadZone.GetFloat();
-	float range = joy_range.GetFloat();
-	transferFunction_t shape = ( transferFunction_t )joy_gammaLook.GetInteger();
-	bool mergedThreshold = joy_mergedThreshold.GetBool();
-	float pitchSpeed = joy_pitchSpeed.GetFloat();
-	float yawSpeed = joy_yawSpeed.GetFloat();
+	const bool invertLook =			in_invertLook.GetBool();
+	const float threshold =			joy_deadZone.GetFloat();
+	const float range =				joy_range.GetFloat();
+	const transferFunction_t shape = ( transferFunction_t )joy_gammaLook.GetInteger();
+	const bool mergedThreshold =	joy_mergedThreshold.GetBool();
+	const float pitchSpeed =		joy_pitchSpeed.GetFloat();
+	const float yawSpeed =			joy_yawSpeed.GetFloat();
 
 	idGame* game = common->Game();
 	const float aimAssist = game != NULL ? game->GetAimAssistSensitivity() : 1.0f;
@@ -1295,29 +1272,57 @@ void idUsercmdGenLocal::JoystickMove2()
 	float comfortTurn = 0.0f;
 	static int lastComfortTime = 0;
 
-	if( ButtonState( UB_IMPULSE34 ) )
+	if( vrSystem->IsActive() )
 	{
-		comfortTurn = -vr_comfortDelta.GetFloat();
+		mappedMove = vec2_zero;
+		mappedLook = vec2_zero;
+		
+		if( ButtonState( UB_IMPULSE34 ) )
+		{
+			comfortTurn = -vr_comfortDelta.GetFloat();
+		}
+		if( ButtonState( UB_IMPULSE35 ) )
+		{
+			comfortTurn = vr_comfortDelta.GetFloat();
+		}
+	
+		comfortTurn += MapAxis( mappedMove, mappedLook, AXIS_LEFT_X ); // Koz remamp axis
+		comfortTurn += MapAxis( mappedMove, mappedLook, AXIS_LEFT_Y );
+		comfortTurn += MapAxis( mappedMove, mappedLook, AXIS_RIGHT_X );
+		comfortTurn += MapAxis( mappedMove, mappedLook, AXIS_RIGHT_Y );
+	
+		if( comfortTurn != 0.0 && ( Sys_Milliseconds() - lastComfortTime >= vr_comfortRepeat.GetInteger() ) )
+		{
+			viewangles[YAW] += comfortTurn;
+	
+			lastComfortTime = Sys_Milliseconds();
+		}
+	
+		// save for visualization
+		lastLookJoypad = mappedLook;
 	}
-	if( ButtonState( UB_IMPULSE35 ) )
+	else
 	{
-		comfortTurn = vr_comfortDelta.GetFloat();
+		mappedMove = idVec2( joystickAxis[ AXIS_LEFT_X ], joystickAxis[ AXIS_LEFT_Y ] );
+		mappedLook = idVec2( joystickAxis[ AXIS_RIGHT_X ], joystickAxis[ AXIS_RIGHT_Y ] );
+	
+		// optional stick swap
+		if( idKeyInput::GetUsercmdAction( K_JOY_STICK1_LEFT ) == UB_LOOKLEFT )
+		{
+			const idVec2	temp = mappedMove;
+			mappedMove = mappedLook;
+			mappedLook = temp;
+		}
+	
+		// optional invert look by inverting the right Y axis
+		if( invertLook )
+		{
+			mappedLook.y = -mappedLook.y;
+		}
+	
+		// save for visualization
+		lastLookJoypad = mappedLook;
 	}
-
-	comfortTurn += MapAxis( mappedMove, mappedLook, AXIS_LEFT_X ); // Koz remamp axis
-	comfortTurn += MapAxis( mappedMove, mappedLook, AXIS_LEFT_Y );
-	comfortTurn += MapAxis( mappedMove, mappedLook, AXIS_RIGHT_X );
-	comfortTurn += MapAxis( mappedMove, mappedLook, AXIS_RIGHT_Y );
-
-	if( comfortTurn != 0.0 && ( Sys_Milliseconds() - lastComfortTime >= vr_comfortRepeat.GetInteger() ) )
-	{
-		viewangles[YAW] += comfortTurn;
-
-		lastComfortTime = Sys_Milliseconds();
-	}
-
-	// save for visualization
-	lastLookJoypad = mappedLook;
 
 	idVec2 leftMapped = JoypadFunction( mappedMove, 1.0f, threshold, range, shape, mergedThreshold );
 	idVec2 rightMapped = JoypadFunction( mappedLook, aimAssist, threshold, range, shape, mergedThreshold );
@@ -1330,6 +1335,7 @@ void idUsercmdGenLocal::JoystickMove2()
 	cmd.forwardmove = idMath::ClampChar( cmd.forwardmove + KEY_MOVESPEED * -leftMapped.y );
 	cmd.rightmove = idMath::ClampChar( cmd.rightmove + KEY_MOVESPEED * leftMapped.x );
 
+	// Koz begin
 	float pitchDelta, yawDelta = 0.0f;
 	pitchDelta = MS2SEC( pollTime - lastPollTime ) * rightMapped.y * pitchSpeed;;
 	yawDelta = MS2SEC( pollTime - lastPollTime ) * -rightMapped.x * yawSpeed;
@@ -1341,66 +1347,16 @@ void idUsercmdGenLocal::JoystickMove2()
 
 	viewangles[PITCH] += pitchDelta;
 	viewangles[YAW] += yawDelta;
+	// Koz end
 
 	const float triggerThreshold = joy_triggerThreshold.GetFloat();
-	HandleJoystickAxis( K_JOY_TRIGGER1, joystickAxis[AXIS_LEFT_TRIG], triggerThreshold, true );
-	HandleJoystickAxis( K_JOY_TRIGGER2, joystickAxis[AXIS_RIGHT_TRIG], triggerThreshold, true );
+	HandleJoystickAxis( K_JOY_TRIGGER1, joystickAxis[ AXIS_LEFT_TRIG ], triggerThreshold, true );
+	HandleJoystickAxis( K_JOY_TRIGGER2, joystickAxis[ AXIS_RIGHT_TRIG ], triggerThreshold, true );
 
-	// Koz vr input -------------------do this again with the touch
+	// Koz SteamVR -------------------
+	// and again for SteamVR left and right controllers
 
-	if( vrSystem->motionControlType == MOTION_OCULUS )
-	{
-		comfortTurn = 0.0;
-
-		mappedMove = vec2_zero;
-		mappedLook = vec2_zero;
-
-		comfortTurn += MapAxis( mappedMove, mappedLook, AXIS_LEFT_TOUCH_X );
-		comfortTurn += MapAxis( mappedMove, mappedLook, AXIS_LEFT_TOUCH_Y );
-		comfortTurn += MapAxis( mappedMove, mappedLook, AXIS_RIGHT_TOUCH_X );
-		comfortTurn += MapAxis( mappedMove, mappedLook, AXIS_RIGHT_TOUCH_Y );
-
-		if( comfortTurn != 0.0 && ( Sys_Milliseconds() - lastComfortTime >= vr_comfortRepeat.GetInteger() ) )
-		{
-			viewangles[YAW] += comfortTurn;
-
-			lastComfortTime = Sys_Milliseconds();
-		}
-
-		leftMapped = JoypadFunction( mappedMove, 1.0f, threshold, range, shape, mergedThreshold );
-		rightMapped = JoypadFunction( mappedLook, aimAssist, threshold, range, shape, mergedThreshold );
-
-		CircleToSquare( leftMapped.x, leftMapped.y );
-
-		if( vr_teleportMode.GetInteger() == 2 )
-		{
-			vrSystem->leftMapped = leftMapped; // Jack: this has not been tested
-		}
-		else
-		{
-			cmd.forwardmove = idMath::ClampChar( cmd.forwardmove + KEY_MOVESPEED * -leftMapped.y );
-			cmd.rightmove = idMath::ClampChar( cmd.rightmove + KEY_MOVESPEED * leftMapped.x );
-		}
-
-		pitchDelta = MS2SEC( pollTime - lastPollTime ) * rightMapped.y * pitchSpeed;;
-		yawDelta = MS2SEC( pollTime - lastPollTime ) * -rightMapped.x * yawSpeed;
-
-		if( vrSystem->IsActive() )
-		{
-			vrSystem->CalcAimMove( yawDelta, pitchDelta );
-		}
-
-		viewangles[PITCH] += pitchDelta;
-		viewangles[YAW] += yawDelta;
-
-		HandleJoystickAxis( K_L_TOUCHTRIG, joystickAxis[AXIS_LEFT_TOUCH_TRIG], triggerThreshold, true );
-		HandleJoystickAxis( K_R_TOUCHTRIG, joystickAxis[AXIS_RIGHT_TOUCH_TRIG], triggerThreshold, true );
-
-	}
-
-	// Koz SteamVR -------------------and again for SteamVR left and right controllers
-
-	if( vrSystem->motionControlType == MOTION_STEAMVR )
+	if( vrSystem->IsActive() && vrSystem->motionControlType == MOTION_STEAMVR )
 	{
 		comfortTurn = 0.0;
 		static int lastComfortTimeSteamVr = 0;
@@ -1426,29 +1382,11 @@ void idUsercmdGenLocal::JoystickMove2()
 		}
 
 
-		if( !vrSystem->IsActive() || ( vrSystem->IsActive() && vr_joyCurves.GetInteger() < 2 ) )
-		{
-			leftMapped = JoypadFunction( mappedMove, 1.0f, threshold, range, shape, mergedThreshold );
-			rightMapped = JoypadFunction( mappedLook, aimAssist, threshold, range, shape, mergedThreshold );
-			//common->Printf( "Openvr leftMapped x %f y %f rightMapped x %f y %f : time %d\n", leftMapped.x, leftMapped.y, rightMapped.x, rightMapped.y, Sys_Milliseconds() );
-		}
+		leftMapped = JoypadFunction( mappedMove, 1.0f, threshold, range, shape, mergedThreshold );
+		rightMapped = JoypadFunction( mappedLook, aimAssist, threshold, range, shape, mergedThreshold );
+		//common->Printf( "Openvr leftMapped x %f y %f rightMapped x %f y %f : time %d\n", leftMapped.x, leftMapped.y, rightMapped.x, rightMapped.y, Sys_Milliseconds() );
 
 		CircleToSquare( leftMapped.x, leftMapped.y );
-
-		if( vrSystem->IsActive() && vr_joyCurves.GetInteger() == 3 )
-		{
-			float lenSq = leftMapped.LengthSqr();
-			float len = sqrtf( lenSq );
-			float dif = lenSq - len;
-			len += dif * vr_joyCurveLin.GetFloat();
-			leftMapped *= len;
-		}
-
-		if( vrSystem->IsActive() && vr_joyCurves.GetInteger() == 4 )
-		{
-			leftMapped.x = 60 + leftMapped.x * .55;
-			leftMapped.y = 60 + leftMapped.y * .55;
-		}
 
 		leftMapped = mappedMove;
 		rightMapped = mappedLook;
@@ -1466,10 +1404,7 @@ void idUsercmdGenLocal::JoystickMove2()
 		pitchDelta = MS2SEC( pollTime - lastPollTime ) * rightMapped.y * pitchSpeed;
 		yawDelta = MS2SEC( pollTime - lastPollTime ) * -rightMapped.x * yawSpeed;
 
-		if( vrSystem->IsActive() )
-		{
-			vrSystem->CalcAimMove( yawDelta, pitchDelta );
-		}
+		vrSystem->CalcAimMove( yawDelta, pitchDelta );
 
 		viewangles[PITCH] += pitchDelta;
 		viewangles[YAW] += yawDelta;
@@ -1479,6 +1414,7 @@ void idUsercmdGenLocal::JoystickMove2()
 
 	}
 }
+
 /*
 ==============
 idUsercmdGenLocal::CmdButtons
@@ -1486,28 +1422,34 @@ idUsercmdGenLocal::CmdButtons
 */
 void idUsercmdGenLocal::CmdButtons()
 {
-
 	cmd.buttons = 0;
 
 	// Koz begin cancel teleport if fire button pressed.
 	static int teleportCanceled = 0;
 
 	// check the attack button
-	if( ButtonState( UB_ATTACK ) )
+	if( vrSystem->IsActive() )
 	{
-		if( vrSystem->teleportButtonCount != 0 && vr_teleportMode.GetInteger() == 0 ) // dont cancel teleport
+		if( ButtonState( UB_ATTACK ) )
 		{
-			vrSystem->teleportButtonCount = 0;
-			teleportCanceled = 1;
+			if( vrSystem->teleportButtonCount != 0 && vr_teleportMode.GetInteger() == 0 ) // dont cancel teleport
+			{
+				vrSystem->teleportButtonCount = 0;
+				teleportCanceled = 1;
+			}
+			else if( teleportCanceled == 0 )
+			{
+				cmd.buttons |= BUTTON_ATTACK;
+			}
+	
 		}
-		else if( teleportCanceled == 0 )
-		{
-			cmd.buttons |= BUTTON_ATTACK;
-		}
-
+	
+		teleportCanceled &= ButtonState( UB_ATTACK );
 	}
-
-	teleportCanceled &= ButtonState( UB_ATTACK );
+	else
+	{
+		cmd.buttons |= BUTTON_ATTACK;
+	}
 	// Koz end
 
 	// check the use button
@@ -1517,21 +1459,22 @@ void idUsercmdGenLocal::CmdButtons()
 	}
 
 	// check the use button
-	if( ButtonState( UB_TALK ) )
+	if( vrSystem->IsActive() )
 	{
-		cmd.buttons |= BUTTON_CHATTING;
+		if( ButtonState( UB_TALK ) )
+		{
+			cmd.buttons |= BUTTON_CHATTING;
+		}
 	}
 
 	// check the run button
-
-	if( !vrSystem->IsActive() || vrSystem->IsActive() && vr_moveClick.GetInteger() <= 2 )  // Koz, do normal run if moveClick = 0
+	if( !vrSystem->IsActive() || ( vrSystem->IsActive() && vr_moveClick.GetInteger() <= 2 ) )  // Koz, do normal run if moveClick = 0
 	{
 		if( toggled_run.on || ( in_alwaysRun.GetBool() && common->IsMultiplayer() ) || vrSystem->forceRun )
 		{
 			cmd.buttons |= BUTTON_RUN;
 		}
 	}
-
 
 	// check the zoom button
 	if( toggled_zoom.on )
@@ -1548,12 +1491,11 @@ void idUsercmdGenLocal::CmdButtons()
 		cmd.buttons |= BUTTON_CROUCH;
 	}
 
-	// Koz begin crouch trigger
-	if( vrSystem->userDuckingAmount > vr_crouchTriggerDist.GetFloat() / vr_scale.GetFloat() && vr_crouchMode.GetInteger() == 1 )
+	// Koz: crouch trigger
+	if( vrSystem->IsActive() && ( vrSystem->GetUserDuckingAmount() > ( vr_crouchTriggerDist.GetFloat() / vr_scale.GetFloat() ) ) && vr_crouchMode.GetInteger() == 1 )
 	{
 		cmd.buttons |= BUTTON_CROUCH;
 	}
-
 }
 
 /*
@@ -1627,6 +1569,7 @@ void idUsercmdGenLocal::CalcTorsoYawDelta()
 		float bodyYaw;
 		float viewYaw;
 
+		//if( game->)
 		if( !gameLocal.GetLocalPlayer() )
 		{
 			if( common->GetCurrentGame() == DOOM3_BFG )
@@ -1954,8 +1897,6 @@ creates the current command for this frame
 void idUsercmdGenLocal::MakeCurrent()
 {
 	idVec3 oldAngles = viewangles;
-	static int thirdPersonTime = Sys_Milliseconds();
-
 
 	if( !Inhibited() )
 	{
