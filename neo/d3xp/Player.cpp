@@ -15275,7 +15275,7 @@ float idPlayer::DefaultFov() const
 
 	if( vrSystem->IsActive() )  // Koz fixme report HMD fov in VR.
 	{
-		fov = vrSystem->hmdFovX;
+		fov = vrSystem->GetHMDFovX();
 	}
 	else
 	{

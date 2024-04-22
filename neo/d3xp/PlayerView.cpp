@@ -624,7 +624,7 @@ void idPlayerView::SingleView( const renderView_t* view, idMenuHandler_HUD* hudM
 
 			int start, barWidth;
 
-			blockWidth /= vrSystem->hmdAspect;
+			blockWidth /= vrSystem->GetHMDAspect();
 
 			// top and bottom blackout bars should be the same regardless of screen separation
 

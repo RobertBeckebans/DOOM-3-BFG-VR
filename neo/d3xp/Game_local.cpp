@@ -3175,8 +3175,8 @@ void idGameLocal::CalcFov( float base_fov, float& fov_x, float& fov_y ) const
 
 	if( vrSystem->IsActive() )
 	{
-		fov_x = vrSystem->hmdFovX;
-		fov_y = vrSystem->hmdFovY;
+		fov_x = vrSystem->GetHMDFovX();
+		fov_y = vrSystem->GetHMDFovY();
 		return;
 	}
 
