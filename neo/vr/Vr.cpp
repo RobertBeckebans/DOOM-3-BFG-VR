@@ -166,7 +166,7 @@ idCVar vr_3dgui( "vr_3dgui", "1", CVAR_BOOL | CVAR_ARCHIVE, "3d effects for in g
 idCVar vr_shakeAmplitude( "vr_shakeAmplitude", "1.0", CVAR_FLOAT | CVAR_ARCHIVE, "Screen shake amplitude 0.0 = disabled to 1.0 = full\n", 0.0f, 1.0f );
 
 
-idCVar vr_controllerStandard( "vr_controllerStandard", "0", CVAR_INTEGER | CVAR_ARCHIVE, "If 1, use standard controller, not motion controllers\nRestart after changing\n" );
+idCVar vr_controllerGamepad( "vr_controllerGamepad", "0", CVAR_INTEGER | CVAR_ARCHIVE, "If 1, use standard controller, not motion controllers\nRestart after changing\n" );
 
 idCVar vr_padDeadzone( "vr_padDeadzone", ".25", CVAR_FLOAT | CVAR_ARCHIVE, "Deadzone for steam pads.\n 0.0 = no deadzone 1.0 = dead\n" );
 idCVar vr_jsDeadzone( "vr_jsDeadzone", ".25", CVAR_FLOAT | CVAR_ARCHIVE, "Deadzone for steam joysticks.\n 0.0 = no deadzone 1.0 = dead\n" );
@@ -861,16 +861,6 @@ void iVr::HMDGetOrientation( idAngles& hmdAngles, idVec3& headPositionDelta, idV
 	static idVec3 initialNeckPosition = vec3_zero;
 	static idVec3 currentNeckPosition = vec3_zero;
 	static idVec3 lastNeckPosition = vec3_zero;
-
-	static idVec3 currentChestPosition = vec3_zero;
-	static idVec3 lastChestPosition = vec3_zero;
-
-	static float chestLength = 0;
-	static bool chestInitialized = false;
-
-	idVec3 neckToChestVec = vec3_zero;
-	idMat3 neckToChestMat = mat3_identity;
-	idAngles neckToChestAng = ang_zero;
 
 	static idVec3 lastHeadPositionDelta = vec3_zero;
 	static idVec3 lastBodyPositionDelta = vec3_zero;

@@ -892,7 +892,7 @@ void idThread::Error( const char* fmt, ... ) const
 	char	text[ 1024 ];
 
 	va_start( argptr, fmt );
-	vsprintf( text, fmt, argptr );
+	idStr::vsnPrintf( text, sizeof( text ), fmt, argptr );
 	va_end( argptr );
 
 	interpreter.Error( text );
@@ -909,7 +909,7 @@ void idThread::Warning( const char* fmt, ... ) const
 	char	text[ 1024 ];
 
 	va_start( argptr, fmt );
-	vsprintf( text, fmt, argptr );
+	idStr::vsnPrintf( text, sizeof( text ), fmt, argptr );
 	va_end( argptr );
 
 	interpreter.Warning( text );
@@ -1863,7 +1863,9 @@ idThread::Event_StartMusic
 */
 void idThread::Event_StartMusic( const char* text )
 {
-	gameSoundWorld->PlayShaderDirectly( text );
+	// RB: this should go into SND_CHANNEL_MUSIC and might conflict with the logic from worldspawn
+	// it would be better to have a music manager instance that fades into this track until done and then resumes the old track
+	gameSoundWorld->PlayShaderDirectly( text );//, SND_CHANNEL_MUSIC );
 }
 
 /*

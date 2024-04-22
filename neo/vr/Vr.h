@@ -281,9 +281,6 @@ public:
 	idVec2				leftMapped;
 	int					oldTeleportButtonState;
 
-	float				independentWeaponYaw;
-	float				independentWeaponPitch;
-
 	bool				playerDead;
 
 	bool				isLoading;
@@ -477,7 +474,7 @@ extern idCVar vr_motionWeaponPitchAdj;
 
 extern idCVar vr_3dgui;
 extern idCVar vr_shakeAmplitude;
-extern idCVar vr_controllerStandard;
+extern idCVar vr_controllerGamepad;
 
 extern idCVar vr_offHandPosX;
 extern idCVar vr_offHandPosY;

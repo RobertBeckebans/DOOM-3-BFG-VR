@@ -470,7 +470,7 @@ idMenuScreen_Shell_VR_Control_Options::idMenuDataSource_Shell_VR_Control_Options
 void idMenuScreen_Shell_VR_Control_Options::idMenuDataSource_Shell_VR_Control_Options::LoadData()
 {
 
-	originalControlType = vr_controllerStandard.GetInteger();
+	originalControlType = vr_controllerGamepad.GetInteger();
 	originalMoveMode = vr_movePoint.GetInteger();
 	originalCrouchMode = vr_crouchMode.GetInteger();
 	originalCrouchHide = vr_crouchHideBody.GetBool();
@@ -517,7 +517,7 @@ void idMenuScreen_Shell_VR_Control_Options::idMenuDataSource_Shell_VR_Control_Op
 		{
 			static const int numValues = 2;
 			static const int values[numValues] = { 0, 1 };
-			vr_controllerStandard.SetInteger( AdjustOption( vr_controllerStandard.GetInteger(), values, numValues, adjustAmount ) );
+			vr_controllerGamepad.SetInteger( AdjustOption( vr_controllerGamepad.GetInteger(), values, numValues, adjustAmount ) );
 			break;
 		}
 
@@ -624,7 +624,7 @@ idSWFScriptVar idMenuScreen_Shell_VR_Control_Options::idMenuDataSource_Shell_VR_
 	{
 
 		case CONTROL_OPTIONS_FIELD_CONTROLLER_TYPE:
-			if( vr_controllerStandard.GetInteger() == 0 )
+			if( vr_controllerGamepad.GetInteger() == 0 )
 			{
 				return "Motion Controllers";
 			}
@@ -739,7 +739,7 @@ bool idMenuScreen_Shell_VR_Control_Options::idMenuDataSource_Shell_VR_Control_Op
 {
 
 
-	if( originalControlType != vr_controllerStandard.GetInteger() )
+	if( originalControlType != vr_controllerGamepad.GetInteger() )
 	{
 		return true;
 	}

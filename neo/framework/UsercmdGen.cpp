@@ -1187,26 +1187,24 @@ float idUsercmdGenLocal::MapAxis( idVec2& mappedMove, idVec2& mappedLook, int ax
 			break;
 
 		case UB_IMPULSE34: // comfort turn right
-
 		{
 			ct = fabs( jaxisValue );
 			if( ct > vr_padToButtonThreshold.GetFloat() )
 			{
 				rVal = -vr_comfortDelta.GetFloat();
 			}
+			break;
 		}
-		break;
 
 		case UB_IMPULSE35: // comfort turn left
-
 		{
 			ct = fabs( jaxisValue );
 			if( ct > vr_padToButtonThreshold.GetFloat() )
 			{
 				rVal = vr_comfortDelta.GetFloat();
 			}
+			break;
 		}
-		break;
 
 		default:
 

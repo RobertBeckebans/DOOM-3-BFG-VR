@@ -13522,7 +13522,7 @@ void idPlayer::Think()
 	static bool lastHandInGui = false;
 
 	// Koz check for forced standard controller
-	if( vrSystem->VR_USE_MOTION_CONTROLS && vr_controllerStandard.GetInteger() )
+	if( vrSystem->VR_USE_MOTION_CONTROLS && vr_controllerGamepad.GetInteger() )
 	{
 		vrSystem->VR_USE_MOTION_CONTROLS = false;
 	}
@@ -17100,9 +17100,7 @@ void idPlayer::CalculateRenderView()
 				wasCinematic = true;
 
 				vrSystem->cinematicStartViewYaw = hmdAngles.yaw + vrSystem->trackingOriginYawOffset;
-//#ifdef USE_OVR //TODO: ovr only?
 				vrSystem->cinematicStartPosition = absolutePosition + ( vrSystem->trackingOriginOffset * idAngles( 0.0f, vrSystem->trackingOriginYawOffset, 0.0f ).ToMat3() );
-//#endif
 				cineYawOffset = hmdAngles.yaw - yawOffset;
 				//vrSystem->cinematicStartPosition.x = -vrSystem->hmdTrackingState.HeadPose.ThePose.Position.z;
 				//vrSystem->cinematicStartPosition.y = -vrSystem->hmdTrackingState.HeadPose.ThePose.Position.x;
@@ -17227,7 +17225,6 @@ void idPlayer::CalculateRenderView()
 				vrSystem->PDAforcetoggle = false;
 				vrSystem->PDAforced = false;
 			}
-
 		}
 	}
 }

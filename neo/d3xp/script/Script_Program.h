@@ -42,9 +42,7 @@ class idRestoreGame;
 #define MAX_STRING_LEN		128
 #define MAX_GLOBALS			296608			// in bytes
 #define MAX_STRINGS			1024
-
 #define MAX_FUNCS			3584
-
 #define MAX_STATEMENTS		131072			// statement_t - 18 bytes last I checked
 
 typedef enum

@@ -5240,26 +5240,8 @@ void idWeapon::Event_LaunchProjectilesEllipse( int num_projectiles, float spread
 		worldModel.GetEntity()->SetShaderParm( SHADERPARM_TIMEOFFSET, renderEntity.shaderParms[ SHADERPARM_TIMEOFFSET ] );
 	}
 
-	// Koz begin - calculate the muzzle position
+	// calculate the muzzle position
 	GetProjectileLaunchOriginAndAxis( muzzleOrigin, muzzleAxis );
-
-	/*	Koz original code - changed to maintain consistency with Event_LaunchProjectiles
-		// calculate the muzzle position
-		if( barrelJointView != INVALID_JOINT && projectileDict.GetBool( "launchFromBarrel" ) )
-		{
-			// there is an explicit joint for the muzzle
-			GetGlobalJointTransform( true, barrelJointView, muzzleOrigin, muzzleAxis );
-		}
-		else
-		{
-			// go straight out of the view
-			muzzleOrigin = playerViewOrigin;
-			muzzleAxis = playerViewAxis;
-		}
-
-	*/
-
-	// Koz end
 
 	// add some to the kick time, incrementally moving repeat firing weapons back
 	if( kick_endtime < gameLocal.time )

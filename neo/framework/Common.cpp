@@ -1352,7 +1352,7 @@ void idCommonLocal::Init( int argc, const char* const* argv, const char* cmdline
 
 		if( vrSystem->IsActive() )
 		{
-			if( vr_controllerStandard.GetInteger() == 1 )
+			if( vr_controllerGamepad.GetInteger() == 1 )
 			{
 				common->Printf( "vr_controllerStandard has disabled motion controls\n" );
 				vrSystem->VR_USE_MOTION_CONTROLS = false;
