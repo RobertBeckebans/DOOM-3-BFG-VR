@@ -248,12 +248,12 @@ iVr::iVr()
 	isActive = false;
 
 	VR_GAME_PAUSED = false;
-	PDAforcetoggle = false;
-	PDAforced = false;
-	PDArising = false;
+	pdaForceToggle = false;
+	pdaForced = false;
+	pdaRising = false;
 	gameSavingLoading = false;
 	showingIntroVideo = true;
-	forceLeftStick = true;	// start the PDA in the left menu.
+	pdaForceLeftStick = true;	// start the PDA in the left menu.
 	pdaToggleTime = Sys_Milliseconds();
 	lastSaveTime = Sys_Milliseconds();
 	wasSaved = false;
@@ -263,7 +263,7 @@ iVr::iVr()
 	useFBO = false;
 	VR_USE_MOTION_CONTROLS = 0;
 
-	scanningPDA = false;
+	pdaScanning = false;
 
 	screenSeparation = 0.0f;
 

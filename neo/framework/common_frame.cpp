@@ -341,7 +341,7 @@ void idCommonLocal::Draw()
 
 		// Koz fixme had playerdead here, can't remember why... but it was breaking the exit game selection in the pause menu, so
 		//commented out, need to test all this crap again.
-		if( vrSystem->PDAforced || vrSystem->PDAforcetoggle )  //&& !vrSystem->playerDead) // Koz fixme do we only want to use the PDA model in VR?
+		if( vrSystem->pdaForced || vrSystem->pdaForceToggle )  //&& !vrSystem->playerDead) // Koz fixme do we only want to use the PDA model in VR?
 		{
 			renderSystem->SetStereoScopicEye( 0 );// Koz set eye to 0 to render guimodel to both eyes. ( -1 left, 1 right )
 			game->Shell_Render(); // Koz render the menu
@@ -359,7 +359,7 @@ void idCommonLocal::Draw()
 		}
 
 		// Koz begin
-		if( ( !vrSystem->IsActive() || vrSystem->playerDead ) || ( !vrSystem->PDAforced && !vrSystem->PDAforcetoggle ) )
+		if( ( !vrSystem->IsActive() || vrSystem->playerDead ) || ( !vrSystem->pdaForced && !vrSystem->pdaForceToggle ) )
 		{
 			// Koz render any menus outside of game ( main menu etc )
 			game->Shell_Render();
@@ -408,7 +408,7 @@ void idCommonLocal::Draw()
 		}
 		else
 		{
-			if( !vrSystem->PDAforced && !vrSystem->PDAforcetoggle )
+			if( !vrSystem->pdaForced && !vrSystem->pdaForceToggle )
 			{
 				Dialog().Render( loadGUI != NULL );
 
@@ -706,31 +706,31 @@ void idCommonLocal::Frame()
 				{
 					static bool ing, shellact, vrpause, pauseG, forcet, pdaf, savlo, playerd, wasl = false;
 
-					if( playerd != vrSystem->playerDead || wasl != vrSystem->wasLoaded || ingame != ing || shellact != game->Shell_IsActive() || vrpause != vrSystem->VR_GAME_PAUSED || pauseG != pauseGame || forcet != vrSystem->PDAforcetoggle || pdaf != vrSystem->PDAforced || savlo != vrSystem->gameSavingLoading )
+					if( playerd != vrSystem->playerDead || wasl != vrSystem->wasLoaded || ingame != ing || shellact != game->Shell_IsActive() || vrpause != vrSystem->VR_GAME_PAUSED || pauseG != pauseGame || forcet != vrSystem->pdaForceToggle || pdaf != vrSystem->pdaForced || savlo != vrSystem->gameSavingLoading )
 					{
 						ing = ingame;
 						shellact = game->Shell_IsActive();
 						vrpause = vrSystem->VR_GAME_PAUSED;
 						pauseG = pauseGame;
-						forcet = vrSystem->PDAforcetoggle;
-						pdaf = vrSystem->PDAforced;
+						forcet = vrSystem->pdaForceToggle;
+						pdaf = vrSystem->pdaForced;
 						savlo = vrSystem->gameSavingLoading;
 						playerd = vrSystem->playerDead;
 						wasl = vrSystem->wasLoaded;
 
 						//common->Printf( "Pause diag: ingame = %d, VR_GAME_PAUSED = %d, pausegame = %d, game->isShellactive = %d playerdead = %d\n", ingame, vrSystem->VR_GAME_PAUSED, pauseGame, game->Shell_IsActive(), vrSystem->playerDead );
-						//common->Printf( "Pause diag: PDAforcetoggle = %d, PDAforced = %d, savingLoading = %d, wasloaded = %d\n", vrSystem->PDAforcetoggle, vrSystem->PDAforced, vrSystem->gameSavingLoading, vrSystem->wasLoaded );
+						//common->Printf( "Pause diag: pdaForceToggle = %d, pdaForced = %d, savingLoading = %d, wasloaded = %d\n", vrSystem->pdaForceToggle, vrSystem->pdaForced, vrSystem->gameSavingLoading, vrSystem->wasLoaded );
 					}
 
-					if( ( vrSystem->VR_GAME_PAUSED || vrSystem->PDAforced ) && !common->Dialog().IsDialogActive() && !game->Shell_IsActive() )
+					if( ( vrSystem->VR_GAME_PAUSED || vrSystem->pdaForced ) && !common->Dialog().IsDialogActive() && !game->Shell_IsActive() )
 					{
 						// the pda has been forced up, but there is no active shell or dialog.
 						// force everything closed.
 						//common->Printf( "Pause 1 setting forcetoggle\n" );
-						vrSystem->PDAforcetoggle = true; // tell the pda check code to force it down.
+						vrSystem->pdaForceToggle = true; // tell the pda check code to force it down.
 						vrSystem->VR_GAME_PAUSED = false;
 					}
-					else if( ( ingame && pauseGame && ( game->Shell_IsActive() /* || Dialog().IsDialogActive() */ ) )  && ( !vrSystem->PDAforced && !vrSystem->gameSavingLoading ) )
+					else if( ( ingame && pauseGame && ( game->Shell_IsActive() /* || Dialog().IsDialogActive() */ ) )  && ( !vrSystem->pdaForced && !vrSystem->gameSavingLoading ) )
 					{
 						if( vrSystem->playerDead && vrSystem->wasLoaded )
 						{
@@ -740,8 +740,8 @@ void idCommonLocal::Frame()
 							{
 								vrSystem->playerDead = false;
 								vrSystem->wasLoaded = false;
-								vrSystem->PDAforced = false;
-								vrSystem->PDAforcetoggle = false;
+								vrSystem->pdaForced = false;
+								vrSystem->pdaForceToggle = false;
 								vrSystem->VR_GAME_PAUSED = false;
 							}
 						}
@@ -750,12 +750,12 @@ void idCommonLocal::Frame()
 							if( !vrSystem->playerDead )
 							{
 								//common->Printf( "Pause 2 setting forcetoggle\n" );
-								vrSystem->PDAforcetoggle = true;
+								vrSystem->pdaForceToggle = true;
 							}
 						}
 
 					}
-					else if( ( ingame && pauseGame && ( game->Shell_IsActive() /* || Dialog().IsDialogActive() */ ) ) && ( vrSystem->PDAforced && !vrSystem->VR_GAME_PAUSED ) )
+					else if( ( ingame && pauseGame && ( game->Shell_IsActive() /* || Dialog().IsDialogActive() */ ) ) && ( vrSystem->pdaForced && !vrSystem->VR_GAME_PAUSED ) )
 					{
 						vrSystem->VR_GAME_PAUSED = true;
 					}

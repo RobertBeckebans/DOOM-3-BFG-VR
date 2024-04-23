@@ -1969,7 +1969,7 @@ void idRenderBackend::StereoRenderExecuteBackEndCommands( const emptyCommand_t* 
 			// This is the rift.
 			if( vrSystem->IsActive() )
 			{
-				if( vrSystem->playerDead || ( game->Shell_IsActive() && !vrSystem->PDAforced && !vrSystem->PDAforcetoggle ) || ( !vrSystem->PDAforced && common->Dialog().IsDialogActive() )
+				if( vrSystem->playerDead || ( game->Shell_IsActive() && !vrSystem->pdaForced && !vrSystem->pdaForceToggle ) || ( !vrSystem->pdaForced && common->Dialog().IsDialogActive() )
 						|| vrSystem->isLoading || vrSystem->showingIntroVideo || session->GetState() == idSession::LOADING )
 				{
 					vrSystem->HMDTrackStatic( !vrSystem->isLoading && !vrSystem->showingIntroVideo && session->GetState() != idSession::LOADING );

@@ -267,7 +267,7 @@ bool idSWF::HandleEvent( const sysEvent_t* event )
 		//common->Printf( "SWFEvents SE_KEY = %d\n", event->evValue );
 
 		if( event->evValue == K_MOUSE1
-				|| ( vrSystem->scanningPDA && (
+				|| ( vrSystem->pdaScanning && (
 						 event->evValue == K_L_TOUCHTRIG
 						 || event->evValue == K_R_TOUCHTRIG
 						 || event->evValue == K_JOY_TRIGGER1
@@ -412,7 +412,7 @@ bool idSWF::HandleEvent( const sysEvent_t* event )
 			if( thisMenu.Icmp( lastMenu.c_str() ) != 0 )
 			{
 				//start new menus or screen with either stick.
-				vrSystem->forceLeftStick = true;
+				vrSystem->pdaForceLeftStick = true;
 				lastMenu = thisMenu;
 			}
 
@@ -423,13 +423,13 @@ bool idSWF::HandleEvent( const sysEvent_t* event )
 
 			if( !inPDAmenu )  // not in the PDA menu, force all stick axis movement to the left stick for menu control
 			{
-				vrSystem->forceLeftStick = true;
+				vrSystem->pdaForceLeftStick = true;
 			}
 			else
 			{
 				// we are in the PDA menu. handle toggling sticks and changing mappings as needed
 
-				if( !vrSystem->forceLeftStick )
+				if( !vrSystem->pdaForceLeftStick )
 				{
 					if( keyValue == K_TOUCH_RIGHT_STICK_LEFT ||
 							keyValue == K_TOUCH_LEFT_STICK_LEFT ||
@@ -440,7 +440,7 @@ bool idSWF::HandleEvent( const sysEvent_t* event )
 							keyValue == K_STEAMVR_RIGHT_JS_LEFT ||
 							keyValue == K_STEAMVR_LEFT_JS_LEFT )
 					{
-						vrSystem->forceLeftStick = true;
+						vrSystem->pdaForceLeftStick = true;
 					}
 				}
 				else
@@ -454,12 +454,12 @@ bool idSWF::HandleEvent( const sysEvent_t* event )
 							keyValue == K_STEAMVR_RIGHT_JS_RIGHT ||
 							keyValue == K_STEAMVR_LEFT_JS_RIGHT )
 					{
-						vrSystem->forceLeftStick = false;
+						vrSystem->pdaForceLeftStick = false;
 					}
 				}
 			}
 
-			if( vrSystem->forceLeftStick )    // in the pda map right stick movement to the left sticks if forced
+			if( vrSystem->pdaForceLeftStick )    // in the pda map right stick movement to the left sticks if forced
 			{
 				sourceAxis = rightStick;
 				destAxis = leftStick;

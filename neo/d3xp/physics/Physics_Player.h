@@ -202,7 +202,7 @@ public:
 	waterLevel_t			waterLevel;
 	int						waterType;
 
-	bool					clientPusherLocked;
+	bool					clientPusherLocked = false;			// SRS - initialize to unlocked at start
 
 private:
 	float					CmdScale( const usercmd_t& cmd ) const;

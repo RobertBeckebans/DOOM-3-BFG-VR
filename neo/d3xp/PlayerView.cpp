@@ -750,7 +750,7 @@ idPlayerView::ScreenFade
 void idPlayerView::ScreenFade()
 {
 	// Carl: Don't cover screen when we need to read the PDA or see what's happening
-	if( !fadeTime || g_stopTime.GetBool() || player->objectiveSystemOpen || vrSystem->PDAforced || vrSystem->PDAforcetoggle )
+	if( !fadeTime || g_stopTime.GetBool() || player->objectiveSystemOpen || vrSystem->pdaForced || vrSystem->pdaForceToggle )
 	{
 		return;
 	}
@@ -957,7 +957,7 @@ void idPlayerView::RenderPlayerView( idMenuHandler_HUD* hudManager )
 			vrSystem->lastCenterEyeAxis = view->viewaxis;
 			vrSystem->lastCenterEyeOrigin = view->vieworg;
 
-			if( !vrSystem->PDAforced && !vrSystem->PDAforcetoggle && !game->IsPDAOpen() )  // Koz moved this so we can see the hud if we want, but still skip all other view effects.
+			if( !vrSystem->pdaForced && !vrSystem->pdaForceToggle && !game->IsPDAOpen() )  // Koz moved this so we can see the hud if we want, but still skip all other view effects.
 			{
 				vrSystem->swfRenderMode = RENDERING_HUD;
 				player->DrawHUDVR( hudManager );
@@ -969,7 +969,7 @@ void idPlayerView::RenderPlayerView( idMenuHandler_HUD* hudManager )
 				if( player->pdaMenu != NULL )
 				{
 
-					if( !vrSystem->PDAforced && !vrSystem->PDAforcetoggle )  // dont render the PDA gui if the PDA model been forced up to display the pause menus.
+					if( !vrSystem->pdaForced && !vrSystem->pdaForceToggle )  // dont render the PDA gui if the PDA model been forced up to display the pause menus.
 					{
 						vrSystem->swfRenderMode = RENDERING_PDA;
 						player->pdaMenu->Update();

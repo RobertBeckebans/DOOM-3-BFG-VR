@@ -234,8 +234,8 @@ Exits with mapSpawned = false
 */
 void idCommonLocal::UnloadMap()
 {
-	vrSystem->PDAforcetoggle = false;
-	vrSystem->PDAforced = false;
+	vrSystem->pdaForceToggle = false;
+	vrSystem->pdaForced = false;
 	vrSystem->VR_GAME_PAUSED = false;
 
 	// end the current map in the game
@@ -724,8 +724,8 @@ void idCommonLocal::ExecuteMapChange()
 	soundSystem->Render();
 
 	// Koz
-	vrSystem->PDAforcetoggle = false;
-	vrSystem->PDAforced = false;
+	vrSystem->pdaForceToggle = false;
+	vrSystem->pdaForced = false;
 	vrSystem->VR_GAME_PAUSED = false;
 	vrSystem->pdaToggleTime = Sys_Milliseconds();
 	vrSystem->wasLoaded = true;
@@ -1111,8 +1111,8 @@ bool idCommonLocal::LoadGame( const char* saveName )
 	// Koz begin
 	// Koz fixme do this right.
 	// Make sure the pda is in a valid state on game load.
-	vrSystem->PDAforced = false;
-	vrSystem->PDAforcetoggle = false;
+	vrSystem->pdaForced = false;
+	vrSystem->pdaForceToggle = false;
 	vrSystem->VR_GAME_PAUSED = false;
 	vrSystem->VR_GAME_PAUSED = false;
 	vrSystem->pdaToggleTime = Sys_Milliseconds() + 1000;

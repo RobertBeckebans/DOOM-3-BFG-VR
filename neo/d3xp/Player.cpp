@@ -6082,7 +6082,7 @@ bool idPlayer::OtherHandImpulseSlot()
 		if( !common->IsMultiplayer() )
 		{
 			// we don't have a PDA, so toggle the menu instead
-			if( vrSystem->PDAforced || inventory.pdas.Num() == 0 )
+			if( vrSystem->pdaForced || inventory.pdas.Num() == 0 )
 			{
 				PerformImpulse( 40 );
 			}
@@ -6099,7 +6099,7 @@ bool idPlayer::OtherHandImpulseSlot()
 		}
 		return true;
 	}
-	if( otherHandSlot == SLOT_FLASHLIGHT_HEAD && !vrSystem->PDAforced && !objectiveSystemOpen
+	if( otherHandSlot == SLOT_FLASHLIGHT_HEAD && !vrSystem->pdaForced && !objectiveSystemOpen
 			&& flashlight.IsValid() && !spectating && weaponEnabled && !hiddenWeapon && !gameLocal.world->spawnArgs.GetBool( "no_Weapons" ) )
 	{
 		// swap flashlight between head and hand
@@ -6113,7 +6113,7 @@ bool idPlayer::OtherHandImpulseSlot()
 		}
 		return true;
 	}
-	if( otherHandSlot == SLOT_FLASHLIGHT_SHOULDER && !vrSystem->PDAforced && !objectiveSystemOpen
+	if( otherHandSlot == SLOT_FLASHLIGHT_SHOULDER && !vrSystem->pdaForced && !objectiveSystemOpen
 			&& flashlight.IsValid() && !spectating && weaponEnabled && !hiddenWeapon && !gameLocal.world->spawnArgs.GetBool( "no_Weapons" ) )
 	{
 		// swap flashlight between body and hand
@@ -6132,7 +6132,7 @@ bool idPlayer::OtherHandImpulseSlot()
 		vrSystem->SwapWeaponHand();
 
 		// Holster the PDA we are holding on the other side
-		if( vrSystem->PDAforced )
+		if( vrSystem->pdaForced )
 		{
 			PerformImpulse( 40 );
 		}
@@ -6159,7 +6159,7 @@ bool idPlayer::OtherHandImpulseSlot()
 		if( !common->IsMultiplayer() )
 		{
 			// we don't have a PDA, so toggle the menu instead
-			if( vrSystem->PDAforced )
+			if( vrSystem->pdaForced )
 			{
 				PerformImpulse( 40 );
 			}
@@ -6179,7 +6179,7 @@ bool idPlayer::OtherHandImpulseSlot()
 		if( !common->IsMultiplayer() )
 		{
 			// we don't have a PDA, so toggle the menu instead
-			if( vrSystem->PDAforced )
+			if( vrSystem->pdaForced )
 			{
 				PerformImpulse( 40 );
 			}
@@ -6240,13 +6240,13 @@ bool idPlayer::WeaponHandImpulseSlot()
 		vrSystem->SwapWeaponHand();
 
 		// if we're holding a gun ( not a pointer finger or fist ) then holster the gun
-		//if ( !vrSystem->PDAforced && !objectiveSystemOpen && currentWeapon != weapon_fists )
+		//if ( !vrSystem->pdaForced && !objectiveSystemOpen && currentWeapon != weapon_fists )
 		//	SetupHolsterSlot();
 		// pick up PDA in our weapon hand, or pick up the torch if our hand is a pointer finger
 		if( !common->IsMultiplayer() )
 		{
 			// we don't have a PDA, so toggle the menu instead
-			if( vrSystem->PDAforced || inventory.pdas.Num() == 0 )
+			if( vrSystem->pdaForced || inventory.pdas.Num() == 0 )
 			{
 				PerformImpulse( 40 );
 			}
@@ -6263,7 +6263,7 @@ bool idPlayer::WeaponHandImpulseSlot()
 		}
 		return true;
 	}
-	if( weaponHandSlot == SLOT_FLASHLIGHT_HEAD && vr_flashlightMode.GetInteger() == FLASHLIGHT_HEAD && currentWeapon == weapon_fists && !vrSystem->PDAforced && !objectiveSystemOpen
+	if( weaponHandSlot == SLOT_FLASHLIGHT_HEAD && vr_flashlightMode.GetInteger() == FLASHLIGHT_HEAD && currentWeapon == weapon_fists && !vrSystem->pdaForced && !objectiveSystemOpen
 			&& flashlight.IsValid() && !spectating && weaponEnabled && !hiddenWeapon && !gameLocal.world->spawnArgs.GetBool( "no_Weapons" ) )
 	{
 		vrSystem->SwapWeaponHand();
@@ -6272,7 +6272,7 @@ bool idPlayer::WeaponHandImpulseSlot()
 		vr_flashlightMode.SetInteger( FLASHLIGHT_HAND );
 		return true;
 	}
-	if( weaponHandSlot == SLOT_FLASHLIGHT_SHOULDER && vr_flashlightMode.GetInteger() == FLASHLIGHT_BODY && currentWeapon == weapon_fists && !vrSystem->PDAforced && !objectiveSystemOpen
+	if( weaponHandSlot == SLOT_FLASHLIGHT_SHOULDER && vr_flashlightMode.GetInteger() == FLASHLIGHT_BODY && currentWeapon == weapon_fists && !vrSystem->pdaForced && !objectiveSystemOpen
 			&& flashlight.IsValid() && !spectating && weaponEnabled && !hiddenWeapon && !gameLocal.world->spawnArgs.GetBool( "no_Weapons" ) )
 	{
 		vrSystem->SwapWeaponHand();
@@ -7845,7 +7845,7 @@ bool idPlayer::UpdateFocusPDA()
 		return false;
 	}
 
-	vrSystem->scanningPDA = true; // let the swf event handler know its ok to take mouse input, even if the mouse cursor is not in the window.
+	vrSystem->pdaScanning = true; // let the swf event handler know its ok to take mouse input, even if the mouse cursor is not in the window.
 
 
 	// game is VR and PDA active
@@ -7984,7 +7984,7 @@ bool idPlayer::UpdateFocusPDA()
 						//SetControllerShake( 0.5f, 100, 0.3f, 60 ); // these are the values from the machine gun
 						SetControllerShake( 0.1f, 12, 0.8f, 12 );
 					}
-					vrSystem->scanningPDA = false;
+					vrSystem->pdaScanning = false;
 					return true;
 				}
 				else
@@ -7998,7 +7998,7 @@ bool idPlayer::UpdateFocusPDA()
 				}
 			}
 		}
-		vrSystem->scanningPDA = false;
+		vrSystem->pdaScanning = false;
 		return false;
 	}
 
@@ -8031,12 +8031,12 @@ bool idPlayer::UpdateFocusPDA()
 		ev = sys->GenerateMouseMoveEvent( pdaScrX * pt.x, pdaScrY * pt.y );
 		SendPDAEvent( &ev );
 
-		vrSystem->scanningPDA = false;
+		vrSystem->pdaScanning = false;
 
 		return true;
 	}
 
-	vrSystem->scanningPDA = false;
+	vrSystem->pdaScanning = false;
 
 	return false; // view didn't hit pda
 }
@@ -8443,15 +8443,15 @@ void idPlayer::UpdateFocus()
 
 			if( pt.guiId == 1 )
 			{
-				ui = focusGUIrenderEntity->gui[0];
+				ui = focusGUIrenderEntity->gui[ 0 ];
 			}
 			else if( pt.guiId == 2 )
 			{
-				ui = focusGUIrenderEntity->gui[1];
+				ui = focusGUIrenderEntity->gui[ 1 ];
 			}
 			else
 			{
-				ui = focusGUIrenderEntity->gui[2];
+				ui = focusGUIrenderEntity->gui[ 2 ];
 			}
 
 			if( ui == NULL )
@@ -8468,11 +8468,10 @@ void idPlayer::UpdateFocus()
 				// new activation
 				// going to see if we have anything in inventory a gui might be interested in
 				// need to enumerate inventory items
-
 				focusUI->SetStateInt( "inv_count", inventory.items.Num() );
 				for( j = 0; j < inventory.items.Num(); j++ )
 				{
-					idDict* item = inventory.items[j];
+					idDict* item = inventory.items[ j ];
 					const char* iname = item->GetString( "inv_name" );
 					const char* iicon = item->GetString( "inv_icon" );
 					const char* itext = item->GetString( "inv_text" );
@@ -8491,7 +8490,7 @@ void idPlayer::UpdateFocus()
 
 				for( j = 0; j < inventory.pdaSecurity.Num(); j++ )
 				{
-					const char* p = inventory.pdaSecurity[j];
+					const char* p = inventory.pdaSecurity[ j ];
 					if( p && *p )
 					{
 						focusUI->SetStateInt( p, 1 );
@@ -8501,7 +8500,7 @@ void idPlayer::UpdateFocus()
 				int powerCellCount = 0;
 				for( j = 0; j < inventory.items.Num(); j++ )
 				{
-					idDict* item = inventory.items[j];
+					idDict* item = inventory.items[ j ];
 					if( item->GetInt( "inv_powercell" ) )
 					{
 						powerCellCount++;
@@ -8720,7 +8719,6 @@ void idPlayer::UpdateFocus()
 	}
 	else if( oldFocus && oldUI )
 	{
-
 		lowered = false;
 		raised = false;
 
@@ -9223,8 +9221,8 @@ void idPlayer::UpdateViewAngles()
 		{
 			const float restrict = 1.0f;
 
-			viewAngles.pitch = std::min( viewAngles.pitch, pm_maxviewpitch.GetFloat() * restrict );
-			viewAngles.pitch = std::max( viewAngles.pitch, pm_minviewpitch.GetFloat() * restrict );
+			viewAngles.pitch = Min( viewAngles.pitch, pm_maxviewpitch.GetFloat() * restrict );
+			viewAngles.pitch = Max( viewAngles.pitch, pm_minviewpitch.GetFloat() * restrict );
 		}
 	}
 
@@ -9539,7 +9537,7 @@ void idPlayer::TogglePDA()
 	// Koz debug common->Printf( "Toggle PDA\n" );
 
 	// Koz begin : reset PDA controls
-	vrSystem->forceLeftStick = true;
+	vrSystem->pdaForceLeftStick = true;
 	// Koz end
 
 	if( inventory.pdas.Num() == 0 )
@@ -9994,7 +9992,7 @@ void idPlayer::PerformImpulse( int impulse )
 			{
 
 			}
-			else if( vrSystem->PDAforced && !vrSystem->PDAforcetoggle )
+			else if( vrSystem->pdaForced && !vrSystem->pdaForceToggle )
 			{
 				// If we're in the menu, just exit
 				PerformImpulse( 40 );
@@ -10014,7 +10012,7 @@ void idPlayer::PerformImpulse( int impulse )
 			else
 			{
 				g_stopTime.SetBool( false );
-				if( objectiveSystemOpen || ( vrSystem->PDAforced && !vrSystem->PDAforcetoggle ) )
+				if( objectiveSystemOpen || ( vrSystem->pdaForced && !vrSystem->pdaForceToggle ) )
 				{
 					// If we're in the menu, just exit
 					PerformImpulse( 40 );
@@ -10150,7 +10148,7 @@ void idPlayer::EvaluateControls()
 
 	extern idCVar timescale;
 
-	if( game->IsPDAOpen() || vrSystem->VR_GAME_PAUSED || currentWeapon == weapon_pda || vrSystem->PDAforcetoggle )  // no teleporting in these cases
+	if( game->IsPDAOpen() || vrSystem->VR_GAME_PAUSED || currentWeapon == weapon_pda || vrSystem->pdaForceToggle )  // no teleporting in these cases
 	{
 		vrSystem->teleportButtonCount = 0;
 	}
@@ -11836,7 +11834,7 @@ bool idPlayer::GetHandOrHeadPositionWithHacks( int hand, idVec3& origin, idMat3&
 		}
 	}
 	// Carl: flashlight hand
-	else if( vrSystem->GetCurrentFlashMode() == FLASHLIGHT_HAND && weaponEnabled && !spectating && !gameLocal.world->spawnArgs.GetBool( "no_Weapons" ) && !game->IsPDAOpen() && !vrSystem->PDAforcetoggle && currentWeapon != weapon_pda )
+	else if( vrSystem->GetCurrentFlashMode() == FLASHLIGHT_HAND && weaponEnabled && !spectating && !gameLocal.world->spawnArgs.GetBool( "no_Weapons" ) && !game->IsPDAOpen() && !vrSystem->pdaForceToggle && currentWeapon != weapon_pda )
 	{
 		weapon_t currentWeapon = flashlight->IdentifyWeapon();
 		CalculateViewFlashPos( origin, axis, flashOffsets[ int( currentWeapon ) ] );
@@ -13142,7 +13140,7 @@ void idPlayer::UpdateVrHud()
 	float hudPitch;
 
 	// update the hud model
-	if( ( !hudActive && ( vr_hudLowHealth.GetInteger() == 0 ) ) || vrSystem->PDAforced || game->IsPDAOpen() )
+	if( ( !hudActive && ( vr_hudLowHealth.GetInteger() == 0 ) ) || vrSystem->pdaForced || game->IsPDAOpen() )
 	{
 		// hide it
 		hudEntity.allowSurfaceInViewID = -1;
@@ -16263,7 +16261,7 @@ void idPlayer::CalculateViewFlashPos( idVec3& origin, idMat3& axis, idVec3 flash
 
 	if( flashMode == FLASHLIGHT_HAND )
 	{
-		if( game->IsPDAOpen() || vrSystem->PDAforcetoggle || currentWeapon == weapon_pda || !vrSystem->VR_USE_MOTION_CONTROLS  || ( vrSystem->handInGui && flashMode == FLASHLIGHT_GUN ) )
+		if( game->IsPDAOpen() || vrSystem->pdaForceToggle || currentWeapon == weapon_pda || !vrSystem->VR_USE_MOTION_CONTROLS  || ( vrSystem->handInGui && flashMode == FLASHLIGHT_GUN ) )
 		{
 			flashMode = FLASHLIGHT_HEAD;
 		}
@@ -16401,12 +16399,12 @@ void idPlayer::CalculateViewFlashPos( idVec3& origin, idMat3& axis, idVec3 flash
 
 	// Koz fixme this is where we set the left hand position. Yes it's a stupid place to do it move later
 
-	if( game->IsPDAOpen() || vrSystem->PDAforcetoggle || currentWeapon == weapon_pda )
+	if( game->IsPDAOpen() || vrSystem->pdaForceToggle || currentWeapon == weapon_pda )
 	{
 		return;    //dont dont anything with the left hand if motion controlling the PDA, only if fixed.
 	}
 
-	if( vrSystem->VR_USE_MOTION_CONTROLS )  // && ( !game->IsPDAOpen() || vrSystem->PDAforcetoggle || currentWeapon == weapon_pda ) )
+	if( vrSystem->VR_USE_MOTION_CONTROLS )  // && ( !game->IsPDAOpen() || vrSystem->pdaForceToggle || currentWeapon == weapon_pda ) )
 	{
 
 		static idVec3 motionPosition = vec3_zero;
@@ -17183,27 +17181,27 @@ void idPlayer::CalculateRenderView()
 		// Koz fixme pause - handle the PDA model if game is paused
 		// really really need to move this somewhere else,
 
-		if( !vrSystem->PDAforcetoggle && vrSystem->PDAforced && weapon->IdentifyWeapon() != WEAPON_PDA )  // PDAforced cannot be valid if the weapon is not the PDA
+		if( !vrSystem->pdaForceToggle && vrSystem->pdaForced && weapon->IdentifyWeapon() != WEAPON_PDA )  // pdaForced cannot be valid if the weapon is not the PDA
 		{
-			vrSystem->PDAforced = false;
+			vrSystem->pdaForced = false;
 			vrSystem->VR_GAME_PAUSED = false;
 			idPlayer* player = gameLocal.GetLocalPlayer();
 			player->SetupPDASlot( true );
 			player->SetupHolsterSlot( true );
 		}
 
-		if( vrSystem->PDAforcetoggle )
+		if( vrSystem->pdaForceToggle )
 		{
-			if( !vrSystem->PDAforced )
+			if( !vrSystem->pdaForced )
 			{
 				if( weapon->IdentifyWeapon() != WEAPON_PDA )
 				{
-					//common->Printf( "idPlayer::CalculateRenderView calling SelectWeapon for PDA\nPDA Forced = %i, PDAForceToggle = %i\n",vrSystem->PDAforced,vrSystem->PDAforcetoggle );
-					//common->Printf( "CRV3 Calling SetupHolsterSlot( %i ) \n", vrSystem->PDAforced );
+					//common->Printf( "idPlayer::CalculateRenderView calling SelectWeapon for PDA\nPDA Forced = %i, PDAForceToggle = %i\n",vrSystem->pdaForced,vrSystem->pdaForceToggle );
+					//common->Printf( "CRV3 Calling SetupHolsterSlot( %i ) \n", vrSystem->pdaForced );
 
 					idPlayer* player = gameLocal.GetLocalPlayer();
-					player->SetupPDASlot( vrSystem->PDAforced );
-					player->SetupHolsterSlot( vrSystem->PDAforced );
+					player->SetupPDASlot( vrSystem->pdaForced );
+					player->SetupHolsterSlot( vrSystem->pdaForced );
 
 					SelectWeapon( weapon_pda, true );
 					SetWeaponHandPose();
@@ -17212,8 +17210,8 @@ void idPlayer::CalculateRenderView()
 				{
 					if( weapon->status == WP_READY )
 					{
-						vrSystem->PDAforced = true;
-						vrSystem->PDAforcetoggle = false;
+						vrSystem->pdaForced = true;
+						vrSystem->pdaForceToggle = false;
 					}
 				}
 			}
@@ -17222,8 +17220,8 @@ void idPlayer::CalculateRenderView()
 				// pda has been already been forced active, put it away.
 
 				TogglePDA();
-				vrSystem->PDAforcetoggle = false;
-				vrSystem->PDAforced = false;
+				vrSystem->pdaForceToggle = false;
+				vrSystem->pdaForced = false;
 			}
 		}
 	}
@@ -17793,7 +17791,7 @@ void idPlayer::Event_GetWeaponHandState()
 
 	int handState = 0;
 	int fingerPose = 0;
-	if( vrSystem->handInGui || vrSystem->PDAforcetoggle || currentWeapon == weapon_pda )
+	if( vrSystem->handInGui || vrSystem->pdaForceToggle || currentWeapon == weapon_pda )
 	{
 		handState = 2 ;
 	}
@@ -17804,7 +17802,7 @@ void idPlayer::Event_GetWeaponHandState()
 	}
 
 
-	if( handState != 1 && vr_useHandPoses.GetBool() && !vrSystem->PDAforcetoggle && !vrSystem->PDAforced )
+	if( handState != 1 && vr_useHandPoses.GetBool() && !vrSystem->pdaForceToggle && !vrSystem->pdaForced )
 	{
 		fingerPose = vr_weaponHand.GetInteger() == 0 ? vrSystem->fingerPose[HAND_RIGHT] : vrSystem->fingerPose[HAND_LEFT];
 		fingerPose = fingerPose << 4;

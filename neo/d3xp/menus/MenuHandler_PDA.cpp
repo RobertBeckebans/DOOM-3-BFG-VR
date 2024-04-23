@@ -491,7 +491,7 @@ bool idMenuHandler_PDA::HandleAction( idWidgetAction& action, const idWidgetEven
 
 			}
 
-			vrSystem->forceLeftStick = true;	// Koz make left active.
+			vrSystem->pdaForceLeftStick = true;	// Koz make left active.
 
 			return true;
 		}

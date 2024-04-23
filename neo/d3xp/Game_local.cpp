@@ -5587,7 +5587,7 @@ void idGameLocal::SelectTimeGroup( int timeGroup )
 	// Koz: VR: We still render frames when game is paused. Make sure the 'fast' (player) timegroup is selected during pause.
 	// This prevents issues with player animation timing in pause.
 	// Nothing in the slow timegroup should change during pause.
-	if( timeGroup || ( vrSystem->VR_GAME_PAUSED && vrSystem->PDAforced ) )
+	if( timeGroup || ( vrSystem->VR_GAME_PAUSED && vrSystem->pdaForced ) )
 	{
 		fast.Get( time, previousTime, realClientTime );
 	}
