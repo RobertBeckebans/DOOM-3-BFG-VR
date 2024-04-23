@@ -276,7 +276,7 @@ idCinematic* idCinematic::Alloc()
 idCinematic::~idCinematic
 ==============
 */
-idCinematic::~idCinematic( )
+idCinematic::~idCinematic()
 {
 	Close();
 }

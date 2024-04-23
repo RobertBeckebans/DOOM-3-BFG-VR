@@ -184,7 +184,7 @@ void IN_DeactivateKeyboard()
 	{
 		return;
 	}
-	win32.g_pKeyboard->Unacquire( );
+	win32.g_pKeyboard->Unacquire();
 }
 
 /*

@@ -340,7 +340,8 @@ void idGrabber::StartDrag( idEntity* grabEnt, int id )
 
 	// start the screen warp
 
-	if( !vrSystem->IsActive() )  // Koz don't warp in VR.  This needs a new shader if
+	// Koz don't warp in VR.  This needs a new shader if
+	if( !vrSystem->IsActive() )
 	{
 		warpId = thePlayer->playerView.AddWarp( phys->GetOrigin(), SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, 160, 2000 );
 	}
