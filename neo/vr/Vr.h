@@ -243,7 +243,6 @@ public:
 	// TODO remove
 	bool				renderingSplash;
 	bool				showingIntroVideo;
-	bool				vrIsBackgroundSaving;
 
 	uint32_t			hmdWidth;
 	uint32_t			hmdHeight;

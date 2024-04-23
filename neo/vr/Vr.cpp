@@ -265,8 +265,6 @@ iVr::iVr()
 
 	scanningPDA = false;
 
-	vrIsBackgroundSaving = false;
-
 	screenSeparation = 0.0f;
 
 	officialIPD = 64.0f;

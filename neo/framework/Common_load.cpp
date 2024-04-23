@@ -37,7 +37,6 @@ If you have questions concerning this license or the applicable additional terms
 #include "d3xp/Game_local.h"
 
 // Koz begin
-#include "vr/BackgroundSave.h"
 #include "vr/Vr.h"
 #ifdef _WIN32
 	#include "sys\win32\win_local.h"
@@ -237,7 +236,6 @@ void idCommonLocal::UnloadMap()
 {
 	vrSystem->PDAforcetoggle = false;
 	vrSystem->PDAforced = false;
-	vrSystem->vrIsBackgroundSaving = false;
 	vrSystem->VR_GAME_PAUSED = false;
 
 	// end the current map in the game
@@ -660,35 +658,7 @@ void idCommonLocal::ExecuteMapChange()
 		// kick off an auto-save of the game (so we can always continue in this map if we die before hitting an autosave)
 		common->Printf( "----- Saving Game -----\n" );
 
-		if( 1 /*!vrSystem->IsActive()*/ )
-		{
-			SaveGame( "autosave" );
-		}
-		else
-		{
-			// Koz: start the save in a background thread.
-			// keep this thread busy headtracking the dialog until complete.
-
-			//Dialog().ShowSaveIndicator( true );
-			//UpdateLevelLoadPacifier();
-
-			int startLoadScreen = Sys_Milliseconds();
-			vrBackgroundSave.StartBackgroundSave( BACKGROUND_SAVE, "autosave" );
-
-			while( vrSystem->vrIsBackgroundSaving == true || ( Sys_Milliseconds() - startLoadScreen < vr_minLoadScreenTime.GetFloat() ) )
-			{
-				//vrSystem->HMDTrackStatic();
-				//UpdateScreen( false, false );
-				//vrSystem->HMDTrackStatic();
-				//SwapBuffers(win32.hDC);
-				//glFinish();
-
-			}
-
-			StartWipe( "wipeMaterial", true );
-			CompleteWipe();
-
-		}
+		SaveGame( "autosave" );
 	}
 
 	common->Printf( "----- Generating Interactions -----\n" );
@@ -756,7 +726,6 @@ void idCommonLocal::ExecuteMapChange()
 	// Koz
 	vrSystem->PDAforcetoggle = false;
 	vrSystem->PDAforced = false;
-	vrSystem->vrIsBackgroundSaving = false;
 	vrSystem->VR_GAME_PAUSED = false;
 	vrSystem->pdaToggleTime = Sys_Milliseconds();
 	vrSystem->wasLoaded = true;
@@ -1118,8 +1087,6 @@ bool idCommonLocal::SaveGame( const char* saveName )
 	}
 	ClearWipe();
 
-	vrSystem->vrIsBackgroundSaving = false;
-
 	vrSystem->lastSaveTime = Sys_Milliseconds();
 	vrSystem->wasSaved = true;
 
@@ -1473,22 +1440,6 @@ SaveGame_f
 CONSOLE_COMMAND_SHIP( saveGame, "saves a game", NULL )
 {
 	const char* savename = ( args.Argc() > 1 ) ? args.Argv( 1 ) : "quick";
-
-	// Koz begin background save in VR
-	if( 0 && vrSystem->IsActive() )
-	{
-		vrBackgroundSave.StartBackgroundSave( BACKGROUND_SAVE, savename );
-
-		while( vrSystem->vrIsBackgroundSaving == true )
-		{
-			//vrSystem->HMDTrackStatic();
-			//SwapBuffers( win32.hDC );
-			//glFinish();
-		}
-		common->Printf( "Background Saved: %s\n", savename );
-		return;
-	}
-	// Koz end
 
 	vrSystem->gameSavingLoading = true;
 	vrSystem->VR_GAME_PAUSED = true;
