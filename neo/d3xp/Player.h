@@ -708,9 +708,7 @@ public:
 
 	idVec3					GetEyePosition() const;
 	void					GetViewPos( idVec3& origin, idMat3& axis ) const;
-
-	void					GetViewPosVR( idVec3& origin, idMat3& axis ) const; // Koz fixme
-
+	void					GetViewPosVR( idVec3& origin, idMat3& axis ) const; // RB
 	void					OffsetThirdPersonView( float angle, float range, float height, bool clip );
 
 	bool					Give( const char* statname, const char* value, unsigned int giveFlags );

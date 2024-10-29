@@ -4203,7 +4203,7 @@ void idPlayer::UpdateSkinSetup()
 		else
 		{
 			// if crouched more than 16 inches hide the body if enabled.
-			if( ( vrSystem->headHeightDiff < -16.0f || IsCrouching() ) && vr_crouchHideBody.GetBool() )
+			if( vrSystem->headHeightDiff < -16.0f || IsCrouching() )
 			{
 				skinN += handsOnly;
 			}

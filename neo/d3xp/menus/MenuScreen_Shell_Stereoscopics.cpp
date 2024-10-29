@@ -326,7 +326,6 @@ bool idMenuScreen_Shell_Stereoscopics::HandleAction( idWidgetAction& action, con
 // SCREEN SETTINGS
 /////////////////////////////////
 
-extern idCVar stereoRender_interOccularCentimeters;
 extern idCVar stereoRender_swapEyes;
 
 /*
@@ -350,7 +349,7 @@ void idMenuScreen_Shell_Stereoscopics::idMenuDataSource_StereoSettings::LoadData
 
 	fields[ STEREO_FIELD_ENABLE ].SetInteger( renderSystem->GetStereoScopicRenderingMode() );
 
-	fields[ STEREO_FIELD_SEPERATION ].SetFloat( 100.0f * ( stereoRender_interOccularCentimeters.GetFloat() / MAX_INTEROCCULAR_DISTANCE ) );
+	fields[ STEREO_FIELD_SEPERATION ].SetFloat( 6.2f ); //100.0f * ( stereoRender_interOccularCentimeters.GetFloat() / MAX_INTEROCCULAR_DISTANCE ) );
 
 	fields[ STEREO_FIELD_SWAP_EYES ].SetBool( stereoRender_swapEyes.GetBool() );
 	originalFields = fields;
@@ -411,7 +410,7 @@ void idMenuScreen_Shell_Stereoscopics::idMenuDataSource_StereoSettings::AdjustFi
 		float newValue = idMath::ClampFloat( 0.0f, 100.0f, fields[ fieldIndex ].ToFloat() + adjustAmount );
 		fields[ fieldIndex ].SetFloat( newValue );
 
-		stereoRender_interOccularCentimeters.SetFloat( ( fields[ STEREO_FIELD_SEPERATION ].ToFloat() / 100.0f ) * MAX_INTEROCCULAR_DISTANCE );
+		//stereoRender_interOccularCentimeters.SetFloat( 6.2f ); //( fields[ STEREO_FIELD_SEPERATION ].ToFloat() / 100.0f ) * MAX_INTEROCCULAR_DISTANCE );
 
 	}
 

@@ -161,7 +161,7 @@ void idRenderWindow::Draw( int time, float x, float y )
 	Render( time );
 
 	memset( &refdef, 0, sizeof( refdef ) );
-	refdef.vieworg = viewOffset.ToVec3();;
+	refdef.vieworg = viewOffset.ToVec3();
 	//refdef.vieworg.Set(-128, 0, 0);
 
 	refdef.viewaxis.Identity();

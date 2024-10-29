@@ -780,7 +780,6 @@ void idPlayerView::ScreenFade()
 	}
 }
 
-idCVar	stereoRender_interOccularCentimeters( "stereoRender_interOccularCentimeters", "3.0", CVAR_ARCHIVE | CVAR_RENDERER, "unused see vr_manualIPD" );
 idCVar	stereoRender_convergence( "stereoRender_convergence", "6", CVAR_RENDERER, "0 = head mounted display, otherwise world units to convergence plane" );
 
 extern	idCVar stereoRender_screenSeparation;	// screen units from center to eyes
@@ -849,21 +848,12 @@ stereoDistances_t	CaclulateStereoDistances(
 }
 
 
-float GetIPD()
-{
-	if( vrSystem->IsActive() && !vr_manualIPDEnable.GetInteger() && vr_useOculusProfile.GetInteger() )
-	{
-		return vr::VRSystem()->GetFloatTrackedDeviceProperty( vr::k_unTrackedDeviceIndex_Hmd, vr::Prop_UserIpdMeters_Float ) * 100;
-	}
 
-	return vr_manualIPD.GetFloat() / 10;
-}
 
 float	GetScreenSeparationForGuis()
 {
 	stereoDistances_t dists = CaclulateStereoDistances(
-								  //stereoRender_interOccularCentimeters.GetFloat(),
-								  GetIPD(),
+								  vrSystem->GetIPD(),
 								  renderSystem->GetPhysicalScreenWidthInCentimeters(),
 								  stereoRender_convergence.GetFloat(),
 								  80.0f /* fov */ );
@@ -893,7 +883,7 @@ void idPlayerView::EmitStereoEyeView( const int eye, idMenuHandler_HUD* hudManag
 	renderView_t eyeView = *view;
 
 	const stereoDistances_t dists = CaclulateStereoDistances(
-										GetIPD(),
+										vrSystem->GetIPD(),
 										renderSystem->GetPhysicalScreenWidthInCentimeters(),
 										stereoRender_convergence.GetFloat(),
 										view->fov_x );

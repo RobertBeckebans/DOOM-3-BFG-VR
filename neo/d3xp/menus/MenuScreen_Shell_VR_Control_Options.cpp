@@ -472,8 +472,6 @@ void idMenuScreen_Shell_VR_Control_Options::idMenuDataSource_Shell_VR_Control_Op
 
 	originalControlType = vr_controllerGamepad.GetInteger();
 	originalMoveMode = vr_movePoint.GetInteger();
-	originalCrouchMode = vr_crouchMode.GetInteger();
-	originalCrouchHide = vr_crouchHideBody.GetBool();
 	originalCrouchTriggerDistance = vr_crouchTriggerDist.GetFloat();
 	originalWeaponPitch = vr_motionWeaponPitchAdj.GetFloat();
 	originalFlashPitch = vr_motionFlashPitchAdj.GetFloat();
@@ -529,21 +527,6 @@ void idMenuScreen_Shell_VR_Control_Options::idMenuDataSource_Shell_VR_Control_Op
 			break;
 		}
 
-		case CONTROL_OPTIONS_FIELD_CROUCH_MODE:
-		{
-			static const int numValues = 2;
-			static const int values[numValues] = { 0, 1 };
-			vr_crouchMode.SetInteger( AdjustOption( vr_crouchMode.GetInteger(), values, numValues, adjustAmount ) );
-			break;
-		}
-
-		case CONTROL_OPTIONS_FIELD_CROUCH_HIDE:
-		{
-			static const int numValues = 2;
-			static const int values[numValues] = { 0, 1 };
-			vr_crouchHideBody.SetInteger( AdjustOption( vr_crouchHideBody.GetInteger(), values, numValues, adjustAmount ) );
-			break;
-		}
 		case CONTROL_OPTIONS_FIELD_CROUCH_TRIGGER_DIST:
 		{
 			float td = vr_crouchTriggerDist.GetFloat();
@@ -665,21 +648,6 @@ idSWFScriptVar idMenuScreen_Shell_VR_Control_Options::idMenuDataSource_Shell_VR_
 			return "Standard Stick Move (Body)";
 		}
 
-		case CONTROL_OPTIONS_FIELD_CROUCH_MODE:
-			if( vr_crouchMode.GetInteger() == 0 )
-			{
-				return "Full Motion Crouching";
-			}
-
-			return "Motion Triggered";
-
-		case CONTROL_OPTIONS_FIELD_CROUCH_HIDE:
-			if( vr_crouchHideBody.GetInteger() == 0 )
-			{
-				return "Diasbled";
-			}
-			return "Enabled";
-
 		case CONTROL_OPTIONS_FIELD_CROUCH_TRIGGER_DIST:
 			return va( "%.0f inches", vr_crouchTriggerDist.GetFloat() );
 
@@ -745,11 +713,6 @@ bool idMenuScreen_Shell_VR_Control_Options::idMenuDataSource_Shell_VR_Control_Op
 	}
 
 	if( originalMoveMode != vr_movePoint.GetInteger() )
-	{
-		return true;
-	}
-
-	if( originalCrouchMode != vr_crouchMode.GetInteger() )
 	{
 		return true;
 	}

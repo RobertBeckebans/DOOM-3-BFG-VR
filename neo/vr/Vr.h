@@ -122,15 +122,16 @@ public:
 
 	void				StartFrame();
 
-	//void				OpenVrGetRight( idVec3& position, idQuat& rotation );
-	//void				OpenVrGetLeft( idVec3& position, idQuat& rotation );
-
 	void				MotionControlGetHand( int hand, idVec3& position, idQuat& rotation );
 	void				MotionControlGetLeftHand( idVec3& position, idQuat& rotation );
 	void				MotionControlGetRightHand( idVec3& position, idQuat& rotation );
 	void				MotionControlGetOpenVrController( vr::TrackedDeviceIndex_t deviceNum, idVec3& position, idQuat& rotation );
 	void				MotionControllerSetHapticOpenVR( int hand, unsigned short value );
 
+	idVec2i				GetEyeResolution() const;
+
+	// returns IPD in centimeters
+	float				GetIPD() const;
 	void				CalcAimMove( float& yawDelta, float& pitchDelta );
 
 	int					GetCurrentFlashMode();
@@ -309,12 +310,6 @@ public:
 
 	float				hmdForwardOffset;
 
-
-
-	float				officialIPD;
-	float				officialHeight;
-
-	float				manualIPD;
 	float				manualHeight;
 
 	idImage*			hmdEyeImage[2];			// TODO REMOVE duplicate of stereoImages in render backend
@@ -405,9 +400,6 @@ private:
 
 extern idCVar vr_scale;
 extern idCVar vr_normalViewHeight;
-extern idCVar vr_useOculusProfile;
-extern idCVar vr_manualIPDEnable;
-extern idCVar vr_manualIPD;
 extern idCVar vr_manualHeight;
 extern idCVar vr_useFloorHeight;
 
@@ -518,7 +510,6 @@ extern idCVar vr_walkSpeedAdjust;
 
 extern idCVar vr_crouchTriggerDist;
 extern idCVar vr_crouchMode;
-extern idCVar vr_crouchHideBody;
 
 extern idCVar vr_wipPeriodMin;
 extern idCVar vr_wipPeriodMax;

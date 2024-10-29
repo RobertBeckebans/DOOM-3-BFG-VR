@@ -349,8 +349,6 @@ idMenuScreen_Shell_VR_Profile_Options::idMenuDataSource_Shell_VR_Profile_Options
 */
 void idMenuScreen_Shell_VR_Profile_Options::idMenuDataSource_Shell_VR_Profile_Options::LoadData()
 {
-	originalUseOculusProfile = vr_useOculusProfile.GetInteger();
-	originalIPD = vr_manualIPD.GetFloat();
 	originalHeight = vr_manualHeight.GetFloat();
 }
 
@@ -387,17 +385,17 @@ void idMenuScreen_Shell_VR_Profile_Options::idMenuDataSource_Shell_VR_Profile_Op
 
 		case VR_PROFILE_USE_OCULUS_PROFILE :
 		{
-			static const int numValues = 2;
-			static const int values[numValues] = { 0, 1 };
-			vr_useOculusProfile.SetInteger( AdjustOption( vr_useOculusProfile.GetInteger(), values, numValues, adjustAmount ) );
+			//static const int numValues = 2;
+			//static const int values[numValues] = { 0, 1 };
+			//vr_useOculusProfile.SetInteger( AdjustOption( vr_useOculusProfile.GetInteger(), values, numValues, adjustAmount ) );
 			break;
 		}
 		case VR_PROFILE_IPD:
 		{
-			const float percent = LinearAdjust( vr_manualIPD.GetFloat(), 40.0, 90.0f, 0.0f, 100.0f );
-			const float adjusted = percent + ( float )adjustAmount ;
-			const float clamped = idMath::ClampFloat( 0.0f, 100.0f, adjusted );
-			vr_manualIPD.SetFloat( LinearAdjust( clamped, 0.0f, 100.0f, 40.0f, 90.0f ) );
+			//const float percent = LinearAdjust( vr_manualIPD.GetFloat(), 40.0, 90.0f, 0.0f, 100.0f );
+			//const float adjusted = percent + ( float )adjustAmount ;
+			//const float clamped = idMath::ClampFloat( 0.0f, 100.0f, adjusted );
+			//vr_manualIPD.SetFloat( LinearAdjust( clamped, 0.0f, 100.0f, 40.0f, 90.0f ) );
 			break;
 		}
 		case VR_PROFILE_HEIGHT:
@@ -425,23 +423,16 @@ idSWFScriptVar idMenuScreen_Shell_VR_Profile_Options::idMenuDataSource_Shell_VR_
 	{
 
 		case VR_PROFILE_USE_OCULUS_PROFILE:
-			if( vr_useOculusProfile.GetInteger() == 0 )
-			{
-				return "Manual Profile";
-			}
-			else
-			{
-				return "Official Profile";
-			}
+			return "Profile UNUSED";
 
 		case VR_OCULUS_IPD:
-			return va( "%.2f MM", vrSystem->officialIPD );
+			return va( "%.2f MM", vrSystem->GetIPD() );
 
 		case VR_OCULUS_HEIGHT:
-			return va( "%.1f In, ( %.2f M )", vrSystem->officialHeight, ( vrSystem->officialHeight * .0254 ) );
+			return "Oculus Height UNUSED";
 
 		case VR_PROFILE_IPD:
-			return va( "%.1f MM", vr_manualIPD.GetFloat() );
+			return "Profile IPD UNUSED";
 
 		case VR_PROFILE_HEIGHT:
 			return va( "%.1f In, ( %.2f M )", vr_manualHeight.GetFloat(), ( vr_manualHeight.GetFloat() * .0254 ) );
@@ -456,15 +447,6 @@ idMenuScreen_Shell_VR_Profile_Options::idMenuDataSource_Shell_VR_Profile_Options
 */
 bool idMenuScreen_Shell_VR_Profile_Options::idMenuDataSource_Shell_VR_Profile_Options::IsDataChanged() const
 {
-
-	if( originalUseOculusProfile != vr_useOculusProfile.GetInteger() )
-	{
-		return true;
-	}
-	if( originalIPD != vr_manualIPD.GetFloat() )
-	{
-		return true;
-	}
 	if( originalHeight != vr_manualHeight.GetFloat() )
 	{
 		return true;
