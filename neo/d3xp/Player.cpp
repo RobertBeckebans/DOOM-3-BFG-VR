@@ -16666,7 +16666,6 @@ idPlayer::GetViewPosVR
 */
 void idPlayer::GetViewPosVR( idVec3& origin, idMat3& axis ) const
 {
-
 	idAngles angles;
 
 	// if dead, fix the angle and don't add any kick
@@ -16677,38 +16676,31 @@ void idPlayer::GetViewPosVR( idVec3& origin, idMat3& axis ) const
 		origin = GetEyePosition();
 		return;
 	}
+	else
+	{
+		origin = GetEyePosition() + viewBob;
 
-	//Carl: Use head and neck rotation model
-	float eyeHeightAboveRotationPoint;
-	float eyeShiftRight = 0;
+		//Carl: Use head and neck rotation model
+		float eyeHeightAboveRotationPoint;
+		float eyeShiftRight = 0;
 
-	eyeHeightAboveRotationPoint = 5;//
-
-	origin = GetEyePosition(); // +viewBob;
-	// Carl: No view bobbing unless knockback is enabled. This isn't strictly a knockback, but close enough.
-	// This is the bounce when you land after jumping
-
-	// re-enabling this until a better method is implemented, as headbob is how vertical smoothing is implemented when going over stairs/bumps
-	// bobbing can be disabled via the walkbob and runbob cvars until a better method devised.
-	// if (vr_knockBack.GetBool())
+		eyeHeightAboveRotationPoint = 5;//
 
 
-	origin += viewBob;
-	angles = viewAngles; // NO VIEW KICKING  +playerView.AngleOffset();
-	axis = angles.ToMat3();// *physicsObj.GetGravityAxis();
+		angles = viewAngles; // NO VIEW KICKING  +playerView.AngleOffset();
+		axis = angles.ToMat3();// *physicsObj.GetGravityAxis();
 
-	// Move pivot point down so looking straight ahead is a no-op on the Z
-//		const idVec3 & gravityVector = physicsObj.GetGravityNormal();
-	//origin += gravityVector * g_viewNodalZ.GetFloat();
+		// Move pivot point down so looking straight ahead is a no-op on the Z
+		//const idVec3& gravityVector = physicsObj.GetGravityNormal();
+		//origin += gravityVector * g_viewNodalZ.GetFloat();
 
+		// adjust the origin based on the camera nodal distance (eye distance from neck)
+		//origin += axis[0] * g_viewNodalX.GetFloat() - axis[1] * eyeShiftRight + axis[2] * eyeHeightAboveRotationPoint;
+		//origin +=  axis[1] * -eyeShiftRight + axis[2] * eyeHeightAboveRotationPoint;
+		origin += axis[2] * eyeHeightAboveRotationPoint;
 
-	// adjust the origin based on the camera nodal distance (eye distance from neck)
-	//origin += axis[0] * g_viewNodalX.GetFloat() - axis[1] * eyeShiftRight + axis[2] * eyeHeightAboveRotationPoint;
-	//origin +=  axis[1] * -eyeShiftRight + axis[2] * eyeHeightAboveRotationPoint;
-	origin += axis[2] * eyeHeightAboveRotationPoint;
-
-	//common->Printf( "GetViewPosVr returning %s\n", origin.ToString() );
-
+		//common->Printf( "GetViewPosVr returning %s\n", origin.ToString() );
+	}
 }
 
 /*

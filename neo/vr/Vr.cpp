@@ -44,110 +44,37 @@ If you have questions concerning this license or the applicable additional terms
 
 #include "../renderer/Framebuffer.h"
 
-// *** Oculus HMD Variables
 
-idCVar vr_pixelDensity( "vr_pixelDensity", "1", CVAR_FLOAT | CVAR_GAME, "" );
-idCVar vr_enable( "vr_enable", "1", CVAR_INTEGER | CVAR_INIT | CVAR_GAME, "Enable VR mode. 0 = Disabled 1 = Enabled." );
-idCVar vr_scale( "vr_scale", "1.0", CVAR_FLOAT | CVAR_ARCHIVE | CVAR_GAME, "World scale. Everything virtual is this times as big." );
-idCVar vr_manualHeight( "vr_manualHeight", "183", CVAR_FLOAT | CVAR_ARCHIVE | CVAR_GAME, "TODO UNUSED: User defined player height in cm" );
-idCVar vr_minLoadScreenTime( "vr_minLoadScreenTime", "6000", CVAR_FLOAT | CVAR_ARCHIVE | CVAR_GAME, "Min time to display load screens in ms.", 0.0f, 10000.0f );
-idCVar vr_useFloorHeight( "vr_useFloorHeight", "0", CVAR_INTEGER | CVAR_ARCHIVE | CVAR_GAME, "0 = Custom eye height. 1 = Marine Eye Height. 2 = Normal View Height. 3 = make floor line up by Doomguy crouching. 4 = make everything line up by scaling world to your height.", 0, 4 );
-idCVar vr_normalViewHeight( "vr_normalViewHeight", "73", CVAR_FLOAT | CVAR_ARCHIVE | CVAR_GAME, "Height of player's view while standing, in real world inches." );
+idCVar vr_enable( "vr_enable", "1", CVAR_INTEGER | CVAR_INIT | CVAR_GAME | CVAR_NEW, "Enable VR mode. 0 = Disabled 1 = Enabled." );
+idCVar vr_pixelDensity( "vr_pixelDensity", "1", CVAR_FLOAT | CVAR_GAME | CVAR_NEW, "" );
+idCVar vr_scale( "vr_scale", "1.0", CVAR_FLOAT | CVAR_ARCHIVE | CVAR_GAME | CVAR_NEW, "World scale. Everything virtual is this times as big." );
+idCVar vr_manualHeight( "vr_manualHeight", "183", CVAR_FLOAT | CVAR_ARCHIVE | CVAR_GAME | CVAR_NEW, "TODO UNUSED: User defined player height in cm" );
 
-idCVar vr_weaponHand( "vr_weaponHand", "0", CVAR_INTEGER | CVAR_ARCHIVE | CVAR_GAME, "Which hand holds weapon.\n 0 = Right hand\n 1 = Left Hand\n", 0, 1 );
+idCVar vr_useFloorHeight( "vr_useFloorHeight", "0", CVAR_INTEGER | CVAR_ARCHIVE | CVAR_GAME | CVAR_NEW, "0 = Custom eye height. 1 = Marine Eye Height. 2 = Normal View Height. 3 = make floor line up by Doomguy crouching. 4 = make everything line up by scaling world to your height.", 0, 4 );
 
-//flashlight cvars
+idCVar vr_guiSeparation( "vr_guiSeparation", "0.01", CVAR_FLOAT | CVAR_ARCHIVE, "Screen separation value for fullscreen guis" );
 
-idCVar vr_flashlightMode( "vr_flashlightMode", "3", CVAR_INTEGER | CVAR_ARCHIVE | CVAR_GAME, "Flashlight mount.\n0 = Body\n1 = Head\n2 = Gun\n3= Hand ( if motion controls available.)" );
+idCVar vr_weaponHand( "vr_weaponHand", "0", CVAR_INTEGER | CVAR_ARCHIVE | CVAR_GAME | CVAR_NEW, "Which hand holds weapon.\n 0 = Right hand\n 1 = Left Hand\n", 0, 1 );
+idCVar vr_headKick( "vr_headKick", "0", CVAR_BOOL | CVAR_ARCHIVE | CVAR_GAME | CVAR_NEW, "Damage can 'kick' the players view. 0 = Disabled in VR." );
 
-idCVar vr_flashlightBodyPosX( "vr_flashlightBodyPosX", "0", CVAR_FLOAT | CVAR_ARCHIVE | CVAR_GAME, "Flashlight vertical offset for body mount." );
-idCVar vr_flashlightBodyPosY( "vr_flashlightBodyPosY", "0", CVAR_FLOAT | CVAR_ARCHIVE | CVAR_GAME, "Flashlight horizontal offset for body mount." );
-idCVar vr_flashlightBodyPosZ( "vr_flashlightBodyPosZ", "0", CVAR_FLOAT | CVAR_ARCHIVE | CVAR_GAME, "Flashlight forward offset for body mount." );
+idCVar vr_controllerGamepad( "vr_controllerGamepad", "0", CVAR_INTEGER | CVAR_ARCHIVE, "If 1, use standard controller, not motion controllers\nRestart after changing\n" );
 
-idCVar vr_flashlightHelmetPosX( "vr_flashlightHelmetPosX", "6", CVAR_FLOAT | CVAR_ARCHIVE | CVAR_GAME, "Flashlight vertical offset for helmet mount." );
-idCVar vr_flashlightHelmetPosY( "vr_flashlightHelmetPosY", "-6", CVAR_FLOAT | CVAR_ARCHIVE | CVAR_GAME, "Flashlight horizontal offset for helmet mount." );
-idCVar vr_flashlightHelmetPosZ( "vr_flashlightHelmetPosZ", "-20", CVAR_FLOAT | CVAR_ARCHIVE | CVAR_GAME, "Flashlight forward offset for helmet mount." );
+idCVar vr_deadzonePitch( "vr_deadzonePitch", "90", CVAR_FLOAT | CVAR_GAME | CVAR_NEW | CVAR_ARCHIVE, "Vertical Aim Deadzone", 0, 180 );
+idCVar vr_deadzoneYaw( "vr_deadzoneYaw", "30", CVAR_FLOAT | CVAR_GAME | CVAR_NEW | CVAR_ARCHIVE, "Horizontal Aim Deadzone", 0, 180 );
+idCVar vr_comfortDelta( "vr_comfortDelta", "10", CVAR_FLOAT | CVAR_GAME | CVAR_NEW | CVAR_ARCHIVE, "Comfort Mode turning angle ", 0, 180 );
+idCVar vr_comfortJetStrafeDelta( "vr_comfortJetStrafeDelta", "90", CVAR_FLOAT | CVAR_GAME | CVAR_NEW | CVAR_ARCHIVE, "Comfort Mode jetStrafe angle ", 0, 90 );
+idCVar vr_padDeadzone( "vr_padDeadzone", ".25", CVAR_FLOAT | CVAR_ARCHIVE, "Deadzone for steam pads.\n 0.0 = no deadzone 1.0 = dead\n" );
+idCVar vr_jsDeadzone( "vr_jsDeadzone", ".25", CVAR_FLOAT | CVAR_ARCHIVE, "Deadzone for steam joysticks.\n 0.0 = no deadzone 1.0 = dead\n" );
+idCVar vr_shakeAmplitude( "vr_shakeAmplitude", "1.0", CVAR_FLOAT | CVAR_ARCHIVE, "Screen shake amplitude 0.0 = disabled to 1.0 = full\n", 0.0f, 1.0f );
+idCVar vr_padToButtonThreshold( "vr_padToButtonThreshold", ".7", CVAR_FLOAT | CVAR_ARCHIVE, "Threshold value for pad contact\n to register as button press\n .1 high sensitiveity thru\n .99 low sensitivity" );
 
-idCVar vr_offHandPosX( "vr_offHandPosX", "0", CVAR_FLOAT | CVAR_ARCHIVE | CVAR_GAME, "X position for off hand when not using motion controls." );
-idCVar vr_offHandPosY( "vr_offHandPosY", "0", CVAR_FLOAT | CVAR_ARCHIVE | CVAR_GAME, "Y position for off hand when not using motion controls." );
-idCVar vr_offHandPosZ( "vr_offHandPosZ", "0", CVAR_FLOAT | CVAR_ARCHIVE | CVAR_GAME, "Z position for off hand when not using motion controls." );
+idCVar vr_teleportMode( "vr_teleportMode", "0", CVAR_INTEGER | CVAR_ARCHIVE, "Teleport Mode. 0 = Blink (default), 1 = Doom VFR style (slow time and warp speed), 2 = Doom VFR style + jet strafe)", 0, 2 );
+idCVar vr_teleport( "vr_teleport", "2", CVAR_INTEGER | CVAR_ARCHIVE, "Player can teleport at will. 0 = disabled, 1 = gun sight, 2 = right hand, 3 = left hand, 4 = head", 0, 4 );
 
-idCVar vr_forward_keyhole( "vr_forward_keyhole", "11.25", CVAR_FLOAT | CVAR_ARCHIVE | CVAR_GAME, "Forward movement keyhole in deg. If view is inside body direction +/- this value, forward movement is in view direction, not body direction" );
-
-idCVar vr_PDAfixLocation( "vr_PDAfixLocation", "0", CVAR_BOOL | CVAR_ARCHIVE | CVAR_GAME, "Fix PDA position in space in front of player\n instead of holding in hand." );
-
-idCVar vr_weaponPivotOffsetForward( "vr_weaponPivotOffsetForward", "3", CVAR_GAME | CVAR_ARCHIVE | CVAR_FLOAT, "" );
-idCVar vr_weaponPivotOffsetHorizontal( "vr_weaponPivotOffsetHorizontal", "0", CVAR_GAME | CVAR_ARCHIVE | CVAR_FLOAT, "" );
-idCVar vr_weaponPivotOffsetVertical( "vr_weaponPivotOffsetVertical", "0", CVAR_GAME | CVAR_ARCHIVE | CVAR_FLOAT, "" );
-idCVar vr_weaponPivotForearmLength( "vr_weaponPivotForearmLength", "16", CVAR_GAME | CVAR_ARCHIVE | CVAR_FLOAT, "" );;
-
-idCVar vr_guiScale( "vr_guiScale", "1", CVAR_FLOAT | CVAR_RENDERER | CVAR_ARCHIVE, "scale reduction factor for full screen menu/pda scale in VR", 0.0001f, 1.0f ); // Koz allow scaling of full screen guis/pda
-idCVar vr_guiSeparation( "vr_guiSeparation", ".01", CVAR_FLOAT | CVAR_ARCHIVE, " Screen separation value for fullscreen guis." );
-
-idCVar vr_guiMode( "vr_guiMode", "2", CVAR_INTEGER | CVAR_GAME | CVAR_ARCHIVE, "Gui interaction mode.\n 0 = Weapon aim as cursor\n 1 = Look direction as cursor\n 2 = Touch screen\n" );
-
-idCVar vr_hudScale( "vr_hudScale", "1.0", CVAR_FLOAT | CVAR_GAME | CVAR_ARCHIVE, "Hud scale", 0.1f, 2.0f );
-idCVar vr_hudPosHor( "vr_hudPosHor", "0", CVAR_FLOAT | CVAR_GAME | CVAR_ARCHIVE, "Hud Horizontal offset in inches" );
-idCVar vr_hudPosVer( "vr_hudPosVer", "7", CVAR_FLOAT | CVAR_GAME | CVAR_ARCHIVE, "Hud Vertical offset in inches" );
-idCVar vr_hudPosDis( "vr_hudPosDis", "32", CVAR_FLOAT | CVAR_GAME | CVAR_ARCHIVE, "Hud Distance from view in inches" );
-idCVar vr_hudPosAngle( "vr_hudPosAngle", "30", CVAR_FLOAT | CVAR_GAME | CVAR_ARCHIVE, "Hud View Angle" );
-idCVar vr_hudPosLock( "vr_hudPosLock", "1", CVAR_INTEGER | CVAR_GAME | CVAR_ARCHIVE, "Lock Hud to:  0 = Face, 1 = Body" );
-
-
-idCVar vr_hudType( "vr_hudType", "2", CVAR_INTEGER | CVAR_GAME | CVAR_ARCHIVE, "VR Hud Type. 0 = Disable.\n1 = Full\n2=Look Activate", 0, 2 );
-idCVar vr_hudRevealAngle( "vr_hudRevealAngle", "48", CVAR_FLOAT | CVAR_GAME | CVAR_ARCHIVE, "HMD pitch to reveal HUD in look activate mode." );
-idCVar vr_hudTransparency( "vr_hudTransparency", "1", CVAR_FLOAT | CVAR_GAME | CVAR_ARCHIVE, " Hud transparency. 0.0 = Invisible thru 1.0 = full", 0.0, 100.0 );
-idCVar vr_hudOcclusion( "vr_hudOcclusion", "1", CVAR_BOOL | CVAR_GAME | CVAR_ARCHIVE, " Hud occlusion. 0 = Objects occlude HUD, 1 = No occlusion " );
-idCVar vr_hudHealth( "vr_hudHealth", "1", CVAR_BOOL | CVAR_GAME | CVAR_ARCHIVE, "Show Armor/Health in Hud." );
-idCVar vr_hudAmmo( "vr_hudAmmo", "1", CVAR_BOOL | CVAR_GAME | CVAR_ARCHIVE, "Show Ammo in Hud." );
-idCVar vr_hudPickUps( "vr_hudPickUps", "1", CVAR_BOOL | CVAR_GAME | CVAR_ARCHIVE, "Show item pick ups in Hud." );
-idCVar vr_hudTips( "vr_hudTips", "1", CVAR_BOOL | CVAR_GAME | CVAR_ARCHIVE, "Show tips Hud." );
-idCVar vr_hudLocation( "vr_hudLocation", "1", CVAR_BOOL | CVAR_GAME | CVAR_ARCHIVE, "Show player location in Hud." );
-idCVar vr_hudObjective( "vr_hudObjective", "1", CVAR_BOOL | CVAR_GAME | CVAR_ARCHIVE, "Show objectives in Hud." );
-idCVar vr_hudStamina( "vr_hudStamina", "1", CVAR_BOOL | CVAR_GAME | CVAR_ARCHIVE, "Show stamina in Hud." );
-idCVar vr_hudPills( "vr_hudPills", "1", CVAR_BOOL | CVAR_GAME | CVAR_ARCHIVE, "Show weapon pills in Hud." );
-idCVar vr_hudComs( "vr_hudComs", "1", CVAR_BOOL | CVAR_GAME | CVAR_ARCHIVE, "Show communications in Hud." );
-idCVar vr_hudWeap( "vr_hudWeap", "1", CVAR_BOOL | CVAR_GAME | CVAR_ARCHIVE, "Show weapon pickup/change icons in Hud." );
-idCVar vr_hudNewItems( "vr_hudNewItems", "1", CVAR_BOOL | CVAR_GAME | CVAR_ARCHIVE, "Show new items acquired in Hud." );
-idCVar vr_hudFlashlight( "vr_hudFlashlight", "1", CVAR_BOOL | CVAR_GAME | CVAR_ARCHIVE, "Show flashlight in Hud." );
-idCVar vr_hudLowHealth( "vr_hudLowHealth", "20", CVAR_INTEGER | CVAR_GAME | CVAR_ARCHIVE, " 0 = Disable, otherwise force hud if heath below this value." );
-
-idCVar vr_voiceRepeat( "vr_voiceRepeat", "0", CVAR_BOOL, "1 = computer speaks back whatever commands or lines you say" );
-idCVar vr_voiceMinVolume( "vr_voiceMinVolume", "2", CVAR_INTEGER | CVAR_GAME | CVAR_ARCHIVE, "Minimum volume required to recognise voice commands. Out of 100. Set this higher if background sounds trigger voice commands.", 0, 100 );
-idCVar vr_voiceCommands( "vr_voiceCommands", "2", CVAR_INTEGER | CVAR_GAME | CVAR_ARCHIVE, "Enable voice commands. 0 = none, 1 = menus, 2 = menus and weapons", 0, 2 );
-idCVar vr_voicePushToTalk( "vr_voicePushToTalk", "0", CVAR_INTEGER | CVAR_ARCHIVE, "'Push to Talk' button must be pressed before voice commands recognized\n 0 = disabled, 1 = enabled \n", 0, 1 );
-idCVar vr_talkWakeMonsters( "vr_talkWakeMonsters", "1", CVAR_INTEGER | CVAR_GAME | CVAR_ARCHIVE, "Talking wakes monsters. 0 = no, 1 = both methods, 2 = like flashlight, 3 = like weapon", 0, 3 );
-idCVar vr_talkWakeMonsterRadius( "vr_talkWakeMonsterRadius", "120", CVAR_FLOAT | CVAR_GAME | CVAR_ARCHIVE, "Radius in inches within which talking quietly can wake enemies. Talking louder wakes monsters further than this." );
-idCVar vr_talkMode( "vr_talkMode", "2", CVAR_INTEGER | CVAR_GAME | CVAR_ARCHIVE, "Talk to NPC 0 = buttons, 1 = buttons or voice, 2 = voice only, 3 = voice no cursor", 0, 3 );
-idCVar vr_tweakTalkCursor( "vr_tweakTalkCursor", "25", CVAR_FLOAT | CVAR_GAME | CVAR_ARCHIVE, "Tweak talk cursor y pos in VR. % val", 0, 99 );
-
-idCVar vr_wristStatMon( "vr_wristStatMon", "1", CVAR_INTEGER | CVAR_ARCHIVE, "Use wrist status monitor. 0 = Disable 1 = Right Wrist 2 = Left Wrist " );
-
-// Koz display windows monitor name in the resolution selection menu, helpful to ID which is the rift if using extended mode
-idCVar vr_listMonitorName( "vr_listMonitorName", "0", CVAR_BOOL | CVAR_ARCHIVE | CVAR_GAME, "List monitor name with resolution." );
-
-idCVar vr_disableWeaponAnimation( "vr_disableWeaponAnimation", "1", CVAR_BOOL | CVAR_ARCHIVE | CVAR_GAME, "Disable weapon animations in VR. ( 1 = disabled )" );
-idCVar vr_headKick( "vr_headKick", "0", CVAR_BOOL | CVAR_ARCHIVE | CVAR_GAME, "Damage can 'kick' the players view. 0 = Disabled in VR." );
-//idCVar vr_showBody( "vr_showBody", "1", CVAR_BOOL | CVAR_ARCHIVE | CVAR_GAME, "Dont change this! Will be removed shortly, modifying will cause the player to have extra hands." );
-idCVar vr_joystickMenuMapping( "vr_joystickMenuMapping", "1", CVAR_BOOL | CVAR_ARCHIVE | CVAR_GAME, " Use alternate joy mapping\n in menus/PDA.\n 0 = D3 Standard\n 1 = VR Mode.\n(Both joys can nav menus,\n joy r/l to change\nselect area in PDA." );
-
-
-idCVar vr_deadzonePitch( "vr_deadzonePitch", "90", CVAR_FLOAT | CVAR_GAME | CVAR_ARCHIVE, "Vertical Aim Deadzone", 0, 180 );
-idCVar vr_deadzoneYaw( "vr_deadzoneYaw", "30", CVAR_FLOAT | CVAR_GAME | CVAR_ARCHIVE, "Horizontal Aim Deadzone", 0, 180 );
-idCVar vr_comfortDelta( "vr_comfortDelta", "10", CVAR_FLOAT | CVAR_GAME | CVAR_ARCHIVE, "Comfort Mode turning angle ", 0, 180 );
-idCVar vr_comfortJetStrafeDelta( "vr_comfortJetStrafeDelta", "90", CVAR_FLOAT | CVAR_GAME | CVAR_ARCHIVE, "Comfort Mode jetStrafe angle ", 0, 90 );
-
-idCVar vr_headingBeamMode( "vr_headingBeamMode", "3", CVAR_INTEGER | CVAR_GAME | CVAR_ARCHIVE, "0 = disabled, 1 = solid, 2 = arrows, 3 = scrolling arrows" );
-
-idCVar vr_weaponSight( "vr_weaponSight", "0", CVAR_INTEGER | CVAR_ARCHIVE, "Weapon Sight.\n 0 = Lasersight\n 1 = Red dot\n 2 = Circle dot\n 3 = Crosshair\n 4 = Beam + Dot\n" );
-idCVar vr_weaponSightToSurface( "vr_weaponSightToSurface", "1", CVAR_INTEGER | CVAR_ARCHIVE, "Map sight to surface. 0 = Disabled 1 = Enabled\n" );
-
-idCVar vr_motionWeaponPitchAdj( "vr_motionWeaponPitchAdj", "40", CVAR_FLOAT | CVAR_ARCHIVE, "Weapon controller pitch adjust" );
-idCVar vr_motionFlashPitchAdj( "vr_motionFlashPitchAdj", "40", CVAR_FLOAT | CVAR_ARCHIVE, "Flashlight controller pitch adjust" );
+idCVar vr_flashlightMode( "vr_flashlightMode", "3", CVAR_INTEGER | CVAR_ARCHIVE | CVAR_GAME | CVAR_NEW, "Flashlight mount.\n0 = Body\n1 = Head\n2 = Gun\n3= Hand ( if motion controls available.)" );
 
 idCVar vr_nodalX( "vr_nodalX", "-3", CVAR_FLOAT | CVAR_ARCHIVE, "Forward offset from eyes to neck" );
 idCVar vr_nodalZ( "vr_nodalZ", "-6", CVAR_FLOAT | CVAR_ARCHIVE, "Vertical offset from neck to eye height" );
-
 
 idCVar vr_controllerOffsetX( "vr_controllerOffsetX", "-3.5", CVAR_FLOAT | CVAR_ARCHIVE, "Controller X offset to handle center" ); // these values work for steam
 idCVar vr_controllerOffsetY( "vr_controllerOffsetY", "0", CVAR_FLOAT | CVAR_ARCHIVE, "Controller Y offset to handle center" );
@@ -159,18 +86,94 @@ idCVar vr_mountz( "vr_mountz", "0", CVAR_FLOAT | CVAR_ARCHIVE, "If motion contro
 
 idCVar vr_mountedWeaponController( "vr_mountedWeaponController", "0", CVAR_BOOL | CVAR_ARCHIVE, "If physical controller mounted on object (eg topshot), enable this to apply mounting offsets\n0=disabled 1 = enabled" );
 
+idCVar vr_handSwapsAnalogs( "vr_handSwapsAnalogs", "0", CVAR_BOOL | CVAR_ARCHIVE, "Should swapping the weapon hand affect analog controls (stick or touchpad) or just buttons/triggers? 0 = only swap buttons, 1 = swap all controls" );
+idCVar vr_minLoadScreenTime( "vr_minLoadScreenTime", "6000", CVAR_FLOAT | CVAR_ARCHIVE | CVAR_GAME | CVAR_NEW, "Min time to display load screens in ms.", 0.0f, 10000.0f );
+idCVar vr_normalViewHeight( "vr_normalViewHeight", "73", CVAR_FLOAT | CVAR_ARCHIVE | CVAR_GAME | CVAR_NEW, "Height of player's view while standing, in real world inches." );
+
+idCVar vr_flashlightBodyPosX( "vr_flashlightBodyPosX", "0", CVAR_FLOAT | CVAR_ARCHIVE | CVAR_GAME | CVAR_NEW, "Flashlight vertical offset for body mount." );
+idCVar vr_flashlightBodyPosY( "vr_flashlightBodyPosY", "0", CVAR_FLOAT | CVAR_ARCHIVE | CVAR_GAME | CVAR_NEW, "Flashlight horizontal offset for body mount." );
+idCVar vr_flashlightBodyPosZ( "vr_flashlightBodyPosZ", "0", CVAR_FLOAT | CVAR_ARCHIVE | CVAR_GAME | CVAR_NEW, "Flashlight forward offset for body mount." );
+
+idCVar vr_flashlightHelmetPosX( "vr_flashlightHelmetPosX", "6", CVAR_FLOAT | CVAR_ARCHIVE | CVAR_GAME | CVAR_NEW, "Flashlight vertical offset for helmet mount." );
+idCVar vr_flashlightHelmetPosY( "vr_flashlightHelmetPosY", "-6", CVAR_FLOAT | CVAR_ARCHIVE | CVAR_GAME | CVAR_NEW, "Flashlight horizontal offset for helmet mount." );
+idCVar vr_flashlightHelmetPosZ( "vr_flashlightHelmetPosZ", "-20", CVAR_FLOAT | CVAR_ARCHIVE | CVAR_GAME | CVAR_NEW, "Flashlight forward offset for helmet mount." );
+
+idCVar vr_offHandPosX( "vr_offHandPosX", "0", CVAR_FLOAT | CVAR_ARCHIVE | CVAR_GAME | CVAR_NEW, "X position for off hand when not using motion controls." );
+idCVar vr_offHandPosY( "vr_offHandPosY", "0", CVAR_FLOAT | CVAR_ARCHIVE | CVAR_GAME | CVAR_NEW, "Y position for off hand when not using motion controls." );
+idCVar vr_offHandPosZ( "vr_offHandPosZ", "0", CVAR_FLOAT | CVAR_ARCHIVE | CVAR_GAME | CVAR_NEW, "Z position for off hand when not using motion controls." );
+
+idCVar vr_forward_keyhole( "vr_forward_keyhole", "11.25", CVAR_FLOAT | CVAR_ARCHIVE | CVAR_GAME | CVAR_NEW, "Forward movement keyhole in deg. If view is inside body direction +/- this value, forward movement is in view direction, not body direction" );
+
+idCVar vr_PDAfixLocation( "vr_PDAfixLocation", "0", CVAR_BOOL | CVAR_ARCHIVE | CVAR_GAME | CVAR_NEW, "Fix PDA position in space in front of player\n instead of holding in hand." );
+
+idCVar vr_weaponPivotOffsetForward( "vr_weaponPivotOffsetForward", "3", CVAR_GAME | CVAR_NEW | CVAR_ARCHIVE | CVAR_FLOAT, "" );
+idCVar vr_weaponPivotOffsetHorizontal( "vr_weaponPivotOffsetHorizontal", "0", CVAR_GAME | CVAR_NEW | CVAR_ARCHIVE | CVAR_FLOAT, "" );
+idCVar vr_weaponPivotOffsetVertical( "vr_weaponPivotOffsetVertical", "0", CVAR_GAME | CVAR_NEW | CVAR_ARCHIVE | CVAR_FLOAT, "" );
+idCVar vr_weaponPivotForearmLength( "vr_weaponPivotForearmLength", "16", CVAR_GAME | CVAR_NEW | CVAR_ARCHIVE | CVAR_FLOAT, "" );;
+
+idCVar vr_guiScale( "vr_guiScale", "1", CVAR_FLOAT | CVAR_RENDERER | CVAR_ARCHIVE, "scale reduction factor for full screen menu/pda scale in VR", 0.0001f, 1.0f ); // Koz allow scaling of full screen guis/pda
+
+idCVar vr_guiMode( "vr_guiMode", "2", CVAR_INTEGER | CVAR_GAME | CVAR_NEW | CVAR_ARCHIVE, "Gui interaction mode.\n 0 = Weapon aim as cursor\n 1 = Look direction as cursor\n 2 = Touch screen\n" );
+
+idCVar vr_hudScale( "vr_hudScale", "1.0", CVAR_FLOAT | CVAR_GAME | CVAR_NEW | CVAR_ARCHIVE, "Hud scale", 0.1f, 2.0f );
+idCVar vr_hudPosHor( "vr_hudPosHor", "0", CVAR_FLOAT | CVAR_GAME | CVAR_NEW | CVAR_ARCHIVE, "Hud Horizontal offset in inches" );
+idCVar vr_hudPosVer( "vr_hudPosVer", "7", CVAR_FLOAT | CVAR_GAME | CVAR_NEW | CVAR_ARCHIVE, "Hud Vertical offset in inches" );
+idCVar vr_hudPosDis( "vr_hudPosDis", "32", CVAR_FLOAT | CVAR_GAME | CVAR_NEW | CVAR_ARCHIVE, "Hud Distance from view in inches" );
+idCVar vr_hudPosAngle( "vr_hudPosAngle", "30", CVAR_FLOAT | CVAR_GAME | CVAR_NEW | CVAR_ARCHIVE, "Hud View Angle" );
+idCVar vr_hudPosLock( "vr_hudPosLock", "1", CVAR_INTEGER | CVAR_GAME | CVAR_NEW | CVAR_ARCHIVE, "Lock Hud to:  0 = Face, 1 = Body" );
+
+
+idCVar vr_hudType( "vr_hudType", "2", CVAR_INTEGER | CVAR_GAME | CVAR_NEW | CVAR_ARCHIVE, "VR Hud Type. 0 = Disable.\n1 = Full\n2=Look Activate", 0, 2 );
+idCVar vr_hudRevealAngle( "vr_hudRevealAngle", "48", CVAR_FLOAT | CVAR_GAME | CVAR_NEW | CVAR_ARCHIVE, "HMD pitch to reveal HUD in look activate mode." );
+idCVar vr_hudTransparency( "vr_hudTransparency", "1", CVAR_FLOAT | CVAR_GAME | CVAR_NEW | CVAR_ARCHIVE, " Hud transparency. 0.0 = Invisible thru 1.0 = full", 0.0, 100.0 );
+idCVar vr_hudOcclusion( "vr_hudOcclusion", "1", CVAR_BOOL | CVAR_GAME | CVAR_NEW | CVAR_ARCHIVE, " Hud occlusion. 0 = Objects occlude HUD, 1 = No occlusion " );
+idCVar vr_hudHealth( "vr_hudHealth", "1", CVAR_BOOL | CVAR_GAME | CVAR_NEW | CVAR_ARCHIVE, "Show Armor/Health in Hud." );
+idCVar vr_hudAmmo( "vr_hudAmmo", "1", CVAR_BOOL | CVAR_GAME | CVAR_NEW | CVAR_ARCHIVE, "Show Ammo in Hud." );
+idCVar vr_hudPickUps( "vr_hudPickUps", "1", CVAR_BOOL | CVAR_GAME | CVAR_NEW | CVAR_ARCHIVE, "Show item pick ups in Hud." );
+idCVar vr_hudTips( "vr_hudTips", "1", CVAR_BOOL | CVAR_GAME | CVAR_NEW | CVAR_ARCHIVE, "Show tips Hud." );
+idCVar vr_hudLocation( "vr_hudLocation", "1", CVAR_BOOL | CVAR_GAME | CVAR_NEW | CVAR_ARCHIVE, "Show player location in Hud." );
+idCVar vr_hudObjective( "vr_hudObjective", "1", CVAR_BOOL | CVAR_GAME | CVAR_NEW | CVAR_ARCHIVE, "Show objectives in Hud." );
+idCVar vr_hudStamina( "vr_hudStamina", "1", CVAR_BOOL | CVAR_GAME | CVAR_NEW | CVAR_ARCHIVE, "Show stamina in Hud." );
+idCVar vr_hudPills( "vr_hudPills", "1", CVAR_BOOL | CVAR_GAME | CVAR_NEW | CVAR_ARCHIVE, "Show weapon pills in Hud." );
+idCVar vr_hudComs( "vr_hudComs", "1", CVAR_BOOL | CVAR_GAME | CVAR_NEW | CVAR_ARCHIVE, "Show communications in Hud." );
+idCVar vr_hudWeap( "vr_hudWeap", "1", CVAR_BOOL | CVAR_GAME | CVAR_NEW | CVAR_ARCHIVE, "Show weapon pickup/change icons in Hud." );
+idCVar vr_hudNewItems( "vr_hudNewItems", "1", CVAR_BOOL | CVAR_GAME | CVAR_NEW | CVAR_ARCHIVE, "Show new items acquired in Hud." );
+idCVar vr_hudFlashlight( "vr_hudFlashlight", "1", CVAR_BOOL | CVAR_GAME | CVAR_NEW | CVAR_ARCHIVE, "Show flashlight in Hud." );
+idCVar vr_hudLowHealth( "vr_hudLowHealth", "20", CVAR_INTEGER | CVAR_GAME | CVAR_NEW | CVAR_ARCHIVE, " 0 = Disable, otherwise force hud if heath below this value." );
+
+idCVar vr_voiceRepeat( "vr_voiceRepeat", "0", CVAR_BOOL, "1 = computer speaks back whatever commands or lines you say" );
+idCVar vr_voiceMinVolume( "vr_voiceMinVolume", "2", CVAR_INTEGER | CVAR_GAME | CVAR_NEW | CVAR_ARCHIVE, "Minimum volume required to recognise voice commands. Out of 100. Set this higher if background sounds trigger voice commands.", 0, 100 );
+idCVar vr_voiceCommands( "vr_voiceCommands", "2", CVAR_INTEGER | CVAR_GAME | CVAR_NEW | CVAR_ARCHIVE, "Enable voice commands. 0 = none, 1 = menus, 2 = menus and weapons", 0, 2 );
+idCVar vr_voicePushToTalk( "vr_voicePushToTalk", "0", CVAR_INTEGER | CVAR_ARCHIVE, "'Push to Talk' button must be pressed before voice commands recognized\n 0 = disabled, 1 = enabled \n", 0, 1 );
+idCVar vr_talkWakeMonsters( "vr_talkWakeMonsters", "1", CVAR_INTEGER | CVAR_GAME | CVAR_NEW | CVAR_ARCHIVE, "Talking wakes monsters. 0 = no, 1 = both methods, 2 = like flashlight, 3 = like weapon", 0, 3 );
+idCVar vr_talkWakeMonsterRadius( "vr_talkWakeMonsterRadius", "120", CVAR_FLOAT | CVAR_GAME | CVAR_NEW | CVAR_ARCHIVE, "Radius in inches within which talking quietly can wake enemies. Talking louder wakes monsters further than this." );
+idCVar vr_talkMode( "vr_talkMode", "2", CVAR_INTEGER | CVAR_GAME | CVAR_NEW | CVAR_ARCHIVE, "Talk to NPC 0 = buttons, 1 = buttons or voice, 2 = voice only, 3 = voice no cursor", 0, 3 );
+idCVar vr_tweakTalkCursor( "vr_tweakTalkCursor", "25", CVAR_FLOAT | CVAR_GAME | CVAR_NEW | CVAR_ARCHIVE, "Tweak talk cursor y pos in VR. % val", 0, 99 );
+
+idCVar vr_wristStatMon( "vr_wristStatMon", "1", CVAR_INTEGER | CVAR_ARCHIVE, "Use wrist status monitor. 0 = Disable 1 = Right Wrist 2 = Left Wrist " );
+
+// Koz display windows monitor name in the resolution selection menu, helpful to ID which is the rift if using extended mode
+idCVar vr_listMonitorName( "vr_listMonitorName", "0", CVAR_BOOL | CVAR_ARCHIVE | CVAR_GAME | CVAR_NEW, "List monitor name with resolution." );
+
+idCVar vr_disableWeaponAnimation( "vr_disableWeaponAnimation", "1", CVAR_BOOL | CVAR_ARCHIVE | CVAR_GAME | CVAR_NEW, "Disable weapon animations in VR. ( 1 = disabled )" );
+
+//idCVar vr_showBody( "vr_showBody", "1", CVAR_BOOL | CVAR_ARCHIVE | CVAR_GAME | CVAR_NEW, "Dont change this! Will be removed shortly, modifying will cause the player to have extra hands." );
+idCVar vr_joystickMenuMapping( "vr_joystickMenuMapping", "1", CVAR_BOOL | CVAR_ARCHIVE | CVAR_GAME | CVAR_NEW, " Use alternate joy mapping\n in menus/PDA.\n 0 = D3 Standard\n 1 = VR Mode.\n(Both joys can nav menus,\n joy r/l to change\nselect area in PDA." );
+
+idCVar vr_headingBeamMode( "vr_headingBeamMode", "3", CVAR_INTEGER | CVAR_GAME | CVAR_NEW | CVAR_ARCHIVE, "0 = disabled, 1 = solid, 2 = arrows, 3 = scrolling arrows" );
+
+idCVar vr_weaponSight( "vr_weaponSight", "0", CVAR_INTEGER | CVAR_ARCHIVE, "Weapon Sight.\n 0 = Lasersight\n 1 = Red dot\n 2 = Circle dot\n 3 = Crosshair\n 4 = Beam + Dot\n" );
+idCVar vr_weaponSightToSurface( "vr_weaponSightToSurface", "1", CVAR_INTEGER | CVAR_ARCHIVE, "Map sight to surface. 0 = Disabled 1 = Enabled\n" );
+
+idCVar vr_motionWeaponPitchAdj( "vr_motionWeaponPitchAdj", "40", CVAR_FLOAT | CVAR_ARCHIVE, "Weapon controller pitch adjust" );
+idCVar vr_motionFlashPitchAdj( "vr_motionFlashPitchAdj", "40", CVAR_FLOAT | CVAR_ARCHIVE, "Flashlight controller pitch adjust" );
+
+
 idCVar vr_3dgui( "vr_3dgui", "1", CVAR_BOOL | CVAR_ARCHIVE, "3d effects for in game guis. 0 = disabled 1 = enabled\n" );
-idCVar vr_shakeAmplitude( "vr_shakeAmplitude", "1.0", CVAR_FLOAT | CVAR_ARCHIVE, "Screen shake amplitude 0.0 = disabled to 1.0 = full\n", 0.0f, 1.0f );
 
-
-idCVar vr_controllerGamepad( "vr_controllerGamepad", "0", CVAR_INTEGER | CVAR_ARCHIVE, "If 1, use standard controller, not motion controllers\nRestart after changing\n" );
-
-idCVar vr_padDeadzone( "vr_padDeadzone", ".25", CVAR_FLOAT | CVAR_ARCHIVE, "Deadzone for steam pads.\n 0.0 = no deadzone 1.0 = dead\n" );
-idCVar vr_jsDeadzone( "vr_jsDeadzone", ".25", CVAR_FLOAT | CVAR_ARCHIVE, "Deadzone for steam joysticks.\n 0.0 = no deadzone 1.0 = dead\n" );
-idCVar vr_padToButtonThreshold( "vr_padToButtonThreshold", ".7", CVAR_FLOAT | CVAR_ARCHIVE, "Threshold value for pad contact\n to register as button press\n .1 high sensitiveity thru\n .99 low sensitivity" );
-idCVar vr_knockBack( "vr_knockBack", "0", CVAR_BOOL | CVAR_ARCHIVE | CVAR_GAME, "Enable damage knockback in VR. 0 = Disabled, 1 = Enabled" );
-idCVar vr_jumpBounce( "vr_jumpBounce", "0", CVAR_FLOAT | CVAR_ARCHIVE | CVAR_GAME, "Enable view bounce after jumping. 0 = Disabled, 1 = Full", 0.0f, 1.0f ); // Carl
-idCVar vr_stepSmooth( "vr_stepSmooth", "1", CVAR_FLOAT | CVAR_ARCHIVE | CVAR_GAME, "Enable smoothing when climbing stairs. 0 = Disabled, 1 = Full", 0.0f, 1.0f ); // Carl
+idCVar vr_knockBack( "vr_knockBack", "0", CVAR_BOOL | CVAR_ARCHIVE | CVAR_GAME | CVAR_NEW, "Enable damage knockback in VR. 0 = Disabled, 1 = Enabled" );
+idCVar vr_jumpBounce( "vr_jumpBounce", "0", CVAR_FLOAT | CVAR_ARCHIVE | CVAR_GAME | CVAR_NEW, "Enable view bounce after jumping. 0 = Disabled, 1 = Full", 0.0f, 1.0f ); // Carl
+idCVar vr_stepSmooth( "vr_stepSmooth", "1", CVAR_FLOAT | CVAR_ARCHIVE | CVAR_GAME | CVAR_NEW, "Enable smoothing when climbing stairs. 0 = Disabled, 1 = Full", 0.0f, 1.0f ); // Carl
 idCVar vr_walkSpeedAdjust( "vr_walkSpeedAdjust", "-20", CVAR_FLOAT | CVAR_ARCHIVE, "Player walk speed adjustment in VR. (slow down default movement)" );
 
 idCVar vr_wipPeriodMin( "vr_wipPeriodMin", "10.0", CVAR_FLOAT | CVAR_ARCHIVE, "" );
@@ -189,9 +192,9 @@ idCVar vr_pdaPitch( "vr_pdaPitch", "30", CVAR_FLOAT | CVAR_ARCHIVE, "" );
 
 idCVar vr_movePoint( "vr_movePoint", "4", CVAR_INTEGER | CVAR_ARCHIVE, "0: Standard Stick Move, 1: Off Hand = Forward, 2: Look = forward, 3: Weapon Hand = Forward, 4: Left Hand = Forward, 5: Right Hand = Forward", 0, 5 );
 idCVar vr_moveClick( "vr_moveClick", "0", CVAR_INTEGER | CVAR_ARCHIVE, " 0 = Normal movement.\n 1 = Click and hold to walk, run button to run.\n 2 = Click to start walking, then touch only. Run btn to run.\n 3 = Click to start walking, hold click to run.\n 4 = Click to start walking, then click toggles run\n" );
-idCVar vr_playerBodyMode( "vr_playerBodyMode", "1", CVAR_INTEGER | CVAR_GAME | CVAR_ARCHIVE, "Player body mode:\n0 = Display full body\n1 = Just Hands \n2 = Weapons only\n" );
+idCVar vr_playerBodyMode( "vr_playerBodyMode", "1", CVAR_INTEGER | CVAR_GAME | CVAR_NEW | CVAR_ARCHIVE, "Player body mode:\n0 = Display full body\n1 = Just Hands \n2 = Weapons only\n" );
 
-idCVar vr_crouchMode( "vr_crouchMode", "0", CVAR_INTEGER | CVAR_GAME | CVAR_ARCHIVE, "Crouch Mode:\n 0 = Full motion crouch (In game matches real life)\n 1 = Crouch anim triggered by smaller movement." );
+idCVar vr_crouchMode( "vr_crouchMode", "0", CVAR_INTEGER | CVAR_GAME | CVAR_NEW | CVAR_ARCHIVE, "Crouch Mode:\n 0 = Full motion crouch (In game matches real life)\n 1 = Crouch anim triggered by smaller movement." );
 idCVar vr_crouchTriggerDist( "vr_crouchTriggerDist", "7", CVAR_FLOAT | CVAR_ARCHIVE, " Distance ( in real-world inches ) player must crouch in real life to toggle crouch\n" );
 idCVar vr_frameCheck( "vr_frameCheck", "0", CVAR_INTEGER | CVAR_ARCHIVE, "0 = bypass frame check" );
 
@@ -206,8 +209,7 @@ idCVar vr_teleportHint( "vr_teleportHint", "0", CVAR_BOOL | CVAR_ARCHIVE, "" ); 
 idCVar vr_useHandPoses( "vr_useHandPoses", "0", CVAR_BOOL | CVAR_ARCHIVE, "If using oculus touch, enable finger poses when hands are empty or in guis" );
 // Koz end
 // Carl
-idCVar vr_teleport( "vr_teleport", "2", CVAR_INTEGER | CVAR_ARCHIVE, "Player can teleport at will. 0 = disabled, 1 = gun sight, 2 = right hand, 3 = left hand, 4 = head", 0, 4 );
-idCVar vr_teleportMode( "vr_teleportMode", "0", CVAR_INTEGER | CVAR_ARCHIVE, "Teleport Mode. 0 = Blink (default), 1 = Doom VFR style (slow time and warp speed), 2 = Doom VFR style + jet strafe)", 0, 2 );
+
 idCVar vr_teleportMaxTravel( "vr_teleportMaxTravel", "950", CVAR_INTEGER | CVAR_ARCHIVE, "Maximum teleport path length/complexity/time. About 250 or 500 are good choices, but must be >= about 950 to use tightrope in MC Underground.", 150, 5000 );
 idCVar vr_teleportThroughDoors( "vr_teleportThroughDoors", "0", CVAR_BOOL | CVAR_ARCHIVE, "Player can teleport somewhere visible even if the path to get there takes them through closed (but not locked) doors." );
 idCVar vr_motionSickness( "vr_motionSickness", "1", CVAR_INTEGER | CVAR_ARCHIVE, "Motion sickness prevention aids. 0 = None, 1 = Chaperone, 2 = Reduce FOV, 3 = Black Screen, 4 = Black & Chaperone, 5 = Reduce FOV & Chaperone, 6 = Slow Mo, 7 = Slow Mo & Chaperone, 8 = Slow Mo & Reduce FOV, 9 = Slow Mo, Chaperone, Reduce FOV", 0, 9 );
@@ -216,7 +218,6 @@ idCVar vr_strobeTime( "vr_strobeTime", "500", CVAR_INTEGER | CVAR_ARCHIVE, "Time
 idCVar vr_chaperone( "vr_chaperone", "2", CVAR_INTEGER | CVAR_ARCHIVE, "Chaperone/Guardian mode. 0 = when near, 1 = when throwing, 2 = when melee, 3 = when dodging, 4 = always", 0, 4 );
 idCVar vr_chaperoneColor( "vr_chaperoneColor", "0", CVAR_INTEGER | CVAR_ARCHIVE, "Chaperone colour. 0 = default, 1 = black, 2 = grey, 3 = white, 4 = red, 5 = green, 6 = blue, 7 = yellow, 8 = cyan, 9 = magenta, 10 = purple", 0, 10 );
 
-idCVar vr_handSwapsAnalogs( "vr_handSwapsAnalogs", "0", CVAR_BOOL | CVAR_ARCHIVE, "Should swapping the weapon hand affect analog controls (stick or touchpad) or just buttons/triggers? 0 = only swap buttons, 1 = swap all controls" );
 idCVar vr_autoSwitchControllers( "vr_autoSwitchControllers", "1", CVAR_BOOL | CVAR_ARCHIVE, "Automatically switch to/from gamepad mode when using gamepad/motion controller. Should be true unless you're trying to use both together, or you get false detections. 0 = no, 1 = yes." );
 
 idCVar vr_instantAccel( "vr_instantAccel", "1", CVAR_BOOL | CVAR_ARCHIVE, "Instant Movement Acceleration. 0 = Disabled 1 = Enabled" );
@@ -247,7 +248,6 @@ iVr::iVr()
 
 	gameSavingLoading = false;
 	showingIntroVideo = true;
-
 	lastSaveTime = Sys_Milliseconds();
 	wasSaved = false;
 	wasLoaded = false;
